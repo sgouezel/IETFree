@@ -22,7 +22,7 @@ theorem exists_centralizer_pow {α : Type*} [DecidableEq α] {v : FreeGroup α} 
     ∃ r : FreeGroup α, ∀ z : FreeGroup α, z * v = v * z → ∃ n : ℤ, z = r ^ n
 ```
 
-(The instance for `α = Fin 2` is the statement filed as `Tasks/centralizer_cyclic.lean`.)  This is
+(The case `α = Fin 2` is the one Lemma 2.7 uses.)  This is
 Lyndon–Schupp, *Combinatorial Group Theory*, Prop. 2.19.  It is the single deep input of Lemma 2.7
 (`exists_nontrivial_commutator`) of the paper; §8 below records exactly what Lemma 2.7 additionally
 needs.  Everything here is stated for a general `α`, so it is reusable beyond `F₂`.
@@ -388,8 +388,8 @@ developed here, Q4 is a short assembly in `Irreducible.lean`.
   3. `P5a` (cascade lemma), then `P5b`/`P5c`.
   4. `P6` — budget the most here; check Mathlib for `List` periodicity first.
   5. `P7`, `P8`, `P9` — mechanical once `P6` is in.
-* **Acceptance criteria.** `Tasks/centralizer_cyclic.lean` becomes provable; `P9` has no `sorry` and
-  its `#print axioms` gives `[propext, Classical.choice, Quot.sound]`; add the file to `Build.sh`.
+* **Acceptance criteria.** `P9` is provable from `P2`–`P8` with no `sorry`, and its `#print axioms`
+  gives `[propext, Classical.choice, Quot.sound]`.
 * **Do not** weaken the target to "`C(v)` is abelian": that is the same theorem (abelian + free ⟹
   cyclic needs Nielsen–Schreier and the rank argument, which is *more* work than the route above).
 -/
@@ -601,7 +601,7 @@ replace it.
 
 With `exists_common_zpow` and `natAbs_eq_of_conj_zpow`, LS 2.19 reduces to the single statement that
 *commensurable* elements have a common root (`z ^ m = s ^ q` with `m, n ≠ 0`); the proof of that is
-the run `commensurable-commute` (`Tasks/commensurable.lean`), and with it:
+the run `commensurable-commute`, and with it:
 `z ^ m = s ^ q` ⟹ `z` and `s` commute (the run's theorem) ⟹ they have a common root (P7 ↦
 `exists_zpow_eq_of_forall_commute` on `⟨z, s⟩`).  Then the maximal root `q₀` of `v` (P3 bounds the
 exponent, so the maximum exists) satisfies `C(v) = ⟨q₀⟩` exactly as §7 planned.

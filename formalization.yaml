@@ -175,10 +175,8 @@ automation:
         report of 296 `#print axioms` lines, and `Build.sh` fails with `--strict` if `sorryAx` is
         reachable. The comparator pair is checked on every build, by `Comparator/Check.lean` (the
         comparator's own algorithm on the two compiled modules), and the genuine comparator is
-        reproduced by one command, `Comparator/run.sh`. `Tasks/` holds the frozen statement files that
-        were handed to individual proof searches, and `Tasks/Match.lean` proves each of those
-        statements from the library to guard against statement drift. The agent kept the ledger
-        `NOTES.md`, which records every statement that had to be restated and why.
+        reproduced by one command, `Comparator/run.sh`. The agent kept the ledger `NOTES.md`, which
+        records every statement that had to be restated and why.
       prompting_notes: >-
         Work proceeded one declaration at a time from the earliest module in the build order, with a
         single-module compile after every edit. Two of the paper's statements were mis-formalized on
@@ -192,16 +190,16 @@ automation:
       tool_setup: >-
         For hard isolated lemmas, several identical agents were started at once on different
         directions and their submissions were checked by compilation before being landed; the
-        statements themselves were frozen in `Tasks/` and given to a proof-search harness whose runs
-        are named there. Landed this way: `IsCutSet.transl_of_locally`, `IsCutSet.comp`,
+        statements themselves were frozen as self-contained files and given to a proof-search
+        harness. Landed this way: `IsCutSet.transl_of_locally`, `IsCutSet.comp`,
         `isIET_mkIETFun`, `exists_mkIETEquiv_eq`, `ae_diophantine`, `exists_lattice_cuts`,
         `exists_lattice_displacement`, `commute_of_zpow_eq`, `rotate_cyclically_reduced`, and the
         image side of the block presentation.
       prompting_notes: >-
         Each run was given one self-contained statement (importing only Mathlib, ending in
-        `:= by sorry`) plus the route in the docstring. `Tasks/README.md` records the outcome of every
-        run, including the one stopped unsolved (`nontrivial-commutator`) and the one whose statement
-        is not in the library (`continuous-domination`).
+        `:= by sorry`) plus the route in the docstring; the outcomes are recorded in the development
+        ledger `NOTES.md`, including the run stopped unsolved (`nontrivial-commutator`) and the one
+        whose statement is not in the library (`continuous-domination`).
   notes: >-
     The human author set the task, the paper's statements, the frozen interfaces and the build, and
     reviewed the outcome; the proof scripts were produced by the agents above. Spend is not recorded
@@ -249,9 +247,8 @@ review:
     No human referee and no independent human reviewer has checked this development against the
     paper; the author of the paper reviewed that the state of the library is acceptable, but did not
     verify it line by line. What has been done: every module is compiled and its axioms printed
-    (`Check.lean`, 296 declarations, all `[propext, Classical.choice, Quot.sound]`); the statement
-    files of the proof-search runs are re-proved from the library on every build (`Tasks/Match.lean`);
-    and the development went through the audits recorded in `NOTES.md` — two refutations of
+    (`Check.lean`, 296 declarations, all `[propext, Classical.choice, Quot.sound]`); and the
+    development went through the audits recorded in `NOTES.md` — two refutations of
     mis-formalized statements, an audit of the hypotheses of every declaration (the derivable ones
     removed), a dead-code scan of the whole library, a docstring pass, and an
     elaboration-performance pass. The comparator pair is checked on every build by
@@ -397,5 +394,4 @@ acknowledgements: >-
   University around AI tools, and the same environment is where this development was carried out. The
   development uses Lean 4 and Mathlib, and the structural patterns of Mathlib (explicit data rather
   than existence statements, dot notation for the API of a structure, `#print axioms` reports) shaped
-  it throughout. The frozen statement files in `Tasks/` follow the interface of the discovery-run
-  harness of Open Math OS.
+  it throughout.

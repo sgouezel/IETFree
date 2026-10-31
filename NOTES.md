@@ -18,6 +18,16 @@ says it was dropped), so an old entry can still be read.
 
 ### Build and axiom status
 
+- **Packaging rule (owner's standing instruction):** `IET2.zip` is the *sources only* — no `Tasks/`
+  (that directory no longer exists, but keep the exclusion), no `.lake/`, no `.scratch/`, no
+  `*.olean`.  Recipe in §"Prose `file:line` links, `Tasks/` dropped" at the end:
+  `zip -r -q IET2.zip IET2 -x 'IET2/.lake/*' 'IET2/.scratch/*' 'IET2/Tasks/*' '*.olean'`, run from the
+  repository root.
+- **The repository** is <https://github.com/sgouezel/IETFree> (`main`); it holds the contents of
+  `IET2/` at its *root*, so module paths there are `IETFree/…`, not `IET2/IETFree/…`.  `Tasks/` no
+  longer exists, in the repository or in this tree (the owner deleted it; see the last entry).  `README.md`
+  links every declaration it names to the line that declares it (§"README links every declaration"
+  at the end).  The command-line recipes below are the ones of *this* VM.
 - **Both builds are green and warning-free**: `lake build` (the genuine Lake project) succeeds from a
   clean `.lake` — 8742 jobs, exit 0, **no warnings** — and `./Build.sh` (plain `lean`, same options)
   also prints no warning.  §"The linter warnings are all gone" at the end of this file records what
@@ -27,10 +37,9 @@ says it was dropped), so an old entry can still be read.
   definition hole `mkIETEquiv`, `coe_mkIETEquiv`, and the unconditional `main`), and three in the
   comparator challenge `ChallengeWeak.lean` (the same three, with the two hypotheses).  The library itself has **none**: `Check.lean`
   prints 296 `#print axioms` lines and not one of them contains `sorryAx` (the report of
-  `ChallengeWeakSolved.lean`, which nothing imports, has 11 more, none with `sorryAx` either).  `Tasks/Match.lean`, which
-  guards that the discovery-run statements still match the library, passes, and so does
-  `Comparator/Check.lean`, the local stand-in for the comparator (32661 declarations compared, no
-  difference).
+  `ChallengeWeakSolved.lean`, which nothing imports, has 11 more, none with `sorryAx` either).
+  `Comparator/Check.lean`, the local stand-in for the comparator, passes (32661 declarations
+  compared, no difference).
 - **All of the paper's Section 3 is proved**: Lemma 3.1 (`compLen_injective` plus the absolute
   continuity `compLenAffine_absolutelyContinuousAt`/`compLen_absolutelyContinuousAt`), Lemma 3.2
   (`block_irreducible_on_good`, `irreduciblePerm_blockPerm`), Lemma 3.4
@@ -7533,3 +7542,542 @@ the marker before `leftEnd` to `coe_mkIETEquiv`, and the lemma `image_point_mem`
 unused `[NeZero n]` was removed.  It is a lemma, not one of the definitions mirrored by
 `Challenge.lean`, and no definition or statement in the frozen block changed — the comparator run
 above is the check on that.
+
+---
+
+## Session: swarm `smvwp4zuj` (M1b frontier) — first two landings, three false auxiliary statements
+
+**Dispatch.** Four members on the four independent packets of the M1b frontier: A = determinant
+identity (`det_sub_last_col` / `det_linInducedMap`), B = change of variables for `inducedMap`, C =
+`ae_mem_simplexOn`, D = `rvStep`. A second wave (up to four more, total eight) will take
+`chartVolume_map_perm`, `simplexVolume_map_perm`, `simplexVolumeOn_eq_map`, `toIET_inv` and the
+`simplexVolume_eq_chartVolume` bridge once A/B have landed.
+
+**Pattern to remember: three auxiliary statements I wrote were FALSE as stated, all refuted by the
+swarm with explicit witnesses.** The missing hypotheses are not cosmetic; each is exactly what makes
+the statement true.
+
+1. `inducedMap_injective` with only `M.det ≠ 0` is false: `M = !![1,1;0,1]` has det `1` and
+   `inducedMap M ≡ 1`. Needs the column sums (`hM : ∀ j, ∑ i, M i j = 1`), because only then is
+   `inducedMap M = linInducedMap M + b` with `linInducedMap M` the map of `Q - b·1ᵀ`.
+2. `inducedMap_mem_region` with only `0 ≤ M` and column sums `1` is false: `M = !![0,0;1,1]` sends
+   the region to `0`. Needs `M.det ≠ 0` (a zero row forces det `0`; and `det ≠ 0` holds for
+   `M = Q·diag(1/Q_β)` since `det Q = 1`).
+3. `ae_mem_simplexOn` with only `[Fintype α]` is false: for the empty alphabet `simplexOn α = ∅`
+   while `simplexVolumeOn α` is a probability measure. Needs `[Nonempty α]` (available from
+   `P : CombData α n`, `n ≠ 0`).
+
+**Landed.** `MasurVeech/Affine.lean` (from member m4): the affine decomposition
+`inducedMap M = linInducedMap M + b`, `toMatrix'_linInducedMapLinear`, the change of variables
+`volume (inducedMap M '' S) = |det M| · volume S` via `Measure.addHaar_image_linearMap` +
+`measure_preimage_add_right`, injectivity and region membership with the corrected hypotheses, and
+the axiom-free core `PacketB.volume_image_inducedMap_of_det` (every `S`, no measurability, no
+nonnegativity). **M1b is now reduced to the single pure matrix identity `det_sub_last_col`**;
+`det_linInducedMap` follows from it via `PacketB.det_linInducedMap_of_matrix`.
+`MasurVeech/SimplexAe.lean` (from member m1): `sum_simplexMap`, `ae_mem_simplexOn_fin`,
+`ae_mem_simplexOn_of_nonempty`, plus the counterexample. `Basic.lean` no longer contains the false
+`ae_mem_simplexOn`; `Volume.lean` no longer contains the false injectivity/region statements and is
+`sorry`-free (geometric layer only).
+
+**Build**: `lake build` green, 8717 jobs, no warnings. `Check.lean` reports `volume_image_inducedMap`
+(=`PacketB.volume_image_inducedMap`) with `sorryAx` from packet A only;
+`PacketB.volume_image_inducedMap_of_det`, `inducedMap_mem_region`, `ae_mem_simplexOn_of_nonempty`,
+`sum_simplexMap`, `chart_inducedMap` all clean.
+
+**Open after the first wave**: `det_sub_last_col` (packet A, member m2, running), `rvStep` (packet D,
+member m3, running), and then the second-wave targets.
+
+**Landing (package A + B complete; M1b closed except two corollaries).** Member m2's
+`det_sub_last_col` (row/column operations: `L * M * E = ![A,b;0,1]` with `L` = add all rows to the
+last, `E` = subtract the last column from the others, both unit lower triangular; column sums enter
+exactly in `lastRowOp_mul_lastColOp`; then Laplace along the last row) is landed in
+`MasurVeech/Affine.lean`, and `det_linInducedMap` follows from it. **`volume_image_inducedMap` is
+now axiom-clean** — the change of variables for `inducedMap` is unconditional:
+`volume (inducedMap M '' S) = ENNreal.ofReal |det M| * volume S` for every `S`, no measurability,
+no nonnegativity. Remaining `sorry`s in the project: `chartVolume_map_perm` and
+`simplexVolume_eq_chartVolume` (Affine), `simplexVolume_map_perm`, `simplexVolumeOn_eq_map`,
+`toIET_inv` (Basic), `rvStep`, `rv_length`, `rvStep_admissible` (Step), and the main theorem.
+
+**Packet F landed (swarm `smvwpk8zn`, member m3).** `simplexVolume_eq_chartVolume` is proved and
+in `Affine.lean`: the copied `simplexVolume (n+1)`, transported to real vectors, is
+`(volume.restrict (region n)).map (chart n)`. Two facts worth remembering:
+
+* **`simplexRegion (n+1) = region n` is definitional (`rfl`)**: `(n+1)-1` reduces to `n` by `Nat.sub`
+  recursion, unlike `(d-1)+1` versus `d`. So the `n → n+1` indexing is cheap in this direction, and
+  the bridge needs no `finCongr` transport. State everything in the `n → n+1` form.
+* The pointwise identity `(fun i => ((simplexMap (n+1) v i : ℝ≥0) : ℝ)) = chart n v` holds on
+  `region n` (`Fin.lastCases` + `simplexMap_last`/`simplexMap_castSucc` + `Real.coe_toNNReal`), and
+  `Measure.map_congr` with `ae_restrict_mem` keeps the junk values outside the region out of it.
+
+`Affine.lean` now has a single `sorry`: `chartVolume_map_perm`. Remaining in the project: that one,
+`simplexVolume_map_perm`, `simplexVolumeOn_eq_map`, `toIET_inv` (Basic), `rvStep`, `rv_length`,
+`rvStep_admissible` (Step), and the main theorem. Members in flight: swarm `smvwp4zuj` m3 on
+`rvStep`; swarm `smvwpk8zn` m1 on `chartVolume_map_perm`, m2 on `toIET_inv`. Seven of the eight
+allowed members are used; the eighth is held for R3 (`Path.lean`, Prop. 4.3 and Corollaries 1–4),
+which is the next large packet after M1.
+
+**Packet H landed (swarm `smvwpk8zn`, member m2).** `CombData.toIET_inv` — source 2.4, swapping the
+two orders inverts the exchange — is proved and in `Basic.lean`; the `sorry` is gone. The route:
+`(mkIET1 lam π)⁻¹ = mkIET1 (imageLengths π lam) π.symm` (`mkIET1_inv`, from `mkIETEquiv`'s
+`invFun`, `IET.ext`, `rfl`), `perm (inv P) = (perm P)⁻¹`, and the length-vector identity
+`imageLengths (perm P) (lam ∘ π_bottom⁻¹) = lam ∘ π_top⁻¹`, which is `perm_symm_apply :
+(perm P).symm k = π_bottom (π_top.symm k)`. The helpers (`mkIET1_proof_irrel`, `coe_mkIET1`,
+`sum_imageLengths_one`, `mkIET1_inv`, `mkIET1_congr`, `CombData.perm_symm_apply`) are now in
+`Basic.lean`; `mkIET1_inv` in particular is what R2/R3 will need.
+
+Remaining `sorry`s: `chartVolume_map_perm` (Affine), `simplexVolume_map_perm`,
+`simplexVolumeOn_eq_map` (Basic), `rvStep`, `rv_length`, `rvStep_admissible` (Step), and the main
+theorem — seven in all. Build green, 8717 jobs.
+
+**Packet D landed (swarm `smvwp4zuj`, member m3): `rvStep` is real.** `Step.lean` now has the actual
+Rauzy–Veech step and its admissibility proof; the only `sorry` left in that file is `rv_length`.
+
+* **Convention** (record this): `rvStep P true` keeps `piTop` and inserts the letter `last false`
+  just after `last true` in `piBottom`; `rvStep P false` is the mirror image. `ε = true` is the
+  source's **type 1** (`λ_{α₁} > λ_{α₀}`), consistent with
+  `rvType := if lam (last false) < lam (last true) then true else false`.
+* **Independently verified on the source's `d = 4` example** (blueprint V2): bottom `(A,B,C,D)`,
+  top `(B,D,A,C)`, `λ_D > λ_C` (type `false`); `rvStep exP false` gives top order `(B,D,C,A)` and
+  bottom unchanged — matching the hand computation. So the definition, not just its API, is right.
+* Machinery: `insertEquiv`/`insertFun`/`removeFun` (the insertion of the last letter after the
+  pivot), `pivot P ε`, the defining equations in position and coordinate form, the branch lemmas,
+  `rvStep_inv` (the step commutes with the involution), `pivot_succ_lt` (for admissible data with
+  `2 ≤ n` the pivot is never the last position, so the total/junk extension is never used), and
+  `IsIrreduciblePerm.symm`.
+
+`rvStep_admissible` and `pivot_succ_lt` are axiom-clean. Remaining `sorry`s in the project:
+`chartVolume_map_perm` (Affine), `simplexVolume_map_perm`, `simplexVolumeOn_eq_map` (Basic),
+`rv_length` (Step), and the main theorem — five in all. Build green, 8717 jobs.
+
+**Packet E landed (swarm `smvwpk8zn`, member m1): `chartVolume_map_perm`, and `Affine.lean` is now
+`sorry`-free.** Route: `permMat σ i j = if σ i = j then 1 else 0`; nonneg, column sums 1,
+`permMat σᵀ * permMat σ = 1` hence `det * det = 1` (orthogonality, cleaner than a signed-permutation
+count), so `|det| = 1`; `l ↦ l ∘ σ` is `inducedMap (permMat σ)` in the chart
+(`chart_inducedMap_permMat`); `inducedMap (permMat σ)` maps `region n` **onto** itself, using
+`inducedMap_mem_region` for `σ` and `σ⁻¹`; then `PacketB.volume_image_inducedMap_of_det` with
+`|det| = 1`. Also contributed `continuous_chart`, `continuous_inducedMap`, `inducedMap_one`,
+`inducedMap_comp` — reusable for the a.e. transfer in R6.
+
+**M1 (R4) is closed**: `det_sub_last_col` + `det_linInducedMap` + the unconditional change of
+variables + permutation invariance + the `simplexVolume` bridge, all in `Affine.lean`, axiom-clean.
+Remaining in the project (four): `simplexVolume_map_perm` and `simplexVolumeOn_eq_map` in
+`Basic.lean` (a short assembly from E and F, mine), `rv_length` in `Step.lean` (now a direct
+computation with the real `rvStep`), and the main theorem.
+
+Swarm `smvwpk8zn`: 2 accepted (m3 = F, m2 = H, m1 = E → 3 accepted), still running with no member
+left? (check `ultramath_status`). Seven of the eight allowed members used; the eighth is reserved
+for R3.
+
+**Both swarms ended solved.** `smvwp4zuj`: 4 accepted (A determinant, B change of variables, C a.e.
+membership, D `rvStep`). `smvwpk8zn`: 3 accepted (E permutation invariance, F the `simplexVolume`
+bridge, H `toIET_inv`). Seven members, all accepted, no rejection needed.
+
+**A fourth false auxiliary statement of mine, caught before anyone could prove it:**
+`rv_length` (Step.lean) asserted `∃ λ̂ > 0, λ = V λ̂` from `λ (last (!ε)) < λ (last ε)` alone. That
+is false if some coordinate of `λ` is `0` (a zero cannot be written as a positive combination). The
+statement now carries `hpos : ∀ a, 0 < lam a`, which is what a length vector of an i.e.m has. The
+pattern is consistent: the hypotheses I omit are the ones that carry the mathematical content.
+
+Project state: four `sorry`s — `simplexVolume_map_perm`, `simplexVolumeOn_eq_map` (Basic; short
+assemblies from E and F), `rv_length` (Step; direct computation with the real `rvStep`), and the main
+theorem. `Affine.lean` is `sorry`-free: determinant, change of variables, injectivity/region
+membership, permutation invariance, and the `simplexVolume` bridge, all axiom-clean. Build green,
+8717 jobs.
+
+**Packet P1 landed (swarm `smvwq64va`, member m4): M1 is completely closed.** `simplexVolume_map_perm`
+and `simplexVolumeOn_eq_map` are proved. Since `Basic.lean` precedes `Affine.lean`, the two
+*statements* were moved out of `Basic.lean` (nothing consumed them) and proved in `Affine.lean`.
+The key device, reusable: the coordinatewise coercion `ι : (Fin m → ℝ≥0) → (Fin m → ℝ)` has left
+inverse `c x = fun i => (x i).toNNReal`, so `μ = (μ.map ι).map c` for *every* `μ` — inverting the
+bridge needs no injectivity argument. Also kept: `simplexVolume_succ_eq_map_toNNReal`,
+`measurable_coord_toNNReal` (needed for the a.e. transfer in R6).
+
+**The project now has two `sorry`s: `rv_length` (Step) and the main theorem.** Everything else —
+the copied IET API, `CombData`/`toIET`/`toIET_inv`, `simplexVolumeOn` and its invariance, the chart,
+the induced map, the determinant, the change of variables, the `simplexVolume` bridge, `rvStep` and
+its admissibility, and the a.e. simplex membership — is proved and axiom-clean. Build green, 8717
+jobs, warning-free.
+
+**Packet P3 landed (swarm `smvwq64va`, member m1): `MasurVeech/Path.lean`.** The path API of R3:
+`vertex` (iterated `rvStep`) with `vertex_append`; `name`/`secondary`; `rvStep_last_self`
+(`(P.rvStep e).last e = P.last e`); **Corollary 1** in both forms (`secondary_eq_of_type_ne`,
+`secondary_eq_of_name_ne`, and the path-level `secondary_eq_name_of_name_ne`);
+`Path.Q_nil/cons/append`; `last_true_ne_last_false` and `name_ne_secondary` for admissible data with
+`2 ≤ n`; and `vertexNat` with `vertexNat_eq_vertex_ofFn` for infinite paths.
+
+Two facts to remember for R5/R6: `vertex_append` + `Path.Q_append` make the matrix product compose
+along concatenated paths (needed for the multiplicativity in Lemma 5/6), and `rvStep_last_self` is
+what makes "same type ⟺ same name" work along a path (needed in Lemma 4's induction).
+
+Housekeeping debt: the transplanted member code brings linter warnings (long lines, unused section
+variables) that are not yet silenced; a warning-cleanup pass is owed before the release. Build green,
+8718 jobs.
+
+**Packet P2 landed (swarm `smvwq64va`, member m3): `rv_length` proved. `Step.lean` is sorry-free.**
+The renormalised vector is `λ̂ = λ` off `last ε` and `λ (last ε) - λ (last !ε)` at `last ε`;
+`last ε ≠ last !ε` follows from the strict inequality (`rvMat ε = 1` when they coincide — the same
+degeneracy as the algorithm stopping). Helpers: `rvMat_cast`, `sum_rvMat_mul`,
+`sum_rvMat_row_sec/main`, and **`type_of_mem_cone`**: for `last ε ≠ last !ε`, the type-`ε` region is
+*exactly* the open cone `C(ε)` — which is the input packet P6 needs for the exact nesting identity.
+
+**Project state: exactly one `sorry` left — the main theorem.** Everything else (the copied IET
+API; `CombData`, `toIET`, `toIET_inv`; the simplex and its measure with invariance and independence
+of the labelling; the chart, the induced map, the determinant, the change of variables; `rvStep` with
+its defining equations and admissibility; `rv_length`; the path API and Corollary 1; a.e. simplex
+membership) is proved and axiom-clean. Build green, 8718 jobs.
+
+## README links every declaration to its line on GitHub (this session)
+
+The repository is public at <https://github.com/sgouezel/IETFree>, default branch `main`, and its
+tree is **the contents of `IET2/` at the repository root** — a link to a module is
+`.../blob/main/IETFree/IET.lean#L271`, with no `IET2/` component.  `README.md` now links every
+declaration name it mentions to the line that declares it: 120 line links over 20 files
+(`https://github.com/sgouezel/IETFree/blob/main/<file>#L<n>`), plus the code spans that are a
+declaration applied to arguments (`IET a b`, `mkIET1 lam π h : IET 0 1`, `IsCompType lam π hl mu s a B`,
+`blockPerm π k hkl hln hstab`, `IsCompIrreducibleOn D E u v`, `UniqueErgodic f`, `simplexMap d`,
+`simplexVolume d`, `mkIETFun λ π 0`, `IsRigidByTranslations (mkIET1 lam π h)`).  Formulas (`G.cellLen
+hq = compLenVec G.s q (monoAt G hq)`, `genY * genX`, `listImageLeft ρ s i - listLeftEnd s i`) are left
+as plain code.  The names `mkIETEquiv`, `coe_mkIETEquiv` and `main` also exist as the two statement
+files' holes/placeholders, so the mentions that are *about* those files point at `Challenge.lean` /
+`ChallengeWeak.lean` and every other mention at the library.
+
+Verified mechanically against `main` = `f5b3b09` ("first version", 2026-10-31T18:19Z): for each link,
+the raw file was fetched and the anchored line checked to contain the declaration — 120/120 agree.
+
+The `file:line` mentions in the prose and in the correspondence table had gone stale by a few lines in
+the unused-binder pass and are refreshed: `main` 331→332 (twice), `ae_diophantine` 1011→1013 (twice),
+`compLen_injective` 272→273, `compLen_absolutelyContinuousAt` 198→197, `irreduciblePerm_blockPerm`
+55→56, `exists_word_trivial_on_block` 217→216, `main_theorem_of_blocks` 242→241, `GoodRegion`
+1087→1088, `exists_goodRegion` 1196→1197, `ae_exists_goodRegion` 1213→1214; every other `file:line`
+in the README was already right.  The layout table's "20 449 lines" became 20 475.
+
+No Lean file was touched, so the build is unaffected (`lake build`: 0 warnings, `./Build.sh`:
+`sorryAx: 6`, comparator accepted).  One thing seen in the repository and **not** touched: `main` also
+carries a `tmp/` directory — stale copies of `IET2/…` together with committed `.olean` binaries, which
+looks accidental.
+
+**Packet P6 landed (swarm `smvwqi199`, member m2): `MasurVeech/Nesting.lean`.** The nesting and
+partition of the path cylinders, **exactly as sets**:
+
+* `cone_mul : cone (A * B) = qApply A '' cone B` (no hypotheses) and
+  `cone_rvMat : cone (rvMat ε) = {w | w > 0, w (last !ε) < w (last ε)}` — the converse half of
+  `type_of_mem_cone`.
+* `mem_simplexCyl_append_iff : x ∈ Δ(γ ++ [e]) ↔ x ∈ Δ(γ) ∧ w (last !e) < w (last e)`, with `w` the
+  renormalised vector at the vertex; `IsRenorm.unique` via the **explicit two-sided inverse**
+  `Path.Qinv` of `Path.Q` (no determinant).
+* `simplexCyl_eq_union : Δ(γ) = Δ(γ0) ∪ Δ(γ1) ∪ cylStop`, pairwise disjoint, and
+  `simplexVolumeOn α (cylStop P γ) = 0`; `simplexVolumeOn_simplexCyl_add :
+  μ Δ(γ) = μ Δ(γ0) + μ Δ(γ1)`; `H1_measure` is hypothesis (H1) of blueprint §10.5 verbatim.
+* `2 ≤ n` is needed: at `n = 1` the two children coincide and the stopping set is the whole
+  simplex — consistent with the main theorem's hypothesis.
+
+**This closes the "exact partition" requirement** that the tree argument of §10.5 rests on (it must
+be a set identity, not an a.e. one, because the diameters are compared as sets).
+
+**Packet P5 landed (swarm `smvwqi199`, member m1): `MasurVeech/CylinderVolume.lean` = Lemma 1 of the
+source.** `volume_simplexCyl : simplexVolumeOn α (simplexCyl P γ) =
+(∏ b, (colsumNN (Path.Q P γ) b)⁻¹) * simplexVolumeOn α (simplexOn α)` — the
+`(∏ Q_β)⁻¹` orientation of the source, axiom-clean. By-products now available:
+`CombData.det_Path.Q` (`det (Path.Q P γ) = 1`, by induction from `det rvMat = 1`),
+`Path.Q_nonneg`, `Path.Q_colsum_pos`, `chart_image_region` (`chart m '' region m =
+openRealSimplex m`) and the `co`-coercion injectivity.
+
+With `Nesting.lean` (exact partition + `μ Δ(γ) = μ Δ(γ0) + μ Δ(γ1)`) this closes the volume side of
+R4: Lemma 3 and the mass estimates of Lemmas 4–6 have their inputs. Packets P9 (Lemma 3) and P10
+(Lemma 5) dispatched in swarm `smvwrc3d8`; P4 (Prop. 4.3), P7 (Lemma 4) and P8 (Lemma 2 + nested
+cylinders) still running.
+
+**Packet P4 landed (swarm `smvwq64va`, member m2): Proposition 4.3, with a sharp correction.**
+`MasurVeech/NameInfinite.lean`: `name_infinite (P) (hP : P.Admissible) (γ) (lam) (hpos) (hty)
+(hnxt) (a) : ∃ᶠ k, mn P γ k = a` (and the `vertex P (List.ofFn γ k)` form), axiom-clean.
+
+**The statement without `P.Admissible` is FALSE**, machine-checked in
+`NameInfiniteCounterexample.lean`: `Fin 3`, `piTop = id`, `piBottom = (1 2)` (so `perm = (1 2)`,
+reducible); both `rvStep`s fix the vertex (the pivot is the second-to-last position), so the name `0`
+never occurs; the two lengths run the subtractive Euclidean algorithm on `(1, (√5−1)/2)`, whose
+two-step self-similarity `g² + g = 1` keeps them positive and distinct forever. Admissibility is a
+standing hypothesis of the source's §4, so restoring it is right — but the example shows the
+proposition is genuinely about irreducible data, not about the recursion alone.
+
+Proof (better than the telescoping sketch of my brief): lengths antitone, total drops by the
+secondary length ⟹ a rarely-main letter is rarely secondary and eventually **frozen**; an active
+letter cannot sit *below* a frozen one (the block below is fixed, so each main occurrence shifts the
+frozen letter up); hence the frozen letters occupy the first `|F|` positions of both orders — a
+nonempty proper invariant initial segment, contradicting `IsIrreduciblePerm`.
+
+## `file:line` cells are links too; `formalization.yaml` drops the `IET/` reference (this session)
+
+* The correspondence table's 28 `file:line` cells (in 19 rows) are now hyperlinks of the same form as
+  the declaration names — `` [`Irreducible.lean:30`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Irreducible.lean#L30) ``
+  — with the same refresh of the numbers recorded in the previous entry.  The two *prose*
+  parentheticals (`… `main` (`IETFree/ChallengeWeakSolved.lean:332`) …`, and the same for
+  `main_of_library`) stay plain text: the name immediately before them is already a link to exactly
+  that line.  `README.md` now has 148 line links over 20 files, all re-verified against `main` =
+  `f5b3b09` (each anchor's line fetched and checked): 120 name links + 28 `file:line` links, 0
+  failures.  The sentence introducing the table says so.
+* `formalization.yaml` no longer refers to the earlier, superseded development: the
+  `related_formalizations` block (the `IET/` entry with its sorry counts and `rotation_not_free`) is
+  removed, and so is the mention of `../IET` in the `alignment` note for Lemma 1.2, which now reads
+  "An illustration in the introduction; not part of this development."  The file still parses
+  (`yaml.safe_load`), and the published v0.4 schema has no top-level `required` list and no
+  `related_formalizations` property, so removing the key leaves nothing dangling.
+
+No Lean file was touched; `lake build` (0 warnings), `./Build.sh` (`sorryAx: 6`) and the comparator
+are unaffected.
+
+**The final assembly is started and its logical core is proved (`MasurVeech/Assembly.lean`).**
+
+* `Assembly.existsUnique_of_lengths` — **the last mile**, fully proved: if the length map of an
+  invariant probability measure is injective and every length vector lies in the ray `ℝ • lam`,
+  and length vectors have total mass `1`, and Lebesgue's is `lam`, then there is exactly one
+  invariant probability measure. (Two measures have vectors `c•lam`, `d•lam`; both sum to `1` and
+  `∑lam = 1`, so `c = d = 1`; injectivity finishes.)
+* `Assembly.unitMeas` (`volume.restrict (Ico 0 1)`), its `IsProbabilityMeasure` instance, and
+  **`Assembly.IET.unitMeas_preimage`** — an exchange of `[0,1)` preserves Lebesgue measure
+  (from the copied `Equiv.IsIET.measure_preimage`), plus `invariant_unitMeas`.
+* `Assembly.cellOf`, `Assembly.lambdaOf` — the cell of a letter and the length map
+  `μ ↦ (μ (cell a))_{a}`.
+* `Assembly.masurVeech_of_components` — **the assembly**, fully proved: given the three a.e.
+  statements `hray` (ray criterion), `hsum` (mass one) and `hinj` (injectivity of the length map),
+  the main theorem follows. All axiom-clean.
+
+So the main theorem is now reduced to exactly three a.e. statements plus one pointwise computation
+(`hLeb : lambdaOf unitMeas P lam = lam` on the simplex, which is the cell-partition computation and
+is provable from the copied cut-set API — next job for me). The three a.e. statements are the packets
+in flight: `hray` needs P8 (nested cylinders) and P11 (tower formula); `hsum` needs the cell partition
+(P11); `hinj` needs P11.
+
+**Packet P9 landed (swarm `smvwrc3d8`, member m2): `MasurVeech/ChildVolume.lean` = Lemma 3.**
+`volume_simplexCyl_append (hP) (hn) (γ) (e) : vol Δ(γ++[e]) =
+(colsumNN Q(γ) (last !e) / (colsumNN Q(γ) (last false) + colsumNN Q(γ) (last true))) * vol Δ(γ)` —
+the **secondary** name's column is the one that changes, as in the source; axiom-clean. Plus the
+absolute restatement and the strict ratio.
+
+**Fifth false side-remark of mine caught:** the packet asked for "ratio `≤ 1`, equality iff never
+rewarded"; that is false — both column sums are positive, so the ratio is *strictly* `< 1`
+(`ratio_lt_one`, unconditional). Pattern across the five: an inequality stated without checking its
+degenerate case (column sums, `det ≠ 0`, `Nonempty`, `hpos`, and now positivity of the column sums).
+
+Inputs for Lemmas 4–6 are now all landed: Lemma 1 (`CylinderVolume`), Lemma 3 (`ChildVolume`), the
+exact partition (`Nesting`), the path API (`Path`), Proposition 4.3 (`NameInfinite`), and the
+assembly skeleton (`Assembly`, conditional on `hray`/`hsum`/`hinj`).
+
+## Prose `file:line` links, `Tasks/` dropped from the README and from the zip (this session)
+
+* The two prose parentheticals that name a location — `main` (`IETFree/ChallengeWeakSolved.lean:332`)
+  and `main_of_library` (`IETFree/ChallengeWeakSolved.lean:281`) — are links now, of the same form as
+  the rest.  `README.md` has **150** line links (120 names + 28 `file:line` cells + these 2), all
+  re-verified against `main` = `f5b3b09`: 0 failures.
+* The owner has **removed `Tasks/` from the GitHub repository**, so `README.md` no longer mentions it:
+  the Status paragraph's parenthetical ("`Tasks/` holds the statement files that seeded the AI proof
+  search … `Build.sh` compiles only `Tasks/Match.lean` …") is gone.  Nothing else in the README named
+  the directory.
+* **`IET2.zip` must not contain `Tasks/`** (owner's instruction, standing).  The recipe, run from the
+  repository root, is
+
+  ```
+  cd /workspace/nucleus/work/projects/default/repo && rm -f IET2.zip &&
+  zip -r -q IET2.zip IET2 -x 'IET2/.lake/*' 'IET2/.scratch/*' 'IET2/Tasks/*' '*.olean'
+  ```
+
+  i.e. sources only: `.lake/` (941 MB of clones and build products), `.scratch/` (2.3 GB of logs and
+  the comparator work dir), `*.olean`, and now `Tasks/`.  Current zip: 475 KB, 46 files.  Check with
+  `unzip -Z1 IET2.zip | grep Tasks` (must print nothing) and `unzip -t`.
+
+Two references to `Tasks/` outside the README are **still there**, deliberately untouched: six mentions
+in `formalization.yaml` (`automation.tool_setup`, `fidelity`, `review`, `acknowledgements`) and the
+`Tasks/Match.lean` compile step in `Build.sh` (which would now fail on a fresh clone, since the
+directory is gone).  Both need the owner's word: deleting the yaml sentences is easy, and the
+`Build.sh` step can be dropped or kept for the local tree.
+
+**`hLeb` proved (`Assembly.lambdaOf_lebesgue`).** The length vector of Lebesgue measure is the length
+vector: each cell `[leftEnd l i, upperEnd l i)` lies in `[0,1)` (`leftEnd_nonneg`,
+`upperEnd_le_total` with `∑ lam = 1`) and has Lebesgue measure `upperEnd - leftEnd = lam a`
+(`Real.volume_Ico`, `upperEnd_eq`). Axiom-clean.
+
+**Consequence: `Assembly.masurVeech_of_components` now has exactly three hypotheses** — `hray`,
+`hsum`, `hinj`, all a.e. statements about the length map — and the main theorem is a one-line
+application of it. `Assembly.existsUnique_of_lengths`, `lambdaOf_lebesgue`,
+`IET.unitMeas_preimage`, `invariant_unitMeas` and the assembly are all axiom-clean; build green
+(8724 jobs).
+
+**Packet P10 landed (swarm `smvwrc3d8`, member m1): `MasurVeech/BalancedSet.lean` = Lemma 5, with its
+analytic input isolated.** `enlarge_balanced_set` is proved from `EnlargeInput` (a seven-conjunct
+predicate: a prefix extension `γt` with a mass fraction, a half-mass set `G`, and pointwise
+balance/domination), and `EnlargeInput` is *not* a restatement of Lemma 5 — it is the concrete
+output of Steps 1–3.
+
+Unconditional and reusable infrastructure proved on the way: `colsumNN_append_singleton`
+(`Q_b(γe) = Q_b(γ) + [b = last(!e)] Q_{last e}(γ)`), `colsumNN_mono` along extensions,
+**laminarity** of the cylinders (`isPrefix_or_isPrefix_of_mem_inter`,
+`disjoint_simplexCyl_of_not_isPrefix`, `volume_iUnion_antichain`), `volume_append_mul` (the exact
+child/parent ratio), `volume_simplexCyl_lt_top`, and **`exists_finset_antichain`** — Step 4 of the
+source, the extraction of a finite prefix-antichain from a laminar cover of a set, which is where
+`μΔ(γ) < ⊤` is used.
+
+Follow-up swarm `smvws3lwk` dispatched to discharge `EnlargeInput`: Step 1 (finite choice of exiting
+paths, unblocked), Step 3 (Prop. 4.3 is landed, so the two-case analysis is unblocked), Step 2
+(Lemma 4, P7, in flight — to be taken as an explicit hypothesis if it has not landed).
+
+## `Tasks/` is gone from the tree; `Build.sh` and the module docstrings are clean of it (this session)
+
+The owner deleted `Tasks/` (14 files, 224 KB — `Match.lean`, `README.md` and the twelve statement files
+of the proof-search runs) from the repository and from this tree.  Nothing depends on it any more.
+
+* `Build.sh`: the `Tasks/Match.lean` step (compile, `FAIL` branch, `ok` line — nine lines) is removed.
+  The script is now the 34 modules + `IETFree.lean` + the comparator check + the sorry count +
+  `--strict`.  Green on the final tree: **34 `ok` lines, 0 warnings**, `sorryAx: 6` (3 `Challenge` +
+  3 `ChallengeWeak`, library 0), comparator check OK.  `lake build` was re-run after the docstring
+  edits below: 8742 jobs, exit 0, 0 warnings.
+* `formalization.yaml`: the last five `Tasks` passages are rewritten — `automation.tool_setup` (both
+  sentences of the first method), the second method's `tool_setup` and `prompting_notes`, `review.notes`
+  and `acknowledgements`.  `grep -c Tasks formalization.yaml` is 0 and the file parses.
+* **The module docstrings pointed at `Tasks/…` too**, and are cleaned; the provenance (the *run* names)
+  is kept and the dead paths dropped: `Centralizer.lean` ×3 (the `α = Fin 2` remark, the "Acceptance
+  criteria" bullet of the plan section, and the `commensurable-commute` sentence),
+  `SingularityBound.lean` ×1 (`singularity-bound-2`, whose paragraph also had a stray two-space
+  continuation, now normalised) and `TranslationVector.lean` ×1 (`translation-vector-bound`).
+  Docstring-only edits: no statement, proof or declaration position changed, and none of those three
+  files is the target of a README link, so no link drifts.  `grep -rn Tasks` over the tree now hits only
+  `NOTES.md` (this history) and `.scratch/`.
+* `README.md` had already been cleaned and `IET2.zip` already excluded `Tasks/`, so both needed no
+  change; the exclusion stays in the recipe (it is now a no-op).
+
+## MasurVeech session: Lemma 6 landed, the main statement is FALSE as stated and is repaired (this session)
+
+**The headline finding.** `Main.masurVeech_ae_unique_invariant` was false as written.  An exchange
+`P.toIET lam` is the identity off `[0,1)` (`mkIETFun_of_notMem`), so every probability measure on
+`[0,1)ᶜ` is invariant: `δ₂` is invariant and is not Lebesgue.  Hence
+`∃! μ : ProbabilityMeasure ℝ, Invariant μ (P.toIET lam)` fails at **every** `lam ∈ simplexOn α`, not
+merely on a null set.  Machine-checked in the new module `MasurVeech/MasurVeech/MainCounterexample.lean`
+(`MainCounterexample.not_existsUnique`, axioms `[propext, Classical.choice, Quot.sound]`).
+
+*Repair* (the source's own setting — an exchange *of the interval*): the quantifier is restricted to
+invariant probability measures with `μ (Ico 0 1) = 1`.  `Main.lean`'s statement now carries that
+conjunct; `Assembly.existsUnique_of_lengths` and `Assembly.masurVeech_of_components` were restated
+accordingly.
+
+**`hsum` is no longer a hypothesis.** With the mass condition, the total mass of the length vector is
+a theorem: the bottom cells `cellOf P lam a` partition `Ico 0 1`, so `∑ a, lambdaOf μ P lam a = 1`
+(`Assembly.sum_lambdaOf`).  New lemmas in `Assembly.lean`: `leftEnd_mono`,
+`leftEnd_succ_eq_upperEnd`, `upperEnd_le_leftEnd`, `mem_cellOf_idx`, `cellOf_subset`,
+`disjoint_cellOf`, `iUnion_cellOf`, `sum_lambdaOf`, `lebesgue_Ico`.  `masurVeech_of_components` now
+takes only **`hray`** and **`hinj`**, both carrying `μ (Ico 0 1) = 1`.
+
+**Landed this session** (all `lake build` green, 8729 jobs, `#print axioms` clean, in `Check.lean`):
+
+| module | content |
+|---|---|
+| `BalancedCover.lean` (`PacketP6bis`, swarm `smvwremj7` m1) | **Lemma 6**: `exists_balanced_cover` / `_sep` / **`_uniform`** (one `C` for all nodes), from `Lemma5Shape` / `Lemma5ShapeUniform` |
+| `NestedCylinder.lean` (`NestedCylinder`, swarm `smvwr69sq` m1) | cylinder tree (H1)+(H2), nested-or-disjoint dichotomy, child-mass identity, Claim 2, `nested_cylinder_tendsto` (conditional on `hhits`) |
+| `Lemma2Diameter.lean` (`Lemma2Diameter`, same) | barycentric contraction `bary_contraction`, sharpness, and the machine-checked refutation of the printed `2(1-dδ)` |
+| `MainCounterexample.lean` | the false statement above |
+
+**Interface repair at landing.** `Lemma5Shape` / `Lemma5ShapeUniform` as submitted had the conjunct
+`A_l ⊆ A` for a general ambient set `A`.  That is *not* derivable from the landed Lemma 5, and not
+implied by the `A = univ` case either (`A₀ = {1}`, `A = {1,2}`, `B = {1,3}` gives `A₀ = A ∩ B` with
+both inclusions strict).  The iteration only ever instantiates the hypothesis at `A = univ`
+(`hL5 γ A Finset.univ …`), so both shapes were restated with the ambient set fixed to `univ` and the
+subset conjunct dropped; the proofs were unchanged.
+
+**Two source slips confirmed by members, machine-checked counterexamples.** (i) §10.5 Claim 1 as
+printed is invalid: from `Δ(γ_{n+1}) ∩ G(γ_n) ≠ ∅` one cannot conclude `λ ∈ G(γ_n)` when a family
+member is longer than `n+1`; the lemma is nevertheless true, by the stopping-time/level-decomposition
+argument (conditional Borel–Cantelli without `condExp`) — swarm `smvwr69sq` m1 was sent back to
+remove `hhits` and `hgood` and prove it.  (ii) §10.1's `Σ_α |θ_{αβ} - θ_{αβ'}| ≤ 2(1-dδ)` gives no
+contraction (`2(1-dδ) > 1` for small `δ`); the factor 2 is unnecessary and
+`diam ≤ (1 - dδ) · diam` holds, which is `Lemma2Diameter.bary_contraction`.
+
+**New swarm `smvwsf0m0`** (3 members, 420 min) on the pieces nobody had: (A) Cor. 4 uniformly over
+the diagram (a positive `Q`-path from every vertex — the `C₁` of Lemma 2 and of Lemma 5's Step 1),
+(B) Lemma 2's mass half plus the `simp`lex/vertex identification for its diameter half given the
+`B`-matrix hypothesis, (C) "a finite measure on `ℝ` is determined by a refining sequence of
+partitions with mesh → 0" (the `hinj` input).
+
+**Still open.** `hray` (needs the towers, `smvwrcl9u`; then Lemma 2 + nested cylinders + R6.2/R6.4),
+`hinj` (needs the towers + the refining-partition lemma), `EnlargeInput` (`smvws3lwk`, needs Lemma 4
+from `smvwr69sq` m2), and the `sorry` in `Main.lean`.
+
+### Addendum (same session): Lemma 4 and the first-return layer landed
+
+* **`MasurVeech/MasurVeech/Lemma4.lean`** (swarm `smvwr69sq` m2, accepted) — **Lemma 4**:
+  `CombData.lemma4_source`, `lemma4`, with `Qhit` (the source's `Q′_α(T)`, well defined by
+  `hit_unique`), the column recursion `qcol_append`, Lemma 3 as `volume_append_singleton`, and
+  `ratio_add`.  Induction on the *truncation depth* `fh` instead of the source's `n̄`, then
+  continuity from below; no measurability of a cylinder is used.  At landing the vendored copy of
+  packets P5/P6 was deleted and replaced by `import MasurVeech.CylinderVolume` / `Nesting`: the
+  member's parts compile unchanged against the landed modules.
+* **`MasurVeech/MasurVeech/FirstReturn.lean`** (swarm `smvwrcl9u` m1) — **R0.3–R0.4, Part 1 and
+  §10.4 at level one**: first return time in `{1,2}` (`ret_mem`, `ret_min`), the return map is
+  `mkIETFun` for `rvStep _ false` (`firstReturn_eq`, `firstReturn_eq_rvStep`), the `mkIETFun ↔
+  rvStep` bridge (`rvStep_toComb_false_perm`, `lam_eq_rvMat_mul`), the tower decomposition
+  (`tower_decomp`, `tower_decomp_iUnion`), equal floor masses (`measure_image_iterate`), Kac
+  (`kac_two_floors`) and the level-one formula with multiplicities `multOne = rvMat false`.  The
+  member was **sent back** (not accepted as the packet answer) for the two real gaps: the *level-n*
+  formula `μ (cell α) = ∑ β, (Path.Q P γ α β : ℝ) μ (level-n cell β)`, and the inverse Rauzy type
+  (the induced interval is a *suffix* there, so it is not the same computation).
+* New swarm **`smvwsufxd`** on the bridge `PacketP6bis.Lemma5ShapeUniform` ⟸
+  `PacketP10.enlarge_balanced_set` + a uniform `EnlargeInput`: the two landed layers disagree on the
+  scalar type of the column sums (real `colsum` vs `PacketP10.colsumNN`), on the domination form
+  (`∃ b' ∈ A₀` vs `≤ A₀.sup`), and on the disjointness form (antichain vs `Disjoint`).  Once the
+  `EnlargeInput` packet lands, this makes Lemma 6 unconditional.
+
+### Addendum 2: TARGET C landed; and a gap found in the blueprint's R7.3 (`hinj`)
+
+* **`MasurVeech/MasurVeech/RefiningPartition.lean`** (swarm `smvwsf0m0` m2, accepted) — a finite
+  measure on `ℝ` is determined by agreeing on the atoms of a refining sequence of partitions with
+  mesh → 0: `measure_eq_of_measurableSet_subset`, `measure_restrict_eq_of_refining_partitions`,
+  `measure_eq_of_refining_partitions`, plus `_diam` and `_Ico` variants.  No shape hypothesis on the
+  atoms; inner regularity by compact sets upgrades closed `F` to all Borel `B ⊆ I`.  The mesh
+  hypothesis is in *pairwise* form because Mathlib's `Metric.diam` is `0` for unbounded sets, so a
+  `diam`-based mesh would be vacuous.  This is the measure-theoretic half of `hinj`.
+* **Gap found while reading R7.3.**  The other half of `hinj` needs the *mesh of the level-`n` floor
+  partition* to tend to `0`, i.e. `max_β λ^{(n)}_β → 0` a.e. (the source's Cor. 2).  That is **not**
+  the same statement as `diam Δ(γ_n) → 0`, which is what §10.5 proves, and `blueprint.md` R7.3 reads
+  as though it were.  It does follow from it, by a short argument: if `(λ^{(n)})_{β} ≥ ε` along a
+  subsequence then `ν_n := Q_n(λ^{(n)} + t e_β)` normalised lies in the same cylinder `Δ(γ_n)` and
+  is at distance `≥ t / C` from `λ` because the diagonal entries of `Q_n` are `≥ 1`
+  (`PacketP10.one_le_diag_Path.Q`), contradicting `diam Δ(γ_n) → 0`.  So the implication
+  `diam Δ(γ_n) → 0 ⟹ max_β λ^{(n)}_β → 0` is a **separate small packet to formalise**, not a
+  consequence to be quoted; it is on the critical path of `hinj` and is not in any running packet.
+
+### Addendum 3: Lemma 2 in the real setting landed; Cor. 4 is now the critical risk
+
+* **`MasurVeech/MasurVeech/Lemma2Real.lean`** (swarm `smvwsf0m0` m3, accepted) — **Lemma 2**, both
+  halves, in the real setting: `volume_simplexCyl_append_ge` (mass, constant `((n C₁ C)⁻¹)^n`),
+  `diam_simplexCyl_append_le` (diameter, factor `1 - (C₁C)⁻¹`) and `lemma2_append` with a *single*
+  constant serving both (`cMass_le_cDiam`), plus `cMass_pos`.  The hard geometry is done and
+  reusable: `eq_sum_smul_vtx` (a point of a cylinder is a convex combination of the vertices
+  `vtx M b = Q e_b / Q_β`), `vtx_mul` (child vertex = `θ`-image of the parent's, `θ = Q_α B_{αβ}/Q'_β`),
+  `le_theta` (`θ ≥ 1/(n C₁ C)`), `vtxNN_mem_closure` (vertices are limits of cylinder points, via an
+  explicit sequence), `dist_co_co`, `isBounded_simplexCyl`.  Hypotheses are the source's: `B` is the
+  matrix of an actual `δ` from the current vertex, `1 ≤ B ≤ C₁` entrywise, `Q(γ)` `C`-balanced.
+* **`Metric.diam` is `ℝ`-valued in this Mathlib** (`@Metric.diam : Set α → ℝ`), so the `CylTree`
+  instance for R6.2 still needs a `Real.toNNReal` transfer (monotonicity of `toNNReal`, with
+  `1 - c ≥ 0`).  That plus the `CylTree` record is all that stands between `lemma2_append` and R6.2.
+* **Cor. 4 is the critical risk.** R6.2's constant `c` is a single number for the whole tree, so the
+  `C₁` of Lemma 2 must be uniform over the vertices of the diagram, i.e. Cor. 4 has to be proved with
+  a bound depending only on `n`.  A first attempt (`smvwsf0m0` m1) reached ~85% of its step budget
+  with no report; a second, sharper attempt was started as swarm `smvwt8bkd` with the support
+  recursion (`Q'_{ab} = Q_{ab} + [b = name]·Q_{a,secondary}` from `Path.Q_append` + `rvMat = 1 + E`)
+  as the route, Prop. 4.3 (`PacketP4.name_infinite`) as the source of "every name occurs infinitely
+  often", and the explicit instruction not to substitute a column-sum statement for the entrywise
+  one.  If Cor. 4 fails, R6.2 and hence `hray` cannot be assembled as planned, and the fallback is a
+  balanced-node-specific version (a fixed-length path making `Q` entrywise positive, using the balance
+  constant `C` from Lemma 6) — that is a legitimate weaker statement for our purposes and should be
+  tried next in that case.
+
+## The build section's file names are links too (this session)
+
+`README.md`'s "Layout and build" section named 34 files without linking them: the path column of the
+layout table, and `lakefile.toml`, `lake-manifest.json`, `lean-toolchain`, `IETFree/`, `IETFree.lean`,
+`Build.sh` and `NOTES.md` in its prose.  They are links now, to
+`https://github.com/sgouezel/IETFree/blob/main/<path>` for a file and `.../tree/main/<path>` for a
+directory (the `IETFree/` directory and the `IETFree/*.lean` glob).  All 34 were checked against the
+repository's tree listing at `main` — `blob` for files, `tree` for the directory — 34/34 resolve.  The
+repeats of `IETFree/` and `IETFree.lean` in the *contents* column of the first row are left as plain
+code, so no row links the same target twice, and nothing inside a fenced code block was touched
+(the commands `lake build`, `./Build.sh`, `Comparator/run.sh` stay plain).
+
+`README.md` now carries 193 links: 150 to a declaration's line, 34 to a file, 3 external, 4 relative
+(`NOTES.md`, `LICENSE`, `Comparator/README.md`) and 2 internal anchors.

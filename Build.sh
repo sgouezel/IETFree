@@ -51,14 +51,6 @@ if grep -q 'error' "$TMPDIR/IETFree.log"; then
 fi
 echo "ok   IETFree.lean"
 
-# the statement files of the discovery runs, and the guard that they match the library
-LEAN_PATH="$PWD:$LEAN_PATH" lean "${LEANOPTS[@]}" -o "$TMPDIR/Match.olean" Tasks/Match.lean 2>&1 \
-  | tee "$TMPDIR/Match.log" | grep -Ev '^$' || true
-if grep -q 'error' "$TMPDIR/Match.log"; then
-  echo "FAIL Tasks/Match.lean"; grep 'error' "$TMPDIR/Match.log"; exit 1
-fi
-echo "ok   Tasks/Match.lean"
-
 echo
 echo "=== the comparator pair (Comparator/Check.lean) ==="
 if ! LEAN_PATH="$PWD:$LEAN_PATH" lean --run Comparator/Check.lean; then

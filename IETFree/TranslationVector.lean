@@ -18,9 +18,9 @@ interval is
 
 an integer combination of the lengths whose coefficients all lie in `{-1, 0, 1}`.  This is the base
 case of the "translation-vector bound" used in the proof of the paper's Theorem 2.6: after composing
-words, coefficients grow at most like the word length (`Tasks/translation_vector_bound.lean`, run
-`translation-vector-bound`), which turns the Diophantine lower bound into `C / |w| ^ c ≤ ℓ` for the
-length `ℓ` of a nontrivial translation interval of `w(f, g)`.
+words, coefficients grow at most like the word length (run `translation-vector-bound`), which turns
+the Diophantine lower bound into `C / |w| ^ c ≤ ℓ` for the length `ℓ` of a nontrivial translation
+interval of `w(f, g)`.
 
 The generator-level statement handed to the discovery run is the abstract form: *if every
   displacement
