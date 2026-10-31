@@ -1,0 +1,8 @@
+{
+  "challenge_module": "ChallengeWeak",
+  "solution_module": "IETFree.ChallengeWeakSolved",
+  "theorem_names": ["coe_mkIETEquiv", "main"],
+  "definition_names": ["mkIETEquiv"],
+  "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
+  "enable_nanoda": false
+}
