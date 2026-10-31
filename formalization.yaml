@@ -79,16 +79,6 @@ sources:
       The two theorems the paper cites, in the paragraph after Definition 2.1 and in the proof of
       Proposition 2.4. They are the `Prop`s `MasurVeech` and `VeechRigidity` of `IETFree/Irreducible.lean`.
 
-related_formalizations:
-  - id: "IET/ (earlier, superseded development, in the same working repository as this directory)"
-    relationship: "supersedes"
-    note: >-
-      An earlier and incomplete attempt at the same paper, still carrying sorries (its
-      `Statements.lean` has 8 and its `Section3.lean` 4). This development replaces it: everything it
-      proved is reproved here with an explicit exchange (`mkIET1`) rather than an existence statement,
-      and the main theorem is closed. It does contain `rotation_not_free`, the paper's Lemma 1.2,
-      which is not part of this development.
-
 classification:
   arxiv:
     - "math.DS"
@@ -302,8 +292,7 @@ alignment:
       module: "—"
       status: "not-formalized"
       note: >-
-        An illustration in the introduction. The superseded development in `../IET` had it as
-        `rotation_not_free`.
+        An illustration in the introduction; not part of this development.
     - source: "Definition 2.1 (uniquely ergodic)"
       lean: "UniqueErgodic"
       module: "IETFree/Irreducible.lean"
