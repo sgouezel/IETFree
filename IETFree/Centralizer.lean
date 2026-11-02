@@ -148,8 +148,8 @@ following: `P2 → P3 → P4` (done) → `§D3 → §D4 → §D5` (done) → com
 -/
 
 /-! ## §1. P2 — powers of a cyclically reduced word — **PROVED**
-  (`FreeGroup.isReduced_flatten_replicate`,
-`FreeGroup.length_flatten_replicate`, `FreeGroup.toWord_mk_pow`)
+(`FreeGroup.length_flatten_replicate`); the reducedness and word-form lemmas of the plan below are
+not needed by the main theorem and were removed when the library was pruned to it
 
 **Statement.** Let `W : List (α × Bool)` be reduced, cyclically reduced and nonempty.  Then for
 `n ≥ 1`, `(List.replicate n W).flatten` is reduced and has length `n * W.length`.
@@ -180,7 +180,8 @@ nonempty (`k = 1`).  Hence it has a maximum `k₀` and a root `q₀` with `g = q
 `reduceCyclically L ≠ []` for `mk L ≠ 1`.
 -/
 
-/-! ## §3. P4 — commutation in a free monoid — **PROVED** (`List.commute_eq_replicate`)
+/-! ## §3. P4 — commutation in a free monoid — **PROVED** (`List.commute_eq_replicate`; the formal
+proof is not needed by the main theorem and was removed when the library was pruned to it)
 
 **Statement.** For nonempty `X Y : List α`, `X ++ Y = Y ++ X` implies that there are `Z : List α`,
 `m n : ℕ` with `m ≠ 0`, `n ≠ 0`, `X = (replicate m Z).flatten`, `Y = (replicate n Z).flatten`.
@@ -402,11 +403,6 @@ namespace FreeGroup
 
 variable {α : Type*}
 
-/-- **P2 (reducedness).** A power of a nonempty cyclically reduced word is reduced. -/
-theorem isReduced_flatten_replicate {W : List (α × Bool)} (h : IsCyclicallyReduced W) (n : ℕ) :
-    IsReduced ((List.replicate n W).flatten) :=
-  (h.flatten_replicate n).isReduced
-
 /-- **P2 (length).** Its length is `n * W.length`. -/
 theorem length_flatten_replicate (W : List (α × Bool)) (n : ℕ) :
     ((List.replicate n W).flatten).length = n * W.length := by
@@ -415,19 +411,6 @@ theorem length_flatten_replicate (W : List (α × Bool)) (n : ℕ) :
   | succ m ih =>
     rw [List.replicate_succ', List.flatten_concat, List.length_append, ih]
     ring
-
-/-- **P2 (`toWord`).** The reduced word of `(mk W) ^ n` is the flattened `n`-fold repetition of
-`W`. -/
-theorem toWord_mk_pow [DecidableEq α] {W : List (α × Bool)} (h : IsCyclicallyReduced W) (n : ℕ) :
-    ((mk W) ^ n).toWord = (List.replicate n W).flatten := by
-  have hW : (mk W).toWord = W := by rw [toWord_mk, h.isReduced.reduce_eq]
-  induction n with
-  | zero => simp
-  | succ m ih =>
-    have hflat : (List.replicate (m + 1) W).flatten = (List.replicate m W).flatten ++ W := by
-      rw [List.replicate_succ', List.flatten_concat]
-    rw [pow_succ, toWord_mul, ih, hW, ← hflat]
-    exact IsReduced.reduce_eq (isReduced_flatten_replicate h (m + 1))
 
 /-! ## Part A: the root bound (P3) -/
 
@@ -461,125 +444,13 @@ theorem le_norm_of_pow_eq [DecidableEq α] {g q : FreeGroup α} {k : ℕ} (hk : 
 
 end FreeGroup
 
-/-! ## Part B: commutation in a free monoid (P4) -/
+/-! ## Parts B and C of the plan: not in the tree
 
-/-- **P4 (auxiliary, induction on the total length).** Two nonempty commuting words are powers of a
-common word. -/
-theorem List.commute_eq_replicate_aux (N : ℕ) :
-    ∀ {α : Type*} {X Y : List α}, X.length + Y.length ≤ N → X ≠ [] → X ++ Y = Y ++ X →
-      ∃ Z : List α, Z ≠ [] ∧ ∃ m n : ℕ, m ≠ 0 ∧
-        X = (List.replicate m Z).flatten ∧ Y = (List.replicate n Z).flatten := by
-  induction N with
-  | zero =>
-    intro α X Y hN hX _
-    have hzero : X.length = 0 := by omega
-    exact absurd (List.length_eq_zero_iff.mp hzero) hX
-  | succ N ih =>
-    intro α X Y hN hX h
-    rcases eq_or_ne Y [] with rfl | hY
-    · exact ⟨X, hX, 1, 0, one_ne_zero, by simp, by simp⟩
-    rcases le_total X.length Y.length with hle | hle
-    · -- `X` is a prefix of `Y`
-      have htake : Y.take X.length = X := by
-        have h1 : (X ++ Y).take X.length = X := List.take_left
-        rw [h, List.take_append_of_le_length hle] at h1
-        exact h1
-      have hYeq : Y = X ++ Y.drop X.length := by
-        conv_lhs => rw [← List.take_append_drop X.length Y]
-        rw [htake]
-      have hcancel : X ++ Y.drop X.length = Y.drop X.length ++ X := by
-        have h1 : X ++ (X ++ Y.drop X.length) = (X ++ Y.drop X.length) ++ X := by
-          rw [← hYeq]; exact h
-        exact List.append_cancel_left (h1.trans (List.append_assoc X (Y.drop X.length) X))
-      have hshorter : X.length + (Y.drop X.length).length ≤ N := by
-        have h1 : (Y.drop X.length).length = Y.length - X.length := List.length_drop
-        have h2 : 0 < X.length := List.length_pos_of_ne_nil hX
-        omega
-      obtain ⟨Z, hZ, m, n, hm, hXZ, hYZ⟩ := ih hshorter hX hcancel
-      refine ⟨Z, hZ, m, m + n, hm, hXZ, ?_⟩
-      rw [hYeq, hYZ, hXZ, List.replicate_add, List.flatten_append]
-    · -- `Y` is a prefix of `X`
-      have htake : X.take Y.length = Y := by
-        have h1 : (Y ++ X).take Y.length = Y := List.take_left
-        rw [← h, List.take_append_of_le_length hle] at h1
-        exact h1
-      have hXeq : X = Y ++ X.drop Y.length := by
-        conv_lhs => rw [← List.take_append_drop Y.length X]
-        rw [htake]
-      have hcancel : Y ++ X.drop Y.length = X.drop Y.length ++ Y := by
-        have h1 : Y ++ (Y ++ X.drop Y.length) = (Y ++ X.drop Y.length) ++ Y := by
-          rw [← hXeq]; exact h.symm
-        exact List.append_cancel_left (h1.trans (List.append_assoc Y (X.drop Y.length) Y))
-      have hshorter : Y.length + (X.drop Y.length).length ≤ N := by
-        have h1 : (X.drop Y.length).length = X.length - Y.length := List.length_drop
-        have h2 : 0 < Y.length := List.length_pos_of_ne_nil hY
-        omega
-      obtain ⟨Z, hZ, m, n, hm, hYZ, hXZ⟩ := ih hshorter hY hcancel
-      refine ⟨Z, hZ, m + n, m, by omega, ?_, hYZ⟩
-      rw [hXeq, hXZ, hYZ, List.replicate_add, List.flatten_append]
-
-/-- **P4.** Two nonempty commuting words in a free monoid are powers of a common word. -/
-theorem List.commute_eq_replicate {α : Type*} {X Y : List α} (hX : X ≠ [])
-    (h : X ++ Y = Y ++ X) :
-    ∃ Z : List α, Z ≠ [] ∧ ∃ m n : ℕ, m ≠ 0 ∧
-      X = (List.replicate m Z).flatten ∧ Y = (List.replicate n Z).flatten :=
-  List.commute_eq_replicate_aux (X.length + Y.length) le_rfl hX h
-
-/-! ## Part C: preparatory lemmas for P5 (cyclic permutations)
-
-P5b is LS Prop. 2.14, proved by induction on the conjugating word with a single-letter case
-  analysis.
-Two of its ingredients are cheap and are proved here; the third, the one-step rotation lemma, is
-stated in the blueprint (§4) with its plan but is **not** yet proved — see the note at the end of
-  this section.
+The commutation lemma of part B (`List.commute_eq_replicate`) and the two cheap ingredients of
+part C (`FreeGroup.invLetter`, `FreeGroup.rotate_cyclically_reduced`) are not needed by the main
+theorem and were removed when the library was pruned to it; part D below is the route that is
+actually used.
 -/
-
-namespace FreeGroup
-
-variable {α : Type*}
-
-/-- The inverse of a single letter. -/
-def invLetter (a : α × Bool) : α × Bool := (a.1, !a.2)
-
-/-- **P5, doubled-word form.** A word is cyclically reduced exactly when its double is reduced: the
-two copies test the ordinary reducedness and the wrap-around condition at once. -/
-theorem isCyclicallyReduced_iff_isReduced_append_self {L : List (α × Bool)} :
-    IsCyclicallyReduced L ↔ IsReduced (L ++ L) := by
-  simp only [isCyclicallyReduced_iff, IsReduced, List.isChain_append]
-  constructor
-  · rintro ⟨h1, h2⟩
-    refine ⟨h1, h1, ?_⟩
-    rcases eq_or_ne L [] with rfl | hL <;> simp_all
-  · rintro ⟨h1, -, h3⟩
-    refine ⟨h1, ?_⟩
-    rcases eq_or_ne L [] with rfl | hL <;> simp_all
-
-/-- **P5, one-step rotation.** A cyclically reduced word stays cyclically reduced when its first
-letter is moved to the end.  Both sides say that no two cyclically adjacent letters cancel; the
-proof unrolls `isCyclicallyReduced_iff` on both sides and splits off the first letter of the tail.
-(This is the missing ingredient of P5b's induction, proved by the run `cyclically-reduced-rotate`.)
--/
-theorem rotate_cyclically_reduced {l : List (α × Bool)} {a : α × Bool} :
-    IsCyclicallyReduced (a :: l) ↔ IsCyclicallyReduced (l ++ [a]) := by
-  match l with
-  | [] => simp [IsCyclicallyReduced]
-  | b :: l' =>
-    rw [isCyclicallyReduced_iff, isCyclicallyReduced_iff]
-    have hL : IsReduced (a :: b :: l') ↔
-        IsReduced (b :: l') ∧ (a.1 = b.1 → a.2 = b.2) := by
-      change ([a] ++ (b :: l')).IsChain (fun a b => a.1 = b.1 → a.2 = b.2) ↔ _
-      rw [List.isChain_append]
-      simp [IsReduced]
-    have hM : IsReduced ((b :: l') ++ [a]) ↔
-        IsReduced (b :: l') ∧ (∀ x ∈ (b :: l').getLast?, x.1 = a.1 → x.2 = a.2) := by
-      change ((b :: l') ++ [a]).IsChain (fun a b => a.1 = b.1 → a.2 = b.2) ↔ _
-      rw [List.isChain_append]
-      simp [IsReduced]
-    rw [hL, hM]
-    simp only [List.getLast?_cons_cons, List.getLast?_append_cons]
-    grind
-
-end FreeGroup
 
 /-! ## Part D: the route actually taken — free groups, norms, and commensurability
 

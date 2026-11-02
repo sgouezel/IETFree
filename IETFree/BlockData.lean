@@ -29,8 +29,8 @@ whole parameter space:
 * `BlockGoodAt`, `ae_BlockGoodPt`: the same at a point of the region, in the form the pointwise
   assembly consumes;
 * `ae_block_good` and `exists_ae_block_good`: a countable cover of the good set by regions
-  (`exists_countable_goodRegion_cover`, `ae_exists_of_countable` and `paramMeasure`, which live in
-  `IETFree.BlockEndpoints`), together with the a.e. statement over all of them.
+  (`exists_countable_goodRegion_cover`, in `IETFree.BlockEndpoints`), together with the a.e.
+  statement over all of them.
 
 The design point is that every block statement is *pointwise*: a `GoodRegion` supplies the strict
 monotonicity of its list only on the open set `O`, so there is no global
@@ -39,8 +39,6 @@ composition at a point is `G.cellLen hq` (which is `compLenVec G.s q (monoAt G h
 length vector is `G.blockLam hq k hkl hln`; both live in `IETFree.BlockEndpoints`.
 -/
 
-set_option linter.unusedSectionVars false
-set_option linter.style.haveILetI false
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -214,7 +212,7 @@ theorem ae_block_of_ae_simplexVolume (G : GoodRegion d e π σ q₀) {k l : ℕ}
     (hQ : ∀ᵐ ν ∂(simplexVolume (l - k)), Q ν) :
     ∀ᵐ q ∂(volume.restrict G.O),
       Q (simplexMap (l - k) (blockFree k l (simplexMap G.n (compLenAffine G.s q)))) := by
-  haveI : NeZero G.n := neZeroN G
+  have : NeZero G.n := neZeroN G
   refine ae_of_ae_of_absolutelyContinuous
     (φ := fun q : PReal d e => simplexMap G.n (compLenAffine G.s q))
     (P := fun ν => Q (simplexMap (l - k) (blockFree k l ν))) ?_
@@ -272,8 +270,8 @@ theorem blockLamAt_eq (G : GoodRegion d e π σ q₀) {q : PReal d e} (hq : q �
     {k l : ℕ} (hkl : k < l) (hln : l ≤ G.n) :
     G.blockLam hq k hkl hln
       = simplexMap (l - k) (blockFree k l (simplexMap G.n (compLenAffine G.s q))) := by
-  haveI : NeZero G.n := neZeroN G
-  haveI : NeZero (l - k) := ⟨by omega⟩
+  have : NeZero G.n := neZeroN G
+  have : NeZero (l - k) := ⟨by omega⟩
   have hx : compLenAffine G.s q ∈ simplexRegion G.n := compLenAffine_mem_regionAt G hq
   have hcv : G.cellLen hq = simplexMap G.n (compLenAffine G.s q) :=
     compLenVec_eq_simplexMap G hq

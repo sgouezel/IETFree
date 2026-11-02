@@ -35,9 +35,6 @@ form (`evalWordEquiv`, with the bridge `evalWord_toEquiv`) is in `IETFree/Challe
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
 
--- `simp only [Fin.val_mk]` is needed in the pure `Fin`-index goals below (removing it breaks the
--- following `omega`/`rw`), but this version of the `unusedSimpArgs` linter reports it as unused.
-set_option linter.unusedSimpArgs false
 
 /-- The affine rescaling of `[u, v)` onto `[0, 1)`. -/
 noncomputable def rescaleMap (u v x : ℝ) : ℝ := (x - u) / (v - u)
@@ -86,8 +83,7 @@ theorem mkIET1_apply {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.
     (hl : (∑ i, lam i) = 1) {x : ℝ} (hx : x ∈ Set.Ico (0 : ℝ) (∑ i, (lam i : ℝ))) :
     mkIET1 lam π hl x
       = x + (imageLeft π lam (idx lam x hx.1) - leftEnd lam (idx lam x hx.1)) := by
-  have hlink : (mkIET1 lam π hl) x = mkIETFun lam π 0 x := rfl
-  rw [hlink, mkIETFun_of_mem _ _ 0 (by simpa using hx), translationVector]
+  rw [mkIET1_eq_mkIETFun, mkIETFun_of_mem _ _ 0 (by simpa using hx), translationVector]
   simp only [sub_zero]
 
 /-- **An invariant initial segment of the permutation gives an invariant initial interval.** -/
@@ -194,31 +190,6 @@ theorem irreduciblePerm_of_no_invariant_cut {n : ℕ} [NeZero n] {lam : Fin n �
     rw [happ] at *
     linarith
 
-/-- **The same criterion, on a datum.**  An exchange presented by a datum has an irreducible
-permutation as soon as no initial interval `[0, leftEnd D.lam k)` with `k ≠ 0` is mapped into itself
-— the statement is made on the datum, so the marked points are not forgotten. -/
-theorem IETDatum.irreduciblePerm_of_no_invariant_cut {n : ℕ} [NeZero n] (D : IETDatum n)
-    (h : ∀ k : Fin n, k ≠ 0 →
-      ¬ ∀ x ∈ Set.Ico (0 : ℝ) 1, x < leftEnd D.lam k → D.toFun x < leftEnd D.lam k) :
-    IsIrreduciblePerm D.π := by
-  have hlNN : (∑ i, D.lam i) = 1 := by
-    rw [← NNReal.coe_inj, NNReal.coe_sum, D.sum_lam, NNReal.coe_one]
-  have hposNN : ∀ i : Fin n, 0 < D.lam i := by
-    intro i
-    rw [← NNReal.coe_pos, IETDatum.lam, simplexMap]
-    split_ifs with hh
-    · rw [Real.coe_toNNReal _ (by linarith [D.sum_lt_one])]
-      linarith [D.sum_lt_one]
-    · rw [Real.coe_toNNReal _ (le_of_lt (D.pos _))]
-      exact D.pos _
-  refine @_root_.irreduciblePerm_of_no_invariant_cut n _ D.lam hposNN hlNN D.π
-    (fun k hk0 hinv => h k hk0 ?_)
-  intro x hx hxc
-  have hlt := hinv x hx hxc
-  have hlink : (mkIET1 D.lam D.π hlNN) x = mkIETFun D.lam D.π 0 x := rfl
-  rw [hlink] at hlt
-  simpa only [IETDatum.toFun] using hlt
-
 /-- **A splitting point of `E` inside a fixed cell of `D` is fixed by `D`.**  This is the input that
 turns the `g`-side of a pair-splitting point into a *fixed* point, hence into a marked point of the
 list (the list contains the `f`-preimages of the marked points of `g`). -/
@@ -226,32 +197,6 @@ theorem mark_fixed_of_inFixedCell {d e : ℕ} [NeZero d] [NeZero e] (D : IETDatu
     (j : Fin (e + 1)) (h : E.InFixedCell D j) : D.toFun (E.mark j) = E.mark j := by
   obtain ⟨l, hl, h1, h2⟩ := h
   exact D.isFixedCell_apply hl ⟨h1, h2⟩
-
-/-- **The pair-splitting points are marked points.**  If the list `s` contains the marked points of
-`D` and the `D`-preimages of the marked points of `E` (which is exactly what the marked list of
-`exists_markedList` does), then every pair-splitting point is one of the `s i`.
-
-The `f`-side is immediate; the `g`-side uses `mark_fixed_of_inFixedCell`: a splitting point of `E`
-lying in a fixed cell of `D` is fixed by `D`, so its `D`-preimage is itself, hence an `s`-point. -/
-theorem pairSplitting_mem_markedList {d e n : ℕ} [NeZero d] [NeZero e]
-    {D : IETDatum d} {E : IETDatum e} {s : Fin (n + 1) → ℝ}
-    (hD : ∀ k : Fin (d + 1), ∃ i : Fin (n + 1), s i = D.mark k)
-    (hE : ∀ j : Fin (e + 1), ∃ i : Fin (n + 1), s i = D.toIET⁻¹ (E.mark j))
-    {x : ℝ} (hx : IsPairSplitting D E x) : ∃ i : Fin (n + 1), s i = x := by
-  rcases hx with rfl | rfl | ⟨k, -, rfl, -⟩ | ⟨j, -, rfl, hf⟩
-  · obtain ⟨i, hi⟩ := hD 0
-    exact ⟨i, by rw [hi, IETDatum.mark_zero]⟩
-  · obtain ⟨i, hi⟩ := hD (Fin.last d)
-    exact ⟨i, by rw [hi, IETDatum.mark_last]⟩
-  · exact hD k
-  · -- `x = E.mark j` lies in a fixed cell of `D`, so `D` fixes it, so its `D`-preimage is itself
-    obtain ⟨i, hi⟩ := hE j
-    have hfix : D.toFun (E.mark j) = E.mark j := mark_fixed_of_inFixedCell D E j hf
-    have hpre : D.toIET⁻¹ (E.mark j) = E.mark j := by
-      refine D.toIET.injective ?_
-      rw [IET.apply_symm_apply']
-      exact hfix.symm
-    exact ⟨i, by rw [hi, hpre]⟩
 
 /-- **The left end of the image is strictly increasing in the image order.**  If all the cell
 lengths are positive, then `ρ j₁ < ρ j₂` forces `listImageLeft ρ S j₁ < listImageLeft ρ S j₂`: the
@@ -429,7 +374,7 @@ noncomputable def blockPerm (π : Equiv.Perm (Fin n)) (k : ℕ) {l : ℕ} (hkl :
     have h1 : ¬ k + j.val < k := by omega
     have h3 : ¬ (π ⟨k + j.val, by omega⟩).val < k := fun hc => h1 ((hstab _).1.mpr hc)
     have hk : k + ((π ⟨k + j.val, by omega⟩).val - k) = (π ⟨k + j.val, by omega⟩).val := by omega
-    simp only [Fin.val_mk]
+    simp only []
     rw [show (⟨k + ((π ⟨k + j.val, by omega⟩).val - k), by omega⟩ : Fin n)
       = π ⟨k + j.val, by omega⟩ from Fin.ext hk]
     simp only [Equiv.symm_apply_apply]
@@ -449,7 +394,7 @@ noncomputable def blockPerm (π : Equiv.Perm (Fin n)) (k : ℕ) {l : ℕ} (hkl :
       exact h1 (h.mp hc)
     have hk : k + ((π.symm ⟨k + j.val, by omega⟩).val - k) = (π.symm ⟨k + j.val, by omega⟩).val :=
       by omega
-    simp only [Fin.val_mk]
+    simp only []
     rw [show (⟨k + ((π.symm ⟨k + j.val, by omega⟩).val - k), by omega⟩ : Fin n)
       = π.symm ⟨k + j.val, by omega⟩ from Fin.ext hk]
     simp only [Equiv.apply_symm_apply]
@@ -521,7 +466,7 @@ theorem blockPerm_lt_iff {n : ℕ} {π : Equiv.Perm (Fin n)} {k l : ℕ} (hkl : 
   have hge : ∀ t : Fin (l - k), k ≤ (π ⟨k + t.val, by omega⟩).val := by
     intro t
     have h1 : ¬ ((⟨k + t.val, by omega⟩ : Fin n).val < k) := by
-      simp only [Fin.val_mk]; omega
+      simp only []; omega
     have h2 : ¬ ((π ⟨k + t.val, by omega⟩).val < k) := fun hc => h1 ((hstab _).1.mpr hc)
     omega
   rw [Fin.lt_def, Fin.lt_def, blockPerm_apply_val hkl hln hstab t,
@@ -551,7 +496,7 @@ theorem imageLeft_blockPerm_aux {n : ℕ} {lam : Fin n → ℝ≥0} {π : Equiv.
     simp only [Finset.mem_image, Finset.mem_filter, Finset.mem_univ, true_and]
     constructor
     · rintro ⟨t, ht, rfl⟩
-      refine ⟨by simp only [Fin.val_mk]; omega, ?_⟩
+      refine ⟨by simp only []; omega, ?_⟩
       exact (blockPerm_lt_iff hkl hln hstab t j).mp ht
     · rintro ⟨hmk, hmpi⟩
       have hmge : k ≤ m.val := by omega
@@ -563,9 +508,9 @@ theorem imageLeft_blockPerm_aux {n : ℕ} {lam : Fin n → ℝ≥0} {π : Equiv.
       refine ⟨⟨m.val - k, by omega⟩, ?_, ?_⟩
       · rw [blockPerm_lt_iff hkl hln hstab]
         rw [show (⟨k + (⟨m.val - k, by omega⟩ : Fin (l - k)).val, by omega⟩ : Fin n) = m from
-          Fin.ext (by simp only [Fin.val_mk]; omega)]
+          Fin.ext (by simp only []; omega)]
         exact hmpi
-      · exact Fin.ext (by simp only [Fin.val_mk]; omega)
+      · exact Fin.ext (by simp only []; omega)
   -- ### the pointwise splitting identity
   have hpt : ∀ m : Fin n, (if π m < π ⟨k + j.val, by omega⟩ then (lam m : ℝ) else 0)
       = (if m.val < k then (lam m : ℝ) else 0)
@@ -577,7 +522,7 @@ theorem imageLeft_blockPerm_aux {n : ℕ} {lam : Fin n → ℝ≥0} {π : Equiv.
         have h3 : (π m).val < k := (hstab m).1.mp h1
         have h4 : k ≤ (π ⟨k + j.val, by omega⟩).val := by
           have h5 : ¬ ((⟨k + j.val, by omega⟩ : Fin n).val < k) := by
-            simp only [Fin.val_mk]; omega
+            simp only []; omega
           have h6 : ¬ ((π ⟨k + j.val, by omega⟩).val < k) := fun hc => h5 ((hstab _).1.mpr hc)
           omega
         omega
@@ -695,12 +640,12 @@ theorem idx_rescaleMap_aux {n : ℕ} [NeZero n] {lam : Fin n → ℝ≥0}
     linarith [hx.2]
   set j : Fin (l - k) := ⟨(idx lam x hx0).val - k, by omega⟩ with hjdef
   have hjeq : (idx lam x hx0).val = k + j.val := by
-    rw [hjdef]; simp only [Fin.val_mk]; omega
+    rw [hjdef]; simp only []; omega
   -- the two inequalities locating the rescaled point in the `j`-th cell of the block
   have hle1 : leftEnd (blockLam lam k hkl hln hpos) j ≤ rescaleMap L (L + M) x := by
     have h1 : leftEnd lam (idx lam x hx0) = L + M * leftEnd (blockLam lam k hkl hln hpos) j := by
       rw [show (idx lam x hx0) = (⟨k + j.val, by omega⟩ : Fin n) from
-        Fin.ext (by simp only [Fin.val_mk]; omega),
+        Fin.ext (by simp only []; omega),
         hLdef, hMdef]
       exact leftEnd_blockLam hpos hkl hln j
     have h2 : M * leftEnd (blockLam lam k hkl hln hpos) j ≤ x - L := by
@@ -712,12 +657,12 @@ theorem idx_rescaleMap_aux {n : ℕ} [NeZero n] {lam : Fin n → ℝ≥0}
   have hlt2 : rescaleMap L (L + M) x < upperEnd (blockLam lam k hkl hln hpos) j := by
     have h1 : leftEnd lam (idx lam x hx0) = L + M * leftEnd (blockLam lam k hkl hln hpos) j := by
       rw [show (idx lam x hx0) = (⟨k + j.val, by omega⟩ : Fin n) from
-        Fin.ext (by simp only [Fin.val_mk]; omega),
+        Fin.ext (by simp only []; omega),
         hLdef, hMdef]
       exact leftEnd_blockLam hpos hkl hln j
     have hlam : (lam (idx lam x hx0) : ℝ) = M * (blockLam lam k hkl hln hpos j : ℝ) := by
       rw [show (idx lam x hx0) = (⟨k + j.val, by omega⟩ : Fin n) from
-        Fin.ext (by simp only [Fin.val_mk]; omega), hMdef]
+        Fin.ext (by simp only []; omega), hMdef]
       have hc := blockLam_coe lam k hkl hln hpos j
       have hMne : blockMass lam k hln ≠ 0 := by rw [← hMdef]; exact ne_of_gt hM
       rw [hc, mul_comm, div_mul_cancel₀ _ hMne]
@@ -792,7 +737,7 @@ theorem mkIET1_rescale_subinterval {n : ℕ} [NeZero n] {lam : Fin n → ℝ≥0
     have h := le_idx lam x hx_tot.1 (i := ⟨k, by omega⟩) (by rw [hLdef] at *; exact hx.1)
     simpa only [Fin.le_def, Fin.val_mk] using h
   have hieq : idx lam x hx_tot.1 = (⟨k + j.val, by omega⟩ : Fin n) :=
-    Fin.ext (by simp only [Fin.val_mk]; omega)
+    Fin.ext (by simp only []; omega)
   have hleft : leftEnd lam (idx lam x hx_tot.1)
       = L + M * leftEnd (blockLam lam k hkl hln hpos) j := by
     rw [hieq, hLdef, hMdef]
@@ -995,7 +940,7 @@ theorem comp_image_cell {d e : ℕ} [NeZero d] [NeZero e] {lam : Fin d → ℝ�
     (mkIET1 mu σ hm * mkIET1 lam π hl) '' Set.Ico (S i.castSucc) (S i.succ)
       = Set.Ico (listImageLeft ρ S i) (listImageLeft ρ S i + (S i.succ - S i.castSucc)) := by
   have hab : S i.castSucc < S i.succ := P.mono (Fin.castSucc_lt_succ (i := i))
-  rw [image_Ico_add hab (fun x hx1 hx2 => P.cell i x hx1 hx2), listLeftEnd_eq P.mono P.zero i]
+  rw [image_Ico_add (fun x hx1 hx2 => P.cell i x hx1 hx2), listLeftEnd_eq P.mono P.zero i]
   congr 1
   · ring
   · ring

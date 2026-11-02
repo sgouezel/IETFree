@@ -14,7 +14,7 @@ file sets up that partition: `IsCutSet f a b s` says that the finite set `s ⊆ 
 cuts for `f` (so that `f` translates each interval between consecutive cuts), and the API around it
 is the cells `[β i, β (i+1))` (`cellStarts`, `cellPos`), their lengths `cellLen`, the left end
 `cellLeft` of the cell containing a point, and the two halves of the statement that the images of
-the cells form the same kind of partition (`Equiv.IsIET.tiling`, `tiling_disjoint`).
+the cells form the same kind of partition (`IsCutSet.image_cell`, `IsCutSet.image_cell_disjoint`).
 
 Nothing here is measure-theoretic: this is the combinatorial substrate of the development.
 -/
@@ -428,13 +428,6 @@ theorem IsCutSet.imageStarts_card (hs : IsCutSet f a b s) (hinj : Function.Injec
     hs.imageStarts.card = s.card :=
   Finset.card_image_of_injective _ hinj
 
-/-- The image starts lie in `[a, b)`. -/
-theorem IsCutSet.imageStarts_subset (hs : IsCutSet f a b s) :
-    ∀ y ∈ hs.imageStarts, y ∈ Set.Ico a b := by
-  intro y hy
-  obtain ⟨β, hβ, rfl⟩ := hs.mem_imageStarts.mp hy
-  exact hs.mapsTo β (hs.cuts_mem β hβ)
-
 /-- **The permutation of the cells**: the `i`-th cell goes to the position of its image among the
 image starts. -/
 noncomputable def IsCutSet.cellPerm (hs : IsCutSet f a b s) (hinj : Function.Injective f) :
@@ -487,7 +480,6 @@ theorem IsCutSet.cellPerm_lt_iff
       rw [key j, key i]
       exact h
     exact (Finset.orderIsoOfFin hs.imageStarts (hs.imageStarts_card hinj)).lt_iff_lt.mp h2
-
 
 end CutSetData
 
@@ -594,24 +586,3 @@ theorem IsCutSet.sum_cellLen_image {e : Equiv ℝ ℝ} {a b : ℝ} {s : Finset �
     have := (hs.mapsTo _ (hs.cellStarts_mem_Ico i)).1
     linarith
   exact (ENNReal.ofReal_eq_ofReal_iff hsum hfin).mp hof
-
-/-- **Tiling, cover half**: every `y ∈ [a, b)` lies in the image of the cell of `e.symm y`, and that
-cell starts at or below `y` — the left end of its image is `e β ≤ y`. -/
-theorem Equiv.IsIET.tiling {a b : ℝ} {e : Equiv ℝ ℝ} {s : Finset ℝ}
-    (hs : IsCutSet (⇑e) a b s) {y : ℝ} (hy : y ∈ Set.Ico a b) :
-    ∃ β ∈ s, β ≤ e.symm y ∧ ⇑e β ≤ y := by
-  have hx : e.symm y ∈ Set.Ico a b := Equiv.IsIET.symm_mapsTo (e := e) hs hy
-  refine ⟨hs.cellLeft (e.symm y) hx, hs.cellLeft_mem _ hx, hs.cellLeft_le _ hx, ?_⟩
-  have hm := hs.map_eq_cell (f := ⇑e) hx
-  rw [Equiv.apply_symm_apply] at hm
-  linarith [hs.cellLeft_le (e.symm y) hx]
-
-/-- **Tiling, disjointness half**: two cells with different left endpoints have disjoint images —
-`e` is injective and translates each cell. -/
-theorem Equiv.IsIET.tiling_disjoint {a b : ℝ} {e : Equiv ℝ ℝ} {s : Finset ℝ}
-    (hs : IsCutSet (⇑e) a b s) {x x' : ℝ} (hx : x ∈ Set.Ico a b) (hx' : x' ∈ Set.Ico a b)
-    (hne : hs.cellLeft x hx ≠ hs.cellLeft x' hx') : ⇑e x ≠ ⇑e x' := by
-  intro hcon
-  have hxx' : x = x' := e.injective hcon
-  subst hxx'
-  exact hne rfl

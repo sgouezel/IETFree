@@ -62,10 +62,6 @@ structure IsCompType {d e n : ℕ} [NeZero d] [NeZero e] (lam : Fin d → ℝ≥
     mkIET1 lam π hl (s k.castSucc) + (s k.succ - s k.castSucc)
       ≤ leftEnd mu (B k) + (mu (B k) : ℝ)
 
-/-- The length of the `i`-th cell of a list `s` of marked points. -/
-noncomputable def listLen {n : ℕ} (s : Fin (n + 1) → ℝ) (i : Fin n) : ℝ :=
-  s i.succ - s i.castSucc
-
 /-- **The left end of the `i`-th cell**, written in the lengths of the list. -/
 noncomputable def listLeftEnd {n : ℕ} (s : Fin (n + 1) → ℝ) (i : Fin n) : ℝ :=
   ∑ j ∈ Finset.univ.filter (fun j : Fin n => j < i), (s j.succ - s j.castSucc)
@@ -367,7 +363,7 @@ theorem mkIET1_inv_of_lt_imageLeft {d e : ℕ} [NeZero d]
     exact hmem.2.trans_le (upperEnd_le_total p.1 k)
   have hidx : idx p.1 x (by linarith [hx1.1]) = k := idx_eq p.1 hx1 hmem.1 hmem.2
   have happ : ⇑(mkIET1 p.1 π hl) x = y := by
-    have hfun : ⇑(mkIET1 p.1 π hl) x = mkIETFun p.1 π 0 x := rfl
+    have hfun : ⇑(mkIET1 p.1 π hl) x = mkIETFun p.1 π 0 x := mkIET1_eq_mkIETFun p.1 π hl x
     rw [hfun, mkIETFun_of_mem p.1 π 0 (by simpa using hx1)]
     simp only [sub_zero, hidx]
     rw [hx]

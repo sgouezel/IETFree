@@ -22,9 +22,6 @@ the original block, `exists_word_trivial_on_block_of_rescaled`.
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
 
--- `simp only [Fin.val_mk]` is needed in the pure `Fin`-index goals below (removing it breaks the
--- following `omega`/`rw`), but this version of the `unusedSimpArgs` linter reports it as unused.
-set_option linter.unusedSimpArgs false
 /-! ### The change of generators `(f, g) ↦ (g ∘ f, g)`
 
 Lemma 3.4 produces its word for the pair `(g ∘ f, g)` on the rescaled block, while the conclusion
@@ -42,6 +39,11 @@ noncomputable def substGen : FreeGroup Gen →* FreeGroup Gen :=
 noncomputable def invSubstGen : FreeGroup Gen →* FreeGroup Gen :=
   FreeGroup.lift (fun i : Gen => if i = 0 then genY⁻¹ * genX else genY)
 
+-- `unusedSimpArgs` reports `FreeGroup.lift_apply_of` as unused in the `simp only` lists below, but
+-- it is needed: the preceding `rw` reduces the *inner* `FreeGroup.lift … (of i)`, and only the
+-- `simp only` (which unfolds `genX`/`genY` first) lets it fire on the outer one — without it the
+-- application stays unreduced and the proof fails.
+set_option linter.unusedSimpArgs false in
 theorem invSubstGen_substGen_apply (i : Gen) : invSubstGen (substGen (FreeGroup.of i))
     = FreeGroup.of i := by
   fin_cases i
@@ -72,6 +74,11 @@ theorem substGen_ne_one {w : FreeGroup Gen} (hw : w ≠ 1) : substGen w ≠ 1 :=
   rw [h, map_one] at hh
   exact hh.symm
 
+-- `unusedSimpArgs` reports `FreeGroup.lift_apply_of` as unused in the `simp only` lists below, but
+-- it is needed: the preceding `rw` reduces the *inner* `FreeGroup.lift … (of i)`, and only the
+-- `simp only` (which unfolds `genX`/`genY` first) lets it fire on the outer one — without it the
+-- application stays unreduced and the proof fails.
+set_option linter.unusedSimpArgs false in
 /-- **The substitution evaluates to the same exchange**: a word in the generators `(g ∘ f, g)`
 becomes a word in `(f, g)`. -/
 theorem evalWord_substGen (w : FreeGroup Gen) (f g : IET 0 1) :

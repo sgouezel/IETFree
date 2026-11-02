@@ -16,10 +16,10 @@ This file sets up the interface that the reduction runs on:
   singularities, and `IsPairSplitting` the splitting singularities of one exchange inside a fixed
   interval of the other (`IsSplitting`, `IsFixedCell`);
 * `O`, the complement of the finitely many hyperplanes `k + ∑ aᵢλᵢ + ∑ bⱼμⱼ = 0` over which the
-  combinatorial type of the pair `(f, g)` can change (`IsBadParam`, `goodParams`), with its two
-  consequences `ae_goodParams` and `coeffs_eq_of_good` / `coeffs_zero_of_good`;
-* the covering step `measure_zero_of_forall_exists_isOpen_null`, which turns the local statements of
-  `GoodRegion` into an almost-everywhere statement.
+  combinatorial type of the pair `(f, g)` can change (`IsBadParam`, `goodParams`), together with the
+  openness of `O` in the coefficient enumeration below;
+* the covering step, which turns the local statements of `GoodRegion` into an almost-everywhere
+  statement, and Proposition 2.5 in the free coordinates (`ae_diophantine_real`).
 
 The parameter space is `PReal d e` — the **free** lengths `(λ₁, …, λ_{d-1})` and `(μ₁, …, μ_{e-1})`,
 the last length of each vector being `1` minus their sum.  The choice is essential: with all `d + e`
@@ -84,16 +84,23 @@ noncomputable def toFun (D : IETDatum n) : ℝ → ℝ := mkIETFun D.lam D.π 0
 takes the datum `D`, never an `IET 0 1`.) -/
 noncomputable def toIET (D : IETDatum n) : IET 0 1 := mkIET1 D.lam D.π D.mem_simplex
 
-theorem toIET_apply (D : IETDatum n) (x : ℝ) : D.toIET x = D.toFun x := rfl
+/-- The unfolding of `toFun`: the exchange of the datum is `mkIETFun` of its length vector and
+permutation. -/
+theorem toFun_def (D : IETDatum n) : D.toFun = mkIETFun D.lam D.π 0 := rfl
+
+/-- The unfolding of `toIET`: the exchange of the datum, as an element of `IET 0 1`, is `mkIET1` of
+its length vector and permutation. -/
+theorem toIET_def (D : IETDatum n) : D.toIET = mkIET1 D.lam D.π D.mem_simplex := rfl
+
+/-- The coercion of `toIET` is `toFun`, by the two unfolding lemmas above. -/
+theorem toIET_apply (D : IETDatum n) (x : ℝ) : D.toIET x = D.toFun x := by
+  rw [toIET_def, toFun_def]
+  exact mkIET1_eq_mkIETFun D.lam D.π D.mem_simplex x
 
 /-- **An exchange maps `[0, 1)` into itself.** -/
 theorem mapsTo (D : IETDatum n) {x : ℝ} (hx : x ∈ Set.Ico (0 : ℝ) 1) :
     D.toFun x ∈ Set.Ico (0 : ℝ) 1 :=
   D.toIET.isIET.mapsTo hx
-
-/-- **An exchange is the identity outside `[0, 1)`.** -/
-theorem eq_of_notMem (D : IETDatum n) {x : ℝ} (hx : x ∉ Set.Ico (0 : ℝ) 1) : D.toFun x = x :=
-  D.toIET.isIET.eq_of_notMem hx
 
 end IETDatum
 
@@ -231,7 +238,7 @@ theorem IETDatum.isFixedCell_apply {n : ℕ} [NeZero n] (D : IETDatum n) {l : Fi
   have hidx : idx D.lam (x - 0) (by simpa using hx0) = l :=
     idx_eq D.lam ⟨by simpa using hx0, by simpa using hxT⟩ (by simpa using hx'.1)
       (by simpa using hx'.2)
-  rw [IETDatum.toFun, mkIETFun_of_mem D.lam D.π 0 ⟨hx0, by simpa using hxT⟩, hidx, hzero]
+  rw [IETDatum.toFun_def, mkIETFun_of_mem D.lam D.π 0 ⟨hx0, by simpa using hxT⟩, hidx, hzero]
   ring
 
 /-- The cells whose image starts at or before the image of the `i`-th cell are exactly the `i`-th
@@ -295,7 +302,7 @@ theorem IETDatum.isSplitting_below {n : ℕ} [NeZero n] (D : IETDatum n) {k : Fi
   have hidx : idx D.lam (y - 0) (by simpa using hy.1) = i := by
     refine idx_eq D.lam ⟨by simpa using hy.1, by simpa using hyT⟩ (by simpa using hle)
       (by simpa using hiy)
-  rw [IETDatum.toFun, mkIETFun_of_mem D.lam D.π 0 ⟨hy.1, by simpa using hyT⟩, hidx,
+  rw [IETDatum.toFun_def, mkIETFun_of_mem D.lam D.π 0 ⟨hy.1, by simpa using hyT⟩, hidx,
     translationVector]
   have h1 : y < leftEnd D.lam i + (D.lam i : ℝ) := by rw [← upperEnd_eq]; exact hiy
   linarith
@@ -341,7 +348,7 @@ theorem IETDatum.isSplitting_above {n : ℕ} [NeZero n] (D : IETDatum n) {k : Fi
   have hidx : idx D.lam (y - 0) (by simpa using hy.1) = i := by
     refine idx_eq D.lam ⟨by simpa using hy.1, by simpa using hyT⟩ (by simpa using hle)
       (by simpa using hiy)
-  rw [IETDatum.toFun, mkIETFun_of_mem D.lam D.π 0 ⟨hy.1, by simpa using hyT⟩, hidx,
+  rw [IETDatum.toFun_def, mkIETFun_of_mem D.lam D.π 0 ⟨hy.1, by simpa using hyT⟩, hidx,
     translationVector]
   linarith
 
@@ -590,8 +597,8 @@ theorem continuous_toReal {d e : ℕ} : Continuous (toReal (d := d) (e := e)) :=
 
 /-! ### The finite enumeration of the coefficient data
 
-`coeffs_eq_of_good` and the openness of `O` both rest on the same fact: there are only finitely many
-coefficient vectors, so "no small relation vanishes" is a *finite* condition.  The coefficients are
+The openness of `O` rests on the following fact: there are only finitely many coefficient vectors,
+so "no small relation vanishes" is a *finite* condition.  The coefficients are
 indexed by `(Fin d ⊕ Fin e) ⊕ Fin 1`: the `aᵢ`, the `bⱼ` and the constant term. -/
 
 /-- A coefficient index: the `aᵢ`, the `bⱼ` and the constant term. -/
@@ -771,8 +778,8 @@ theorem ae_mem_simplexRegion_prod {d e : ℕ} :
   filter_upwards [MeasureTheory.ae_iff.mpr h1, MeasureTheory.ae_iff.mpr h2] with z hz1 hz2
   exact ⟨hz1, hz2⟩
 
-/-- **Almost every point of the free region is good**: the free-coordinate form of `ae_goodParams`.
-This is the form Section 3 uses, since every region `O` there is a set of free parameters. -/
+/-- **Almost every point of the free region is good.**  This is the form Section 3 uses, since every
+region `O` there is a set of free parameters. -/
 theorem ae_goodParams_real {d e : ℕ} [NeZero d] [NeZero e] :
     ∀ᵐ z ∂((volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e))),
       ¬ IsBadParam z := by
@@ -785,113 +792,6 @@ theorem ae_goodParams_real {d e : ℕ} [NeZero d] [NeZero e] :
   exact hzN (max N₀ 4) (le_max_left _ _)
     (isBadParam_mem_badSet ⟨simplexRegion_subset_ubox d hmemz.1,
       simplexRegion_subset_ubox e hmemz.2⟩ (le_max_right _ _) hbad')
-
-/-- **Except on finitely many hyperplanes of zero measure**, no small nontrivial integer relation
-holds.  Note the ambient measure: there is no `volume` on `Fin d → ℝ≥0` in this Mathlib, so the
-statement is made for the project's `simplexVolume`, which is the measure `MasurVeech` and
-`VeechRigidity` use.
-
-The proof is the one of Proposition 2.5 in `Diophantine.lean`: `simplexVolume d` is the pushforward
-of Lebesgue measure on the free coordinates `simplexRegion d ⊆ (Fin (d - 1) → ℝ)` under
-`simplexMap d`, so `(simplexVolume d).prod (simplexVolume e)` is the pushforward under
-`simplexMap d × simplexMap e`
-(`Measure.map_prod_map`); a bad relation becomes the integer form
-`k + ∑ aᵢ z.1 i + ∑ bⱼ z.2 j` in the free coordinates, and `ae_eventually_notMem_badSet` says that
-almost every free point is outside the tube of every such form. -/
-theorem ae_goodParams (d e : ℕ) [NeZero d] [NeZero e] :
-    ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)), ¬ IsBadParam (toReal p) := by
-  classical
-  set ν : Measure ((Fin (d - 1) → ℝ) × (Fin (e - 1) → ℝ)) :=
-    ((volume : Measure (Fin (d - 1) → ℝ)).restrict (simplexRegion d)).prod
-      (volume.restrict (simplexRegion e)) with hν
-  -- the parameter measure is the pushforward of Lebesgue measure in the free coordinates
-  have hmap : (simplexVolume d).prod (simplexVolume e)
-      = ν.map (Prod.map (simplexMap d) (simplexMap e)) := by
-    rw [hν, simplexVolume, simplexVolume, MeasureTheory.Measure.map_prod_map _ _
-      (measurable_simplexMap d) (measurable_simplexMap e)]
-  have hset : MeasurableSet {p : (Fin d → ℝ≥0) × (Fin e → ℝ≥0) | ¬ IsBadParam (toReal p)} :=
-    (isOpen_goodParams d e).measurableSet.preimage continuous_toReal.measurable
-  rw [hmap, MeasureTheory.ae_map_iff ((measurable_simplexMap d).prodMap
-    (measurable_simplexMap e)).aemeasurable hset]
-  -- the free coordinates are in the simplex region
-  have hmem : ∀ᵐ z ∂ν, z.1 ∈ simplexRegion d ∧ z.2 ∈ simplexRegion e := by
-    rw [hν]
-    exact ae_mem_simplexRegion_prod
-  filter_upwards [ae_goodParams_real (d := d) (e := e), hmem] with z hz hmemz
-  have hz' : ¬ IsBadParam (toReal (simplexMap d z.1, simplexMap e z.2)) := by
-    rwa [toReal_simplexMap hmemz.1.1 hmemz.2.1]
-  exact hz'
-
-/-- **The only way `O` is consumed**: two relations with coefficients bounded by `1` that agree on a
-good pair are the same relation.  (`2 = 1 + 1 ≤ 4`: the difference of the two relations is a small
-relation.) -/
-theorem coeffs_eq_of_good {d e : ℕ} {q : PReal d e} (hp : ¬ IsBadParam q)
-    {a a' : Fin (d - 1) → ℤ} {b b' : Fin (e - 1) → ℤ}
-    (ha : ∀ i, |a i| ≤ 1) (ha' : ∀ i, |a' i| ≤ 1)
-    (hb : ∀ j, |b j| ≤ 1) (hb' : ∀ j, |b' j| ≤ 1)
-    (h : (∑ i, (a i : ℝ) * q.1 i) + (∑ j, (b j : ℝ) * q.2 j)
-      = (∑ i, (a' i : ℝ) * q.1 i) + (∑ j, (b' j : ℝ) * q.2 j)) :
-    a = a' ∧ b = b' := by
-  by_contra hne
-  apply hp
-  have hda : ∀ i, |(a - a') i| ≤ 4 := by
-    intro i
-    have h1 := abs_le.mp (ha i)
-    have h2 := abs_le.mp (ha' i)
-    simp only [Pi.sub_apply]
-    rw [abs_le]
-    constructor <;> omega
-  have hdb : ∀ j, |(b - b') j| ≤ 4 := by
-    intro j
-    have h1 := abs_le.mp (hb j)
-    have h2 := abs_le.mp (hb' j)
-    simp only [Pi.sub_apply]
-    rw [abs_le]
-    constructor <;> omega
-  refine ⟨0, a - a', b - b', hda, hdb, by norm_num, ?_, ?_⟩
-  · rcases not_and_or.mp hne with hne | hne
-    · right; left
-      obtain ⟨i, hi⟩ := Function.ne_iff.mp hne
-      exact ⟨i, by simpa only [Pi.sub_apply] using sub_ne_zero.mpr hi⟩
-    · right; right
-      obtain ⟨j, hj⟩ := Function.ne_iff.mp hne
-      exact ⟨j, by simpa only [Pi.sub_apply] using sub_ne_zero.mpr hj⟩
-  · have h1 : (∑ i, ((a - a') i : ℝ) * q.1 i)
-        = (∑ i, (a i : ℝ) * q.1 i)
-          - ∑ i, (a' i : ℝ) * q.1 i := by
-      rw [← Finset.sum_sub_distrib]
-      refine Finset.sum_congr rfl fun i _ => ?_
-      simp only [Pi.sub_apply, Int.cast_sub]
-      ring
-    have h2 : (∑ j, ((b - b') j : ℝ) * q.2 j)
-        = (∑ j, (b j : ℝ) * q.2 j)
-          - ∑ j, (b' j : ℝ) * q.2 j := by
-      rw [← Finset.sum_sub_distrib]
-      refine Finset.sum_congr rfl fun j _ => ?_
-      simp only [Pi.sub_apply, Int.cast_sub]
-      ring
-    rw [h1, h2]
-    push_cast
-    linarith
-
-/-- **The vanishing form**, which is the one the case analysis of Lemma 3.2 uses when a relation is
-collected into a single equation before being compared with another: a relation with coefficients
-bounded by `4` that vanishes on a good pair is trivial. -/
-theorem coeffs_zero_of_good {d e : ℕ} {q : PReal d e} (hp : ¬ IsBadParam q)
-    {a : Fin (d - 1) → ℤ} {b : Fin (e - 1) → ℤ} (ha : ∀ i, |a i| ≤ 4) (hb : ∀ j, |b j| ≤ 4)
-    (h : (∑ i, (a i : ℝ) * q.1 i) + (∑ j, (b j : ℝ) * q.2 j) = 0) :
-    a = 0 ∧ b = 0 := by
-  by_contra hne
-  apply hp
-  refine ⟨0, a, b, ha, hb, by norm_num, ?_, ?_⟩
-  · rcases not_and_or.mp hne with h | h
-    · right; left
-      obtain ⟨i, hi⟩ := Function.ne_iff.mp h
-      exact ⟨i, by simpa using hi⟩
-    · right; right
-      obtain ⟨j, hj⟩ := Function.ne_iff.mp h
-      exact ⟨j, by simpa using hj⟩
-  · simpa using h
 
 /-- The last index of `Fin n`: the length determined by `∑ λ = 1`. -/
 def lastIdx (n : ℕ) [NeZero n] : Fin n := ⟨n - 1, by have := NeZero.pos n; omega⟩
@@ -1021,35 +921,9 @@ theorem relation_of_good {d e : ℕ} [NeZero d] [NeZero e] {p : (Fin d → ℝ�
 
 /-! ## 1'. The covering step: a measure is determined by what it gives near each point
 
-`ae_goodParams` says that a.e. parameter pair is good, and `ae_exists_goodRegion` that a.e. pair has
-a good neighbourhood.  The step from the second to "the set where anything goes wrong is null" is
-the following elementary fact, which is where the second countability of the parameter space is
-used. -/
-
-/-- **A measure is determined by what it gives near each point.**  If every point of `s` has an open
-neighbourhood `O` with `μ (O ∩ bad) = 0`, then `μ (s ∩ bad) = 0`: in a second-countable space,
-countably many such neighbourhoods cover `s`. -/
-theorem measure_zero_of_forall_exists_isOpen_null {α : Type*} [MeasurableSpace α]
-    [TopologicalSpace α] [SecondCountableTopology α] {μ : Measure α} {s bad : Set α}
-    (h : ∀ p ∈ s, ∃ O : Set α, IsOpen O ∧ p ∈ O ∧ μ (O ∩ bad) = 0) :
-    μ (s ∩ bad) = 0 := by
-  classical
-  obtain ⟨basis, hbasis⟩ := TopologicalSpace.exists_seq_basis (α := α)
-  -- the basis elements that sit inside a good neighbourhood
-  set good : Set ℕ := {n | ∃ O : Set α, IsOpen O ∧ μ (O ∩ bad) = 0 ∧ basis n ⊆ O} with hgood
-  have hnull : ∀ n ∈ good, μ (basis n ∩ bad) = 0 := by
-    rintro n ⟨O, -, hO, hbO⟩
-    exact measure_mono_null (Set.inter_subset_inter_left bad hbO) hO
-  have hcover : s ∩ bad ⊆ ⋃ n ∈ good, basis n ∩ bad := by
-    rintro p ⟨hps, hpb⟩
-    obtain ⟨O, hOopen, hpO, hOμ⟩ := h p hps
-    obtain ⟨W, hW, hpW, hWO⟩ := hbasis.exists_subset_of_mem_open hpO hOopen
-    obtain ⟨n, rfl⟩ := hW
-    exact Set.mem_biUnion ⟨O, hOopen, hOμ, hWO⟩ ⟨hpW, hpb⟩
-  refine measure_mono_null hcover ?_
-  rw [measure_biUnion_null_iff]
-  · exact hnull
-  · exact Set.Countable.mono (Set.subset_univ good) Set.countable_univ
+The step from "a.e. pair has a good neighbourhood" to "the set where anything goes wrong is null"
+is an elementary fact about a measure and the second-countable parameter space; the a.e. statements
+of this file are then transported to the free coordinates. -/
 
 /-- **Proposition 2.5 in the free coordinates**: almost every point of the product of the two free
 regions gives a Diophantine pair of length vectors.  This is the form Lemma 3.4 consumes: the

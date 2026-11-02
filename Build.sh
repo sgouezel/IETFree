@@ -25,7 +25,7 @@ LEANOPTS=(-DautoImplicit=false -DrelaxedAutoImplicit=false -DmaxSynthPendingDept
           -Dlinter.mathlibStandardSet=true)
 
 # the library, in dependency order (the first two are the statement files of the comparator setup)
-lib="Challenge ChallengeWeak IETFree/CutSet IETFree/CutSetMeasure IETFree/IET IETFree/Diophantine IETFree/Commensurable IETFree/MeasureTools IETFree/TranslationVector IETFree/SingularityBound IETFree/Centralizer IETFree/Irreducible IETFree/ReductionData IETFree/Presentation IETFree/IntegerAffine IETFree/SingularityList IETFree/GoodRegion IETFree/LengthMap IETFree/SubintervalTransfer IETFree/BlockRescaling IETFree/GeneratorChange IETFree/InvariantInterval IETFree/BlockEndpoints IETFree/BlockAETransfer IETFree/BlockDiophantine IETFree/BlockData IETFree/BlockIrreducibility IETFree/BlockAssembly IETFree/BlockDatum IETFree/BlockLemma IETFree/Reduction IETFree/ChallengeWeakSolved IETFree/Check"
+lib="Challenge ChallengeWeak IETFree/CutSet IETFree/CutSetMeasure IETFree/IET IETFree/Diophantine IETFree/Commensurable IETFree/MeasureTools IETFree/TranslationVector IETFree/SingularityBound IETFree/Centralizer IETFree/Irreducible IETFree/ReductionData IETFree/Presentation IETFree/IntegerAffine IETFree/SingularityList IETFree/GoodRegion IETFree/LengthMap IETFree/SubintervalTransfer IETFree/BlockRescaling IETFree/GeneratorChange IETFree/InvariantInterval IETFree/BlockEndpoints IETFree/BlockAETransfer IETFree/BlockDiophantine IETFree/BlockData IETFree/BlockIrreducibility IETFree/BlockAssembly IETFree/BlockDatum IETFree/BlockLemma IETFree/ChallengeWeakSolved"
 mods="$lib"
 
 for f in $mods; do
@@ -40,8 +40,8 @@ for f in $mods; do
 done
 
 echo
-echo "=== axiom report (see Check.lean) ==="
-grep -E "^'" "$(logof IETFree/Check)" || true
+echo "=== the axiom check of the main theorem (in ChallengeWeakSolved.lean) ==="
+grep -E "depends on axioms" "$(logof IETFree/ChallengeWeakSolved)" || true
 
 # the root module, which just imports everything
 LEAN_PATH="$PWD:$LEAN_PATH" lean "${LEANOPTS[@]}" -o "IETFree.olean" "IETFree.lean" 2>&1 \
@@ -74,8 +74,8 @@ echo "  of which the comparator challenge (ChallengeWeak): ${chals:-0}"
 echo "  of which the library (with ChallengeWeakSolved): $(( ${sorries:-0} - ${stated:-0} - ${chals:-0} ))"
 
 if [ "${1:-}" = "--strict" ]; then
-  if grep -q 'sorryAx' "$(logof IETFree/Check)"; then
-    echo "STRICT: FAIL -- sorryAx still reachable"
+  if grep -q 'sorryAx' "$(logof IETFree/ChallengeWeakSolved)"; then
+    echo "STRICT: FAIL -- sorryAx still reachable from the main theorem"
     exit 1
   fi
   echo "STRICT: ok"

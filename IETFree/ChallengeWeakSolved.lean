@@ -257,7 +257,7 @@ theorem masurVeech_of_fun (h : MasurVeechFun) : MasurVeech := by
     MeasureTheory.ae_iff.mpr (simplexVolume_compl_simplex (d := d))] with lam hlam hmem
   intro h'
   rw [uniqueErgodic_iff]
-  have hfun : (⇑(mkIET1 lam π h') : ℝ → ℝ) = mkIETFun lam π 0 := rfl
+  have hfun : (⇑(mkIET1 lam π h') : ℝ → ℝ) = mkIETFun lam π 0 := coe_mkIET1 lam π h'
   rwa [hfun]
 
 /-- **Veech's rigidity in the library's form**, from the challenge's. -/
@@ -267,7 +267,7 @@ theorem veechRigidity_of_fun (h : VeechRigidityFun) : VeechRigidity := by
     MeasureTheory.ae_iff.mpr (simplexVolume_compl_simplex (d := d))] with lam hlam hmem
   intro h'
   rw [isRigidByTranslations_iff]
-  have hfun : (⇑(mkIET1 lam π h') : ℝ → ℝ) = mkIETFun lam π 0 := rfl
+  have hfun : (⇑(mkIET1 lam π h') : ℝ → ℝ) = mkIETFun lam π 0 := coe_mkIET1 lam π h'
   rwa [hfun]
 
 /-! ## The theorem of the challenge file -/
@@ -314,16 +314,6 @@ theorem main_of_library (hMV : MasurVeech) (hVR : VeechRigidity) {d e : ℕ} [Ne
   have hp2 : p.2 = simplexMap e (toReal p).2 := (congrArg Prod.snd hfix).symm
   rwa [hp1, hp2]
 
-#print axioms evalWord_toEquiv
-#print axioms evalWord_toEquiv_eq_one
-#print axioms ae_prod_of_ae_free
-#print axioms exists_word_ae
-#print axioms main_of_library
-#print axioms uniqueErgodic_iff
-#print axioms isRigidByTranslations_iff
-#print axioms masurVeech_of_fun
-#print axioms veechRigidity_of_fun
-
 end ChallengeWeakSolved
 
 /-! ## The two theorems of the challenge -/
@@ -337,5 +327,6 @@ theorem main (hMV : MasurVeechFun) (hVR : VeechRigidityFun) {d e : ℕ} [NeZero 
   ChallengeWeakSolved.main_of_library (ChallengeWeakSolved.masurVeech_of_fun hMV)
     (ChallengeWeakSolved.veechRigidity_of_fun hVR) π σ
 
-#print axioms coe_mkIETEquiv
+-- The axiom check of the library: the single `#print axioms` of the tree, for the main theorem,
+-- registered directly below it.
 #print axioms main

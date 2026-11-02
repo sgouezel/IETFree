@@ -285,7 +285,7 @@ theorem clamp_imageLengths_eq (hl : (∑ j, mu j) = 1) {u v : ℝ} (h0u : 0 ≤ 
 
 /-- **T4**: an exchange restricted to an invariant interval, rescaled to `[0, 1)`, is the exchange
 with the truncated lengths and the same permutation. -/
-theorem mkIET1_restrict_invariant (hl : (∑ j, mu j) = 1) (_hpos : Positive mu) {u v : ℝ}
+theorem mkIET1_restrict_invariant (hl : (∑ j, mu j) = 1) {u v : ℝ}
     (h0u : 0 ≤ u) (huv : u < v) (hv1 : v ≤ 1)
     (hinv : ∀ x ∈ Set.Ico u v, (mkIET1 mu σ hl x ∈ Set.Ico u v ↔ x ∈ Set.Ico u v)) :
     ∃ (mu' : Fin e → ℝ≥0) (hl' : (∑ j, mu' j) = 1),
@@ -459,26 +459,6 @@ theorem sum_truncatedLengths (mu : Fin e → ℝ≥0) (hl : (∑ j, mu j) = 1) {
         (Finset.sum_div _ _ _).symm
     _ = (v - u) / (v - u) := by rw [sum_clamp_sub mu htot h0u huv hv1]
     _ = ((1 : ℝ≥0) : ℝ) := by rw [div_self hvune]; simp
-
-omit [NeZero e] in
-/-- **Companion: the prefix sums of the truncated lengths are the clamped prefix sums.**
-
-Note the `clamp`.  For a cell that starts at or after `v` the truncated length is `0`, so the prefix
-sum is `1`, while `(leftEnd mu j - u)/(v - u) > 1`: the literal form
-`leftEnd mu' j = (max u (leftEnd mu j) - u)/(v - u)` of the task statement is false once a cell
-starts beyond `v`.  The correct statement is the clamped one below; it specialises to the literal
-one for the cells that start before `v` (`leftEnd_truncatedLengths_of_le`). -/
-theorem leftEnd_truncatedLengths (mu : Fin e → ℝ≥0) {u v : ℝ} (h0u : 0 ≤ u) (huv : u < v)
-    (j : Fin e) :
-    leftEnd (truncatedLengths mu u v huv) j = (clamp u v (leftEnd mu j) - u) / (v - u) :=
-  leftEnd_of_clamp_sub (fun j => truncatedLengths_clamp mu huv j) huv h0u j
-
-omit [NeZero e] in
-/-- The companion in the literal form of the task statement, for a cell starting before `v`. -/
-theorem leftEnd_truncatedLengths_of_le (mu : Fin e → ℝ≥0) {u v : ℝ} (h0u : 0 ≤ u)
-    (huv : u < v) {j : Fin e} (hj : leftEnd mu j ≤ v) :
-    leftEnd (truncatedLengths mu u v huv) j = (max u (leftEnd mu j) - u) / (v - u) := by
-  rw [leftEnd_truncatedLengths mu h0u huv, clamp, min_eq_right (max_le (le_of_lt huv) hj)]
 
 end Main
 

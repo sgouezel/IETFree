@@ -11,7 +11,7 @@ Integer-affine functions of the free parameters.
 
 A function of the free parameters is integer affine (`IsIntAffine`) when it is an integer constant
 plus an integer combination of the coordinates.  The file proves that the class is closed under the
-operations used in the reduction (`add`, `neg`, `sub`, `smul`, `sum`, `ite`), that the concrete
+operations used in the reduction (`add`, `neg`, `sub`, `sum`, `ite`), that the concrete
 singularity functions of `IETFree.Presentation` are integer affine (`isIntAffine_cutAffine`,
 `isIntAffine_imageLeftAffine`, …), and it extracts the data (`intAffineData`) that the Diophantine
 transfer consumes.
@@ -143,24 +143,6 @@ end IntAffine
 section Closure
 
 variable {d e : ℕ}
-
-theorem IsIntAffine.smul (k : ℤ) {f : ParamAffine d e} (hf : IsIntAffine f) :
-    IsIntAffine ((k : ℝ) • f) := by
-  obtain ⟨c, A, B, h⟩ := hf
-  refine ⟨k * c, fun i => k * A i, fun j => k * B j, fun q => ?_⟩
-  have hq : ((k : ℝ) • f) q = (k : ℝ) * f q := rfl
-  rw [hq, h q]
-  have e1 : (∑ i, ((k * A i : ℤ) : ℝ) * q.1 i)
-      = (k : ℝ) * ∑ i, (A i : ℝ) * q.1 i := by
-    rw [Finset.mul_sum]
-    exact Finset.sum_congr rfl (fun i _ => by push_cast; ring)
-  have e2 : (∑ j, ((k * B j : ℤ) : ℝ) * q.2 j)
-      = (k : ℝ) * ∑ j, (B j : ℝ) * q.2 j := by
-    rw [Finset.mul_sum]
-    exact Finset.sum_congr rfl (fun j _ => by push_cast; ring)
-  rw [e1, e2]
-  push_cast
-  ring
 
 theorem IsIntAffine.sum {ι : Type*} (s : Finset ι) {F : ι → ParamAffine d e}
     (h : ∀ i ∈ s, IsIntAffine (F i)) : IsIntAffine (∑ i ∈ s, F i) := by
@@ -299,15 +281,3 @@ with a *single* integer-affine function: the pattern cannot change without the t
 and a meeting point would be an interior zero of a continuous function (IVT).  This is what makes
 the `μ'` of Lemma 3.4 integer combinations of the parameters, as the paper's
 "integer combination" step needs. -/
-
-section SignConstancy
-
-variable {d e : ℕ}
-
-end SignConstancy
-
-section Truncation
-
-variable {d e : ℕ}
-
-end Truncation

@@ -3,7 +3,7 @@
 # Standard: https://github.com/mathlib-initiative/formalization.yaml
 #
 # Everything below describes the tree this file sits in: the Lean sources are in IETFree/, the
-# development ledger is NOTES.md, and ./Build.sh compiles the 33 modules in a fixed order and prints
+# development ledger is NOTES.md, and ./Build.sh compiles the 31 modules in a fixed order and prints
 # the axiom report. Counts and line references were checked against the tree at the time of writing.
 
 version: "v0.4"
@@ -93,7 +93,7 @@ classification:
 status:
   scope: >-
     The whole of the paper except the two inputs it quotes from the literature, and except Lemma 1.2
-    and the remark after Theorem 1.1. All 31 modules of IETFree/ are sorry-free; the only six
+    and the remark after Theorem 1.1. All 29 modules of IETFree/ are sorry-free; the only six
     sorries in the tree are deliberate placeholder statements: three in the display-only file
     `Challenge.lean` (nothing imports it — the definition hole `mkIETEquiv`, `coe_mkIETEquiv` and
     `main`), and three in the comparator challenge `ChallengeWeak.lean` (the definition hole
@@ -161,19 +161,21 @@ automation:
         An AI agent working in a Linux VM under Open Math OS, writing Lean 4.33.1 against Mathlib
         pinned at the `v4.33.1` tag. The repository is a genuine Lake project — `lakefile.toml`,
         `lake-manifest.json`, `lean-toolchain` — with one Lean library for `IETFree/` and one for each
-        of the two statement files, so `lake build` (after `lake exe cache get`) builds all 34 modules.
+        of the two statement files, so `lake build` (after `lake exe cache get`) builds all 32 modules.
         That build enables the Mathlib linter set and is warning-free: a clean `lake build` reports no
         linter warning at all, and neither does `Build.sh`.  The declaration linters, which
         `lake build` does not run, are clean as well: Mathlib's lint driver (`runLinter`) reports
-        0 findings on the library's 982 declarations.
+        0 findings on every declaration of the library.
         In the development VM Mathlib is a root-owned, read-only, prebuilt tree, which Lake cannot use
         as a package, so `Build.sh` reproduces the same compilation with plain `lean`, in the same
         order and with the same options, and additionally prints the axiom report and the sorry count.
         While a file was being worked on, one module was compiled at a time with a small helper script,
         and the full build was run at the end. The import list of the umbrella `IETFree.lean` is
-        generated, by `lake exe mk_all --lib IETFree`, and sorted by module name. `Check.lean` is a
-        report of 296 `#print axioms` lines, and `Build.sh` fails with `--strict` if `sorryAx` is
-        reachable. The comparator pair is checked on every build, by `Comparator/Check.lean` (the
+        generated, by `lake exe mk_all --lib IETFree`, and sorted by module name. The library carries
+        a single axiom check, `#print axioms main`, registered directly below `main` in
+        `IETFree/ChallengeWeakSolved.lean`, and `Build.sh` fails with `--strict` if `sorryAx` is
+        reachable from it. The comparator pair is checked on every build, by `Comparator/Check.lean`
+        (the
         comparator's own algorithm on the two compiled modules), and the genuine comparator is
         reproduced by one command, `Comparator/run.sh`. The agent kept the ledger `NOTES.md`, which
         records every statement that had to be restated and why.
@@ -246,8 +248,8 @@ review:
   notes: >-
     No human referee and no independent human reviewer has checked this development against the
     paper; the author of the paper reviewed that the state of the library is acceptable, but did not
-    verify it line by line. What has been done: every module is compiled and its axioms printed
-    (`Check.lean`, 296 declarations, all `[propext, Classical.choice, Quot.sound]`); and the
+    verify it line by line. What has been done: every module is compiled and the axioms of the main
+    theorem printed (`#print axioms main`, `[propext, Classical.choice, Quot.sound]`); and the
     development went through the audits recorded in `NOTES.md` — two refutations of
     mis-formalized statements, an audit of the hypotheses of every declaration (the derivable ones
     removed), a dead-code scan of the whole library, a docstring pass, and an
@@ -382,7 +384,7 @@ alignment:
         witnesses; blocks are invariant under both generators, so a nontrivial word trivial on each
         block is trivial on all of [0,1).
     - source: "the open regions of Section 3, and their countable cover"
-      lean: "GoodRegion, exists_goodRegion, ae_exists_goodRegion, exists_countable_goodRegion_cover"
+      lean: "GoodRegion, exists_goodRegion, exists_countable_goodRegion_cover"
       module: "IETFree/GoodRegion.lean, IETFree/BlockEndpoints.lean"
       status: "proved"
       note: >-

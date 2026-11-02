@@ -29,9 +29,6 @@ is Theorem 1.1 for the per-block words, and `exists_word_trivial_on_all_of_block
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
 
--- `NeZero (l - k)` is an *instance* in the telescopes below (`mkIET1` needs it as such), so `haveI`
--- is the right binder; the style linter only sees that its value is a `Prop`.
-set_option linter.style.haveILetI false
 namespace GoodRegion
 
 variable {d e : ℕ} [NeZero d] [NeZero e] {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)}
@@ -64,7 +61,7 @@ theorem exists_word_trivial_of_region (G : GoodRegion d e π σ q₀) [NeZero G.
   have hkl : i₀.val < i₁.val := hi
   have hln : i₁.val ≤ G.n := by have := i₁.isLt; omega
   have hne : NeZero (i₁.val - i₀.val) := ⟨by omega⟩
-  haveI := hne
+  have := hne
   have hpos := G.cellLen_pos hq
   -- the two rescaled exchanges of the block
   set F' : IET 0 1 := mkIET1 (G.blockLam hq i₀.val (l := i₁.val) hi (by omega))
@@ -222,7 +219,7 @@ theorem exists_word_trivial_on_block {d e : ℕ} [NeZero d] [NeZero e]
           ∃ w : FreeGroup Gen, w ≠ 1 ∧
             ∀ x : ℝ, u ≤ x → x < v → (evalWord w D.toIET E.toIET) x = x := by
   obtain ⟨ι, hι, Gfam, hcov, hae⟩ := BlockData.exists_ae_block_good π σ hMV hVR
-  haveI := hι
+  have := hι
   filter_upwards [hae] with z hz
   obtain ⟨hbad, hz1, hz2, hdio, hblk⟩ := hz
   intro D E hDπ hEπ hDv hEv u v hb

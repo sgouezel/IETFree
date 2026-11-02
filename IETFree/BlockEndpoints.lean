@@ -19,17 +19,17 @@ This file draws three consequences that Lemma 3.4 needs:
 * `GoodRegion.surj`: the list is *exhausted* by `0`, `1`, the `d - 1` cuts of `f` and the `e - 1`
   preimages of the cuts of `g`;
 * `GoodRegion.mem_pairSplitting`: every pair-splitting point is one of the marked points (the
-  `hE` hypothesis of `pairSplitting_mem_markedList` is discharged from `posG_pre`);
+  two list-membership hypotheses of the pair-splitting lemma are discharged from `posG_pre`);
 * `GoodRegion.block_endpoints`: the two endpoints of a block are marked points, with indices
   `i₀ < i₁`, so the block is a run of cells of the list; the same is true of the marked points of a
   datum (`GoodRegion.mem_markD`) and of the cuts of `f` (`mem_cutF`, `mem_cutList`).
 
-It also holds the bookkeeping of A3 — `exists_countable_goodRegion_cover`, `ae_exists_of_countable`
-and the parameter measure `paramMeasure` — and the lengths of a block **at a point of the region**,
+It also holds the bookkeeping of A3 (`exists_countable_goodRegion_cover`) and the lengths of a block
+**at a point of the region**,
 which is what every block statement is stated with: `cellLen` (the cell lengths of the composition,
 with `cellLen_pos` and `cellLen_sum`), `blockLam` (the block rescaled to mass `1`, with
-`blockLam_sum`, `blockLam_coe` and the `rfl` rewrite rule `blockLam_def`), `blockLam_congr`,
-`blockLen_simplexMap`, and the structure API `Block.lam` (with `lam_sum`) and `Block.perm`.
+`blockLam_sum`, `blockLam_coe` and the `rfl` rewrite rule `blockLam_def`), `blockLam_congr`, and the
+structure API `Block.lam` (with `lam_sum`) and `Block.perm`.
 -/
 
 open MeasureTheory Filter Topology
@@ -199,8 +199,8 @@ theorem GoodRegion.mem_markD {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)}
     ∃ i : Fin (G.n + 1), G.s i q = D.mark k := by
   classical
   have hr := G.subset_region q hq
-  have hl : simplexMap d q.1 ∈ simplex d := simplexMap_mem_simplex_fin hr.1.1 hr.1.2
-  have hm : simplexMap e q.2 ∈ simplex e := simplexMap_mem_simplex_fin hr.2.1 hr.2.2
+  have hl : simplexMap d q.1 ∈ simplex d := G.simplexMap_mem_simplex_fst hq
+  have hm : simplexMap e q.2 ∈ simplex e := G.simplexMap_mem_simplex_snd hq
   have hlam : D.lam = simplexMap d q.1 := by rw [IETDatum.lam, hv]
   rcases eq_or_ne k 0 with hk | hk
   · refine ⟨0, ?_⟩
@@ -218,8 +218,8 @@ theorem GoodRegion.mem_markD {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)}
     rw [hkk, IETDatum.mark_castSucc, hlam]
     exact hi
 
-/-- **The pair-splitting points are marked points.**  This is `pairSplitting_mem_markedList` with
-its two list-membership hypotheses discharged from the shape of the list. -/
+/-- **The pair-splitting points are marked points**, with the two list-membership hypotheses
+discharged from the shape of the list. -/
 theorem GoodRegion.mem_pairSplitting {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)}
     {q₀ : PReal d e} (G : GoodRegion d e π σ q₀) {D : IETDatum d} {E : IETDatum e}
     {q : PReal d e} (hq : q ∈ G.O) (hvD : D.v = q.1) (hπD : D.π = π) (hvE : E.v = q.2)
@@ -227,8 +227,8 @@ theorem GoodRegion.mem_pairSplitting {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm 
     ∃ i : Fin (G.n + 1), G.s i q = x := by
   classical
   have hr := G.subset_region q hq
-  have hl : simplexMap d q.1 ∈ simplex d := simplexMap_mem_simplex_fin hr.1.1 hr.1.2
-  have hm : simplexMap e q.2 ∈ simplex e := simplexMap_mem_simplex_fin hr.2.1 hr.2.2
+  have hl : simplexMap d q.1 ∈ simplex d := G.simplexMap_mem_simplex_fst hq
+  have hm : simplexMap e q.2 ∈ simplex e := G.simplexMap_mem_simplex_snd hq
   -- replace `D` and `E` by the canonical data attached to `q`
   have hD : D = IETDatum.ofMem π hr.1 := by
     obtain ⟨a, b, c⟩ := D
@@ -298,8 +298,8 @@ theorem GoodRegion.block_endpoints {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (F
     (hσE : E.π = σ) {u v : ℝ} (hb : IsBlock D E u v) :
     ∃ i₀ i₁ : Fin (G.n + 1), G.s i₀ q = u ∧ G.s i₁ q = v ∧ i₀ < i₁ := by
   have hr := G.subset_region q hq
-  have hl : simplexMap d q.1 ∈ simplex d := simplexMap_mem_simplex_fin hr.1.1 hr.1.2
-  have hm : simplexMap e q.2 ∈ simplex e := simplexMap_mem_simplex_fin hr.2.1 hr.2.2
+  have hl : simplexMap d q.1 ∈ simplex d := G.simplexMap_mem_simplex_fst hq
+  have hm : simplexMap e q.2 ∈ simplex e := G.simplexMap_mem_simplex_snd hq
   obtain ⟨i₀, hi₀⟩ := G.mem_pairSplitting hq hvD hπD hvE hσE hb.left
   obtain ⟨i₁, hi₁⟩ := G.mem_pairSplitting hq hvD hπD hvE hσE hb.right
   refine ⟨i₀, i₁, hi₀, hi₁, ?_⟩
@@ -337,44 +337,6 @@ theorem exists_countable_goodRegion_cover {d e : ℕ} [NeZero d] [NeZero e]
   obtain ⟨i, hir, hzi⟩ := Set.mem_iUnion₂.mp (hrcov ⟨hz, h1, h2⟩)
   exact ⟨⟨i, hir⟩, hzi⟩
 
-/-- **From a countable family of open sets to an almost-sure statement**: if a property holds almost
-everywhere on each `O i` (in the sense that `O i ∩ {¬ P i}` is null), then almost every point of `s`
-lies in some `O i` on which its own property holds. -/
-theorem ae_exists_of_countable {α : Type*}
-    [MeasurableSpace α] {μ : Measure α} {ι : Type*} [Countable ι] {s : Set α} {O : ι → Set α}
-    {P : ι → α → Prop} (hO : ∀ z ∈ s, ∃ i, z ∈ O i)
-    (hnull : ∀ i, μ (O i ∩ {z | ¬ P i z}) = 0) :
-    ∀ᵐ z ∂μ, z ∈ s → ∃ i, z ∈ O i ∧ P i z := by
-  rw [ae_iff]
-  have hsub : {z | ¬ (z ∈ s → ∃ i, z ∈ O i ∧ P i z)} ⊆ ⋃ i, (O i ∩ {z | ¬ P i z}) := by
-    intro z hz
-    simp only [Set.mem_ofPred_eq, Classical.not_imp] at hz
-    obtain ⟨hzs, hno⟩ := hz
-    obtain ⟨i, hi⟩ := hO z hzs
-    exact Set.mem_iUnion.mpr ⟨i, hi, fun hP => hno ⟨i, hi, hP⟩⟩
-  exact measure_mono_null hsub (measure_iUnion_null hnull)
-/-- A free coordinate of `simplexMap`: the value at an index that is not the last one. -/
-theorem coe_simplexMap_of_lt {n : ℕ} {x : Fin (n - 1) → ℝ} (i : Fin n) (h : i.val < n - 1)
-    (hx : 0 ≤ x ⟨i.val, h⟩) : (simplexMap n x i : ℝ) = x ⟨i.val, h⟩ := by
-  rw [simplexMap, dif_neg (by omega), Real.coe_toNNReal _ hx]
-
-/-- The last coordinate of `simplexMap`. -/
-theorem coe_simplexMap_last {n : ℕ} {x : Fin (n - 1) → ℝ} (i : Fin n) (h : ¬ i.val < n - 1)
-    (hx : 0 ≤ 1 - ∑ j, x j) : (simplexMap n x i : ℝ) = 1 - ∑ j, x j := by
-  rw [simplexMap, dif_pos (by omega), Real.coe_toNNReal _ hx]
-
-/-- On the open simplex region, the length of the cell of index `k + i` (of `simplexMap n x`) is
-`blockLen k r x i`. -/
-theorem blockLen_simplexMap {n : ℕ} {x : Fin (n - 1) → ℝ} (hx : x ∈ simplexRegion n)
-    {k r : ℕ} (i : Fin r) (h : k + i.val < n) :
-    blockLen k r x i = (simplexMap n x ⟨k + i.val, h⟩ : ℝ) := by
-  rcases lt_or_eq_of_le (show k + i.val ≤ n - 1 by omega) with hlt | heq
-  · rw [blockLen_of_lt x i hlt,
-      coe_simplexMap_of_lt ⟨k + i.val, h⟩ hlt (le_of_lt (hx.1 _))]
-  · rw [blockLen_of_not_lt x i (by omega),
-      coe_simplexMap_last ⟨k + i.val, h⟩ (by simp only; omega)
-        (by linarith [hx.2])]
-
 /-- `blockLam` depends only on the length vector, not on the proof of positivity. -/
 theorem blockLam_congr {n : ℕ} {lam lam' : Fin n → ℝ≥0} (h : lam = lam') {k l : ℕ}
     (hkl : k < l) (hln : l ≤ n) (hpos : Positive lam) (hpos' : Positive lam') :
@@ -401,6 +363,11 @@ singularity list `G.s`. -/
 noncomputable def cellLen (G : GoodRegion d e π σ q₀) {q : PReal d e} (hq : q ∈ G.O) :
     Fin G.n → ℝ≥0 :=
   compLenVec G.s q (monoAt G hq)
+
+/-- **The unfolding of `cellLen`**: the cell lengths are `compLen` of the singularity list at the
+point, and do not depend on which proof of monotonicity is supplied. -/
+theorem cellLen_eq (G : GoodRegion d e π σ q₀) {q : PReal d e} (hq : q ∈ G.O)
+    (hmono : StrictMono fun k => G.s k q) : G.cellLen hq = compLen hmono := rfl
 
 /-- The cell lengths are positive. -/
 theorem cellLen_pos (G : GoodRegion d e π σ q₀) {q : PReal d e} (hq : q ∈ G.O) (i : Fin G.n) :
@@ -465,14 +432,8 @@ end Block
 
 end GoodRegion
 
-/-! ### The parameter measure of Lemma 3.4
-
-The assembly of Lemma 3.4 has to combine almost-sure statements stated for two different measures:
-`ae_goodParams_real` and `ae_diophantine_real` are stated for the product of the two restricted
-Lebesgue measures on the free regions, while the block statements (`ae_BlockGoodPt`) are stated
-for the restriction of Lebesgue measure to the region `O` of a `GoodRegion`.  The two are reconciled
-by absolute continuity against the ambient Lebesgue measure on the parameter space. -/
-
-/-- The parameter measure of Lemma 3.4: Lebesgue measure on the two open simplex regions. -/
-noncomputable abbrev paramMeasure (d e : ℕ) : Measure (PReal d e) :=
-  (volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e))
+/-! The assembly of Lemma 3.4 has to combine almost-sure statements stated for two different
+measures: `ae_goodParams_real` and `ae_diophantine_real` are stated for the product of the two
+restricted Lebesgue measures on the free regions, while the block statements (`ae_BlockGoodPt`) are
+stated for the restriction of Lebesgue measure to the region `O` of a `GoodRegion`.  The two are
+reconciled by absolute continuity against the ambient Lebesgue measure on the parameter space. -/

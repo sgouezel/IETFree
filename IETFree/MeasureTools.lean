@@ -350,10 +350,6 @@ theorem isFiniteUnionIntervals_ne_id {h : IET 0 1} {C : Finset ℝ}
     rw [hsame] at hzero
     exact hdisp hzero
 
-/-- The empty set is a finite union of half-open intervals (an empty family). -/
-theorem IsFiniteUnionIntervals.empty : IsFiniteUnionIntervals (∅ : Set ℝ) :=
-  ⟨∅, by simp⟩
-
 /-! ## Tools for Lemma 2.10
 
 The support of a commutator, the length of the words produced, and the averaged Birkhoff estimate of
@@ -662,4 +658,3 @@ theorem exists_small_intersection (f g : IET 0 1) {S S₀ : Set ℝ} (hS : Measu
     rw [Finset.sum_add_distrib, Finset.sum_add_distrib]
     linarith
   linarith
-

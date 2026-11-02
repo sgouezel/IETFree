@@ -19,9 +19,9 @@ family of integer-affine functions is Diophantine after rescaling by the block m
 * `GoodRegion.exists_isIntAffine_s`, `GoodRegion.sAffine`, `GoodRegion.isIntAffine_sAffine`,
   `GoodRegion.sAffine_spec`: every entry of the marked list is integer affine on the region;
 * `GoodRegion.compLenVec_coe_eq`: the cell lengths of the composition in real coordinates, against
-  the integer-affine representative `G.sAffine`; and `cutAffine_eq_leftEnd`, `sum_sub_mul`, the two
+  the integer-affine representative `G.sAffine`; and `cutAffine_eq_leftEnd`, the two
   algebraic identities the assembly needs;
-* the `g`-cell lengths in real coordinates (`gLenAffine`, `gUpperEnd`, with `isIntAffine_gUpperEnd`
+* the `g`-cell lengths in real coordinates (`gUpperEnd`, with `isIntAffine_gUpperEnd`
   and their evaluation lemmas) and `GoodRegion.exists_isIntAffine_truncatedLengths`: the `μ'` family
   of a block — the `g`-cell pieces truncated to the block — is a family of integer-affine functions;
 * `IsDiophantine.of_intAffine_family`: the transfer of the Diophantine condition to a family of
@@ -112,9 +112,6 @@ end Uniform
 
 end GoodRegion
 
-set_option linter.unusedSectionVars false
-set_option linter.unusedSimpArgs false
-set_option linter.unusedVariables false
 
 /-!
 The truncation of the `g`-cells at the ends of a block.
@@ -139,16 +136,6 @@ omit [NeZero d] [NeZero e] in
 theorem cutAffine_eq_leftEnd {q : PReal d e} (hq : q.1 ∈ simplexRegion d) (k : Fin d) :
     cutAffine (e := e) k q = leftEnd (simplexMap d q.1) k := by
   rw [cutAffine_apply, leftEnd_simplexMap hq]
-
-/-- **The difference of two integer combinations of a length vector**: subtracting the coefficient
-families and then combining is the difference of the two combinations. -/
-theorem sum_sub_mul {n : ℕ} (a a' : Fin n → ℤ) (lam : Fin n → ℝ) :
-    (∑ i, (((a - a') i : ℤ) : ℝ) * lam i)
-      = (∑ i, (a i : ℝ) * lam i) - ∑ i, (a' i : ℝ) * lam i := by
-  rw [← Finset.sum_sub_distrib]
-  refine Finset.sum_congr rfl (fun i _ => ?_)
-  simp only [Pi.sub_apply, Int.cast_sub]
-  ring
 
 end GoodRegion
 
@@ -397,32 +384,12 @@ The block construction never needs the `NNReal` length vector: the real cell len
 coordinates (and `1 - ∑ q.2` at the last cell), so they are integer affine on *all* of `PReal d e`,
 and `leftEnd`/`upperEnd` are integer affine accordingly (`cutAffineRight` and `gUpperEnd`).  The
 identifications with `leftEnd`/`upperEnd` of `(simplexMap e q.2 : Fin e → ℝ≥0)` hold on the open
-simplex region (`cutAffineRight_eq_leftEnd`, `gLenAffine_eq`, `gUpperEnd_eq`), which is exactly
+simplex region (`cutAffineRight_eq_leftEnd`, `gUpperEnd_eq`), which is exactly
 where they are used. -/
 
 section GCells
 
 variable {d e : ℕ} [NeZero d] [NeZero e]
-
-/-- The real length of the `j`-th cell of `g` as an affine function of the free parameters: the
-free coordinate `q.2 j` away from the last cell, and the remaining mass `1 - ∑ q.2` at the last one.
-This is the `g`-analogue of `imageLenAffine`, and it is why no `NNReal` is needed in the block
-construction: on the open simplex region it is `(simplexMap e q.2 j : ℝ)`, but as a free-coordinate
-expression it is integer affine on *all* of `PReal d e`, not merely on a region. -/
-noncomputable def gLenAffine (j : Fin e) : ParamAffine d e :=
-  if h : j.val + 1 = e then (AffineMap.const ℝ (PReal d e) (1 : ℝ))
-      - ∑ m : Fin (e - 1), rightCoordAffine (d := d) m
-    else rightCoordAffine (d := d) ⟨j.val, by have h1 := j.isLt; omega⟩
-
-omit [NeZero d] [NeZero e] in
-theorem gLenAffine_eq {q : PReal d e} (hq : q.2 ∈ simplexRegion e) (j : Fin e) :
-    gLenAffine (d := d) j q = (simplexMap e q.2 j : ℝ) := by
-  by_cases h : j.val + 1 = e
-  · rw [gLenAffine, dif_pos h, simplexMap, dif_pos h, AffineMap.coe_sub, Pi.sub_apply,
-      AffineMap.const_apply, AffineMap.sum_apply, Real.coe_toNNReal _ (by linarith [hq.2])]
-    simp only [rightCoordAffine_apply]
-  · rw [gLenAffine, dif_neg h, simplexMap, dif_neg h, rightCoordAffine_apply,
-      Real.coe_toNNReal _ (le_of_lt (hq.1 _))]
 
 /-- The right end of the `j`-th cell of `g`, in real coordinates: the next cut, and `1` at the last
 cell.  Integer affine on all of `PReal d e`. -/

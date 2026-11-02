@@ -9,12 +9,12 @@ import IETFree.CutSetMeasure
 /-!
 Interval exchanges: the predicate, the explicit construction, and the group.
 
-`IsIET a b f` says that the bare function `f` is the identity or has a cut set, and `cutSet` is the
-minimal cut set of such a map.  The file then constructs the exchange attached to a length vector
+`IsIET a b f` says that the bare function `f` is the identity or has a cut set.  The file then
+constructs the exchange attached to a length vector
 and a permutation explicitly (`mkIETFun`, `mkIETEquiv`, `mkIET1`, with the cut set `mkIETCuts`),
 exhibits the simplex of length vectors as a measure space (`simplexRegion`, `simplexMap`,
 `simplexVolume`), with `Positive` for the positivity of a length vector, and
-proves the classification `exists_mkIETEquiv_eq` / `isIET_iff_exists_mkIETEquiv`: every exchange is
+proves the classification `exists_mkIETEquiv_eq`: every exchange is
 `mkIETFun` of the lengths and the permutation of any of its cut sets.  It closes with the type
 `IET a b` of exchanges as permutations of `ℝ` fixing the complement of `[a, b)`, and its group
 structure.
@@ -80,65 +80,6 @@ theorem mapsTo (h : IsIET a b f) {x : ℝ} (hx : x ∈ Set.Ico a b) : f x ∈ Se
   · rw [hid x]; exact hx
   · exact hs.mapsTo x hx
 
-/-- **Monotonicity**: an exchange on `[a, b)` is an exchange on any larger interval. -/
-theorem mono (h : IsIET a b f) {a' b' : ℝ} (ha : a' ≤ a) (hb : b ≤ b') : IsIET a' b' f := by
-  rcases h with hid | ⟨s, hs⟩
-  · exact Or.inl hid
-  · classical
-    have hab : a < b := hs.lt
-    have hab' : a' ≤ b := le_trans ha (le_of_lt hab)
-    have ha' : a' ∈ (insert a' (s ∪ {a, b})).filter (fun c => c ∈ Set.Ico a' b') := by
-      refine Finset.mem_filter.mpr ⟨Finset.mem_insert_self a' _, le_rfl, ?_⟩
-      exact lt_of_lt_of_le (lt_of_le_of_lt ha hab) hb
-    refine Or.inr ⟨(insert a' (s ∪ {a, b})).filter (fun c => c ∈ Set.Ico a' b'),
-      ?_, ?_, ?_, ha', ?_, ?_⟩
-    · intro x hx
-      exact hs.apply_eq_self_of_lt x (lt_of_lt_of_le hx ha)
-    · intro x hx
-      exact hs.apply_eq_self_of_le x (le_trans hb hx)
-    · intro x hx
-      rcases lt_or_ge x a with hxa | hxa
-      · rw [hs.apply_eq_self_of_lt x hxa]; exact hx
-      · rcases lt_or_ge x b with hxb | hxb
-        · exact ⟨le_trans ha (hs.mapsTo x ⟨hxa, hxb⟩).1,
-            lt_of_lt_of_le (hs.mapsTo x ⟨hxa, hxb⟩).2 hb⟩
-        · rw [hs.apply_eq_self_of_le x hxb]; exact hx
-    · intro c hc
-      exact (Finset.mem_filter.mp hc).2
-    · intro x y hx hy hns
-      have hs_sub : s ⊆ (insert a' (s ∪ {a, b})).filter (fun c => c ∈ Set.Ico a' b') := by
-        intro c hc
-        refine Finset.mem_filter.mpr ⟨Finset.mem_insert_of_mem (Finset.mem_union_left _ hc),
-          ⟨le_trans ha (hs.cuts_mem c hc).1, lt_of_lt_of_le (hs.cuts_mem c hc).2 hb⟩⟩
-      rcases lt_or_ge x a with hxa | hxa
-      · rw [hs.apply_eq_self_of_lt x hxa]
-        rcases lt_or_ge y a with hya | hya
-        · rw [hs.apply_eq_self_of_lt y hya]; ring
-        · exact absurd ⟨a, Finset.mem_filter.mpr
-            ⟨Finset.mem_insert_of_mem (Finset.mem_union_right _ (Finset.mem_insert_self _ _)),
-              ha, lt_of_le_of_lt hya hy.2⟩,
-            lt_of_le_of_lt (min_le_left _ _) hxa, le_trans hya (le_max_right _ _)⟩ hns
-      · rcases lt_or_ge x b with hxb | hxb
-        · rcases lt_or_ge y a with hya | hya
-          · exact absurd ⟨a, Finset.mem_filter.mpr
-              ⟨Finset.mem_insert_of_mem (Finset.mem_union_right _ (Finset.mem_insert_self _ _)),
-                ha, lt_of_le_of_lt hxa hx.2⟩,
-              lt_of_le_of_lt (min_le_right _ _) hya, le_trans hxa (le_max_left _ _)⟩ hns
-          · rcases lt_or_ge y b with hyb | hyb
-            · exact hs.transl_of_not_separated x y ⟨hxa, hxb⟩ ⟨hya, hyb⟩ (fun hh => hns
-                (Separated.mono hh hs_sub))
-            · exact absurd ⟨b, Finset.mem_filter.mpr
-                ⟨Finset.mem_insert_of_mem (Finset.mem_union_right _ (Finset.mem_insert_of_mem
-                  (Finset.mem_singleton_self b))), hab', lt_of_le_of_lt hyb hy.2⟩,
-                lt_of_le_of_lt (min_le_left _ _) hxb, le_trans hyb (le_max_right _ _)⟩ hns
-        · rw [hs.apply_eq_self_of_le x hxb]
-          rcases lt_or_ge y b with hyb | hyb
-          · exact absurd ⟨b, Finset.mem_filter.mpr
-              ⟨Finset.mem_insert_of_mem (Finset.mem_union_right _ (Finset.mem_insert_of_mem
-                (Finset.mem_singleton_self b))), hab', lt_of_le_of_lt hxb hx.2⟩,
-              lt_of_le_of_lt (min_le_right _ _) hyb, le_trans hxb (le_max_left _ _)⟩ hns
-          · rw [hs.apply_eq_self_of_le y hyb]; ring
-
 /-- **Composition**: exchanges on `[a, b)` are closed under composition. -/
 theorem comp (hf : IsIET a b f) (hg : IsIET a b g) : IsIET a b (g ∘ f) := by
   rcases hf with hid | ⟨s, hs⟩
@@ -153,65 +94,8 @@ theorem comp (hf : IsIET a b f) (hg : IsIET a b g) : IsIET a b (g ∘ f) := by
 
 end IsIET
 
-/-- The cardinalities of the cut sets of `f` are attained. -/
-theorem exists_card_cutSet {f : ℝ → ℝ} {a b : ℝ} (h : ∃ s, IsCutSet f a b s) :
-    ∃ n, ∃ s, IsCutSet f a b s ∧ s.card = n := by
-  obtain ⟨s, hs⟩ := h
-  exact ⟨s.card, s, hs, rfl⟩
-
-/-- The **minimal cut set** of `f` on `[a, b)`: a cut set of smallest cardinality, empty if there is
-none.  It is contained in *every* cut set (see `cutSet_subset`). -/
-noncomputable def cutSet (f : ℝ → ℝ) (a b : ℝ) : Finset ℝ := by
-  classical
-  exact if h : ∃ s, IsCutSet f a b s then (Nat.find_spec (exists_card_cutSet h)).choose else ∅
-
-/-- The minimal cut set is a cut set, provided there is one. -/
-theorem cutSet_isCutSet {f : ℝ → ℝ} {a b : ℝ} (h : ∃ s, IsCutSet f a b s) :
-    IsCutSet f a b (cutSet f a b) := by
-  classical
-  unfold cutSet
-  rw [dif_pos h]
-  exact (Nat.find_spec (exists_card_cutSet h)).choose_spec.1
-
-/-- The minimal cut set is a cut set for an exchange on a nonempty interval. -/
-theorem IsIET.cutSet_isCutSet {f : ℝ → ℝ} {a b : ℝ} (h : IsIET a b f) (hab : a < b) :
-    IsCutSet f a b (cutSet f a b) :=
-  _root_.cutSet_isCutSet (h.exists_isCutSet hab)
-
 -- the data of one cut set, in scope below (`hs` stays a binder of each declaration)
 variable {f : ℝ → ℝ} {a b : ℝ} {s : Finset ℝ}
-
-/-- The minimal cut set has no more cuts than any cut set. -/
-theorem card_cutSet_le (hs : IsCutSet f a b s) :
-    (cutSet f a b).card ≤ s.card := by
-  have h : ∃ t, IsCutSet f a b t := ⟨s, hs⟩
-  classical
-  unfold cutSet
-  rw [dif_pos h]
-  have h1 : (Nat.find_spec (exists_card_cutSet h)).choose.card = Nat.find (exists_card_cutSet h) :=
-    (Nat.find_spec (exists_card_cutSet h)).choose_spec.2
-  rw [h1]
-  exact Nat.find_min' (exists_card_cutSet h) ⟨s, hs, rfl⟩
-
-/-- **The minimal cut set is contained in every cut set.** -/
-theorem cutSet_subset (hs : IsCutSet f a b s) :
-    cutSet f a b ⊆ s := by
-  have h : ∃ t, IsCutSet f a b t := ⟨s, hs⟩
-  have h₁ : IsCutSet f a b (cutSet f a b ∩ s) := (cutSet_isCutSet h).inter hs
-  have h₂ : (cutSet f a b ∩ s).card ≤ (cutSet f a b).card :=
-    Finset.card_le_card Finset.inter_subset_left
-  have h₃ : (cutSet f a b).card ≤ (cutSet f a b ∩ s).card := card_cutSet_le h₁
-  have h₄ : (cutSet f a b).card = (cutSet f a b ∩ s).card := le_antisymm h₃ h₂
-  have h₅ : cutSet f a b ∩ s = cutSet f a b :=
-    Finset.eq_of_subset_of_card_le Finset.inter_subset_left (le_of_eq h₄)
-  exact Finset.inter_eq_left.mp h₅
-
-/-- **The cut set of a composite** is contained in the cut sets of the factors (the second one
-pulled back). -/
-theorem cutSet_comp_subset {f g : ℝ → ℝ} {a b : ℝ} {s t : Finset ℝ}
-    (hf : IsCutSet f a b s) (hg : IsCutSet g a b t) :
-    cutSet (g ∘ f) a b ⊆ s ∪ hf.preimage t :=
-  cutSet_subset (IsCutSet.comp (f := f) (g := g) hf hg)
 
 /-! ## Lebesgue measure on the simplex -/
 
@@ -240,7 +124,14 @@ abbrev Positive {n : ℕ} (lam : Fin n → ℝ≥0) : Prop :=
 
 /-- **The indices of a block of `n` cells**: `k < l ≤ n`.  The instance `NeZero (l - k)`, which
 `blockLam` and `mkIET1` need to form the rescaled block, is derived here once, so that no statement
-about a block has to carry it. -/
+about a block has to carry it.
+
+Two layers use the indices: the *raw* API of `blockMass` / `blockLam` / `blockPerm` takes
+`(k) {l} (hkl : k < l) (hln : l ≤ n)` as plain arguments — it is stated for an arbitrary
+length vector, with no region in scope — and the *block-level* statements (`GoodRegion.Block`,
+`mkIET1_rescale_subinterval`, `idx_rescaleMap_aux`) take the bundle `BlockIdx n` (or a `Block`,
+which extends it).  The bundle is not threaded through the raw API: doing so would touch the ~150
+call sites of those three definitions for no change in their statements. -/
 structure BlockIdx (n : ℕ) where
   /-- The index of the first cell of the block. -/
   k : ℕ
@@ -308,15 +199,6 @@ theorem upperEnd_eq {n : ℕ} (lam : Fin n → ℝ≥0) (i : Fin n) :
   rw [upperEnd, leftEnd, h, Finset.sum_insert (by simp)]
   ring
 
-theorem leftEnd_le {n : ℕ} (lam : Fin n → ℝ≥0) {i j : Fin n} (hij : i ≤ j) :
-    leftEnd lam i ≤ leftEnd lam j := by
-  rw [leftEnd, leftEnd]
-  refine Finset.sum_le_sum_of_subset_of_nonneg ?_ ?_
-  · intro k hk
-    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hk ⊢
-    exact lt_of_lt_of_le hk hij
-  · intro k _ _; exact (lam k).coe_nonneg
-
 /-- The cells are disjoint: the right end of the `i`-th interval is at most the left end of any
 later one.  Only nonnegativity of the lengths is used. -/
 theorem upperEnd_le_leftEnd {n : ℕ} (lam : Fin n → ℝ≥0) {i j : Fin n} (hij : i < j) :
@@ -337,15 +219,6 @@ theorem upperEnd_of_max {n : ℕ} (lam : Fin n → ℝ≥0) {i : Fin n}
 
 theorem leftEnd_nonneg {n : ℕ} (lam : Fin n → ℝ≥0) (i : Fin n) : 0 ≤ leftEnd lam i :=
   Finset.sum_nonneg fun j _ => (lam j).coe_nonneg
-
-theorem upperEnd_nonneg {n : ℕ} (lam : Fin n → ℝ≥0) (i : Fin n) : 0 ≤ upperEnd lam i :=
-  Finset.sum_nonneg fun j _ => (lam j).coe_nonneg
-
-theorem leftEnd_le_total {n : ℕ} (lam : Fin n → ℝ≥0) (i : Fin n) :
-    leftEnd lam i ≤ ∑ j, (lam j : ℝ) := by
-  rw [leftEnd]
-  exact Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _)
-    (fun k _ _ => (lam k).coe_nonneg)
 
 theorem upperEnd_le_total {n : ℕ} (lam : Fin n → ℝ≥0) (i : Fin n) :
     upperEnd lam i ≤ ∑ j, (lam j : ℝ) := by
@@ -497,7 +370,7 @@ private theorem mkIETFunCore_of_notMem {n : ℕ} [NeZero n] (lam : Fin n → ℝ
 
 /-- The image of the `i`-th interval lies in the image interval of `i`. -/
 theorem image_point_mem {n : ℕ} (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
-    {x : ℝ} (_hx : x ∈ Set.Ico 0 (∑ i, (lam i : ℝ))) {i : Fin n}
+    {x : ℝ} {i : Fin n}
     (h1 : leftEnd lam i ≤ x) (h2 : x < upperEnd lam i) :
     x + translationVector π lam i ∈ Set.Ico 0 (∑ i, (lam i : ℝ)) ∧
       imageLeft π lam i ≤ x + translationVector π lam i ∧
@@ -521,7 +394,7 @@ private theorem mkIETFunCore_inv_left {n : ℕ} [NeZero n] (lam : Fin n → ℝ�
     set i := idx lam x hx.1 with hi
     have h1 : leftEnd lam i ≤ x := idx_mem lam x hx.1
     have h2 : x < upperEnd lam i := lt_upperEnd_idx lam hx
-    obtain ⟨hIm, hlow, hhigh⟩ := image_point_mem lam π hx h1 h2
+    obtain ⟨hIm, hlow, hhigh⟩ := image_point_mem lam π h1 h2
     rw [← htot] at hIm
     -- the index, in the reordered arrangement, of the image point is `π i`
     have hidx : idx (imageLengths π lam) (x + translationVector π lam i) hIm.1 = π i := by
@@ -800,7 +673,7 @@ Every cut set, not only the minimal one, gives a length vector and a permutation
 cells and the permutation of the cells induced by the images.  The original map is `mkIETFun` of
 that data.  This is the API the classification `exists_mkIETEquiv_eq` is an instance of, and it is
 what lets the other results of this file be stated in terms of `mkIETFun` and `mkIETEquiv`
-(`IsCutSet.eq_mkIETFun`, `IsCutSet.eq_mkIETEquiv`) whenever an explicit cut set is at hand. -/
+(`IsCutSet.eq_mkIETFun`) whenever an explicit cut set is at hand. -/
 
 /-- **The length vector of a cut set**: the lengths of its cells. -/
 noncomputable def IsCutSet.lengths (hs : IsCutSet f a b s) :
@@ -877,14 +750,6 @@ theorem IsCutSet.eq_mkIETFun {a b : ℝ} {e : Equiv ℝ ℝ} {s : Finset ℝ} [N
       · exact hs.apply_eq_self_of_le x (not_lt.mp h2)
     rw [mkIETFun_of_notMem _ _ a hx', he]
 
-/-- **An exchange is `mkIETEquiv` of its cut-set data.** -/
-theorem IsCutSet.eq_mkIETEquiv {a b : ℝ} {e : Equiv ℝ ℝ} {s : Finset ℝ} [NeZero s.card]
-    (hs : IsCutSet (⇑e) a b s) :
-    ⇑e = ⇑(mkIETEquiv hs.lengths (hs.perm e.injective) a) := by
-  funext x
-  rw [coe_mkIETEquiv]
-  exact hs.eq_mkIETFun x
-
 /-- **Classification**: every exchange on `[a, b)` is `mkIETEquiv` of some length vector and some
 permutation, placed at `a`. -/
 theorem exists_mkIETEquiv_eq {a b : ℝ} {e : Equiv ℝ ℝ} (hab : a ≤ b) (h : IsIET a b e) :
@@ -906,16 +771,6 @@ theorem exists_mkIETEquiv_eq {a b : ℝ} {e : Equiv ℝ ℝ} (hab : a ≤ b) (h 
     have : NeZero s.card := ⟨hs.card_pos.ne'⟩
     exact ⟨s.card, ‹NeZero s.card›, hs.lengths, hs.perm e.injective, hs.sum_lengths,
       Equiv.ext hs.eq_mkIETFun⟩
-
-theorem isIET_iff_exists_mkIETEquiv {a b : ℝ} (hab : a ≤ b) (e : Equiv ℝ ℝ) :
-    e.IsIET a b ↔ ∃ (n : ℕ) (_ : NeZero n) (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n)),
-      (∑ i, (lam i : ℝ)) = b - a ∧ e = mkIETEquiv lam π a := by
-  constructor
-  · intro h
-    exact exists_mkIETEquiv_eq hab h
-  · rintro ⟨n, hn, lam, π, hsum, rfl⟩
-    have h := isIET_mkIETEquiv lam π a (t := b - a) (le_of_eq hsum)
-    rwa [show a + (b - a) = b from by ring] at h
 
 namespace Equiv
 
@@ -1018,6 +873,16 @@ noncomputable def mkIET1 {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Eq
     have h2 := isIET_mkIETEquiv lam π 0 (t := 1) (le_of_eq h1)
     simpa using h2
 
+/-- **The function of `mkIET1`**: the unfolding of the definition, `mkIET1 lam π hl` acting on `ℝ`
+is `mkIETFun lam π 0`. -/
+theorem coe_mkIET1 {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
+    (hl : (∑ i, lam i) = 1) : ⇑(mkIET1 lam π hl) = mkIETFun lam π 0 := rfl
+
+/-- The pointwise form of `coe_mkIET1`. -/
+theorem mkIET1_eq_mkIETFun {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
+    (hl : (∑ i, lam i) = 1) (x : ℝ) : mkIET1 lam π hl x = mkIETFun lam π 0 x :=
+  congrFun (coe_mkIET1 lam π hl) x
+
 /-- **The cut set of `mkIET1`**: `mkIETCuts lam 0 1` cuts the exchange on `[0, 1)` into
 translations. This is the named form of what `isIET_mkIETFun` provides, and it is what makes the
 cell API (`cellStarts`, `cellLen`, `lengths`, `perm`) available for the paper's exchanges. -/
@@ -1025,7 +890,7 @@ theorem isCutSet_mkIET1 {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equ
     (hl : (∑ i, lam i) = 1) :
     IsCutSet (mkIET1 lam π hl) 0 1 (mkIETCuts lam 0 1) := by
   have hl' : (∑ i, (lam i : ℝ)) = 1 := by exact_mod_cast hl
-  have h : ⇑(mkIET1 lam π hl).toEquiv = mkIETFun lam π 0 := rfl
+  have h : ⇑(mkIET1 lam π hl).toEquiv = mkIETFun lam π 0 := coe_mkIET1 lam π hl
   rw [h]
   simpa using isCutSet_mkIETCuts (t := 1) lam π 0 (le_of_eq hl') one_pos
 

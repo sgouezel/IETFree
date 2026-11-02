@@ -14,8 +14,8 @@ translates each of them; hence the images of the cells also tile `[a, b)`, and a
 the Lebesgue measure of `[a, b)` (`Equiv.IsIET.measure_preimage`).  With that at hand the file
 proves that an exchange is measurable, that it has finite preimages, and the local structure of a
 piecewise translation: such a map is determined by its translations (`IsLocallyTranslationAt`,
-`IsCutSet.transl_of_locally`), which is what makes a finer cut set again a cut set (`IsCutSet.comp`,
-`IsCutSet.inter`).
+`IsCutSet.transl_of_locally`), which is what makes a finer cut set again a cut set
+(`IsCutSet.comp`).
 -/
 
 open MeasureTheory Filter
@@ -319,53 +319,6 @@ theorem IsCutSet.preimage_subset (hs : IsCutSet f a b s)
 def IsLocallyTranslationAt (f : ℝ → ℝ) (a b c : ℝ) : Prop :=
   ∃ σ : ℝ, ∃ ε : ℝ, 0 < ε ∧ ∀ z : ℝ, z ∈ Set.Ico a b → |z - c| < ε → f z = z + σ
 
-/-- **A true discontinuity belongs to every cut set.**  If `f` is not locally a translation at `c`,
-then `c` lies in every cut set: otherwise `c` would be in the interior of a piece of that cut set,
-on which `f` is a translation.  Here `c ∉ s` only says that `c` is not a cut of `s`, and the
-distance from `c` to the other cuts of `s` is positive because they are distinct from `c`. -/
-theorem IsCutSet.locallyTranslationAt_of_not_mem
-    (hs : IsCutSet f a b s) {c : ℝ} (hc : c ∈ Set.Ico a b) (hcs : c ∉ s) :
-    IsLocallyTranslationAt f a b c := by
-  classical
-  -- the distance from `c` to the other cuts is positive, since they are distinct from `c`
-  obtain ⟨δ, hδpos, hδ⟩ : ∃ δ : ℝ, 0 < δ ∧ ∀ u ∈ s, u ≠ c → δ ≤ |u - c| := by
-    rcases (s.filter (fun u => u ≠ c)).eq_empty_or_nonempty with hemp | hne
-    · refine ⟨1, one_pos, ?_⟩
-      intro u hu huc
-      exact absurd (Finset.mem_filter.mpr ⟨hu, huc⟩) (by rw [hemp]; simp)
-    · set D := (s.filter (fun u => u ≠ c)).image (fun u => |u - c|) with hD
-      have hDne : D.Nonempty := hne.image _
-      have hDmem : D.min' hDne ∈ D := Finset.min'_mem _ _
-      have hDpos : 0 < D.min' hDne := by
-        obtain ⟨u, hu, hue⟩ := Finset.mem_image.mp hDmem
-        have huc : u ≠ c := (Finset.mem_filter.mp hu).2
-        rw [← hue]
-        exact abs_pos.mpr (sub_ne_zero.mpr huc)
-      refine ⟨D.min' hDne, hDpos, ?_⟩
-      intro u hu huc
-      exact Finset.min'_le _ _ (Finset.mem_image.mpr ⟨u, Finset.mem_filter.mpr ⟨hu, huc⟩, rfl⟩)
-  refine ⟨f c - c, δ, hδpos, ?_⟩
-  intro z hz hzc
-  have hns : ¬ Separated s z c := by
-    intro hsep
-    rcases le_total z c with h | h
-    · obtain ⟨u, hu, h1, h2⟩ := hsep.exists_of_le h
-      have huc : u ≠ c := by rintro rfl; exact absurd hu hcs
-      have h3 : |u - c| ≤ |z - c| := by
-        rw [abs_of_nonpos (by linarith : u - c ≤ 0),
-          abs_of_nonpos (by linarith : z - c ≤ 0)]
-        linarith
-      linarith [hδ u hu huc, hzc]
-    · obtain ⟨u, hu, h1, h2⟩ := hsep.symm.exists_of_le h
-      have huc : u ≠ c := by rintro rfl; exact absurd hu hcs
-      have h3 : |u - c| ≤ |z - c| := by
-        rw [abs_of_nonneg (by linarith : 0 ≤ u - c),
-          abs_of_nonneg (by linarith : 0 ≤ z - c)]
-        linarith
-      linarith [hδ u hu huc, hzc]
-  have hdisp := hs.transl_of_not_separated z c hz hc hns
-  linarith
-
 /-- **Composition of cut sets**: the cuts of `g ∘ f` are those of `f` together with the preimages
 under `f` of the cuts of `g` — finite because `f` is finite-to-one. -/
 theorem IsCutSet.comp {s t : Finset ℝ} {f g : ℝ → ℝ} {a b : ℝ}
@@ -559,27 +512,5 @@ theorem IsCutSet.transl_of_locally (hs : IsCutSet f a b s)
         obtain ⟨h1, h2⟩ := (mem_Ioc_min_max y x hyx).mpr ⟨hyc, hcx⟩
         exact h c hcs (by simpa only [min_comm] using h1) (by simpa only [max_comm] using h2))
     exact hswap.symm
-
-/-- **The intersection of two cut sets is a cut set.**  Every true discontinuity lies in both
-(`IsCutSet.locallyTranslationAt_of_not_mem`), so a piece of `s ∩ t` contains no jump of `f` and the
-displacement is constant on it. -/
-theorem IsCutSet.inter {s t : Finset ℝ} {f : ℝ → ℝ} {a b : ℝ}
-    (hs : IsCutSet f a b s) (ht : IsCutSet f a b t) : IsCutSet f a b (s ∩ t) := by
-  refine ⟨hs.apply_eq_self_of_lt, hs.apply_eq_self_of_le, hs.mapsTo,
-    Finset.mem_inter.mpr ⟨hs.a_mem, ht.a_mem⟩, ?_, ?_⟩
-  · intro c hc
-    exact hs.cuts_mem c (Finset.mem_inter.mp hc).1
-  · intro x y hx hy hns
-    refine hs.transl_of_locally hx hy ?_
-    intro c hc h1 h2
-    by_contra hj
-    have hcab : c ∈ Set.Ico a b :=
-      ⟨le_of_lt (lt_of_le_of_lt (le_min hx.1 hy.1) h1),
-        lt_of_le_of_lt h2 (lt_of_lt_of_le (max_lt hx.2 hy.2) le_rfl)⟩
-    have hct : c ∈ t := by
-      by_contra hmem
-      exact hj (ht.locallyTranslationAt_of_not_mem (s := t) hcab hmem)
-    exact hns ⟨c, Finset.mem_inter.mpr ⟨hc, hct⟩, ⟨h1, h2⟩⟩
-
 
 end CutSetData

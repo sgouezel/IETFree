@@ -620,7 +620,7 @@ theorem mkIET1_sub_eq_dispCoeff {d : ℕ} [NeZero d] (lam : Fin d → ℝ≥0)
     (π : Equiv.Perm (Fin d)) (hl : (∑ i, lam i) = 1) (y : ℝ) :
     (mkIET1 lam π hl).toEquiv y - y
       = ∑ i, (dispCoeff lam π 0 y i : ℝ) * (lam i : ℝ) := by
-  have h2 : (mkIET1 lam π hl).toEquiv y = mkIETFun lam π 0 y := rfl
+  have h2 := mkIET1_eq_mkIETFun lam π hl y
   have h := mkIETFun_sub_eq_sum_dispCoeff lam π 0 y
   rw [h2]
   linarith
@@ -678,12 +678,12 @@ theorem ietCuts_trans {d : ℕ} [NeZero d] (lam : Fin d → ℝ≥0) (π : Equiv
   -- both points outside `[0, 1)`: the exchange is the identity
   have hleft : ∀ z : ℝ, z < 0 → (mkIET1 lam π hl).toEquiv z = z := by
     intro z hz
-    have h2 : (mkIET1 lam π hl).toEquiv z = mkIETFun lam π 0 z := rfl
+    have h2 := mkIET1_eq_mkIETFun lam π hl z
     rw [h2]
     exact mkIETFun_of_notMem lam π 0 (fun hcon => absurd hcon.1 (not_le.mpr hz))
   have hright : ∀ z : ℝ, 1 ≤ z → (mkIET1 lam π hl).toEquiv z = z := by
     intro z hz
-    have h2 : (mkIET1 lam π hl).toEquiv z = mkIETFun lam π 0 z := rfl
+    have h2 := mkIET1_eq_mkIETFun lam π hl z
     rw [h2]
     exact mkIETFun_of_notMem lam π 0 (fun hcon => absurd hcon.2 (by rw [hl']; simpa using hz))
   rcases lt_or_ge y 0 with hy | hy
@@ -699,8 +699,8 @@ theorem ietCuts_trans {d : ℕ} [NeZero d] (lam : Fin d → ℝ≥0) (π : Equiv
         exact h (Separated.of_lt_le (hsub h0mem) hy' hy).symm
       · rcases lt_or_ge y' 1 with hy1' | hy1'
         · -- both in `[0, 1)`
-          have h2 : (mkIET1 lam π hl).toEquiv y = mkIETFun lam π 0 y := rfl
-          have h3 : (mkIET1 lam π hl).toEquiv y' = mkIETFun lam π 0 y' := rfl
+          have h2 := mkIET1_eq_mkIETFun lam π hl y
+          have h3 := mkIET1_eq_mkIETFun lam π hl y'
           rw [h2, h3]
           exact mkIETFun_sub_eq_of_not_sep lam π hl ⟨hy, hy1⟩ ⟨hy', hy1'⟩ hcell
         · exfalso

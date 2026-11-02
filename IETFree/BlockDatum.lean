@@ -28,7 +28,7 @@ Lemma 3.2 read on it (`irreducibleOn_datum`, `irreduciblePerm_blockPerm`).  Then
   and the two halves of the pointwise conjugacy are `comp_conj_rescale` (composition side) and
   `restrict_rescale` (`g` side);
 * the degenerate case of a single cell is dealt with by `mkIET1_of_all_one` and `blockLam_of_one`,
-  with the words `genX` and `genY * genX` (`genX_ne_one`, `genY_mul_genX_ne_one`).
+  with the words `genX` and `genY * genX` (`genX_ne_one`).
 
 Nothing here takes a *global* monotonicity hypothesis `∀ q, StrictMono fun k => s k q`: a
 `GoodRegion` only knows that its list increases at the points of `O`, so every lemma takes
@@ -38,11 +38,6 @@ Nothing here takes a *global* monotonicity hypothesis `∀ q, StrictMono fun k =
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
-
--- `NeZero (l - k)` is an *instance* (`mkIET1` and `simplex` need it as such), so `haveI` is the
--- right binder when it is derived from `k < l`; the style linter only sees that its value is a
--- `Prop`.
-set_option linter.style.haveILetI false
 
 section BlockIrreducibleTransport
 
@@ -59,7 +54,7 @@ theorem irreduciblePerm_blockPerm (D : IETDatum n) (hkl : k < l) (hln : l ≤ n)
       (leftEnd D.lam ⟨k, by omega⟩ + blockMass D.lam k hln)) :
     IsIrreduciblePerm (blockPerm D.π k hkl hln hstab) := by
   classical
-  haveI : NeZero (l - k) := ⟨by omega⟩
+  have : NeZero (l - k) := ⟨by omega⟩
   have hpos : ∀ i, 0 < (D.lam i : ℝ) := D.lam_pos
   have hMpos : 0 < blockMass D.lam k hln := blockMass_pos hpos k hkl hln
   have hlNN : (∑ i, D.lam i) = 1 := by
@@ -135,8 +130,10 @@ theorem irreduciblePerm_blockPerm (D : IETDatum n) (hkl : k < l) (hln : l ≤ n)
             (rescaleMap (leftEnd D.lam ⟨k, by omega⟩)
               (leftEnd D.lam ⟨k, by omega⟩ + blockMass D.lam k hln) x) := by
     rw [rescaleMapInv, add_sub_cancel_left, mul_comm]
+  have hDt : D.toFun x = mkIET1 D.lam D.π D.mem_simplex x := by
+    rw [IETDatum.toFun_def, ← mkIET1_eq_mkIETFun D.lam D.π D.mem_simplex]
   change D.toFun x ∈ Set.Ico (leftEnd D.lam ⟨k, by omega⟩) (leftEnd D.lam ⟨k + j.val, by omega⟩)
-  rw [show D.toFun x = mkIET1 D.lam D.π D.mem_simplex x from rfl, hfx, hval]
+  rw [hDt, hfx, hval]
   set y : ℝ := (mkIET1 (blockLam D.lam k hkl hln hpos) (blockPerm D.π k hkl hln hstab)
       (blockLam_sum D.lam k hkl hln hpos)
       (rescaleMap (leftEnd D.lam ⟨k, by omega⟩)
@@ -618,10 +615,6 @@ theorem GoodRegion.isIrreduciblePerm_blockPermOf (G : GoodRegion d e π σ q₀)
 
 end BlockApplicationAE
 
--- `NeZero (i₁ - i₀)` is an *instance* here (`mkIET1` and `mkIET1_rescale_subinterval` need it as
--- such), so `haveI` is the right binder; the style linter only sees that its value is a `Prop`.
-set_option linter.style.haveILetI false
-
 /-! ### The rescaled composition on a block of marked cells
 
 Lemma 3.4 applies Theorem 2.6 to the pair `(g ∘ f, g)` restricted to the block `[u,v)` and rescaled
@@ -641,7 +634,7 @@ noncomputable def blockRescaled (G : GoodRegion d e π σ q₀) [NeZero G.n]
     {D : IETDatum d} {E : IETDatum e} (h : G.Fits q D E)
     {i₀ i₁ : Fin (G.n + 1)} (hi : i₀ < i₁) (hk : IsPairSplitting D E (G.s i₀ q))
     (hk' : IsPairSplitting D E (G.s i₁ q)) : IET 0 1 := by
-  haveI : NeZero (i₁.val - i₀.val) := ⟨by omega⟩
+  have : NeZero (i₁.val - i₀.val) := ⟨by omega⟩
   exact mkIET1 (G.blockLam hq i₀.val (l := i₁.val) hi (by omega))
     (G.blockPermOf hq h hi hk hk')
     (G.blockLam_sum hq i₀.val hi (by omega))
@@ -675,8 +668,11 @@ theorem comp_conj_rescale (G : GoodRegion d e π σ q₀) [NeZero G.n]
   have hcomp : ∀ z, (mkIET1 (G.cellLen hq) G.ρ hsum) z
       = (E.toIET * D.toIET) z := by
     intro z
+    have hlen : G.cellLen hq = compLen P.mono := cellLen_eq G hq P.mono
     have h1 : mkIET1 (G.cellLen hq) G.ρ hsum
-        = mkIET1 (compLen P.mono) G.ρ (compLen_sum P.mono P.zero P.top) := rfl
+        = mkIET1 (compLen P.mono) G.ρ (compLen_sum P.mono P.zero P.top) := by
+      refine IET.ext fun z => ?_
+      rw [mkIET1_eq_mkIETFun, mkIET1_eq_mkIETFun, hlen]
     have h2 : mkIET1 (compLen P.mono) G.ρ (compLen_sum P.mono P.zero P.top)
         = E.toIET * D.toIET := by
       rw [← P.eq_mkIET1]
@@ -685,7 +681,7 @@ theorem comp_conj_rescale (G : GoodRegion d e π σ q₀) [NeZero G.n]
       exact G.comp_eq_toFun hq h z
     rw [h1, h2]
   -- the point in the block and the rescaled restriction
-  haveI := hne
+  have := hne
   set x := rescaleMapInv L (L + M) y with hxdef
   have hLlt : L < L + M := by linarith
   have hx : x ∈ Set.Ico L (L + M) := by
@@ -750,8 +746,12 @@ theorem restrict_rescale (G : GoodRegion d e π σ q₀)
   -- the exchange `E` is `mkIET1` of its own length vector
   have hE : E.toIET = mkIET1 (simplexMap e q.2) σ hm := by
     refine IET.ext fun x => ?_
-    change mkIETFun E.lam E.π 0 x = mkIETFun (simplexMap e q.2) σ 0 x
-    rw [show E.lam = simplexMap e q.2 from by rw [IETDatum.lam, h.hEv], h.hEπ]
+    rw [IETDatum.toIET_def]
+    have hfun : ⇑(mkIET1 E.lam E.π E.mem_simplex) x = mkIETFun E.lam E.π 0 x :=
+      mkIET1_eq_mkIETFun E.lam E.π E.mem_simplex x
+    have hfun' : ⇑(mkIET1 (simplexMap e q.2) σ hm) x = mkIETFun (simplexMap e q.2) σ 0 x :=
+      mkIET1_eq_mkIETFun (simplexMap e q.2) σ hm x
+    rw [hfun, hfun', show E.lam = simplexMap e q.2 from by rw [IETDatum.lam, h.hEv], h.hEπ]
   -- the invariance of the block under `g`
   have hinv : ∀ x ∈ Set.Ico (G.s i₀ q) (G.s i₁ q),
       (mkIET1 (simplexMap e q.2) σ hm x ∈ Set.Ico (G.s i₀ q) (G.s i₁ q) ↔
@@ -761,7 +761,7 @@ theorem restrict_rescale (G : GoodRegion d e π σ q₀)
     rw [← hE]
     exact (IsPairSplitting.iff_mem hk hk' hx01).2.symm
   obtain ⟨mu', hl', hmu'form, hmu'eq⟩ :=
-    RestrictIET.mkIET1_restrict_invariant hm hpos h0u huv h1v hinv
+    RestrictIET.mkIET1_restrict_invariant hm h0u huv h1v hinv
   -- rewrite `mu'` as the named family
   have hcoe : mu' = RestrictIET.truncatedLengths (simplexMap e q.2) (G.s i₀ q) (G.s i₁ q) huv := by
     funext j
@@ -808,29 +808,18 @@ theorem blockLam_of_one {n : ℕ} {lam : Fin n → ℝ≥0} {k l : ℕ} (hkl : k
   rw [div_self hne]
   simp
 
-/-- **`genY * genX` is a nontrivial word**: it evaluates to the composition `g ∘ f`. -/
-theorem genY_mul_genX_ne_one : genY * genX ≠ 1 := by
-  intro h
-  have h2 := congrArg FreeGroup.toWord h
-  rw [FreeGroup.toWord_one] at h2
-  exact absurd h2 (by decide)
-
 end GoodRegion
 
-/-! ### Lemma 3.4, the pointwise conclusion
-
-`GoodRegion.exists_word_trivial_of_region` is the heart of Lemma 3.4: at a point `q` of a good
-region, given the almost-sure block data *at that point* — unique ergodicity and rigidity for every
-block permutation, and the Diophantine condition for every block — every block `[u,v)` carries a
-nontrivial word which is the identity on it.  The block is a run of marked cells
+/-! `GoodRegion.exists_word_trivial_of_region` (in `IETFree.BlockLemma`) is the heart of Lemma 3.4:
+at a point `q` of a good region, given the almost-sure block data *at that point* — unique
+ergodicity and rigidity for every block permutation, and the Diophantine condition for every block —
+every block `[u,v)` carries a nontrivial word which is the identity on it.  The block is a run of
+marked cells
 (`GoodRegion.block_endpoints`), and the two cases are the one-cell case (the rescaled composition is
 the identity, `mkIET1_of_all_one`, and the word is `genX`) and Theorem 2.6
 (`irreducible_case`) followed by the word transport
 (`exists_word_trivial_on_block_of_rescaled`, fed by `GoodRegion.comp_conj_rescale` and
 `GoodRegion.restrict_rescale`). -/
-
--- `NeZero (i₁ - i₀)` is an instance here (`mkIET1` needs it), so `haveI` is the right binder.
-set_option linter.style.haveILetI false
 
 /-! ## Two helper lemmas for the single-cell case -/
 
@@ -852,7 +841,7 @@ theorem mkIET1_of_all_one {r : ℕ} [NeZero r] {lam : Fin r → ℝ≥0} (π : E
     rw [h1, Finset.sum_const, Finset.card_univ, Fintype.card_fin] at hl
     have h2 : ((r : ℝ≥0)) = 1 := by simpa using hl
     exact_mod_cast h2
-  haveI : Subsingleton (Fin r) := by rw [hcard]; infer_instance
+  have : Subsingleton (Fin r) := by rw [hcard]; infer_instance
   have hzero : ∀ i : Fin r, i = 0 := fun i => Subsingleton.elim i 0
   refine IET.ext fun x => ?_
   rw [IET.one_apply]

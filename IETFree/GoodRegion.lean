@@ -20,8 +20,8 @@ parameters:
   sums of the cell lengths (the volume argument `sum_len_eq_of_tiling`);
 * `exists_rank_perm` (from `IETFree.Presentation`) turns the order of the affine images into the
   permutation `ρ`;
-* `exists_compPresentation_on_ball` assembles all of it, and `GoodRegion` /
-  `ae_exists_goodRegion` is the resulting a.e. statement.
+* `exists_compPresentation_on_ball` assembles all of it into the ball of good parameters on which
+  the type `GoodRegion` below lives.
 
 The file closes with the remark that `cell` must not be read as "`g ∘ f` maps cells onto cells": it
 maps the `i`-th cell by `listImageLeft ρ s i - listLeftEnd s i`, which is the exchange `(ν, ρ)`
@@ -48,7 +48,7 @@ one of: `0`, `1`, a cut of `f` (a `leftEnd λ i`), or the preimage under `f` of 
 It is what the numerical statements of Section 3 need:
 
 * the preimages of the marked points of `g` are in the list (`posG`), which is the input of
-  `pairSplitting_mem_markedList`;
+  `GoodRegion.mem_pairSplitting`;
 * every singularity is an integer affine function of the free parameters with explicitly bounded
   coefficients, which is what makes the block lengths Diophantine (Lemma 3.4);
 * the μ-parts of the singularity functions are `0` for the cuts of `f` and the prefix sums of `μ`
@@ -78,7 +78,7 @@ structure SingularityShape {d e : ℕ} [NeZero d] [NeZero e] (n : ℕ) (π : Equ
     s (posG j) q = preimageCutAffine π ⟨j.val + 1, by have := j.isLt; omega⟩ (cellIdx j) q
   /-- the `posG` entries really are the preimages under `f` of the cuts of `g`.  This is the strong
   form (an evaluation of `f⁻¹`, not the affine candidate), and it is what
-  `pairSplitting_mem_markedList` consumes. -/
+  `GoodRegion.mem_pairSplitting` consumes. -/
   posG_pre : ∀ q ∈ O, ∀ (j : Fin (e - 1)) (hl : simplexMap d q.1 ∈ simplex d),
     s (posG j) q = (mkIET1 (simplexMap d q.1) π hl)⁻¹
       (leftEnd (simplexMap e q.2) ⟨j.val + 1, by have := j.isLt; omega⟩)
@@ -139,7 +139,7 @@ theorem imageInG {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
     have himg : mkIET1 (simplexMap d v) π hl '' Set.Ico (s k.castSucc) (s k.succ)
         = Set.Ico (mkIET1 (simplexMap d v) π hl (s k.castSucc))
             (mkIET1 (simplexMap d v) π hl (s k.castSucc) + (s k.succ - s k.castSucc)) := by
-      have h := image_Ico_add hcell (f := mkIET1 (simplexMap d v) π hl) (δ := δ) hδ
+      have h := image_Ico_add (f := mkIET1 (simplexMap d v) π hl) (δ := δ) hδ
       have h1' : s k.castSucc + δ = mkIET1 (simplexMap d v) π hl (s k.castSucc) :=
         (hδ _ le_rfl hcell).symm
       rw [h, h1']
@@ -211,7 +211,7 @@ theorem markedCell_g_transl {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm
   have himg : mkIET1 (simplexMap d v) π hl '' Set.Ico (s k.castSucc) (s k.succ)
       = Set.Ico (mkIET1 (simplexMap d v) π hl (s k.castSucc))
           (mkIET1 (simplexMap d v) π hl (s k.castSucc) + (s k.succ - s k.castSucc)) := by
-    have h := image_Ico_add hcell (f := mkIET1 (simplexMap d v) π hl) (δ := δ) hδ
+    have h := image_Ico_add (f := mkIET1 (simplexMap d v) π hl) (δ := δ) hδ
     have h1' : s k.castSucc + δ = mkIET1 (simplexMap d v) π hl (s k.castSucc) :=
       (hδ _ le_rfl hcell).symm
     rw [h, h1']
@@ -713,7 +713,7 @@ theorem partialSum_image {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (F
     intro j
     have hδ := htransl q hq hl hm j
     obtain ⟨δ, hδ⟩ := hδ
-    rw [image_Ico_add (hmono q hq (Fin.castSucc_lt_succ (i := j))) (f := h) (δ := δ) hδ]
+    rw [image_Ico_add (f := h) (δ := δ) hδ]
     have h1 : s j.castSucc q + δ = F j q := by
       rw [← hF q hq hl hm j]
       exact (hδ _ le_rfl (hmono q hq (Fin.castSucc_lt_succ (i := j)))).symm
@@ -1207,14 +1207,3 @@ theorem exists_goodRegion {d e : ℕ} [NeZero d] [NeZero e]
     (fun q hq => (hpres q hq
       (simplexMap_mem_simplex_fin (hreg q hq).1.1 (hreg q hq).1.2)
       (simplexMap_mem_simplex_fin (hreg q hq).2.1 (hreg q hq).2.2)).2), hshape⟩
-
-/-- **Almost every parameter pair has a good region** — the corollary of `ae_goodParams` that
-Section 3 runs on.  Almost every point of the product of the two open simplexes is good, and
-`exists_goodRegion` then produces the ball around it. -/
-theorem ae_exists_goodRegion {d e : ℕ} [NeZero d] [NeZero e]
-    (π : Equiv.Perm (Fin d)) (σ : Equiv.Perm (Fin e)) :
-    ∀ᵐ q ∂((volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e))),
-      Nonempty (GoodRegion d e π σ q) := by
-  filter_upwards [ae_goodParams_real (d := d) (e := e),
-    ae_mem_simplexRegion_prod (d := d) (e := e)] with q hq hreg
-  exact exists_goodRegion π σ q hq hreg

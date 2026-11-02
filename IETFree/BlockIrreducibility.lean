@@ -105,7 +105,7 @@ theorem mkIETCuts_eq_markCuts (D : IETDatum n) : mkIETCuts D.lam 0 1 = D.markCut
 theorem isCutSet_markCuts (D : IETDatum n) : IsCutSet D.toFun 0 1 D.markCuts := by
   have h := isCutSet_mkIETCuts D.lam D.π (a := 0) (t := 1) (by rw [D.sum_lam]) one_pos
   rw [D.mkIETCuts_eq_markCuts] at h
-  simpa [IETDatum.toFun] using h
+  simpa [IETDatum.toFun_def] using h
 
 end IETDatum
 
@@ -195,7 +195,7 @@ theorem IETDatum.toFun_eq_of_mem_cell {n : ℕ} [NeZero n] (D : IETDatum n) (i :
     ⟨le_trans (leftEnd_nonneg D.lam i) hle, lt_of_lt_of_le hlt (upperEnd_le_total D.lam i)⟩
   have hidx : idx D.lam x (by simpa using hx'.1) = i := by
     refine idx_eq D.lam (i := i) (by simpa using hx') (by simpa using hle) (by simpa using hlt)
-  rw [IETDatum.toFun, mkIETFun_of_mem D.lam D.π 0 (by simpa using hx')]
+  rw [IETDatum.toFun_def, mkIETFun_of_mem D.lam D.π 0 (by simpa using hx')]
   simp only [sub_zero]
   rw [hidx]
 
@@ -207,6 +207,21 @@ theorem sum_ite_one_mul {n : ℕ} (p : Fin n → Prop) [DecidablePred p] (f : Fi
   refine Finset.sum_congr rfl fun i _ => ?_
   by_cases h : p i <;> simp [h]
 
+/-- A difference of two indicator functions takes values in `{-1, 0, 1}`. -/
+theorem abs_ite_sub_ite_le (p q : Prop) [Decidable p] [Decidable q] :
+    |(if p then (1 : ℤ) else 0) - (if q then (1 : ℤ) else 0)| ≤ 1 := by
+  by_cases hp : p <;> by_cases hq : q <;> simp [hp, hq]
+
+/-- A sum of two indicator functions minus a third takes values in `{-2, …, 2}`. -/
+theorem abs_ite_add_ite_sub_ite_le (p q r : Prop) [Decidable p] [Decidable q] [Decidable r] :
+    |(if p then (1 : ℤ) else 0) + (if q then (1 : ℤ) else 0) - (if r then (1 : ℤ) else 0)| ≤ 2 := by
+  by_cases hp : p <;> by_cases hq : q <;> by_cases hr : r <;> simp [hp, hq, hr]
+
+/-- A difference of three indicator functions takes values in `{-2, …, 2}`. -/
+theorem abs_ite_sub_ite_sub_ite_le (p q r : Prop) [Decidable p] [Decidable q] [Decidable r] :
+    |(if p then (1 : ℤ) else 0) - (if q then (1 : ℤ) else 0)
+      - (if r then (1 : ℤ) else 0)| ≤ 2 := by
+  by_cases hp : p <;> by_cases hq : q <;> by_cases hr : r <;> simp [hp, hq, hr]
 /-- The difference of two indicators vanishes exactly when the two predicates agree. -/
 theorem ite_one_sub_ite_one_eq_zero {p q : Prop} [Decidable p] [Decidable q] :
     ((if p then (1 : ℤ) else 0) - (if q then 1 else 0)) = 0 ↔ (p ↔ q) := by
@@ -237,36 +252,20 @@ theorem splitting_of_imageLeft_relation {d e : ℕ} [NeZero d] [NeZero e]
   set b : Fin e → ℤ := fun j =>
     (if (σ j).val < (σ l).val then 1 else 0) - (if j.val < l.val then 1 else 0) with hb_def
   have hlam : (∑ i, (a i : ℝ) * (lam i : ℝ)) = imageLeft π lam k - leftEnd lam n := by
-    have hsplit : (∑ i, (a i : ℝ) * (lam i : ℝ))
-        = (∑ i, ((if (π i).val < (π k).val then (1 : ℤ) else 0 : ℤ) : ℝ) * (lam i : ℝ))
-          - ∑ i, ((if i.val < n.val then (1 : ℤ) else 0 : ℤ) : ℝ) * (lam i : ℝ) := by
-      rw [← Finset.sum_sub_distrib]
-      refine Finset.sum_congr rfl fun i _ => ?_
-      simp only [ha_def, Int.cast_sub]
-      ring
-    rw [hsplit, sum_ite_one_mul, sum_ite_one_mul]
-    rfl
+    simp only [ha_def, Int.cast_sub, sub_mul, Finset.sum_sub_distrib, sum_ite_one_mul, imageLeft,
+      leftEnd, Fin.lt_def]
   have hmu : (∑ j, (b j : ℝ) * (mu j : ℝ)) = imageLeft σ mu l - leftEnd mu l := by
-    have hsplit : (∑ j, (b j : ℝ) * (mu j : ℝ))
-        = (∑ j, ((if (σ j).val < (σ l).val then (1 : ℤ) else 0 : ℤ) : ℝ) * (mu j : ℝ))
-          - ∑ j, ((if j.val < l.val then (1 : ℤ) else 0 : ℤ) : ℝ) * (mu j : ℝ) := by
-      rw [← Finset.sum_sub_distrib]
-      refine Finset.sum_congr rfl fun j _ => ?_
-      simp only [hb_def, Int.cast_sub]
-      ring
-    rw [hsplit, sum_ite_one_mul, sum_ite_one_mul]
-    rfl
+    simp only [hb_def, Int.cast_sub, sub_mul, Finset.sum_sub_distrib, sum_ite_one_mul, imageLeft,
+      leftEnd, Fin.lt_def]
   have hrel : (∑ i, (a i : ℝ) * (lam i : ℝ)) + (∑ j, (b j : ℝ) * (mu j : ℝ)) = 0 := by
     rw [hlam, hmu]
     linarith
-  have hA : ∀ i, |a i| ≤ 1 := by
-    intro i
-    simp only [ha_def]
-    split_ifs <;> simp
-  have hB : ∀ j, |b j| ≤ 1 := by
-    intro j
-    simp only [hb_def]
-    split_ifs <;> simp
+  have hA : ∀ i, |a i| ≤ 1 := fun i => by
+    rw [ha_def]
+    exact abs_ite_sub_ite_le _ _
+  have hB : ∀ j, |b j| ≤ 1 := fun j => by
+    rw [hb_def]
+    exact abs_ite_sub_ite_le _ _
   -- the coefficients here are even in `{-1,0,1}`, but `relation_of_good` is stated for `≤ 2`
   obtain ⟨haconst, hbconst, hsum0⟩ := relation_of_good (p := (lam, mu)) hgood
     (fun i => le_trans (hA i) (by norm_num)) (fun j => le_trans (hB j) (by norm_num)) hl hm hrel
@@ -358,39 +357,21 @@ theorem splitting_of_imageLeft_relation_add {d e : ℕ} [NeZero d] [NeZero e]
     - (if j.val < l.val then 1 else 0) - (if j.val < n.val then 1 else 0) with hb_def
   have hlam : (∑ i, (a i : ℝ) * (lam i : ℝ))
       = imageLeft π lam k + imageLeft π lam m - leftEnd lam m := by
-    have hsplit : (∑ i, (a i : ℝ) * (lam i : ℝ))
-        = (∑ i, ((if (π i).val < (π k).val then (1 : ℤ) else 0 : ℤ) : ℝ) * (lam i : ℝ))
-          + (∑ i, ((if (π i).val < (π m).val then (1 : ℤ) else 0 : ℤ) : ℝ) * (lam i : ℝ))
-          - ∑ i, ((if i.val < m.val then (1 : ℤ) else 0 : ℤ) : ℝ) * (lam i : ℝ) := by
-      rw [← Finset.sum_add_distrib, ← Finset.sum_sub_distrib]
-      refine Finset.sum_congr rfl fun i _ => ?_
-      simp only [ha_def, Int.cast_add, Int.cast_sub]
-      ring
-    rw [hsplit, sum_ite_one_mul, sum_ite_one_mul, sum_ite_one_mul]
-    rfl
+    simp only [ha_def, Int.cast_add, Int.cast_sub, add_mul, sub_mul, Finset.sum_add_distrib,
+      Finset.sum_sub_distrib, sum_ite_one_mul, imageLeft, leftEnd, Fin.lt_def]
   have hmu : (∑ j, (b j : ℝ) * (mu j : ℝ))
       = imageLeft σ mu l - leftEnd mu l - leftEnd mu n := by
-    have hsplit : (∑ j, (b j : ℝ) * (mu j : ℝ))
-        = (∑ j, ((if (σ j).val < (σ l).val then (1 : ℤ) else 0 : ℤ) : ℝ) * (mu j : ℝ))
-          - (∑ j, ((if j.val < l.val then (1 : ℤ) else 0 : ℤ) : ℝ) * (mu j : ℝ))
-          - ∑ j, ((if j.val < n.val then (1 : ℤ) else 0 : ℤ) : ℝ) * (mu j : ℝ) := by
-      rw [← Finset.sum_sub_distrib, ← Finset.sum_sub_distrib]
-      refine Finset.sum_congr rfl fun j _ => ?_
-      simp only [hb_def, Int.cast_sub]
-      ring
-    rw [hsplit, sum_ite_one_mul, sum_ite_one_mul, sum_ite_one_mul]
-    rfl
+    simp only [hb_def, Int.cast_sub, sub_mul, Finset.sum_sub_distrib, sum_ite_one_mul, imageLeft,
+      leftEnd, Fin.lt_def]
   have hrel : (∑ i, (a i : ℝ) * (lam i : ℝ)) + (∑ j, (b j : ℝ) * (mu j : ℝ)) = 0 := by
     rw [hlam, hmu]
     linarith
-  have hA : ∀ i, |a i| ≤ 2 := by
-    intro i
-    simp only [ha_def]
-    split_ifs <;> simp
-  have hB : ∀ j, |b j| ≤ 2 := by
-    intro j
-    simp only [hb_def]
-    split_ifs <;> simp
+  have hA : ∀ i, |a i| ≤ 2 := fun i => by
+    rw [ha_def]
+    exact abs_ite_add_ite_sub_ite_le _ _ _
+  have hB : ∀ j, |b j| ≤ 2 := fun j => by
+    rw [hb_def]
+    exact abs_ite_sub_ite_sub_ite_le _ _ _
   obtain ⟨haconst, hbconst, hsum0⟩ := relation_of_good (p := (lam, mu)) hgood hA hB hl hm hrel
   -- the coefficient of the last index of `a` is `0` or `1`, and `1` is impossible
   have ham : a m = (if (π m).val < (π k).val then 1 else 0) := by

@@ -94,10 +94,6 @@ theorem evalWord_mapsTo_of_invariant {d e : ℕ} [NeZero d] [NeZero e] (D : IETD
     rw [evalWord_mul, IET.mul_apply]
     exact hu _ (hv x hx)
 
-/-- The part of the `i`-th block inside `[0, 1)`. -/
-private def BlockIn {n : ℕ} (u v : Fin n → ℝ) (i : Fin n) : Set ℝ :=
-  {x | x ∈ Set.Ico (0 : ℝ) 1 ∧ u i ≤ x ∧ x < v i}
-
 /-- The part of the union of the blocks of `J` inside `[0, 1)`. -/
 private def BlocksIn {n : ℕ} (u v : Fin n → ℝ) (J : Finset (Fin n)) : Set ℝ :=
   {x | x ∈ Set.Ico (0 : ℝ) 1 ∧ ∃ i ∈ J, u i ≤ x ∧ x < v i}

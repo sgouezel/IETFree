@@ -28,10 +28,6 @@ the earlier version of this file stated that transfer for the *global* monotonic
 `∀ q, StrictMono fun k => s k q`, which `GoodRegion` cannot supply, so those statements are gone.
 -/
 
--- `NeZero (l - k)` is needed as an *instance* by `mkIET1`, so `haveI` is the right binder; the
--- style linter only sees that its value is a `Prop`.
-set_option linter.style.haveILetI false
-
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
 
@@ -119,7 +115,7 @@ theorem eq_of_forall_lt_last_eq_of_sum_eq {r : ℕ} (hr : 0 < r) {f g : Fin r �
 theorem blockLam_eq_simplexMap_rescaleSub {n : ℕ} [NeZero n] {k l : ℕ} (hkl : k < l) (hln : l ≤ n)
     {x : Fin (n - 1) → ℝ} (hx : x ∈ simplexRegion n) (hpos : Positive (simplexMap n x)) :
     blockLam (simplexMap n x) k hkl hln hpos = simplexMap (l - k) (rescaleSub k (l - k) x) := by
-  haveI : NeZero (l - k) := ⟨by omega⟩
+  have : NeZero (l - k) := ⟨by omega⟩
   have hy : rescaleSub k (l - k) x ∈ simplexRegion (l - k) := by
     have h := rescaleSub_mem_simplexRegion (n := n) (k := k) (m := l - k - 1) (x := x) hx
     have h' : l - k - 1 + 1 = l - k := by omega
@@ -183,7 +179,7 @@ theorem absolutelyContinuous_map_blockFree {n : ℕ} [NeZero n] {k l : ℕ} (hkl
     (hln : l ≤ n) :
     (simplexVolume n).map (fun ν => simplexMap (l - k) (blockFree k l ν))
       ≪ simplexVolume (l - k) := by
-  haveI : NeZero (l - k) := ⟨by omega⟩
+  have : NeZero (l - k) := ⟨by omega⟩
   have hmeas : Measurable fun ν : Fin n → ℝ≥0 => simplexMap (l - k) (blockFree k l ν) :=
     (measurable_simplexMap (l - k)).comp measurable_blockFree
   have hcongr : ((fun ν : Fin n → ℝ≥0 => simplexMap (l - k) (blockFree k l ν)) ∘ simplexMap n)

@@ -27,7 +27,8 @@ The generator-level statement handed to the discovery run is the abstract form: 
 of `f` and of `g` is a lattice vector with coefficients in `{-1, 0, 1}`, then every displacement of
   a
 word of length `n` is a lattice vector with coefficients in `[-n, n]`*.  The lemmas here supply that
-hypothesis for `f = g = mkIETFun lam π 0` (`mkIETFun_sub_eq_sum`), together with the bookkeeping
+hypothesis for `f = g = mkIETFun lam π 0` (`mkIETFun_sub_eq_sum_dispCoeff`), together with the
+bookkeeping
   that
 identifies the coercion of `evalWord w f g` with the corresponding permutation lift
 (`evalWord_apply_coe`).
@@ -68,16 +69,6 @@ theorem translationVector_eq_sum_coeff {n : ℕ} (π : Equiv.Perm (Fin n)) (lam 
     translationVector π lam i = ∑ j, (translationCoeff π i j : ℝ) * (lam j : ℝ) :=
   translationVector_eq_sum π lam i
 
-/-- **The displacement of `mkIETFun` is a lattice vector with coefficients in `{-1, 0, 1}`.** -/
-theorem mkIETFun_sub_eq_sum {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
-    (a : ℝ) {x : ℝ} (hx : x ∈ Set.Ico a (a + ∑ i, (lam i : ℝ))) :
-    ∃ D : Fin n → ℤ, (∀ i, |D i| ≤ 1) ∧
-      mkIETFun lam π a x - x = ∑ i, (D i : ℝ) * (lam i : ℝ) := by
-  refine ⟨translationCoeff π (idx lam (x - a) (by linarith [hx.1])), fun i => ?_, ?_⟩
-  · exact abs_translationCoeff_le_one π _ i
-  · rw [mkIETFun_of_mem lam π a hx, translationVector_eq_sum_coeff]
-    ring
-
 /-! ## The lift of a word, as a permutation -/
 
 /-- The coercion of an exchange to the underlying permutation, as a monoid homomorphism. -/
@@ -100,132 +91,6 @@ theorem evalWord_apply_coe (w : FreeGroup Gen) (f g : IET 0 1) :
     by_cases h : i = 0 <;> simp [h]
   exact congrArg (fun (φ : FreeGroup Gen →* Equiv.Perm ℝ) => ⇑(φ w)) h2
 
-section aux
-
-variable {d e : ℕ} {lam : Fin d → ℝ} {mu : Fin e → ℝ}
-  {f g : Equiv.Perm ℝ} {Df : ℝ → Fin d → ℤ} {Dg : ℝ → Fin e → ℤ}
-
-/-- Displacement of a single generator at a point, as a lattice vector with coefficients `≤ 1`. -/
-lemma latticeDisp_gen (hfb : ∀ y i, |Df y i| ≤ 1) (hgb : ∀ y j, |Dg y j| ≤ 1)
-    (hf : ∀ y, f y = y + ∑ i, (Df y i : ℝ) * lam i)
-    (hg : ∀ y, g y = y + ∑ j, (Dg y j : ℝ) * mu j)
-    (i : Fin 2) (y : ℝ) :
-    ∃ s : Fin d ⊕ Fin e → ℤ, (∀ k, |s k| ≤ 1) ∧
-      (if i = 0 then f else g) y = y + ∑ k, (s k : ℝ) * Sum.elim lam mu k := by
-  fin_cases i
-  · refine ⟨Sum.elim (Df y) (0 : Fin e → ℤ), ?_, ?_⟩
-    · intro k
-      cases k with
-      | inl a => simpa using hfb y a
-      | inr b => simp
-    · change f y = _
-      rw [hf y, Fintype.sum_sum_type]
-      simp
-  · refine ⟨Sum.elim (0 : Fin d → ℤ) (Dg y), ?_, ?_⟩
-    · intro k
-      cases k with
-      | inl a => simp
-      | inr b => simpa using hgb y b
-    · change g y = _
-      rw [hg y, Fintype.sum_sum_type]
-      simp
-
-/-- Displacement of one generator or its inverse, at a point. -/
-lemma latticeDisp_gen_inv (hfb : ∀ y i, |Df y i| ≤ 1) (hgb : ∀ y j, |Dg y j| ≤ 1)
-    (hf : ∀ y, f y = y + ∑ i, (Df y i : ℝ) * lam i)
-    (hg : ∀ y, g y = y + ∑ j, (Dg y j : ℝ) * mu j)
-    (i : Fin 2) (y : ℝ) :
-    ∃ s : Fin d ⊕ Fin e → ℤ, (∀ k, |s k| ≤ 1) ∧
-      (if i = 0 then f else g)⁻¹ y = y + ∑ k, (s k : ℝ) * Sum.elim lam mu k := by
-  obtain ⟨s, hs, h⟩ := latticeDisp_gen hfb hgb hf hg i ((if i = 0 then f else g)⁻¹ y)
-  refine ⟨fun k => -s k, fun k => by simpa using hs k, ?_⟩
-  have hz : (if i = 0 then f else g) ((if i = 0 then f else g)⁻¹ y) = y :=
-    Equiv.apply_symm_apply _ _
-  rw [hz] at h
-  have hS : (∑ k, ((-s k : ℤ) : ℝ) * Sum.elim lam mu k)
-      = -(∑ k, (s k : ℝ) * Sum.elim lam mu k) := by
-    rw [← Finset.sum_neg_distrib]
-    exact Finset.sum_congr rfl fun k _ => by push_cast; ring
-  rw [hS]
-  linarith
-
-/-- The displacement of a list-word at any point is a lattice vector with coefficients bounded by
-the word length. -/
-lemma latticeDisp_list (hfb : ∀ y i, |Df y i| ≤ 1) (hgb : ∀ y j, |Dg y j| ≤ 1)
-    (hf : ∀ y, f y = y + ∑ i, (Df y i : ℝ) * lam i)
-    (hg : ∀ y, g y = y + ∑ j, (Dg y j : ℝ) * mu j)
-    (L : List (Fin 2 × Bool)) (x : ℝ) :
-    ∃ c : Fin d ⊕ Fin e → ℤ, (∀ k, |c k| ≤ (L.length : ℤ)) ∧
-      (List.prod (L.map fun p : Fin 2 × Bool =>
-        cond p.2 (if p.1 = 0 then f else g) ((if p.1 = 0 then f else g)⁻¹))) x
-        = x + ∑ k, (c k : ℝ) * Sum.elim lam mu k := by
-  revert x
-  induction L using List.reverseRecOn with
-  | nil =>
-    intro x
-    refine ⟨fun _ => 0, ?_, ?_⟩
-    · intro k; simp
-    · simp
-  | append_singleton L p ih =>
-    intro x
-    obtain ⟨e, he, hee⟩ : ∃ e : Fin d ⊕ Fin e → ℤ, (∀ k, |e k| ≤ 1) ∧
-        cond p.2 (if p.1 = 0 then f else g) ((if p.1 = 0 then f else g)⁻¹) x
-          = x + ∑ k, (e k : ℝ) * Sum.elim lam mu k := by
-      obtain ⟨i, b⟩ := p
-      cases b
-      · simpa using latticeDisp_gen_inv hfb hgb hf hg i x
-      · simpa using latticeDisp_gen hfb hgb hf hg i x
-    obtain ⟨c, hc, hcx⟩ := ih (cond p.2 (if p.1 = 0 then f else g) ((if p.1 = 0 then f else g)⁻¹) x)
-    refine ⟨fun k => c k + e k, ?_, ?_⟩
-    · intro k
-      have h1 := hc k
-      have h2 := he k
-      have h3 : |c k + e k| ≤ |c k| + |e k| := abs_add_le _ _
-      have hL : (L.length : ℤ) + 1 = ((L ++ [p]).length : ℤ) := by simp
-      linarith
-    · have hsum : (∑ k, ((c k + e k : ℤ) : ℝ) * Sum.elim lam mu k)
-          = (∑ k, (c k : ℝ) * Sum.elim lam mu k)
-            + ∑ k, (e k : ℝ) * Sum.elim lam mu k := by
-        rw [← Finset.sum_add_distrib]
-        exact Finset.sum_congr rfl fun k _ => by push_cast; ring
-      have hstep : (List.prod ((L ++ [p]).map fun q : Fin 2 × Bool =>
-            cond q.2 (if q.1 = 0 then f else g) ((if q.1 = 0 then f else g)⁻¹)) x)
-          = List.prod (L.map fun q : Fin 2 × Bool =>
-              cond q.2 (if q.1 = 0 then f else g) ((if q.1 = 0 then f else g)⁻¹))
-            (cond p.2 (if p.1 = 0 then f else g) ((if p.1 = 0 then f else g)⁻¹) x) := by
-        simp [List.map_append, Equiv.Perm.mul_apply]
-      rw [hstep, hcx, hee, hsum]
-      ring
-
-end aux
-
-/-- **The translation-vector bound.** For generators whose displacements are lattice vectors with
-coefficients in `{-1, 0, 1}`, the displacement of any word of length `n` is a lattice vector with
-coefficients bounded by `n`. -/
-theorem exists_lattice_displacement {d e : ℕ} (lam : Fin d → ℝ) (mu : Fin e → ℝ)
-    (f g : Equiv.Perm ℝ)
-    (Df : ℝ → Fin d → ℤ) (Dg : ℝ → Fin e → ℤ)
-    (hf : ∀ y, f y = y + ∑ i, (Df y i : ℝ) * lam i) (hfb : ∀ y i, |Df y i| ≤ 1)
-    (hg : ∀ y, g y = y + ∑ j, (Dg y j : ℝ) * mu j) (hgb : ∀ y j, |Dg y j| ≤ 1)
-    (w : FreeGroup (Fin 2)) (x : ℝ) :
-    ∃ a : Fin d → ℤ, ∃ b : Fin e → ℤ,
-      (∀ i, |a i| ≤ ((FreeGroup.toWord w).length : ℤ)) ∧
-        (∀ j, |b j| ≤ ((FreeGroup.toWord w).length : ℤ)) ∧
-        FreeGroup.lift (fun i : Fin 2 => if i = 0 then f else g) w x
-          = x + (∑ i, (a i : ℝ) * lam i) + (∑ j, (b j : ℝ) * mu j) := by
-  classical
-  obtain ⟨c, hc, hcx⟩ := latticeDisp_list hfb hgb hf hg w.toWord x
-  refine ⟨fun i => c (Sum.inl i), fun j => c (Sum.inr j), ?_, ?_, ?_⟩
-  · intro i; exact hc (Sum.inl i)
-  · intro j; exact hc (Sum.inr j)
-  · have hlift : FreeGroup.lift (fun i : Fin 2 => if i = 0 then f else g) w
-        = List.prod (w.toWord.map fun p : Fin 2 × Bool =>
-            cond p.2 (if p.1 = 0 then f else g) ((if p.1 = 0 then f else g)⁻¹)) := by
-      conv_lhs => rw [← FreeGroup.mk_toWord (x := w)]
-      rfl
-    rw [hlift, hcx, Fintype.sum_sum_type]
-    simp
-    ring
 /-! ## Instantiation for the exchanges `mkIET1 lam π` and `mkIET1 mu σ` -/
 
 /-- The coefficient vector of the displacement of `mkIETFun lam π a` at `y`, extended by `0` off the

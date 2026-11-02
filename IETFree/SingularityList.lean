@@ -697,7 +697,7 @@ theorem markedCell_transl {d e n : ℕ} [NeZero d] (π : Equiv.Perm (Fin d))
       · rw [hi]; linarith
 
 /-- The image of a half-open interval under a translation. -/
-theorem image_Ico_add {a b : ℝ} (_h : a < b) {f : ℝ → ℝ} {δ : ℝ}
+theorem image_Ico_add {a b : ℝ} {f : ℝ → ℝ} {δ : ℝ}
     (hf : ∀ x, a ≤ x → x < b → f x = x + δ) :
     f '' Set.Ico a b = Set.Ico (a + δ) (b + δ) := by
   ext y
@@ -736,7 +736,7 @@ theorem no_gcut_inside_image {d e n : ℕ} [NeZero d] (π : Equiv.Perm (Fin d))
   have himg : mkIET1 (simplexMap d v) π hl '' Set.Ico (s k.castSucc) (s k.succ)
       = Set.Ico (mkIET1 (simplexMap d v) π hl (s k.castSucc))
           (mkIET1 (simplexMap d v) π hl (s k.castSucc) + (s k.succ - s k.castSucc)) := by
-    have h := image_Ico_add hlt (f := mkIET1 (simplexMap d v) π hl) (δ := δ) hδ
+    have h := image_Ico_add (f := mkIET1 (simplexMap d v) π hl) (δ := δ) hδ
     have h1' : s k.castSucc + δ = mkIET1 (simplexMap d v) π hl (s k.castSucc) :=
       (hδ _ le_rfl hlt).symm
     rw [h, h1']
