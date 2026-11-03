@@ -1,0 +1,294 @@
+/-
+Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Sébastien Gouëzel
+-/
+
+import IETFree.RauzyVeech.RichPath.StraddleMass
+import IETFree.RauzyVeech.RichPath.MinimalExit
+import IETFree.RauzyVeech.RichPath.RichPathAssembly
+
+/-!
+# `Γ₂`'s mass constant made dependent on the balance constant of the node
+
+`Induction.ExtMassGen P M C₂` is the `Γ₂` step of the assembly with an arbitrary mass constant
+`M : ℝ → ℝ`: the exit family `E` of the node satisfies `1/(M Cb) < ∑ η ∈ E, cond P w η`, where
+`Cb = 𝔐(q_w)/𝔪_{A'}(q_w)` is the balance constant of the node (`M = fun _ => C₂` recovers the
+constant form, which is false; the exit family's mass decays like `Cb⁻²`).
+
+`KeeGen M C₂ Cb = 4·#α·C₂²·Cb + (2·M Cb + 1)` is the resulting balance constant, positive and large
+(`one_lt_KeeGen`, `two_mul_lt_KeeGen`, `le_KeeGen`), and `balanceStep_of_extMassGen` is the constant
+chase of the balance step with `1/C₂` replaced by `1/(M Cb)` throughout: since
+`NodeHeight.BalanceStep` takes an arbitrary `K : ℝ → ℝ`, nothing else moves. `one_div_mul_two_eq` is
+the elementary arithmetic used in the chase. -/
+
+
+open Finset
+open scoped BigOperators
+
+namespace Induction
+
+open IETDatum₂
+
+variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
+
+/-! ## 1. Piece B with an arbitrary mass constant -/
+
+/-- **Piece B (`Γ₂`) with the mass constant `M : ℝ → ℝ`.**  The mass bound is `1/(M Cb) < ∑ η ∈ T,
+cond P w η`: the reciprocal of the mass is not a constant but an arbitrary function of the balance
+constant `Cb` of the node (the constant case is `M = fun _ => C₂`).  The growth bound keeps a
+*constant* `C₂` (the diagram constant `2^L + 1`, `L` the diameter of the Rauzy diagram): it is what
+`HeightDichotomy.dichotomy` consumes as `hC2bd`. -/
+def ExtMassGen (P : IETDatum₂ α n) (M : ℝ → ℝ) (C2 : ℝ) : Prop :=
+  ∀ (Cb : ℝ), 1 ≤ Cb → ∀ (k : ℕ) (A' : Finset α) (w : List Bool),
+    A'.card = k → k < Fintype.card α → A'.Nonempty →
+    (∀ b ∈ A', (1 / Cb) * NodeHeight.Mk 1 (NodeHeight.st P w) ≤ NodeHeight.st P w b) →
+    ∃ T : Finset (List Bool), NodeHeight.PrefixFree T ∧
+      1 / (M Cb) < ∑ η ∈ T, CylinderMass.cond P w η ∧
+      ∀ η ∈ T, (∃ e : Bool, (P.vertex (w ++ η)).last e ∉ A') ∧
+        NodeHeight.Mk 1 (NodeHeight.st P (w ++ η)) ≤ C2 * NodeHeight.Mk 1 (NodeHeight.st P w)
+
+/-! ## 2. The balance constant -/
+
+/-- The balance constant of the assembly, at mass constant `M`: the `Γ₄` constant `4·#α·C₀·C₂` (with
+`C₀ = C₂·Cb` the `A'`-balance at the `Γ₂`-endpoint) plus the mass `1/(2·M Cb)` of `Γ₂·Γ₃`, plus `1`
+of slack turning the two `≤` into the strict inequalities `BalanceStep` asks for. This is the
+balance constant of the assembly with `C₂` replaced by `M Cb`. -/
+def KeeGen (M : ℝ → ℝ) (C2 : ℝ) : ℝ → ℝ :=
+  fun Cb => 4 * (Fintype.card α : ℝ) * C2 * C2 * Cb + (2 * M Cb + 1)
+
+omit [DecidableEq α] in
+theorem one_lt_KeeGen {M : ℝ → ℝ} {C2 Cb : ℝ} (hMpos : 0 < M Cb) (hC2 : 0 ≤ C2)
+    (hCb : 1 ≤ Cb) : 1 < KeeGen (α := α) M C2 Cb := by
+  have h1 : (0 : ℝ) ≤ 4 * (Fintype.card α : ℝ) * C2 * C2 * Cb := by positivity
+  simp only [KeeGen]
+  nlinarith
+
+omit [DecidableEq α] in
+theorem two_mul_lt_KeeGen {M : ℝ → ℝ} {C2 Cb : ℝ} (hC2 : 0 ≤ C2) (hCb : 0 ≤ Cb) :
+    M Cb * 2 < KeeGen (α := α) M C2 Cb := by
+  have h1 : (0 : ℝ) ≤ 4 * (Fintype.card α : ℝ) * C2 * C2 * Cb := by positivity
+  simp only [KeeGen]
+  nlinarith
+
+omit [DecidableEq α] in
+theorem le_KeeGen {M : ℝ → ℝ} {C2 Cb : ℝ} (hMpos : 0 < M Cb) :
+    4 * (Fintype.card α : ℝ) * (C2 * Cb) * C2 ≤ KeeGen (α := α) M C2 Cb := by
+  have h1 : (0 : ℝ) ≤ 2 * M Cb + 1 := by linarith
+  simp only [KeeGen]
+  nlinarith
+
+/-- A numerical identity used in the mass bookkeeping. -/
+theorem one_div_mul_two_eq {x : ℝ} (hx : x ≠ 0) : 1 / (x * 2) = 1 / 2 * (1 / x) := by
+  field_simp
+
+end Induction
+
+namespace Induction
+
+open IETDatum₂
+
+variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
+
+/-! ## 3. The balance step with the repaired mass constant -/
+
+/-- **The assembly with an arbitrary mass constant.**  `NodeHeight.BalanceStep` (the source's
+`Γ₂`--`Γ₄`) follows from the mass estimate `ExtMassGen` with constant `M` and the `Γ₃` mass estimate
+(spelled out in the signature), with balance constant `KeeGen M C₂`.  The proof is the balance
+step's, character for character, with `1/C₂` replaced by `1/(M Cb)` (hence `2·C₂` by `2·M Cb` in the
+constant): `Γ₂` gives a family of mass `> 1/(M Cb)`; at each of its endpoints `w ++ η` the
+`A'`-balance is `C₂·Cb` (`bal_of_growth`) and `Γ₃` gives a family of mass `> 1/2`; the composed
+family has mass `>
+1/(2·M Cb)` (`NodeHeight.sum_comp`), each composed word has a prefix `γ₁` reaching a new large
+letter (`HeightDichotomy.dichotomy`), and `LargeLetter.exists_prefixFree_mass` replaces the family
+by its minimal elements, which loses no mass. -/
+theorem balanceStep_of_extMassGen (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
+    {M : ℝ → ℝ} {C2 : ℝ} (hC2 : 1 ≤ C2) (hM : ∀ Cb : ℝ, 1 ≤ Cb → 0 < M Cb)
+    (hB : ExtMassGen P M C2)
+    (hG :
+    ∀ (Cb : ℝ), 1 ≤ Cb → ∀ (k : ℕ) (A' : Finset α) (w : List Bool),
+      A'.card = k → k < Fintype.card α → A'.Nonempty →
+      (∀ b ∈ A', (1 / Cb) * NodeHeight.Mk 1 (NodeHeight.st P w) ≤ NodeHeight.st P w b) →
+      (∃ e : Bool, (P.vertex w).last e ∉ A') →
+      ∃ T : Finset (List Bool), NodeHeight.PrefixFree T ∧
+        1 / 2 < ∑ η ∈ T, CylinderMass.cond P w η ∧
+        ∀ η ∈ T, ∃ (ν : List Bool) (e : Bool), η = ν ++ [e] ∧
+          (((P.vertex (w ++ ν)).last e ∈ A' ∧ (P.vertex (w ++ ν)).last (!e) ∉ A')
+            ∨ 2 * (Fintype.card α : ℝ) * NodeHeight.Mk 1 (NodeHeight.st P w)
+                < NodeHeight.Mk 1 (NodeHeight.st P (w ++ η))) ∧
+          (∀ b ∈ A', NodeHeight.st P (w ++ η) b
+            ≤ 2 * (Fintype.card α : ℝ) * NodeHeight.Mk 1 (NodeHeight.st P w))) :
+    NodeHeight.BalanceStep P (KeeGen (α := α) M C2) := by
+  classical
+  intro Cb hCb k A' w hk hklt hbal
+  have hMpos : (0 : ℝ) < M Cb := hM Cb hCb
+  have hCbpos : (0 : ℝ) < Cb := by linarith
+  rcases Finset.eq_empty_or_nonempty A' with hemp | hne
+  · -- `A' = ∅`: the node itself, with a letter of maximal height
+    subst hemp
+    obtain ⟨θ, hθ⟩ := LargeLetter.exists_eq_Mk_one (NodeHeight.st P w) (NodeHeight.card_pos P)
+    have hlt := one_lt_KeeGen (α := α) (M := M) (C2 := C2) (Cb := Cb) hMpos
+      (by linarith : (0 : ℝ) ≤ C2) hCb
+    refine ⟨{[]}, NodeHeight.prefixFree_singleton [], ?_, ?_⟩
+    · rw [Finset.sum_singleton, CylinderMass.cond_nil,
+        div_lt_one (by linarith : (0 : ℝ) < KeeGen (α := α) M C2 Cb)]
+      simpa using hlt
+    · intro η hη
+      rw [Finset.mem_singleton] at hη
+      subst hη
+      refine ⟨θ, Finset.notMem_empty θ, ?_⟩
+      have hM : (0 : ℝ) < NodeHeight.Mk 1 (NodeHeight.st P w) :=
+        NodeHeight.Mk_st_pos P w le_rfl (NodeHeight.card_pos P)
+      simp only [List.append_nil, Finset.insert_empty, NodeHeight.mmin_singleton, hθ, min_self]
+      exact le_mul_of_one_le_left (le_of_lt hM) (le_of_lt hlt)
+  -- `Γ₂` at the node `w`
+  obtain ⟨T2, hT2pf, hT2mass, hT2data⟩ := hB Cb hCb k A' w hk hklt hne hbal
+  -- the `A'`-balance at the `Γ₂`-endpoints
+  have hbal' : ∀ η ∈ T2, ∀ b ∈ A',
+      (1 / (C2 * Cb)) * NodeHeight.Mk 1 (NodeHeight.st P (w ++ η)) ≤ NodeHeight.st P (w ++ η) b :=
+    fun η hη => bal_of_growth P hC2 hCb (w' := w ++ η) hbal
+      (fun b => CylinderMass.state_mono P w η b) (hT2data η hη).2
+  -- the `Γ₃` family at each `Γ₂`-endpoint
+  have hexG : ∀ η ∈ T2, ∃ F : Finset (List Bool), NodeHeight.PrefixFree F ∧
+      1 / 2 < ∑ δ ∈ F, CylinderMass.cond P (w ++ η) δ ∧
+      ∀ δ ∈ F, ∃ (ν : List Bool) (e : Bool), δ = ν ++ [e] ∧
+        (((P.vertex ((w ++ η) ++ ν)).last e ∈ A'
+            ∧ (P.vertex ((w ++ η) ++ ν)).last (!e) ∉ A')
+          ∨ 2 * (Fintype.card α : ℝ) * NodeHeight.Mk 1 (NodeHeight.st P (w ++ η))
+              < NodeHeight.Mk 1 (NodeHeight.st P ((w ++ η) ++ δ))) ∧
+        (∀ b ∈ A', NodeHeight.st P ((w ++ η) ++ δ) b
+          ≤ 2 * (Fintype.card α : ℝ) * NodeHeight.Mk 1 (NodeHeight.st P (w ++ η))) :=
+    fun η hη => hG (C2 * Cb) (by nlinarith) k A' (w ++ η) hk hklt hne (hbal' η hη)
+      (hT2data η hη).1
+  set F : List Bool → Finset (List Bool) :=
+    fun η => if h : η ∈ T2 then Classical.choose (hexG η h) else ∅ with hF
+  have hF_spec : ∀ η (h : η ∈ T2), F η = Classical.choose (hexG η h) := by
+    intro η h
+    simp only [hF, dif_pos h]
+  have hF_pf : ∀ η, NodeHeight.PrefixFree (F η) := by
+    intro η
+    by_cases h : η ∈ T2
+    · rw [hF_spec η h]
+      exact (Classical.choose_spec (hexG η h)).1
+    · simp only [hF, dif_neg h]
+      exact NodeHeight.prefixFree_empty
+  have hF_mass : ∀ η ∈ T2, 1 / 2 < ∑ δ ∈ F η, CylinderMass.cond P (w ++ η) δ := by
+    intro η h
+    rw [hF_spec η h]
+    exact (Classical.choose_spec (hexG η h)).2.1
+  have hF_data : ∀ η ∈ T2, ∀ δ ∈ F η, ∃ (ν : List Bool) (e : Bool), δ = ν ++ [e] ∧
+      (((P.vertex ((w ++ η) ++ ν)).last e ∈ A'
+          ∧ (P.vertex ((w ++ η) ++ ν)).last (!e) ∉ A')
+        ∨ 2 * (Fintype.card α : ℝ) * NodeHeight.Mk 1 (NodeHeight.st P (w ++ η))
+            < NodeHeight.Mk 1 (NodeHeight.st P ((w ++ η) ++ δ))) ∧
+      (∀ b ∈ A', NodeHeight.st P ((w ++ η) ++ δ) b
+        ≤ 2 * (Fintype.card α : ℝ) * NodeHeight.Mk 1 (NodeHeight.st P (w ++ η))) := by
+    intro η h δ hδ
+    rw [hF_spec η h] at hδ
+    exact (Classical.choose_spec (hexG η h)).2.2 δ hδ
+  -- the dichotomy (`Γ₄`) at every composed word
+  have hdich : ∀ η ∈ T2, ∀ δ ∈ F η, ∃ γ₁ : List Bool,
+      η <+: γ₁ ∧ γ₁ <+: η ++ δ ∧
+      ∃ θ : α, θ ∉ A' ∧ NodeHeight.Mk 1 (NodeHeight.st P (w ++ γ₁)) ≤
+        4 * (Fintype.card α : ℝ) * (C2 * Cb) * C2 *
+          min (NodeHeight.mmin (insert θ A') (NodeHeight.st P (w ++ γ₁)))
+            (NodeHeight.Mk 1 (NodeHeight.st P w)) := by
+    intro η hη δ hδ
+    obtain ⟨ν, e, hδeq, hlast, hbnd⟩ := hF_data η hη δ hδ
+    subst hδeq
+    obtain ⟨γ₁, hp1, hp2, θ, hθ, hbound⟩ :=
+      HeightDichotomy.dichotomy P hP hn w η ν e A' hne (by nlinarith) hC2 (hbal' η hη)
+        (LevelMass.heights_bound_of_end P (w ++ η) (ν ++ [e]) A'
+          (R := 2 * (Fintype.card α : ℝ) * NodeHeight.Mk 1 (NodeHeight.st P (w ++ η))) hbnd)
+        hlast (hT2data η hη).2
+    exact ⟨γ₁, hp1, hp2, θ, hθ, hbound⟩
+  set gam : List Bool → List Bool → List Bool :=
+    fun η δ =>
+      if h : η ∈ T2 ∧ δ ∈ F η then Classical.choose (hdich η h.1 δ h.2) else []
+      with hgam
+  have hgam_prop : ∀ η δ (h : η ∈ T2 ∧ δ ∈ F η),
+      η <+: gam η δ ∧ gam η δ <+: η ++ δ ∧ ∃ θ : α, θ ∉ A' ∧
+        NodeHeight.Mk 1 (NodeHeight.st P (w ++ gam η δ)) ≤
+          4 * (Fintype.card α : ℝ) * (C2 * Cb) * C2 *
+            min (NodeHeight.mmin (insert θ A') (NodeHeight.st P (w ++ gam η δ)))
+              (NodeHeight.Mk 1 (NodeHeight.st P w)) := by
+    intro η δ h
+    simp only [hgam, dif_pos h]
+    exact Classical.choose_spec (hdich η h.1 δ h.2)
+  -- the composed family and its minimal elements
+  set S : Finset (List Bool) := T2.biUnion (fun η => (F η).image (fun δ => η ++ δ)) with hS
+  set U : Finset (List Bool) := T2.biUnion (fun η => (F η).image (fun δ => gam η δ)) with hU
+  have hSpf : NodeHeight.PrefixFree S := by
+    rw [hS]
+    exact NodeHeight.prefixFree_comp hT2pf hF_pf
+  have hSmass : ∑ x ∈ S, CylinderMass.cond P w x =
+      ∑ η ∈ T2, CylinderMass.cond P w η * ∑ δ ∈ F η, CylinderMass.cond P (w ++ η) δ := by
+    rw [hS]
+    exact NodeHeight.sum_comp (T := F) hT2pf P w
+  have hcov : ∀ x ∈ S, ∃ t ∈ U, t <+: x := by
+    intro x hx
+    rw [hS, Finset.mem_biUnion] at hx
+    obtain ⟨η, hη, hx⟩ := hx
+    rw [Finset.mem_image] at hx
+    obtain ⟨δ, hδ, rfl⟩ := hx
+    exact ⟨gam η δ, by
+      rw [hU, Finset.mem_biUnion]
+      exact ⟨η, hη, Finset.mem_image.mpr ⟨δ, hδ, rfl⟩⟩,
+        (hgam_prop η δ ⟨hη, hδ⟩).2.1⟩
+  obtain ⟨T, hTU, hTpf, hTmass⟩ := LargeLetter.exists_prefixFree_mass P hP hn w S U hSpf hcov
+  -- the mass of the composed family exceeds `1/(2·C₂)`
+  have hT2ne : T2.Nonempty := by
+    rcases Finset.eq_empty_or_nonempty T2 with h | h
+    · rw [h, Finset.sum_empty] at hT2mass
+      have : (0 : ℝ) < 1 / (M Cb) := by positivity
+      linarith
+    · exact h
+  have hstep1 : ∀ η ∈ T2, CylinderMass.cond P w η * (1 / 2) ≤
+      CylinderMass.cond P w η * ∑ δ ∈ F η, CylinderMass.cond P (w ++ η) δ :=
+    fun η hη => mul_le_mul_of_nonneg_left (le_of_lt (hF_mass η hη))
+      (le_of_lt (CylinderMass.cond_pos P w η))
+  obtain ⟨η₀, hη₀⟩ := hT2ne
+  have hstep2 : CylinderMass.cond P w η₀ * (1 / 2) <
+      CylinderMass.cond P w η₀ * ∑ δ ∈ F η₀, CylinderMass.cond P (w ++ η₀) δ :=
+    mul_lt_mul_of_pos_left (hF_mass η₀ hη₀) (CylinderMass.cond_pos P w η₀)
+  have hsum_lt : ∑ η ∈ T2, CylinderMass.cond P w η * (1 / 2) <
+      ∑ η ∈ T2, CylinderMass.cond P w η * ∑ δ ∈ F η, CylinderMass.cond P (w ++ η) δ :=
+    Finset.sum_lt_sum hstep1 ⟨η₀, hη₀, hstep2⟩
+  have hfac : ∑ η ∈ T2, CylinderMass.cond P w η * (1 / 2)
+      = (1 / 2) * ∑ η ∈ T2, CylinderMass.cond P w η := by
+    rw [Finset.mul_sum]
+    exact Finset.sum_congr rfl fun η _ => by ring
+  have hhalf : (1 / 2) * (1 / (M Cb)) < (1 / 2) * ∑ η ∈ T2, CylinderMass.cond P w η :=
+    mul_lt_mul_of_pos_left hT2mass (by norm_num)
+  have hSgt : 1 / (M Cb * 2) < ∑ x ∈ S, CylinderMass.cond P w x := by
+    rw [hSmass, one_div_mul_two_eq (ne_of_gt hMpos)]
+    linarith [hsum_lt, hfac, hhalf]
+  refine ⟨T, hTpf, ?_, ?_⟩
+  · -- the mass: `1/(K Cb) < 1/(2 C₂) ≤ mass(T)`
+    have hTle : 1 / (M Cb * 2) ≤ ∑ t ∈ T, CylinderMass.cond P w t :=
+      le_of_lt (lt_of_lt_of_le hSgt hTmass)
+    have hlt : 1 / KeeGen (α := α) M C2 Cb < 1 / (M Cb * 2) := by
+      refine one_div_lt_one_div_of_lt (by positivity) ?_
+      have := two_mul_lt_KeeGen (α := α) (M := M) (C2 := C2) (Cb := Cb)
+        (by linarith : (0 : ℝ) ≤ C2) (by linarith : (0 : ℝ) ≤ Cb)
+      linarith
+    linarith
+  · -- the conclusion, at every member of `U`
+    intro t ht
+    have htU : t ∈ U := hTU ht
+    rw [hU, Finset.mem_biUnion] at htU
+    obtain ⟨η, hη, ht⟩ := htU
+    rw [Finset.mem_image] at ht
+    obtain ⟨δ, hδ, rfl⟩ := ht
+    obtain ⟨-, -, θ, hθ, hbound⟩ := hgam_prop η δ ⟨hη, hδ⟩
+    refine ⟨θ, hθ, le_trans hbound ?_⟩
+    have hmin0 : (0 : ℝ) ≤ min (NodeHeight.mmin (insert θ A') (NodeHeight.st P (w ++ gam η δ)))
+        (NodeHeight.Mk 1 (NodeHeight.st P w)) :=
+      le_min (le_of_lt (NodeHeight.mmin_pos ⟨θ, Finset.mem_insert_self θ A'⟩
+        fun b => NodeHeight.st_pos P _ b))
+        (le_of_lt (NodeHeight.Mk_st_pos P w le_rfl (NodeHeight.card_pos P)))
+    exact mul_le_mul_of_nonneg_right (le_KeeGen (α := α) (M := M) (C2 := C2) (Cb := Cb) hMpos)
+      hmin0
+
+end Induction
+

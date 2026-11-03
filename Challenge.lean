@@ -8,23 +8,22 @@ import Mathlib
 
 /-!
 The challenge statement, in the shortest form that can be checked: the *unconditional* form of
-Theorem 1.1, in Mathlib-only language.  The comparator challenge is `ChallengeWeak.lean`, next to
-this file, which states the same theorem with its two external inputs as hypotheses.
+Theorem 1.1, in Mathlib-only language.  This file *is* the comparator challenge (`comparator.json`,
+`Comparator/`): `IETFree/ChallengeSolved.lean` proves it, and the comparator checks that the two
+agree declaration by declaration.
 
 `mkIETFun` is the function of the interval exchange with lengths `lam` and permutation `π` placed on
 `[a, a + ∑ lam)`; `mkIETEquiv` packages it as a permutation of `ℝ`, and `coe_mkIETEquiv` records its
-coercion.  As in `ChallengeWeak.lean`, the inverse is not *constructed*: `mkIETEquiv` is a
+coercion.  The inverse is not *constructed*: `mkIETEquiv` is a
 definition hole (`:= sorry`) and `coe_mkIETEquiv` a statement, so the file contains no proof about
 `mkIETFun`'s inverse — only the statement of Theorem 1.1, with `sorry`, uses them.  `main` is the
 theorem.
 
-The declarations are at the root namespace, and their names are the library's, exactly as in
-`ChallengeWeak.lean`.
+The declarations are at the root namespace, and their names are the library's.
 
-**FROZEN.**  The statements in this file are frozen — they are the unconditional form of Theorem
-1.1, displayed for the reader — and must not be changed.  The corresponding definitions in
-`IET.lean` are frozen with them.  The comparator target is `ChallengeWeak.lean`, next to this file.
--/
+The declarations mirror the library's (`IETFree/IET.lean`) name for name and body for body, so that
+the comparator can compare the statements declaration by declaration; `IETFree/ChallengeSolved.lean`
+proves them. -/
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
@@ -42,30 +41,31 @@ noncomputable def imageLeft {n : ℕ} (π : Equiv.Perm (Fin n)) (lam : Fin n →
 noncomputable def translationVector {n : ℕ} (π : Equiv.Perm (Fin n)) (lam : Fin n → ℝ≥0)
     (i : Fin n) : ℝ := imageLeft π lam i - leftEnd lam i
 
-/-- The lengths reordered into the order of the images. -/
-def imageLengths {n : ℕ} (π : Equiv.Perm (Fin n)) (lam : Fin n → ℝ≥0) : Fin n → ℝ≥0 :=
-  fun k => lam (π.symm k)
+/-- The intervals whose left endpoint is at most `x`. -/
+noncomputable def idxSet {n : ℕ} (lam : Fin n → ℝ≥0) (x : ℝ) : Finset (Fin n) :=
+  Finset.univ.filter (fun i : Fin n => leftEnd lam i ≤ x)
 
-/-- The index of the interval containing `x`, for `x` above the left end. -/
+/-- The index of the interval, in the arrangement with lengths `lam`, that contains `x`. -/
 noncomputable def idx {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (x : ℝ) (hx : 0 ≤ x) : Fin n :=
-  (Finset.univ.filter (fun i : Fin n => leftEnd lam i ≤ x)).max'
+  (idxSet lam x).max'
     (by
       refine ⟨0, ?_⟩
-      simp only [Finset.mem_filter, Finset.mem_univ, true_and]
+      simp only [idxSet, Finset.mem_filter, Finset.mem_univ, true_and]
       simpa [leftEnd] using hx)
 
-/-- **The function of the interval exchange** with lengths `lam` and permutation `π`, placed on
-`[a, a + ∑ lam)`. -/
+/-- **The interval exchange transformation**, as a bare function, with lengths `lam` and
+permutation `π`, placed on `[a, a + ∑ lam)`. -/
 noncomputable def mkIETFun {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
     (a x : ℝ) : ℝ :=
   if hx : x ∈ Set.Ico a (a + ∑ i, (lam i : ℝ)) then
     x + translationVector π lam (idx lam (x - a) (by linarith [hx.1]))
   else x
 
-/-- **The interval exchange** with lengths `lam` and permutation `π`, placed on `[a, a + ∑ lam)`,
-as a permutation of `ℝ`.
+/-- **The interval exchange transformation**, as an equiv, with lengths `lam` and permutation `π`,
+placed on `[a, a + ∑ lam)`; this is a permutation of `ℝ`.
 
-It is not constructed here: this is a **definition hole**, as in `ChallengeWeak.lean`. -/
+It is not constructed here: this is a **definition hole**, which the solution fills with the
+library's `mkIETEquiv`. -/
 noncomputable def mkIETEquiv {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
     (a : ℝ) : Equiv ℝ ℝ := sorry
 

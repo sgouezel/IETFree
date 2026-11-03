@@ -389,9 +389,7 @@ theorem IsCutSet.sum_cellLen_lt (hs : IsCutSet f a b s) (i : Fin s.card) :
     ∑ j ∈ Finset.univ.filter (fun j => j < i), hs.cellLen j = hs.cellStarts i - a := by
   classical
   have hne : 0 < s.card := hs.card_pos
-  have hpos : ∀ j : Fin s.card, hs.cellLen j = hs.cellPos (j.val + 1) - hs.cellPos j.val
-    := by
-    intro j
+  have hpos (j : Fin s.card) : hs.cellLen j = hs.cellPos (j.val + 1) - hs.cellPos j.val := by
     have h1 := hs.cellPos_of_lt j.isLt
     unfold IsCutSet.cellLen
     rw [h1]
@@ -586,3 +584,22 @@ theorem IsCutSet.sum_cellLen_image {e : Equiv ℝ ℝ} {a b : ℝ} {s : Finset �
     have := (hs.mapsTo _ (hs.cellStarts_mem_Ico i)).1
     linarith
   exact (ENNReal.ofReal_eq_ofReal_iff hsum hfin).mp hof
+
+/-! ## Finite unions of half-open intervals
+
+The cells of a cut set are half-open intervals, and several statements of the development are about
+subsets of `ℝ` that are finite unions of them: the support of a piecewise-translation bijection
+(`isFiniteUnionIntervals_ne_id`), and the small sets of Lemma 2.9
+(`IETFree.UniqueErgodicity.exists_uniform_birkhoff`).  The presentation is recorded, because a
+union of half-open intervals cannot be recovered from its endpoints alone. -/
+
+/-- `S` is a finite union of half-open intervals `[a, b)`, presented by a finite set of endpoint
+pairs.
+
+**Note on the presentation.**  An earlier version of this predicate took a finite set `cuts` of
+reals and quantified over *all* pairs `a < b` of cuts.  That is strictly weaker: the union of all
+`[a, b)` with `a, b ∈ cuts` is exactly the single half-open interval `[min cuts, max cuts)`, so a
+support that is a union of *some* of its cells could not be presented in that form.  The pair-based
+form is the one closed under finite unions, and it is what the cells of an exchange give. -/
+def IsFiniteUnionIntervals (S : Set ℝ) : Prop :=
+  ∃ P : Finset (ℝ × ℝ), ∀ x : ℝ, x ∈ S ↔ ∃ p ∈ P, x ∈ Set.Ico p.1 p.2

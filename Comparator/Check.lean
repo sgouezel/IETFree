@@ -37,7 +37,7 @@ Usage, from `IET2/`:
 
     lean --run Comparator/Check.lean
 
-which is what `Build.sh` does, so a drift between the challenge and the library breaks the build.
+which is what `SlowBuild.sh` does, so a drift between the challenge and the library is caught.
 -/
 
 open Lean
