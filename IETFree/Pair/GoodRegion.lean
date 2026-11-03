@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.SingularityList
+public import IETFree.Pair.SingularityList
 
 /-!
 The image side of `g ∘ f`, the partial sums, and the local presentation: the type `GoodRegion`.
@@ -37,6 +38,8 @@ with `lam`, `perm` and the `Countable`
 instance that makes "every block" a countable intersection) and `Fits` (`D.π = π`, `D.v = q.1`,
 `E.π = σ`, `E.v = q.2`).
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -1198,3 +1201,5 @@ theorem exists_goodRegion {d e : ℕ} [NeZero d] [NeZero e]
     (fun q hq => (hpres q hq
       (simplexMap_mem_simplex_fin (hreg q hq).1.1 (hreg q hq).1.2)
       (simplexMap_mem_simplex_fin (hreg q hq).2.1 (hreg q hq).2.2)).2), hshape⟩
+
+end

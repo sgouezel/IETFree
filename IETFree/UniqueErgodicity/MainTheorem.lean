@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.PosBlocks
-import IETFree.RauzyVeech.RichPath.RichGreedyPath
-import IETFree.RauzyVeech.TowerTiling
+public import IETFree.RauzyVeech.PosBlocks
+public import IETFree.RauzyVeech.RichPath.RichGreedyPath
+public import IETFree.RauzyVeech.TowerTiling
 
 /-!
 # Masur–Veech: a.e. unique ergodicity of interval exchange maps
@@ -34,6 +35,8 @@ the exchange is the identity off `[0,1)` and the Dirac mass at `2` is invariant 
 The statement is given for the two-bijection datum `IETDatum₂` used by the induction; the
 single-permutation form, stated with the copied `mkIET1'`, is `masurVeech_ae_unique_invariant_perm`
 below. -/
+
+@[expose] public section
 
 
 open MeasureTheory
@@ -133,3 +136,5 @@ theorem masurVeech_ae_unique_invariant_perm {n : ℕ} (hn : 2 ≤ n) [NeZero n]
   filter_upwards [hmain, ae_mem_simplexOn_fin (Nat.pos_iff_ne_zero.mp (by omega))]
     with lam hl h
   rwa [IETDatum₂.ofPerm_toIET π h, ← mkIET1_of_mem h] at hl
+
+end

@@ -3,11 +3,12 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import Mathlib
-import IETFree.UniqueErgodicity.Split
-import IETFree.UniqueErgodicity.Limits
-import IETFree.UniqueErgodicity.Transfer
+public import Mathlib
+public import IETFree.UniqueErgodicity.Split
+public import IETFree.UniqueErgodicity.Limits
+public import IETFree.UniqueErgodicity.Transfer
 
 /-!
 # Measurability preparation for the split interval
@@ -29,6 +30,8 @@ split interval, and none of which is in `Split.lean`, `Limits.lean` or `Transfer
   below only asks for the section identity on `[0, 1)`, and for the pushforward to be carried by
   `[0, 1)`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Set Topology
 open scoped ENNReal NNReal BigOperators
@@ -282,3 +285,5 @@ theorem lift_unique_on_Ico {X : Type*} [MeasurableSpace X]
 end LiftUnique
 
 end IETFree.UniqueErgodicity
+
+end

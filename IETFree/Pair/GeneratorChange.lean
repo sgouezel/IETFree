@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.BlockRescaling
+public import IETFree.Pair.BlockRescaling
 
 /-!
 The change of generators `(f, g) ↦ (g ∘ f, g)`, and the transport of a word back from the rescaled
@@ -18,6 +19,8 @@ preserves nontriviality (`substGen_ne_one`), and it is compatible with evaluatio
 (`evalWord_substGen`).  From a word trivial for the rescaled pair the file returns a word trivial on
 the original block, `exists_word_trivial_on_block_of_rescaled`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -127,3 +130,5 @@ theorem exists_word_trivial_on_block_of_rescaled {F G F' G' : IET 0 1} {u v : �
   rw [hφ] at hconj
   rw [evalWord_substGen]
   exact hconj
+
+end

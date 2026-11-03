@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RichPath.MinimalExitMass
-import IETFree.RauzyVeech.RichPath.GradedInduction
-import IETFree.RauzyVeech.RichPath.MassFunction
+public import IETFree.RauzyVeech.RichPath.MinimalExitMass
+public import IETFree.RauzyVeech.RichPath.GradedInduction
+public import IETFree.RauzyVeech.RichPath.MassFunction
 
 /-!
 # Closing `Γ₂`: an existential mass growth from the uniform minimal exit
@@ -18,6 +19,8 @@ node, with the height constant `2^L` supplied by `MinimalExitMass.exists_uniform
 
 The family slot only has to be met on the single prefix-free family `S = {[]}`, which is why no
 hypothesis on `P` beyond irreducibility is needed. -/
+
+@[expose] public section
 
 open Finset
 open scoped BigOperators
@@ -74,3 +77,4 @@ theorem exists_extMassGen_sharp (P : IETDatum₂ α n) (hP : P.Irreducible) (hn 
 
 end MassGrowth
 
+end

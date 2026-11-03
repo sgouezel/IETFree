@@ -39,7 +39,7 @@ LEANOPTS=(-DautoImplicit=false -DrelaxedAutoImplicit=false -DmaxSynthPendingDept
 lib=$(python3 - <<'PY'
 import re, sys
 def imports(path):
-    return re.findall(r'^import (IETFree[.\w]*)', open(path, encoding='utf-8').read(), re.M)
+    return re.findall(r'^(?:public |meta |public meta )?import (IETFree[.\w]*)', open(path, encoding='utf-8').read(), re.M)
 mods = imports('IETFree.lean')
 deps = {m: imports(m.replace('.', '/') + '.lean') for m in mods}
 order, state = [], {}

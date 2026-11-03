@@ -3,12 +3,13 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.BlockAssembly
-import IETFree.Pair.BlockDatum
-import IETFree.Pair.BlockData
-import IETFree.Pair.BlockDiophantine
-import IETFree.Pair.GeneratorChange
+public import IETFree.Pair.BlockAssembly
+public import IETFree.Pair.BlockDatum
+public import IETFree.Pair.BlockData
+public import IETFree.Pair.BlockDiophantine
+public import IETFree.Pair.GeneratorChange
 
 /-!
 Lemma 3.4 and Theorem 1.1.
@@ -25,6 +26,8 @@ description of the block lengths.
 is Theorem 1.1 for the per-block words, and `exists_word_trivial_on_all_of_blocks` (in
 `IETFree.BlockAssembly`) is what turns the per-block words of that statement into one word.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -347,3 +350,5 @@ theorem main_theorem_of_blocks {d e : ℕ} [NeZero d] [NeZero e]
       exact h2
     simp only [Fin.lt_def, Fin.val_castLE, Fin.val_castSucc, Fin.val_succ] at h1' h2'
     omega
+
+end

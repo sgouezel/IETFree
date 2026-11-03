@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.Path
-import IETFree.RauzyVeech.Affine
+public import IETFree.RauzyVeech.Path
+public import IETFree.RauzyVeech.Affine
 
 /-!
 Lemma 1 of the source (p. 16): for a finite path `γ` of the Rauzy–Veech algorithm with
@@ -15,6 +16,8 @@ matrix `Q = Path.Q P γ`, the volume of the path cylinder `Δ(γ) = cone Q ∩ �
 The proof goes through the set identity `Δ(γ) = M • Δ°` with `M = Q diag(Q_β)⁻¹`, whose column sums
 are `1`, followed by the change of variables `AffineVolume.volume_image_inducedMap_of_det` and the
 determinant computation `det M = det Q / ∏ Q_β = (∏ Q_β)⁻¹` (all `Path.Q` are unimodular). -/
+
+@[expose] public section
 
 open MeasureTheory Matrix
 open scoped BigOperators ENNReal NNReal
@@ -653,3 +656,4 @@ theorem colsumNN_pos {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZer
 
 end Checks
 
+end

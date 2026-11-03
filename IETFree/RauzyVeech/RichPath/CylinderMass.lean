@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.ColDiam
-import IETFree.RauzyVeech.BalancedSet
+public import IETFree.RauzyVeech.ColDiam
+public import IETFree.RauzyVeech.BalancedSet
 
 /-!
 # The cylinder mass, and Kerckhoff's lemma in cylinder-mass form
@@ -29,6 +30,8 @@ for the mass of the child cylinder relative to its parent
   cylinder-mass form of Kerckhoff's lemma (the source's
   `P_q(Γ_α, (B_γ q)_α > T q_α) < T⁻¹`).
 -/
+
+@[expose] public section
 
 
 open Finset
@@ -439,3 +442,4 @@ theorem volume_append_eq_cond (P : IETDatum₂ α n) (γ δ : List Bool) :
 
 end CylinderMass
 
+end

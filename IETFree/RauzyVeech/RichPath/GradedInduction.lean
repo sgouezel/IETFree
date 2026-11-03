@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RichPath.LargeLetter
+public import IETFree.RauzyVeech.RichPath.LargeLetter
 
 /-!
 # The graded induction of the source
@@ -37,6 +38,8 @@ This file delivers the **skeleton** of that induction, in the cylinder-mass lang
   `NodeHeight.BalanceStep P K` (whose content is `Γ₂`--`Γ₄`), and it is proved unconditionally in
   `IETFree/RauzyVeech/RichPath/RichGreedyPath.lean`.
 -/
+
+@[expose] public section
 
 open Finset
 open scoped BigOperators
@@ -175,3 +178,4 @@ theorem inductionStep_of_balance (P : IETDatum₂ α n) {K : ℝ → ℝ}
 
 end Induction
 
+end

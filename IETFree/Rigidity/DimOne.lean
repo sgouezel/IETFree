@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.TopBotFormalism
-import IETFree.RauzyVeech.Affine
-import IETFree.RauzyVeech.SimplexAe
+public import IETFree.TopBotFormalism
+public import IETFree.RauzyVeech.Affine
+public import IETFree.RauzyVeech.SimplexAe
 
 /-!
 # The `d = 1` case of the root theorem
@@ -16,6 +17,8 @@ statement.  It is true and not vacuous: every `π : Equiv.Perm (Fin 1)` is irred
 exchange `mkIET1' lam π h` is the identity on the simplex, so rigidity holds with `q n = n`,
 `t = 0`, `B n = Set.Ico 0 1`.  This is the `d = 1` half of its proof.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped NNReal ENNReal BigOperators
@@ -88,3 +91,5 @@ theorem ae_fin_one (π : Equiv.Perm (Fin 1)) :
 
 
 end IETFree.Rigidity
+
+end

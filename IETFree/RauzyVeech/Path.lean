@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.Step
+public import IETFree.RauzyVeech.Step
 
 /-!
 # Paths of the Rauzy–Veech algorithm
@@ -14,6 +15,8 @@ Corollary 1 of the source (p. 13: consecutive arrows with different names satisf
 name(γₙ)`), the multiplicativity of `Path.Q`, and the fact that for irreducible data on at least two
 letters the two last letters differ (so the two `last` values never coincide).  Also `vertexNat`,
 the iteration along an infinite sequence of types, which is the shape needed for Proposition 4.3. -/
+
+@[expose] public section
 
 open scoped BigOperators
 
@@ -163,3 +166,5 @@ theorem vertexNat_irreducible (P : IETDatum₂ α n) (γ : ℕ → Bool) (hP : P
   exact vertex_irreducible P _ hP
 
 end IETDatum₂
+
+end

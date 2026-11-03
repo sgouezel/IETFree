@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.IET
+public import IETFree.IET
 
 /-!
 # Interval exchanges in the Marmi–Moussa–Yoccoz framework
@@ -36,6 +37,8 @@ The rest of the contents:
 The single-exchange API (`IsCutSet`, `IsIET`, `mkIETFun`, `mkIET1'`, `simplexVolume`, …) is the
 library's own, from `IETFree.CutSet`, `IETFree.CutSetMeasure` and `IETFree.IET`; this module adds
 the two-bijection datum on top of it. -/
+
+@[expose] public section
 
 open MeasureTheory
 open scoped BigOperators NNReal
@@ -180,3 +183,5 @@ theorem ofPerm_toIET {n : ℕ} [NeZero n] (π : Equiv.Perm (Fin n)) {lam : Fin n
   rfl
 
 end IETDatum₂
+
+end

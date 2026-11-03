@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.UniqueErgodicity.TransferConv
-import IETFree.UniqueErgodicity.MeasPrep
+public import IETFree.UniqueErgodicity.TransferConv
+public import IETFree.UniqueErgodicity.MeasPrep
 
 /-!
 # Restricting the germ map to its invariant part
@@ -20,6 +21,8 @@ accordingly.
 Nothing here is mathematical: it is the `Subtype` bookkeeping that the assembly in
 `UniqueErgodicity.IET` needs, kept separate so that it is proved once.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped BigOperators
@@ -75,3 +78,4 @@ theorem forall_mem_rightPart_of_subtype (G : SplitI D → SplitI D)
 
 end IETFree.UniqueErgodicity
 
+end

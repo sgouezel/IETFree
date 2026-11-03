@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import Lean
+public import Lean
 
 /-!
 # A local stand-in for the comparator
@@ -39,6 +40,8 @@ Usage, from `IET2/`:
 
 which is what `SlowBuild.sh` does, so a drift between the challenge and the library is caught.
 -/
+
+@[expose] public section
 
 open Lean
 
@@ -211,3 +214,5 @@ def main : IO UInt32 := do
 end ComparatorCheck
 
 def main : IO UInt32 := ComparatorCheck.main
+
+end

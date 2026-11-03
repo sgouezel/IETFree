@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.Affine
-import IETFree.RauzyVeech.Path
+public import IETFree.RauzyVeech.Affine
+public import IETFree.RauzyVeech.Path
 
 /-!
 # Nesting and partition of the path cylinders
@@ -39,6 +40,8 @@ finite word `γ`, writing `Δ(γ) = simplexCyl P γ`:
 `2 ≤ n` is required and not a convenience: for `n = 1` (one letter) `rvMat` is the identity, every
 `Δ(γ)` is the whole open simplex, the two children coincide, and `cylStop` is the whole simplex, so
 both disjointness and nullity fail. -/
+
+@[expose] public section
 
 open MeasureTheory
 open scoped BigOperators ENNReal NNReal
@@ -882,3 +885,5 @@ theorem sum_qApply (Q : Matrix α α ℤ) (y : α → ℝ) :
   rw [Finset.sum_mul]
 
 end IETDatum₂
+
+end

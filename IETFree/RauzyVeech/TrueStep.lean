@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.InvariantMeasure
-import IETFree.RauzyVeech.LevelN
+public import IETFree.RauzyVeech.InvariantMeasure
+public import IETFree.RauzyVeech.LevelN
 
 /-!
 # The Rauzy–Veech step of type `true`
@@ -14,6 +15,8 @@ Mirror of `IETFree.FirstReturn` for the case `λ botCell < λ (topCell π)`: the
 is the prefix `Ico 0 (Λ - λ botCell)`, the return time is `1` except on the upper part of the top
 cell where it is `2`, and the return map is the exchange of the step `IETDatum₂.rvStep (toComb π)
 true`. -/
+
+@[expose] public section
 
 open MeasureTheory Finset
 open scoped BigOperators ENNReal NNReal
@@ -1476,3 +1479,4 @@ theorem tower_formula_level_pathQ_any (P : IETDatum₂ α n) (_hP : P.Irreducibl
 end
 end TowerTrue
 
+end

@@ -3,14 +3,17 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.TopBotFormalism
+public import IETFree.TopBotFormalism
 
 /-!
 # The Rauzy–Veech step: statements
 
 The step and the path combinatorics: the last letters `last`, the elementary matrix `rvMat`, the
 product `IETDatum₂.Path.Q` along a word, and the inverse of an irreducible permutation. -/
+
+@[expose] public section
 
 open MeasureTheory
 open scoped BigOperators ENNReal NNReal
@@ -538,3 +541,5 @@ def simplexCyl (P : IETDatum₂ α n) (γ : List Bool) : Set (α → ℝ≥0) :=
   {x | (fun a => (x a : ℝ)) ∈ cone (Path.Q P γ) ∧ x ∈ simplexOn α}
 
 end IETDatum₂
+
+end

@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RichPath.LevelMass
-import IETFree.RauzyVeech.RauzyReach
-import IETFree.RauzyVeech.PairReach
+public import IETFree.RauzyVeech.RichPath.LevelMass
+public import IETFree.RauzyVeech.RauzyReach
+public import IETFree.RauzyVeech.PairReach
 
 /-!
 # The vocabulary of the extension step, and the minimal extension to a row end outside `A'`
@@ -24,6 +25,8 @@ its existence half (`NodeHeight.st = cs` is `B_w·1`, so `Mk 1` is the source's 
   `exists_minimal_exit` gives the *minimal-length* such word, together with the paper's structural
   fact that all its proper prefixes are blocked.
 -/
+
+@[expose] public section
 
 open Finset NodeHeight
 open scoped BigOperators
@@ -93,3 +96,5 @@ theorem exists_minimal_exit (P : IETDatum₂ α n) (hP : P.Irreducible) (w : Lis
   omega
 
 end MinimalExit
+
+end

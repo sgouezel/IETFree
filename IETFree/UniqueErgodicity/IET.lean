@@ -3,14 +3,15 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.UniqueErgodicity.Main
-import IETFree.UniqueErgodicity.Germ
-import IETFree.UniqueErgodicity.MeasPrep
-import IETFree.UniqueErgodicity.CompactTool
-import IETFree.UniqueErgodicity.TransferConv
-import IETFree.UniqueErgodicity.SubtypeConv
-import IETFree.UniqueErgodicity.GermIterate
+public import IETFree.UniqueErgodicity.Main
+public import IETFree.UniqueErgodicity.Germ
+public import IETFree.UniqueErgodicity.MeasPrep
+public import IETFree.UniqueErgodicity.CompactTool
+public import IETFree.UniqueErgodicity.TransferConv
+public import IETFree.UniqueErgodicity.SubtypeConv
+public import IETFree.UniqueErgodicity.GermIterate
 
 /-!
 # Theorem 2: uniform Birkhoff convergence from a unique invariant measure
@@ -47,6 +48,8 @@ The iterate bridge for the left germs is in `UniqueErgodicity/GermIterate.lean`,
 `germMapOf_leftGerm`, `proj_iterate_germMapOf_leftGerm` and `germMapOf_orbit_infinite`; this file
 uses them directly.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Set Topology
 open scoped ENNReal NNReal BigOperators
@@ -775,3 +778,4 @@ theorem exists_uniform_birkhoff (f : IET 0 1) (hue : UniqueErgodic f) (S : Set �
 
 end IETFree.UniqueErgodicity
 
+end

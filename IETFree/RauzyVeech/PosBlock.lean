@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.ColDiam
+public import IETFree.RauzyVeech.ColDiam
 
 /-!
 # The algebra of the positive-block contraction
@@ -33,6 +34,8 @@ No measure theory is involved.  The peeling of the blocks along a greedy path is
 `IETFree/RauzyVeech/Peel.lean`; the assembly is
  `IETFree/RauzyVeech/PosBlocks.lean`.
 -/
+
+@[expose] public section
 
 
 open scoped BigOperators NNReal
@@ -326,3 +329,5 @@ theorem spread_append_contract (P : IETDatum₂ α n) (γ δ : List Bool) {M : �
 end Spread
 
 end PosBlock
+
+end

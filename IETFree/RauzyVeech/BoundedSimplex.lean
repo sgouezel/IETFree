@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.BalancedSet
+public import IETFree.RauzyVeech.BalancedSet
 
 /-!
 # Boundedness of the simplex and of its path cylinders
@@ -14,6 +15,8 @@ import IETFree.RauzyVeech.BalancedSet
 boundedness inputs of the ray criterion (`RayCriterion.eq_of_nonneg_preimage_of_diam`), and they are
 kept beside two elementary lemmas: `colR_eq_sum` (a column sum of an integer matrix, read in `ℝ`)
 and `dist_co_co` (the sup-distance on `α → ℝ≥0` is the distance of the coerced real vectors). -/
+
+@[expose] public section
 
 
 open MeasureTheory Filter
@@ -85,3 +88,4 @@ theorem isBounded_simplexCyl (P : IETDatum₂ α n) (γ : List Bool) :
 
 end BoundedSimplex
 
+end

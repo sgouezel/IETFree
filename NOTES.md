@@ -63,14 +63,17 @@ group power — the `…Fun` predicates of the conditional challenge are gone (s
 - **Declaration linters** (Batteries' `runLinter`, which `lake build` does not run): 0 findings for
   `IETFree` and 0 for `Challenge`, 14 linters (`runLinter` does not print its declaration count, so
   none is quoted here — re-run it with `-v` to see the linter list).
-- **Size**: 114 modules, 45 667 lines; 4 509 project declarations, of which 3 941 are reachable
-  from `main` (re-measured after Addendum 169; the last paragraph of Addendum 160 states the walk —
-  per-module `constNames.size`, generated declarations included, and the `getUsedConstants` closure
-  of `main`).
+- **Size**: 114 modules, 46 196 lines; 4 542 project declarations, of which 2 571 are written by
+  hand (the rest are generated), and 3 974 reachable from `main` (re-measured after Addendum 172;
+  the last paragraph of Addendum 160 states the walk — per-module `constNames.size`, generated
+  declarations included, and the `getUsedConstants` closure of `main`).  Under the module system the
+  generated declarations are named `_private.<Module>.0.…`, so the total moves with them; the
+  hand-written count is the stable one.
 - **Docstrings and links are checked, not eyeballed**: a module docstring describes its module, not
   a stage of a campaign, and every declaration it names in backticks exists (Addendum 169 dumps
-  `constNames` and joins it with Mathlib's names to check); the README's 217 repository links and
-  its 126 declaration anchors were audited against the tree in the same pass.
+  `constNames` and joins it with Mathlib's names to check); the README's 218 repository links and
+  its 162 declaration anchors were audited against the tree in the same pass (and re-anchored after
+  the module conversion).
 
 ## Layout
 
@@ -145,6 +148,16 @@ breaks the build.
   *notions* the statements are about (`UniqueErgodic`, `IsRigidByTranslations`, `HasPositiveBlocks`,
   `RayCondition`, `GoodAt`) and the states of the inductions that really run (`Induction.Graded`,
   `InductionStep`, `NodeHeight.GradedStep`, `GradedStepMin`, `BalanceStep`).
+- **Every file is a module** (Addendum 172): `module` after the copyright block, `public import`
+  everywhere, and the file's API in a `@[expose] public section` closed by a final `end`.  The
+  exposure is blanket on purpose — it keeps every definition as transparent to its clients as
+  before — and narrowing it to the definitions that really must unfold is a separate pass.
+  **Trap:** an *auxiliary* declaration in a proof term is named `_private.<Module>.0.<name>`, so a
+  declaration copied verbatim into `Challenge.lean` whose proof mentions one elaborates to a
+  different term than the library's, and the comparator reports `differs: <name>`.  It is the
+  auxiliary that is fatal, not the tactic style: `simp` and `omega` generate them (Addenda 172 and
+  174), `refine`/`exact` do not.  Hence `idxSet_nonempty`'s tactic proof avoids `simp` and
+  `simplexMap_val_lt` avoids `omega`, and neither `simplexMap` nor `idx` has a `by` in its body.
 - `Challenge.lean`'s declarations are **verbatim copies of the library's** wherever `main`,
   `coe_mkIETEquiv` or `mkIETEquiv` reaches them — a shorter equivalent body is a different
   `ConstantInfo`.  In particular the body of `idx` must stay identical in the two files: `idx` is

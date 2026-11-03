@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import Mathlib
+public import Mathlib
 
 /-!
 Cut sets and their cells.
@@ -18,6 +19,8 @@ the cells form the same kind of partition (`IsCutSet.image_cell`, `IsCutSet.imag
 
 Nothing here is measure-theoretic: this is the combinatorial substrate of the development.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
@@ -603,3 +606,5 @@ support that is a union of *some* of its cells could not be presented in that fo
 form is the one closed under finite unions, and it is what the cells of an exchange give. -/
 def IsFiniteUnionIntervals (S : Set ℝ) : Prop :=
   ∃ P : Finset (ℝ × ℝ), ∀ x : ℝ, x ∈ S ↔ ∃ p ∈ P, x ∈ Set.Ico p.1 p.2
+
+end

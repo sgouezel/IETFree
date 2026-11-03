@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.Path
+public import IETFree.RauzyVeech.Path
 
 /-!
 # Direction F: every vertex of a Rauzy class is reached from its base in bounded time,
@@ -35,6 +36,8 @@ hence equals `C`; by injectivity no vertex outside `C` is sent into `C`.  Readin
 a point of `C` backwards, it cannot enter `C` at any step, so it starts in `C`: `P ∈ C`.  Applying
 this to the set of vertices reachable *from* `Q` (which is contained in `R` when `Q ∈ R`) gives
 `Reach Q P`. -/
+
+@[expose] public section
 
 
 -- `[Fintype α]`/`[DecidableEq α]`/`[NeZero n]` are section variables used in the proofs but not
@@ -292,3 +295,4 @@ theorem returnWord_spec {P Q : IETDatum₂ α n} (h : Reach P Q) :
 
 end RauzyReach
 
+end

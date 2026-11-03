@@ -4,5 +4,5 @@
   "theorem_names": ["coe_mkIETEquiv", "main"],
   "definition_names": ["mkIETEquiv"],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
-  "enable_nanoda": false
+  "enable_nanoda": true
 }

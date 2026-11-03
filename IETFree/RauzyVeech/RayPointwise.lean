@@ -3,15 +3,16 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.CylinderGrowth
-import IETFree.RauzyVeech.IterGlue2
-import IETFree.RauzyVeech.TowerGlue
-import IETFree.RauzyVeech.InvariantMeasure
-import IETFree.RauzyVeech.ClosureSimplex
-import IETFree.RauzyVeech.RayPath
-import IETFree.RauzyVeech.ColDiam
-import IETFree.RauzyVeech.MainComponents
+public import IETFree.RauzyVeech.CylinderGrowth
+public import IETFree.RauzyVeech.IterGlue2
+public import IETFree.RauzyVeech.TowerGlue
+public import IETFree.RauzyVeech.InvariantMeasure
+public import IETFree.RauzyVeech.ClosureSimplex
+public import IETFree.RauzyVeech.RayPath
+public import IETFree.RauzyVeech.ColDiam
+public import IETFree.RauzyVeech.MainComponents
 
 /-!
 # The pointwise ray criterion: coalescence of the normalised columns gives the ray condition
@@ -30,6 +31,8 @@ rewritten with `IETDatum₂.pfx_pathStep`.  The stopping-set hypothesis is only 
 greedy path* (`lam ∉ cylStop P (pathWord P lam k)`), not for every word: this is
 `iterOK_pathWord_of_notMem_cylStop` below, which re-runs the proof of `IterGlue2.iterOK_pathWord`
 against `IETDatum₂.mem_pathWord_of_notMem_cylStop`. -/
+
+@[expose] public section
 
 
 open MeasureTheory Filter
@@ -193,3 +196,4 @@ theorem rayCondition_of_cols (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2
 
 end RayPointwise
 
+end

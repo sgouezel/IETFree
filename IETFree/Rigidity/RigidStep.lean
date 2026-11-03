@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Rigidity.RigidSet
+public import IETFree.Rigidity.RigidSet
 
 /-!
 # The rigid step
@@ -33,6 +34,8 @@ The proof runs as follows:
 The hypothesis `hstop` is carried by the statement but is **not used** by the proof: the tower
 statements at the node `γ` are those of `Rigidity/RigidSet.lean`, which needs `IterOK P lam γ` only.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
@@ -341,3 +344,5 @@ theorem rigid_step {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero 
 
 end Internal
 end IETFree.Rigidity
+
+end

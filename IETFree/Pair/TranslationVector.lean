@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.IET
-import IETFree.Pair.MeasureTools
+public import IETFree.IET
+public import IETFree.Pair.MeasureTools
 
 /-!
 **Translation vectors are lattice vectors with coefficients in `{-1, 0, 1}`.**
@@ -27,6 +28,8 @@ a lattice vector with coefficients in `[-n, n]`*.  The lemmas here supply that h
 identifies the coercion of `evalWord w f g` with the corresponding permutation lift
 (`evalWord_apply_coe`).
 -/
+
+@[expose] public section
 
 open MeasureTheory
 open scoped BigOperators ENNReal NNReal
@@ -145,3 +148,5 @@ theorem cellCuts_lattice {n : ℕ} (lam : Fin n → ℝ≥0) {c : ℝ} (hc : c �
   refine ⟨fun j => if j < i then 1 else 0, fun j => ?_, leftEnd_eq_sum lam i⟩
   change |(if j < i then (1 : ℤ) else 0)| ≤ 1
   split_ifs <;> simp
+
+end

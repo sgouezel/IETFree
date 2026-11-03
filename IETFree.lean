@@ -3,121 +3,122 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.ChallengeSolved
-import IETFree.CutSet
-import IETFree.CutSetMeasure
-import IETFree.IET
-import IETFree.Pair.BlockAETransfer
-import IETFree.Pair.BlockAssembly
-import IETFree.Pair.BlockData
-import IETFree.Pair.BlockDatum
-import IETFree.Pair.BlockDiophantine
-import IETFree.Pair.BlockEndpoints
-import IETFree.Pair.BlockIrreducibility
-import IETFree.Pair.BlockLemma
-import IETFree.Pair.BlockRescaling
-import IETFree.Pair.Centralizer
-import IETFree.Pair.Commensurable
-import IETFree.Pair.Diophantine
-import IETFree.Pair.GeneratorChange
-import IETFree.Pair.GoodRegion
-import IETFree.Pair.IntegerAffine
-import IETFree.Pair.InvariantInterval
-import IETFree.Pair.Irreducible
-import IETFree.Pair.LengthMap
-import IETFree.Pair.MeasureTools
-import IETFree.Pair.Presentation
-import IETFree.Pair.ReductionData
-import IETFree.Pair.SingularityBound
-import IETFree.Pair.SingularityList
-import IETFree.Pair.SubintervalTransfer
-import IETFree.Pair.TranslationVector
-import IETFree.RauzyVeech.Affine
-import IETFree.RauzyVeech.BalancedSet
-import IETFree.RauzyVeech.BoundedSimplex
-import IETFree.RauzyVeech.ChildVolume
-import IETFree.RauzyVeech.ClosureSimplex
-import IETFree.RauzyVeech.ColDiam
-import IETFree.RauzyVeech.CylinderGrowth
-import IETFree.RauzyVeech.CylinderRecurrence
-import IETFree.RauzyVeech.CylinderVolume
-import IETFree.RauzyVeech.FirstReturn
-import IETFree.RauzyVeech.InvariantMeasure
-import IETFree.RauzyVeech.IterGlue
-import IETFree.RauzyVeech.IterGlue2
-import IETFree.RauzyVeech.LengthInjective
-import IETFree.RauzyVeech.LevelN
-import IETFree.RauzyVeech.LevyRecurrence
-import IETFree.RauzyVeech.MainComponents
-import IETFree.RauzyVeech.MeshShrink
-import IETFree.RauzyVeech.NameInfinite
-import IETFree.RauzyVeech.Nesting
-import IETFree.RauzyVeech.PairReach
-import IETFree.RauzyVeech.Path
-import IETFree.RauzyVeech.Peel
-import IETFree.RauzyVeech.PosBlock
-import IETFree.RauzyVeech.PosBlocks
-import IETFree.RauzyVeech.PrefixWord
-import IETFree.RauzyVeech.RauzyPath
-import IETFree.RauzyVeech.RauzyReach
-import IETFree.RauzyVeech.RayCriterion
-import IETFree.RauzyVeech.RayPath
-import IETFree.RauzyVeech.RayPointwise
-import IETFree.RauzyVeech.RefiningPartition
-import IETFree.RauzyVeech.RichPath.BadFirstStop
-import IETFree.RauzyVeech.RichPath.BoundedLag
-import IETFree.RauzyVeech.RichPath.CylinderMass
-import IETFree.RauzyVeech.RichPath.GradedInduction
-import IETFree.RauzyVeech.RichPath.HeightDichotomy
-import IETFree.RauzyVeech.RichPath.InductionAssembly
-import IETFree.RauzyVeech.RichPath.LargeLetter
-import IETFree.RauzyVeech.RichPath.LevelMass
-import IETFree.RauzyVeech.RichPath.MassFunction
-import IETFree.RauzyVeech.RichPath.MassGrowth
-import IETFree.RauzyVeech.RichPath.MinimalExit
-import IETFree.RauzyVeech.RichPath.MinimalExitMass
-import IETFree.RauzyVeech.RichPath.NodeHeight
-import IETFree.RauzyVeech.RichPath.Potential
-import IETFree.RauzyVeech.RichPath.RichGreedyPath
-import IETFree.RauzyVeech.RichPath.RichPathAssembly
-import IETFree.RauzyVeech.RichPath.Stopping
-import IETFree.RauzyVeech.RichPath.StraddleMass
-import IETFree.RauzyVeech.SimplexAe
-import IETFree.RauzyVeech.Step
-import IETFree.RauzyVeech.TowerCells
-import IETFree.RauzyVeech.TowerGlue
-import IETFree.RauzyVeech.TowerInjectivity
-import IETFree.RauzyVeech.TowerLevel
-import IETFree.RauzyVeech.TowerLevelN
-import IETFree.RauzyVeech.TowerLevelOne
-import IETFree.RauzyVeech.TowerTiling
-import IETFree.RauzyVeech.TrueStep
-import IETFree.RauzyVeech.Volume
-import IETFree.Rigidity.Combinatorics
-import IETFree.Rigidity.Defs
-import IETFree.Rigidity.DimOne
-import IETFree.Rigidity.Hit
-import IETFree.Rigidity.Matrix
-import IETFree.Rigidity.RigidSet
-import IETFree.Rigidity.RigidStep
-import IETFree.Rigidity.Sequences
-import IETFree.Rigidity.Transport
-import IETFree.Rigidity.Veech
-import IETFree.TopBotFormalism
-import IETFree.UniqueErgodicity.Basic
-import IETFree.UniqueErgodicity.CompactTool
-import IETFree.UniqueErgodicity.Germ
-import IETFree.UniqueErgodicity.GermIterate
-import IETFree.UniqueErgodicity.IET
-import IETFree.UniqueErgodicity.Limits
-import IETFree.UniqueErgodicity.Main
-import IETFree.UniqueErgodicity.MainTheorem
-import IETFree.UniqueErgodicity.MeasPrep
-import IETFree.UniqueErgodicity.Split
-import IETFree.UniqueErgodicity.SubtypeConv
-import IETFree.UniqueErgodicity.Transfer
-import IETFree.UniqueErgodicity.TransferConv
+public import IETFree.ChallengeSolved
+public import IETFree.CutSet
+public import IETFree.CutSetMeasure
+public import IETFree.IET
+public import IETFree.Pair.BlockAETransfer
+public import IETFree.Pair.BlockAssembly
+public import IETFree.Pair.BlockData
+public import IETFree.Pair.BlockDatum
+public import IETFree.Pair.BlockDiophantine
+public import IETFree.Pair.BlockEndpoints
+public import IETFree.Pair.BlockIrreducibility
+public import IETFree.Pair.BlockLemma
+public import IETFree.Pair.BlockRescaling
+public import IETFree.Pair.Centralizer
+public import IETFree.Pair.Commensurable
+public import IETFree.Pair.Diophantine
+public import IETFree.Pair.GeneratorChange
+public import IETFree.Pair.GoodRegion
+public import IETFree.Pair.IntegerAffine
+public import IETFree.Pair.InvariantInterval
+public import IETFree.Pair.Irreducible
+public import IETFree.Pair.LengthMap
+public import IETFree.Pair.MeasureTools
+public import IETFree.Pair.Presentation
+public import IETFree.Pair.ReductionData
+public import IETFree.Pair.SingularityBound
+public import IETFree.Pair.SingularityList
+public import IETFree.Pair.SubintervalTransfer
+public import IETFree.Pair.TranslationVector
+public import IETFree.RauzyVeech.Affine
+public import IETFree.RauzyVeech.BalancedSet
+public import IETFree.RauzyVeech.BoundedSimplex
+public import IETFree.RauzyVeech.ChildVolume
+public import IETFree.RauzyVeech.ClosureSimplex
+public import IETFree.RauzyVeech.ColDiam
+public import IETFree.RauzyVeech.CylinderGrowth
+public import IETFree.RauzyVeech.CylinderRecurrence
+public import IETFree.RauzyVeech.CylinderVolume
+public import IETFree.RauzyVeech.FirstReturn
+public import IETFree.RauzyVeech.InvariantMeasure
+public import IETFree.RauzyVeech.IterGlue
+public import IETFree.RauzyVeech.IterGlue2
+public import IETFree.RauzyVeech.LengthInjective
+public import IETFree.RauzyVeech.LevelN
+public import IETFree.RauzyVeech.LevyRecurrence
+public import IETFree.RauzyVeech.MainComponents
+public import IETFree.RauzyVeech.MeshShrink
+public import IETFree.RauzyVeech.NameInfinite
+public import IETFree.RauzyVeech.Nesting
+public import IETFree.RauzyVeech.PairReach
+public import IETFree.RauzyVeech.Path
+public import IETFree.RauzyVeech.Peel
+public import IETFree.RauzyVeech.PosBlock
+public import IETFree.RauzyVeech.PosBlocks
+public import IETFree.RauzyVeech.PrefixWord
+public import IETFree.RauzyVeech.RauzyPath
+public import IETFree.RauzyVeech.RauzyReach
+public import IETFree.RauzyVeech.RayCriterion
+public import IETFree.RauzyVeech.RayPath
+public import IETFree.RauzyVeech.RayPointwise
+public import IETFree.RauzyVeech.RefiningPartition
+public import IETFree.RauzyVeech.RichPath.BadFirstStop
+public import IETFree.RauzyVeech.RichPath.BoundedLag
+public import IETFree.RauzyVeech.RichPath.CylinderMass
+public import IETFree.RauzyVeech.RichPath.GradedInduction
+public import IETFree.RauzyVeech.RichPath.HeightDichotomy
+public import IETFree.RauzyVeech.RichPath.InductionAssembly
+public import IETFree.RauzyVeech.RichPath.LargeLetter
+public import IETFree.RauzyVeech.RichPath.LevelMass
+public import IETFree.RauzyVeech.RichPath.MassFunction
+public import IETFree.RauzyVeech.RichPath.MassGrowth
+public import IETFree.RauzyVeech.RichPath.MinimalExit
+public import IETFree.RauzyVeech.RichPath.MinimalExitMass
+public import IETFree.RauzyVeech.RichPath.NodeHeight
+public import IETFree.RauzyVeech.RichPath.Potential
+public import IETFree.RauzyVeech.RichPath.RichGreedyPath
+public import IETFree.RauzyVeech.RichPath.RichPathAssembly
+public import IETFree.RauzyVeech.RichPath.Stopping
+public import IETFree.RauzyVeech.RichPath.StraddleMass
+public import IETFree.RauzyVeech.SimplexAe
+public import IETFree.RauzyVeech.Step
+public import IETFree.RauzyVeech.TowerCells
+public import IETFree.RauzyVeech.TowerGlue
+public import IETFree.RauzyVeech.TowerInjectivity
+public import IETFree.RauzyVeech.TowerLevel
+public import IETFree.RauzyVeech.TowerLevelN
+public import IETFree.RauzyVeech.TowerLevelOne
+public import IETFree.RauzyVeech.TowerTiling
+public import IETFree.RauzyVeech.TrueStep
+public import IETFree.RauzyVeech.Volume
+public import IETFree.Rigidity.Combinatorics
+public import IETFree.Rigidity.Defs
+public import IETFree.Rigidity.DimOne
+public import IETFree.Rigidity.Hit
+public import IETFree.Rigidity.Matrix
+public import IETFree.Rigidity.RigidSet
+public import IETFree.Rigidity.RigidStep
+public import IETFree.Rigidity.Sequences
+public import IETFree.Rigidity.Transport
+public import IETFree.Rigidity.Veech
+public import IETFree.TopBotFormalism
+public import IETFree.UniqueErgodicity.Basic
+public import IETFree.UniqueErgodicity.CompactTool
+public import IETFree.UniqueErgodicity.Germ
+public import IETFree.UniqueErgodicity.GermIterate
+public import IETFree.UniqueErgodicity.IET
+public import IETFree.UniqueErgodicity.Limits
+public import IETFree.UniqueErgodicity.Main
+public import IETFree.UniqueErgodicity.MainTheorem
+public import IETFree.UniqueErgodicity.MeasPrep
+public import IETFree.UniqueErgodicity.Split
+public import IETFree.UniqueErgodicity.SubtypeConv
+public import IETFree.UniqueErgodicity.Transfer
+public import IETFree.UniqueErgodicity.TransferConv
 
 /-!
 # Interval exchange transformations
@@ -164,3 +165,7 @@ subdirectories above them, and the challenge solution at the top.
 The theorem that uses them all is `IETFree/ChallengeSolved.lean`: the unconditional form of
 Theorem 1.1, in the words of `Challenge.lean` (the comparator challenge one directory above).
 -/
+
+@[expose] public section
+
+end

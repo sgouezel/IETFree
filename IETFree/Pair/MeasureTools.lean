@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.IET
+public import IETFree.IET
 
 /-!
 Measure-theoretic tools for Section 2: Lebesgue measure on `[0, 1)`, its behaviour under exchanges,
@@ -16,6 +17,8 @@ and lemmas that the statements and proofs there use, including `unitMeas` and it
 `sum_inter_le` behind display
 (2.3) of the paper).
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal commutatorElement
@@ -621,3 +624,5 @@ theorem exists_small_intersection (f g : IET 0 1) {S S₀ : Set ℝ} (hS : Measu
     rw [Finset.sum_add_distrib, Finset.sum_add_distrib]
     linarith
   linarith
+
+end

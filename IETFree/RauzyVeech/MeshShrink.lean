@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RayPath
-import IETFree.RauzyVeech.NameInfinite
+public import IETFree.RauzyVeech.RayPath
+public import IETFree.RauzyVeech.NameInfinite
 
 /-!
 # Corollary 2: the base interval of the Rauzy induction shrinks to a point
@@ -39,6 +40,8 @@ gives that every
    `Λ = ∑_a ∑_c (Q_k)_{ac} w k c ≥ (Cs k b) · w k b`,
    so `w k b ≤ Λ / Cs k b → 0` for every letter, and `∑_b w k b → 0`, `max_b w k b → 0`.
 -/
+
+@[expose] public section
 
 
 open MeasureTheory Filter
@@ -491,3 +494,4 @@ end Bound
 
 end MeshShrink
 
+end

@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RauzyPath
-import IETFree.RauzyVeech.ClosureSimplex
-import IETFree.RauzyVeech.BoundedSimplex
+public import IETFree.RauzyVeech.RauzyPath
+public import IETFree.RauzyVeech.ClosureSimplex
+public import IETFree.RauzyVeech.BoundedSimplex
 
 /-!
 # The path hypotheses of the ray criterion
@@ -16,6 +17,8 @@ import IETFree.RauzyVeech.BoundedSimplex
 file records the two structural facts for the greedy path of `IETFree/RauzyVeech/RauzyPath.lean`:
 the cylinders `simplexCyl P (pfx p k)` are antitone (`antitone_simplexCyl_pfx`) and the first one is
 bounded (`isBounded_simplexCyl_pfx`). -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped NNReal ENNReal BigOperators Topology
@@ -38,3 +41,4 @@ theorem isBounded_simplexCyl_pfx (P : IETDatum₂ α n) (p : ℕ → Bool) :
 
 end RayCriterion
 
+end

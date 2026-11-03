@@ -3,12 +3,13 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RichPath.Potential
-import IETFree.RauzyVeech.RichPath.InductionAssembly
-import IETFree.RauzyVeech.RichPath.GradedInduction
-import IETFree.RauzyVeech.RichPath.RichPathAssembly
-import IETFree.RauzyVeech.MainComponents
+public import IETFree.RauzyVeech.RichPath.Potential
+public import IETFree.RauzyVeech.RichPath.InductionAssembly
+public import IETFree.RauzyVeech.RichPath.GradedInduction
+public import IETFree.RauzyVeech.RichPath.RichPathAssembly
+public import IETFree.RauzyVeech.MainComponents
 
 /-!
 # Richness of the greedy path, unconditionally
@@ -35,6 +36,8 @@ reduction to the graded estimate (`GradedInduction.lean`:
 `exists_gradedStep_card_of_inductionStep`), and the analytic step from the estimate to richness,
 which is the body of the theorem below (`step_pinned`, then the pinned Lévy recurrence
 `levy_cylinder`). -/
+
+@[expose] public section
 
 
 open MeasureTheory Filter IETDatum₂
@@ -93,3 +96,4 @@ theorem richGreedyPath (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n
 
 end RichPath
 
+end

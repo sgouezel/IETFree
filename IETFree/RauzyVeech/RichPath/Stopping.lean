@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RichPath.LargeLetter
+public import IETFree.RauzyVeech.RichPath.LargeLetter
 
 /-!
 # The `Γ₃` bookkeeping: level words, thresholds, stop events, and the minimal stopping family
@@ -25,6 +26,8 @@ The vocabulary that the `Γ₃` argument of `IETFree.Potential` runs on (`NodeHe
   family `StopW`, `StopFam` (`prefixFree_stopFam`, `st_eq_of_exitArrow`).
 
 -/
+
+@[expose] public section
 
 
 open MeasureTheory IETDatum₂ Finset NodeHeight
@@ -614,3 +617,4 @@ theorem exists_stopfam_of_good (P : IETDatum₂ α n) (hP : P.Irreducible)
 
 end Stopping
 
+end

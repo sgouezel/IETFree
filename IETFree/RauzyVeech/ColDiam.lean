@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.MeshShrink
-import IETFree.RauzyVeech.CylinderVolume
-import IETFree.RauzyVeech.BoundedSimplex
+public import IETFree.RauzyVeech.MeshShrink
+public import IETFree.RauzyVeech.CylinderVolume
+public import IETFree.RauzyVeech.BoundedSimplex
 
 /-!
 # The shrinking of the path cylinders, and the coalescence of the normalised columns
@@ -28,6 +29,8 @@ proves
 So the shrinking of the cylinders follows from the coalescence of the normalised columns of the
 cocycle `k ↦ Q(γ_k(λ))`, which `PosBlock` and `Peel` produce from positive blocks.  The argument is
 purely geometric: no statement about the *volume* of `Δ(γ_k)` is used. -/
+
+@[expose] public section
 
 open MeasureTheory Set Filter
 open scoped BigOperators ENNReal NNReal Topology
@@ -177,3 +180,5 @@ theorem tendsto_diam_of_cols_eventually_close (P : IETDatum₂ α n) (p : ℕ �
     linarith
 
 end ColShrink
+
+end

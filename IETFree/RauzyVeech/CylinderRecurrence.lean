@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RauzyPath
-import IETFree.RauzyVeech.LevyRecurrence
+public import IETFree.RauzyVeech.RauzyPath
+public import IETFree.RauzyVeech.LevyRecurrence
 
 /-!
 # The cylinder recurrence: a definite fraction of every cylinder avoiding `Z` makes `Z` null
@@ -26,6 +27,8 @@ the simplex of length vectors, which is the form in which richness of the greedy
   is at most the mass of the simplex (`measure_le_measure_sdiff_Nbad`,
  `simplexVolumeOn_univ`).
 -/
+
+@[expose] public section
 
 
 open MeasureTheory
@@ -286,3 +289,5 @@ theorem simplexVolumeOn_univ {α : Type*} [Fintype α] {n : ℕ} (P : IETDatum�
 end Vol
 
 end CylRec
+
+end

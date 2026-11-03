@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.BlockRescaling
+public import IETFree.Pair.BlockRescaling
 
 /-!
 # The restriction of an exchange to an invariant interval
@@ -23,6 +24,8 @@ lengths `mu' j = max 0 (min v (upperEnd mu j) - max u (leftEnd mu j)) / (v - u)`
 The workhorse is the clamping function `clamp u v t = min v (max u t)`: the difference of the clamp
 at the two ends of a cell is the length of the part of that cell inside `[u, v)`, and it telescopes.
 -/
+
+@[expose] public section
 
 open Finset
 open scoped BigOperators NNReal
@@ -461,3 +464,5 @@ theorem sum_truncatedLengths (mu : Fin e → ℝ≥0) (hl : (∑ j, mu j) = 1) {
 end Main
 
 end RestrictIET
+
+end

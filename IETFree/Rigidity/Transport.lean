@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.TopBotFormalism
-import IETFree.RauzyVeech.Affine
+public import IETFree.TopBotFormalism
+public import IETFree.RauzyVeech.Affine
 
 /-!
 # Transport of the a.e. rigidity statement along `ofPerm`
@@ -30,6 +31,8 @@ for the source's single-permutation form, both for the exchange as a bundled `IE
 of the two halves of the proof of `veechRigidity`.
 -/
 
+@[expose] public section
+
 open MeasureTheory Filter
 
 namespace IETFree.Rigidity
@@ -49,3 +52,5 @@ theorem ae_isRigidByTranslations_mkIET1 {d : ℕ} [NeZero d] (π : Equiv.Perm (F
   exact hl
 
 end IETFree.Rigidity
+
+end

@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import Mathlib
+public import Mathlib
 
 /-!
 # The abstract transfer argument for the split interval
@@ -24,6 +25,8 @@ The statements are
 
 The lift lemma that the germ-map construction uses is the corrected `MeasPrep.lift_unique_on_Ico`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped ENNReal Topology BoundedContinuousFunction
@@ -215,3 +218,4 @@ theorem map_map_eq_self (G : X → X) (hGm : Measurable G) (hGinj : Function.Inj
 
 end IETFree.UniqueErgodicity
 
+end

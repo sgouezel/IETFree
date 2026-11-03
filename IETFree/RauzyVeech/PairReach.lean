@@ -3,14 +3,17 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.CylinderGrowth
-import IETFree.RauzyVeech.NameInfinite
+public import IETFree.RauzyVeech.CylinderGrowth
+public import IETFree.RauzyVeech.NameInfinite
 
 /-!
 # `PairReach`: the combinatorial core of Cor. 4
 
 Descent on `pos_T(last false)`. -/
+
+@[expose] public section
 
 open scoped BigOperators
 
@@ -545,3 +548,4 @@ theorem exists_uniform_bound' (hn : 2 ≤ n) :
 
 end IETDatum₂
 
+end

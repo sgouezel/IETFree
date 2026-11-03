@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.SingularityList
+public import IETFree.Pair.SingularityList
 
 /-!
 The rescaling of an exchange to a block of marked cells, the block length vector and the block
@@ -31,6 +32,8 @@ generators (`evalWord_conj_apply`), which the transport back from the rescaled b
 evaluation of a word in two exchanges is `evalWord` in `IETFree.MeasureTools`; its `Equiv`-valued
 form (`evalWordEquiv`, with the bridge `evalWord_toEquiv`) is in `IETFree/ChallengeSolved.lean`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -1012,3 +1015,5 @@ theorem leftEnd_add_blockMass_compLen {n : ℕ} {s : Fin (n + 1) → ℝ} (hmono
     show k + (l - k) = l from by omega, Finset.sum_range_sub (sExt s) l, sExt_of_le hln]
   have hzero : sExt s 0 = 0 := by rw [sExt_of_le (by omega)]; simpa using h0
   rw [hzero, sub_zero]
+
+end

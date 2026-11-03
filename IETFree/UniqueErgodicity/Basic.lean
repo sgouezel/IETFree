@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.InvariantMeasure
-import IETFree.TopBotFormalism
+public import IETFree.RauzyVeech.InvariantMeasure
+public import IETFree.TopBotFormalism
 
 /-!
 # The two forms of unique ergodicity: `UniqueErgodic` and `UniformBirkhoff`
@@ -43,6 +44,8 @@ The proof is in the modules of this directory:
   a finite union of intervals.
 -/
 
+@[expose] public section
+
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
 
@@ -60,3 +63,4 @@ def UniformBirkhoff (f : IET 0 1) : Prop :=
     ∀ n ≥ N, ∀ x ∈ Set.Ico (0 : ℝ) 1,
       |birkhoffAverage ℝ ⇑f ψ n x - ∫ y, ψ y ∂unitMeas| ≤ ε
 
+end

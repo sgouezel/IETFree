@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RichPath.HeightDichotomy
-import IETFree.RauzyVeech.RichPath.RichPathAssembly
+public import IETFree.RauzyVeech.RichPath.HeightDichotomy
+public import IETFree.RauzyVeech.RichPath.RichPathAssembly
 
 /-!
 # The balance constant of the induction step
@@ -18,6 +19,8 @@ The `Γ₃` mass estimate of the induction is the statement of
 This file keeps the other half of the step — the balance constant `KeeGen` delivered by `Γ₂`, and
 the fact that `A'`-balance is preserved by the growth bound (`bal_of_growth`) — which
 `MassFunction.balanceStep_of_extMassGen` consumes. -/
+
+@[expose] public section
 
 
 
@@ -62,3 +65,4 @@ variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
 end Induction
 
+end

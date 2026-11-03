@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.Presentation
+public import IETFree.Pair.Presentation
 
 /-!
 Lemma 3.2: irreducibility on a block.
@@ -23,6 +24,8 @@ The other content is the API of a datum that the reduction uses: the cuts and ma
 `IETDatum` (`markCuts`, `mark_mem_markCuts`, `isCutSet_markCuts`), the cut set of a composition
 (`mem_comp_markCuts`), and the local form of `IsCompIrreducibleOn` (`IsCompIrreducibleOn.toDatum`).
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -1103,3 +1106,5 @@ theorem block_irreducible_on_good {d e : ℕ} [NeZero d] [NeZero e] (D : IETDatu
     · exact h1
   exact hb.consecutive c
     (exists_pairSplitting_of_invariant D E hp hb.left.mem_Icc.1 huc huS hcS hinv) huc hcv
+
+end

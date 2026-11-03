@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.TopBotFormalism
-import IETFree.Rigidity.Veech
+public import IETFree.TopBotFormalism
+public import IETFree.Rigidity.Veech
 
 /-!
 # From "arbitrarily large return times" to rigidity by translations
@@ -18,6 +19,8 @@ steps.  Taking `ε k = 1/(k+1)` and `N₀ = k` turns it into the sequence form o
 `B k` is squeezed between `1 - 1/(k+1)` and `1`.
 
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
@@ -79,3 +82,5 @@ theorem ae_isRigidByTranslations {α : Type*} [Fintype α] {n : ℕ} [NeZero n]
     exact hex k x hx
 
 end IETFree.Rigidity
+
+end

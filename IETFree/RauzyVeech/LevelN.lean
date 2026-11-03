@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.FirstReturn
-import IETFree.RauzyVeech.TowerLevel
-import IETFree.RauzyVeech.InvariantMeasure
+public import IETFree.RauzyVeech.FirstReturn
+public import IETFree.RauzyVeech.TowerLevel
+public import IETFree.RauzyVeech.InvariantMeasure
 
 /-!
 # Iterated permutations, path matrices over `ℕ`, and renormalised length vectors
@@ -28,6 +29,8 @@ The infrastructure behind the level-`n` tower formula, first in `Fin n` coordina
 Only the type-`false` case is treated here (`IETFree/RauzyVeech/FirstReturn.lean` proves the
 first-return theorem only in that case); the level-`n` formula itself, for an arbitrary word, is
 `TowerTrue.tower_formula_level_pathQ_any` of `IETFree/RauzyVeech/TrueStep.lean`. -/
+
+@[expose] public section
 
 open MeasureTheory Finset
 open scoped BigOperators ENNReal NNReal
@@ -355,3 +358,4 @@ def cellAt (P : IETDatum₂ α n) (γ : List Bool) (lam : α → ℝ≥0) (b : �
 
 end Tower
 
+end

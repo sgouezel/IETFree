@@ -3,15 +3,18 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.FirstReturn
-import IETFree.RauzyVeech.TowerLevelN
+public import IETFree.RauzyVeech.FirstReturn
+public import IETFree.RauzyVeech.TowerLevelN
 
 /-!
 # The cell of the first-return map inside its domain cell
 
 `cellHat_subset_dom` places the cell of the first-return map inside the corresponding domain cell of
 the level-`k` exchange — the inclusion used by the tower decomposition. -/
+
+@[expose] public section
 
 open MeasureTheory
 open scoped BigOperators ENNReal NNReal
@@ -45,3 +48,5 @@ theorem cellHat_subset_dom (π' : Equiv.Perm (Fin n)) (L' : Fin n → ℝ≥0) (
 end
 
 end TowerCells
+
+end

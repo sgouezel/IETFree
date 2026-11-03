@@ -3,14 +3,15 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.BlockEndpoints
-import IETFree.Pair.BlockIrreducibility
-import IETFree.Pair.BlockRescaling
-import IETFree.Pair.BlockData
-import IETFree.Pair.GoodRegion
-import IETFree.Pair.LengthMap
-import IETFree.Pair.InvariantInterval
+public import IETFree.Pair.BlockEndpoints
+public import IETFree.Pair.BlockIrreducibility
+public import IETFree.Pair.BlockRescaling
+public import IETFree.Pair.BlockData
+public import IETFree.Pair.GoodRegion
+public import IETFree.Pair.LengthMap
+public import IETFree.Pair.InvariantInterval
 
 /-!
 The presentation of `g ∘ f` on a block: the datum, the invariance of the block, and the rescaled
@@ -35,6 +36,8 @@ Nothing here takes a *global* monotonicity hypothesis `∀ q, StrictMono fun k =
 `{q} (hq : q ∈ G.O)` and uses `monoAt G hq` and the pointwise length vector
 `G.cellLen hq`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -865,3 +868,5 @@ theorem mkIET1_of_all_one {r : ℕ} [NeZero r] {lam : Fin r → ℝ≥0} (π : E
       simp
     rw [htv, add_zero]
   · rw [dif_neg hx]
+
+end

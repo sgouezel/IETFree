@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RichPath.LargeLetter
+public import IETFree.RauzyVeech.RichPath.LargeLetter
 
 /-!
 # The mass calculus of `Γ₂`/`Γ₃`: level words, fibres, and the covering bound
@@ -22,6 +23,8 @@ The combinatorial mass machinery that the `Γ₃` argument of
 * §5 the covering bound: a prefix-free family all of whose members extend a member of `B` has mass
   at most that of `B` (`sum_cond_le_sum_of_covers`).
 -/
+
+@[expose] public section
 
 
 open Finset NodeHeight
@@ -234,3 +237,4 @@ theorem sum_cond_le_sum_of_covers (P : IETDatum₂ α n) (hP : P.Irreducible) (h
 
 end LevelMass
 
+end

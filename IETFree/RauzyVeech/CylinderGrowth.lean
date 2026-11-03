@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.NameInfinite
+public import IETFree.RauzyVeech.NameInfinite
 
 /-!
 # Corollary 4 of the source: a strictly positive `Q`-matrix out of every vertex
@@ -30,6 +31,8 @@ Rauzy diagram there is a finite path whose matrix `Q = Path.Q` has all entries `
   all entries `≥ 1`, and `exists_uniform_bound`: the uniform constant `C₁` of Lemma 2.
 
 `PairReach` itself is proved in `IETFree/RauzyVeech/PairReach.lean`. -/
+
+@[expose] public section
 
 open scoped BigOperators
 
@@ -470,3 +473,4 @@ theorem exists_false_block (P : IETDatum₂ α n) (i : Fin n)
 
 end IETDatum₂
 
+end

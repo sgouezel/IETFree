@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RichPath.CylinderMass
+public import IETFree.RauzyVeech.RichPath.CylinderMass
 
 /-!
 # The height functionals of a node, and the graded induction
@@ -32,6 +33,8 @@ notion that `gradedStep_succ` takes as input; it is proved, for a suitable `K`, 
 
 
 -/
+
+@[expose] public section
 
 -- section instances used in the proofs but not in every statement
 
@@ -647,3 +650,4 @@ theorem volume_union_ge (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ 
 
 end NodeHeight
 
+end

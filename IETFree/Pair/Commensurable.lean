@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import Mathlib
+public import Mathlib
 
 /-!
 **Commensurable elements of a free group commute** (run `commensurable-commute`, ported).
@@ -27,6 +28,8 @@ The proof is by reduction to word combinatorics:
 
 Nothing here is specific to two generators.
 -/
+
+@[expose] public section
 
 open List
 
@@ -289,3 +292,5 @@ theorem commute_of_zpow_eq {α : Type*} {a b : FreeGroup α} {m n : ℤ}
       exact commute_of_pow_eq hM0 hN0 h'
 
 end FreeGroup
+
+end

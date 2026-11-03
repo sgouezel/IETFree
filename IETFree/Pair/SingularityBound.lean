@@ -3,7 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
-import IETFree.Pair.TranslationVector
+module
+
+public import IETFree.Pair.TranslationVector
 
 /-!
 # The singularity bound: the cuts of a word are lattice points of bounded size
@@ -35,6 +37,8 @@ preimage of a cut
 computed by subtracting the displacement of `e'`) and `inv_translate_aux` (the cuts of `f⁻¹` are
 `Sf.image f`).
 -/
+
+@[expose] public section
 
 open MeasureTheory
 open scoped BigOperators ENNReal NNReal
@@ -937,3 +941,5 @@ theorem isFiniteUnionIntervals_wordSupp {d e : ℕ} [NeZero d] [NeZero e] (lam :
   refine hC₀ y y' (fun hsep => hy' ?_)
   obtain ⟨c, hc, hci⟩ := hsep
   exact ⟨c, Finset.mem_insert_of_mem (Finset.mem_insert_of_mem hc), hci⟩
+
+end

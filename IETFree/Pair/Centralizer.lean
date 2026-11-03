@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.Commensurable
+public import IETFree.Pair.Commensurable
 
 /-!
 # The centralizer of a nontrivial element of a free group is cyclic
@@ -71,6 +72,8 @@ that is conjugate to `q` has exponent `±1`), gives commensurability of powers
 * Do not weaken the target to "the centralizer is abelian": in a free group that is the same
   theorem, and reaching it through Nielsen–Schreier is more work than the route above.
 -/
+
+@[expose] public section
 
 /-! # Powers of cyclically reduced words, and the root bound -/
 
@@ -585,3 +588,5 @@ theorem exists_zpow_eq_of_mul_comm {v : FreeGroup α} (hv : v ≠ 1) :
     rw [hzq, h1, inv_zpow, zpow_neg]
 
 end FreeGroup
+
+end

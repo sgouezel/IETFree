@@ -3,12 +3,13 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.Nesting
-import IETFree.RauzyVeech.PrefixWord
-import IETFree.RauzyVeech.BalancedSet
-import IETFree.RauzyVeech.ChildVolume
-import IETFree.RauzyVeech.SimplexAe
+public import IETFree.RauzyVeech.Nesting
+public import IETFree.RauzyVeech.PrefixWord
+public import IETFree.RauzyVeech.BalancedSet
+public import IETFree.RauzyVeech.ChildVolume
+public import IETFree.RauzyVeech.SimplexAe
 
 /-!
 # The greedy Rauzy–Veech path of a length vector
@@ -26,6 +27,8 @@ ingredients, none assumed:
   meets no stopping time at any time);
 * `simplexCyl_pfx_succ_subset`: the cylinders along the path are nested.
 -/
+
+@[expose] public section
 
 
 open MeasureTheory
@@ -255,3 +258,4 @@ theorem simplexCyl_pfx_succ_subset (P : IETDatum₂ α n) (hP : P.Irreducible) (
   rw [PrefixWord.pfx_succ]
   exact IETDatum₂.simplexCyl_append_subset P hP hn (PrefixWord.pfx p k) (p k)
 
+end

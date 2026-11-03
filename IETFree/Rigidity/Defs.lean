@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.TopBotFormalism
-import IETFree.RauzyVeech.TrueStep
+public import IETFree.TopBotFormalism
+public import IETFree.RauzyVeech.TrueStep
 
 /-!
 # Veech rigidity: the node vocabulary
@@ -31,6 +32,8 @@ Nothing here is a source statement: the source-facing theorem is `veechRigidity`
 proved in `Rigidity/Veech.lean` and
 `Rigidity/RigidStep.lean`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
@@ -60,3 +63,5 @@ comparability constant `M` of the heights (`deltaOf`). -/
 noncomputable def deltaOf (ε : ℝ) (M : ℕ) : ℝ := min (1/4) (ε / (8 * ((M : ℝ) + 2)))
 
 end IETFree.Rigidity
+
+end

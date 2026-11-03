@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.Presentation
+public import IETFree.Pair.Presentation
 
 /-!
 Integer-affine functions of the free parameters.
@@ -19,6 +20,8 @@ transfer consumes.
 The truncation lemma that the assembly uses is `GoodRegion.exists_isIntAffine_truncatedLengths` in
 `IETFree.BlockDiophantine`, where the integer-affine families are built directly.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -276,3 +279,5 @@ with a *single* integer-affine function: the pattern cannot change without the t
 and a meeting point would be an interior zero of a continuous function (IVT).  This is what makes
 the `μ'` of Lemma 3.4 integer combinations of the parameters, as the paper's
 "integer combination" step needs. -/
+
+end

@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.Presentation
+public import IETFree.Pair.Presentation
 
 /-!
 The marked singularity list of `g ∘ f`, and the images of its points under `f`.
@@ -23,6 +24,8 @@ The file then proves the two geometric facts the reduction needs about that list
   is decided by the combinatorics alone — and `f (s k)` sits on a cut of `g` only identically
   (`markedPos_eq_cut_of_eq`).
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -998,3 +1001,5 @@ theorem markedPos_spec {d e n : ℕ} [NeZero d] (π : Equiv.Perm (Fin d))
           = leftEnd (simplexMap e q.2) ⟨j'.val + 1, by have := j'.isLt; omega⟩ := by
         rw [hprem, IET.apply_symm_apply']
       rw [markedPos_inr π τ m j' hτ, hval, cutAffineRight_eq_leftEnd (d := d) hreg.2]
+
+end

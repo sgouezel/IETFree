@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.BlockEndpoints
-import IETFree.Pair.IntegerAffine
-import IETFree.Pair.InvariantInterval
+public import IETFree.Pair.BlockEndpoints
+public import IETFree.Pair.IntegerAffine
+public import IETFree.Pair.InvariantInterval
 
 /-!
 The integer-affine data of a block, and the Diophantine transfer.
@@ -34,6 +35,8 @@ the Diophantine transfer, both indexed by `hmono : ∀ q, StrictMono fun k => G.
 `GoodRegion` does not supply such an `hmono`, and the block's length vector is `G.cellLen hq` at the
 point `q`, which is what the assembly uses.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -480,3 +483,5 @@ theorem exists_isIntAffine_truncatedLengths (G : GoodRegion d e π σ q₀)
   exact ⟨Hs, hHs, hval⟩
 
 end GoodRegion
+
+end

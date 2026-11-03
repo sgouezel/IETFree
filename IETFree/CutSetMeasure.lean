@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.CutSet
+public import IETFree.CutSet
 
 /-!
 The cells tile the interval, and an exchange preserves Lebesgue measure.
@@ -17,6 +18,8 @@ piecewise translation: such a map is determined by its translations (`IsLocallyT
 `IsCutSet.transl_of_locally`), which is what makes a finer cut set again a cut set
 (`IsCutSet.comp`).
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
@@ -514,3 +517,5 @@ theorem IsCutSet.transl_of_locally (hs : IsCutSet f a b s)
     exact hswap.symm
 
 end CutSetData
+
+end

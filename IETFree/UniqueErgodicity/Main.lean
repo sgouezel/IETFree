@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.UniqueErgodicity.MainTheorem
-import IETFree.UniqueErgodicity.Basic
+public import IETFree.UniqueErgodicity.MainTheorem
+public import IETFree.UniqueErgodicity.Basic
 
 /-!
 # The a.e. Birkhoff form of Masur–Veech
@@ -23,6 +24,8 @@ exchange) upgrades it to uniform convergence of the Birkhoff averages, and Lemma
 
 Nothing else is used: no positivity of the lengths, and no condition on the left limit.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
@@ -42,3 +45,4 @@ theorem unitMeas_singleton (x : ℝ) : unitMeas {x} = 0 := by
 
 end IETFree.UniqueErgodicity
 
+end

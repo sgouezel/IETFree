@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import Mathlib
+public import Mathlib
 
 /-!
 # Tool 1: uniform Birkhoff convergence on a compact space
@@ -16,6 +17,8 @@ probability measure `μ`, the Birkhoff averages of every continuous function `φ
 This file contains the empirical (Birkhoff) measures `birkhoffMeasure`, the exact shift identity
 for their pushforwards, and the two headline convergence theorems (absolute and relative form).
 -/
+
+@[expose] public section
 
 namespace IETFree.UniqueErgodicity
 
@@ -415,3 +418,5 @@ theorem tendsto_uniform_birkhoffAverage (f : X → X) (hf : Continuous f)
 /-! ### Axioms -/
 
 end IETFree.UniqueErgodicity
+
+end

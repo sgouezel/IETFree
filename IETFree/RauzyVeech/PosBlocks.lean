@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.MainComponents
-import IETFree.RauzyVeech.Peel
-import IETFree.RauzyVeech.RayPointwise
+public import IETFree.RauzyVeech.MainComponents
+public import IETFree.RauzyVeech.Peel
+public import IETFree.RauzyVeech.RayPointwise
 
 /-!
 # Positive blocks give the ray condition
@@ -32,6 +33,8 @@ uniform positivity supply it a.e. with a single `M` (`MainTheorem.hasPositiveBlo
 why the assembly `MainTheorem.main_of_components` needs nothing else from this file.  Positivity of
 the coordinates of `lam` is not assumed: a positive block at time `0` gives it
 (`RayPointwise.mem_simplexCyl_nil_of_mem`). -/
+
+@[expose] public section
 
 
 open MeasureTheory Filter
@@ -73,4 +76,4 @@ theorem positiveBlocksRay (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 �
         (fun γ δ => PosBlock.spread_append_le P γ δ)
         (fun γ δ h1 h2 => PosBlock.spread_append_contract P γ δ hM h1 h2))
 
-
+end

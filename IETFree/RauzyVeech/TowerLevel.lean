@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.FirstReturn
+public import IETFree.RauzyVeech.FirstReturn
 
 /-!
 # The tower formula at level one, in matrix form
@@ -22,6 +23,8 @@ plus the floor over `topCell π` inside `botCell` (`Tower.multOne_cast_mul`).  A
 This is the `k = 1` case of the level-`n` formula: its iterates are set up in
 `IETFree/RauzyVeech/LevelN.lean`, and the formula for an arbitrary word is
 `TowerTrue.tower_formula_level_pathQ_any` of `IETFree/RauzyVeech/TrueStep.lean`. -/
+
+@[expose] public section
 
 open MeasureTheory Finset
 open scoped BigOperators ENNReal NNReal
@@ -114,3 +117,4 @@ end
 
 end Tower
 
+end
