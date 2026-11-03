@@ -1,5 +1,5 @@
 name = "IETFree"
-defaultTargets = ["IETFree", "Challenge", "ChallengeWeak"]
+defaultTargets = ["IETFree", "Challenge"]
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
@@ -20,9 +20,6 @@ rev = "v4.33.1"
 [[lean_lib]]
 name = "IETFree"
 
-# the two statement files live at the root, outside `IETFree/`
+# the statement file lives at the root, outside `IETFree/`
 [[lean_lib]]
 name = "Challenge"
-
-[[lean_lib]]
-name = "ChallengeWeak"

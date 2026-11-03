@@ -1,19 +1,19 @@
 # The comparator pair
 
 This directory holds the [comparator](https://github.com/leanprover/comparator) setup for
-Theorem 1.1 — `main`, with Masur–Veech and Veech's rigidity as hypotheses.
+Theorem 1.1 — `main`, unconditionally.
 
 | file | role |
 |---|---|
 | `../comparator.json` | the configuration: challenge module, solution module, the two theorem targets, the definition hole, `permitted_axioms` |
-| `../ChallengeWeak.lean` | **the challenge**: one self-contained file, `import Mathlib` only |
-| `../IETFree/ChallengeWeakSolved.lean` | **the solution**: imports the library, proves the two targets and fills the hole |
+| `../Challenge.lean` | **the challenge**: one self-contained file, `import Mathlib` only |
+| `../IETFree/ChallengeSolved.lean` | **the solution**: imports the library, proves the two targets and fills the hole |
 | `Check.lean` | a stand-in for the comparator: runs its algorithm on the two compiled modules |
 
 ```json
 {
-  "challenge_module": "ChallengeWeak",
-  "solution_module": "IETFree.ChallengeWeakSolved",
+  "challenge_module": "Challenge",
+  "solution_module": "IETFree.ChallengeSolved",
   "theorem_names": ["coe_mkIETEquiv", "main"],
   "definition_names": ["mkIETEquiv"],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
@@ -28,18 +28,20 @@ constant* on both sides — same name, same type, same value, the proofs inside 
 So the challenge file
 
 * declares, verbatim, the declarations its statement uses — `leftEnd`, `imageLeft`,
-  `translationVector`, `imageLengths`, `leftEnd_zero`, `idxSet`, `idx`, `mkIETFun`, `simplexRegion`,
-  `simplexMap`, `simplexVolume`, `unitMeas`, `IsIrreduciblePerm`, `evalWordEquiv`.  They are *copies of
-  the library's own text*: a shorter equivalent body would be a different declaration, and the
-  definitional height in `ReducibilityHints` is compared as well.  All of them are library
-  declarations except `evalWordEquiv`, which is only the bridge to the statement (it evaluates a word in
-  two permutations of `ℝ` instead of two exchanges) and therefore lives in
-  `IETFree/ChallengeWeakSolved.lean`, not in a library module — the challenge declares the same text;
-* renames what cannot be the library's, and the solution declares the same renamed definitions —
-  `UniqueErgodicFun`, `IsRigidByTranslationsFun` (the library's `UniqueErgodic` and
-  `IsRigidByTranslations` are for `f : IET 0 1`, iterated by the group power), and
-  `MasurVeechFun`, `VeechRigidityFun` (the two inputs in that form);
+  `translationVector`, `idxSet`, `idx`, `mkIETFun`, `simplexRegion`, `simplexMap`,
+  `simplexVolume`, `evalWordEquiv`.  They are *copies of the library's own text*: a shorter equivalent
+  body would be a different declaration, and the definitional height in `ReducibilityHints` is
+  compared as well.  All of them are library declarations except `evalWordEquiv`, which is only the
+  bridge to the statement (it evaluates a word in two permutations of `ℝ` instead of two exchanges)
+  and therefore lives in `IETFree/ChallengeSolved.lean`, not in a library module — the challenge
+  declares the same text;
 * leaves `mkIETEquiv` as a **definition hole**.
+
+Nothing is renamed: the unconditional statement mentions no `…Fun` predicate, so every declaration it
+reaches is the library's.  (The earlier, conditional challenge `ChallengeWeak.lean` also had to
+rename four `…Fun` predicates of its own; that file has been removed, and the predicates themselves
+were deleted, and the library's two `Prop`s `MasurVeech`/`VeechRigidity` became the theorems
+`masurVeech`/`veechRigidity`.)
 
 ## The definition hole
 
@@ -56,20 +58,17 @@ The hole is pinned down by `coe_mkIETEquiv`, a *theorem target*: the solution ha
 
 ## The solution
 
-`IETFree/ChallengeWeakSolved.lean` declares the four `…Fun` predicates with the challenge's bodies,
-proves `coe_mkIETEquiv` from `mkIETEquiv_apply`, and proves `main` by turning the challenge's
-hypotheses into the library's (`uniqueErgodic_iff` and `isRigidByTranslations_iff`, both
-`IET.pow_apply_iterate`; then `masurVeech_of_fun` and `veechRigidity_of_fun`, using that almost every
-length vector is in the simplex, `simplexVolume_compl_simplex`), then quoting
-`ChallengeWeakSolved.main_of_library` — the same theorem with the library's hypotheses, whose proof
-is unchanged.
+`IETFree/ChallengeSolved.lean` proves `coe_mkIETEquiv` from `mkIETEquiv_apply`, and proves `main` by
+quoting `ChallengeSolved.main_of_library` — Theorem 1.1 for the library's own exchanges — which
+applies the two theorems of the literature, `masurVeech` and `veechRigidity`
+(`IETFree/Pair/Irreducible.lean`); nothing is left as a hypothesis.
 
 ## Checking the pair without the comparator
 
 The comparator needs `landrun` and `lean4export`, and a Lake package it can build; none of that works
 in this VM (`/opt/mathlib` is root-owned and read-only). `Check.lean` runs the comparator's own
 algorithm (`Comparator/Compare.lean`, `Comparator/Axioms.lean`) on the two `.olean` environments
-instead of on their exports, and `Build.sh` runs it:
+instead of on their exports, and `SlowBuild.sh` runs it (as does the reader, with the command below):
 
 ```sh
 cd IET2 && lean --run Comparator/Check.lean
@@ -78,14 +77,14 @@ cd IET2 && lean --run Comparator/Check.lean
 ```text
 theorem targets:   #[coe_mkIETEquiv, main]
 definition holes:  #[mkIETEquiv]
-declarations compared: 32661
+declarations compared: 30899
 axioms of the solution:    #[Classical.choice, Quot.sound, propext]
 permitted by the config:   #[propext, Quot.sound, Classical.choice]
 OK: ...
 ```
 
 It is not the tool: it shares the algorithm, not the code. That it bites was checked by mutation —
-changing a body in the challenge (`simplex`) is reported as `differs: simplex`, changing the
+changing a body in the challenge (`simplexRegion`) is reported as `differs: simplexRegion`, changing the
 challenge's `main` (`w ≠ 1` to `w = 1`) as `the statement differs: main`, and dropping the definition
 hole as `differs: mkIETEquiv._proof_1`.
 
@@ -99,7 +98,7 @@ MATHLIB=/opt/mathlib ./Comparator/run.sh   # read-only prebuilt Mathlib (this VM
 ```
 
 `run.sh` does the whole recipe below: fetch and build the two tools if needed (it reuses
-`.scratch/cmp`), create the Lake project, build `ChallengeWeak` and `IETFree.ChallengeWeakSolved`, and
+`.scratch/cmp`), create the Lake project, build `Challenge` and `IETFree.ChallengeSolved`, and
 run the comparator; it exits 0 only if the pair is accepted.  `--rebuild` forces the tools to be
 rebuilt, and `COMPARATOR_REV`, `COMPARATOR_WORK` and `COMPARATOR_LANDRUN` override the defaults
 (see `--help`).
@@ -109,7 +108,7 @@ rebuilt, and `COMPARATOR_REV`, `COMPARATOR_WORK` and `COMPARATOR_LANDRUN` overri
 ```sh
 cd IET2
 lake exe cache get                                    # once, if you trust the cache
-lake build ChallengeWeak IETFree.ChallengeWeakSolved
+lake build Challenge IETFree.ChallengeSolved
 systemd-run --property=RestrictAddressFamilies=~AF_UNIX --user --pty \
   -E PATH="$PATH" --working-directory $(pwd) \
   -- bash -c 'lake env comparator comparator.json'
@@ -144,18 +143,18 @@ replay); only the sandbox is shimmed.  What it took:
    `Comparator.Axioms` compile unchanged.)
 
 2. **A Lake project the comparator can build in.** The comparator runs `lake build <module>` itself,
-   and this library is normally built by `Build.sh` with `LEAN_PATH` at a prebuilt, read-only
+   and this library is normally built by `SlowBuild.sh` with `LEAN_PATH` at a prebuilt, read-only
    `/opt/mathlib`.  A throw-away project resolves Mathlib *by path* instead of from the registry:
 
    ```sh
    # .scratch/lake/lakefile.toml
    name = "ietfree_lake"
    [[require]] name = "mathlib" path = "/opt/mathlib"
-   [[lean_lib]] name = "ChallengeWeak"
+   [[lean_lib]] name = "Challenge"
    [[lean_lib]] name = "IETFree"
    ```
 
-   with `ChallengeWeak.lean` and `IETFree/` symlinked in and `comparator.json` copied.  Lake then
+   with `Challenge.lean` and `IETFree/` symlinked in and `comparator.json` copied.  Lake then
    builds both modules from source in about a minute.
 
 3. **The run.**
@@ -169,19 +168,19 @@ replay); only the sandbox is shimmed.  What it took:
    ```
 
    ```text
-   Exporting #[coe_mkIETEquiv, main, …, mkIETEquiv] from ChallengeWeak
-   Exporting #[coe_mkIETEquiv, main, …, mkIETEquiv] from IETFree.ChallengeWeakSolved
+   Exporting #[coe_mkIETEquiv, main, …, mkIETEquiv] from Challenge
+   Exporting #[coe_mkIETEquiv, main, …, mkIETEquiv] from IETFree.ChallengeSolved
    Running Lean default kernel on solution.
    Lean default kernel accepts the solution
    Your solution is okay!
    ```
 
-   Exit status 0.  And it is not vacuous: with `w ≠ 1` changed to `w = 1` in `ChallengeWeak.lean`'s
+   Exit status 0.  And it is not vacuous: with `w ≠ 1` changed to `w = 1` in `Challenge.lean`'s
    `main`, the same command exits 1 with
 
    ```text
    uncaught exception: Challenge and solution theorem statement do not match: 'main'
    ```
 
-`Build.sh` keeps running `Check.lean` as the cheap, always-on guard; the genuine run above is the
-one-off certificate.
+`SlowBuild.sh` runs `Check.lean` as part of its thorough check; for ordinary work the guard is the
+one command above, and the genuine run is the one-off certificate.

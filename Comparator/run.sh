@@ -3,8 +3,8 @@
 # Run the genuine [leanprover/comparator](https://github.com/leanprover/comparator) on this
 # library's comparator pair:
 #
-#     challenge  `ChallengeWeak`                (ChallengeWeak.lean)
-#     solution   `IETFree.ChallengeWeakSolved`  (IETFree/ChallengeWeakSolved.lean)
+#     challenge  `Challenge`                    (Challenge.lean)
+#     solution   `IETFree.ChallengeSolved`      (IETFree/ChallengeSolved.lean)
 #     config     `comparator.json`
 #
 # This is the recipe of `Comparator/README.md` end to end: fetch and build the two tools, build the
@@ -103,11 +103,11 @@ name = "ietfree_lake"
 name = "mathlib"
 path = "$MATHLIB"
 [[lean_lib]]
-name = "ChallengeWeak"
+name = "Challenge"
 [[lean_lib]]
 name = "IETFree"
 EOF
-  ln -sfn "$ROOT/ChallengeWeak.lean" "$PROJECT/ChallengeWeak.lean"
+  ln -sfn "$ROOT/Challenge.lean" "$PROJECT/Challenge.lean"
   ln -sfn "$ROOT/IETFree" "$PROJECT/IETFree"
   # Lake derives the toolchain from the required Mathlib and refuses to continue in the same process
   # when it has to write it, so write it up front.
@@ -121,10 +121,10 @@ if [ "$PROJECT" != "$ROOT" ]; then
 fi
 
 echo "== building the two modules"
-if ! ( cd "$PROJECT" && lake build ChallengeWeak IETFree.ChallengeWeakSolved ); then
+if ! ( cd "$PROJECT" && lake build Challenge IETFree.ChallengeSolved ); then
   # Lake may have needed to create or update the manifest or the toolchain first; one retry.
   echo "== retrying the build"
-  ( cd "$PROJECT" && lake build ChallengeWeak IETFree.ChallengeWeakSolved )
+  ( cd "$PROJECT" && lake build Challenge IETFree.ChallengeSolved )
 fi
 
 # `lean4export` needs to find the oleans: ask Lake for the search path it uses.

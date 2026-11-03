@@ -4,111 +4,155 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
 
-import IETFree.BlockAETransfer
-import IETFree.BlockAssembly
-import IETFree.BlockData
-import IETFree.BlockDatum
-import IETFree.BlockDiophantine
-import IETFree.BlockEndpoints
-import IETFree.BlockIrreducibility
-import IETFree.BlockLemma
-import IETFree.BlockRescaling
-import IETFree.Centralizer
-import IETFree.ChallengeWeakSolved
-import IETFree.Commensurable
+import IETFree.Basic
+import IETFree.ChallengeSolved
 import IETFree.CutSet
 import IETFree.CutSetMeasure
-import IETFree.Diophantine
-import IETFree.GeneratorChange
-import IETFree.GoodRegion
 import IETFree.IET
-import IETFree.IntegerAffine
-import IETFree.InvariantInterval
-import IETFree.Irreducible
-import IETFree.LengthMap
-import IETFree.MeasureTools
-import IETFree.Presentation
-import IETFree.ReductionData
-import IETFree.SingularityBound
-import IETFree.SingularityList
-import IETFree.SubintervalTransfer
-import IETFree.TranslationVector
+import IETFree.Pair.BlockAETransfer
+import IETFree.Pair.BlockAssembly
+import IETFree.Pair.BlockData
+import IETFree.Pair.BlockDatum
+import IETFree.Pair.BlockDiophantine
+import IETFree.Pair.BlockEndpoints
+import IETFree.Pair.BlockIrreducibility
+import IETFree.Pair.BlockLemma
+import IETFree.Pair.BlockRescaling
+import IETFree.Pair.Centralizer
+import IETFree.Pair.Commensurable
+import IETFree.Pair.Diophantine
+import IETFree.Pair.GeneratorChange
+import IETFree.Pair.GoodRegion
+import IETFree.Pair.IntegerAffine
+import IETFree.Pair.InvariantInterval
+import IETFree.Pair.Irreducible
+import IETFree.Pair.LengthMap
+import IETFree.Pair.MeasureTools
+import IETFree.Pair.Presentation
+import IETFree.Pair.ReductionData
+import IETFree.Pair.SingularityBound
+import IETFree.Pair.SingularityList
+import IETFree.Pair.SubintervalTransfer
+import IETFree.Pair.TranslationVector
+import IETFree.RauzyVeech.Affine
+import IETFree.RauzyVeech.BalancedSet
+import IETFree.RauzyVeech.BoundedSimplex
+import IETFree.RauzyVeech.ChildVolume
+import IETFree.RauzyVeech.ClosureSimplex
+import IETFree.RauzyVeech.ColDiam
+import IETFree.RauzyVeech.CylinderGrowth
+import IETFree.RauzyVeech.CylinderRecurrence
+import IETFree.RauzyVeech.CylinderVolume
+import IETFree.RauzyVeech.FirstReturn
+import IETFree.RauzyVeech.InvariantMeasure
+import IETFree.RauzyVeech.IterGlue
+import IETFree.RauzyVeech.IterGlue2
+import IETFree.RauzyVeech.LengthInjective
+import IETFree.RauzyVeech.LevelN
+import IETFree.RauzyVeech.LevyRecurrence
+import IETFree.RauzyVeech.MainComponents
+import IETFree.RauzyVeech.MeshShrink
+import IETFree.RauzyVeech.NameInfinite
+import IETFree.RauzyVeech.Nesting
+import IETFree.RauzyVeech.PairReach
+import IETFree.RauzyVeech.Path
+import IETFree.RauzyVeech.Peel
+import IETFree.RauzyVeech.PosBlock
+import IETFree.RauzyVeech.PosBlocks
+import IETFree.RauzyVeech.PrefixWord
+import IETFree.RauzyVeech.RauzyPath
+import IETFree.RauzyVeech.RauzyReach
+import IETFree.RauzyVeech.RayCriterion
+import IETFree.RauzyVeech.RayPath
+import IETFree.RauzyVeech.RayPointwise
+import IETFree.RauzyVeech.RefiningPartition
+import IETFree.RauzyVeech.RichPath.BadFirstStop
+import IETFree.RauzyVeech.RichPath.BoundedLag
+import IETFree.RauzyVeech.RichPath.CylinderMass
+import IETFree.RauzyVeech.RichPath.GradedInduction
+import IETFree.RauzyVeech.RichPath.HeightDichotomy
+import IETFree.RauzyVeech.RichPath.InductionAssembly
+import IETFree.RauzyVeech.RichPath.LargeLetter
+import IETFree.RauzyVeech.RichPath.LevelMass
+import IETFree.RauzyVeech.RichPath.MassFunction
+import IETFree.RauzyVeech.RichPath.MassGrowth
+import IETFree.RauzyVeech.RichPath.MinimalExit
+import IETFree.RauzyVeech.RichPath.MinimalExitMass
+import IETFree.RauzyVeech.RichPath.NodeHeight
+import IETFree.RauzyVeech.RichPath.Potential
+import IETFree.RauzyVeech.RichPath.RichGreedyPath
+import IETFree.RauzyVeech.RichPath.RichPathAssembly
+import IETFree.RauzyVeech.RichPath.Stopping
+import IETFree.RauzyVeech.RichPath.StraddleMass
+import IETFree.RauzyVeech.SimplexAe
+import IETFree.RauzyVeech.Step
+import IETFree.RauzyVeech.TowerCells
+import IETFree.RauzyVeech.TowerGlue
+import IETFree.RauzyVeech.TowerInjectivity
+import IETFree.RauzyVeech.TowerLevel
+import IETFree.RauzyVeech.TowerLevelN
+import IETFree.RauzyVeech.TowerLevelOne
+import IETFree.RauzyVeech.TowerTiling
+import IETFree.RauzyVeech.TrueStep
+import IETFree.RauzyVeech.Volume
+import IETFree.Rigidity.Combinatorics
+import IETFree.Rigidity.Defs
+import IETFree.Rigidity.DimOne
+import IETFree.Rigidity.Hit
+import IETFree.Rigidity.Matrix
+import IETFree.Rigidity.RigidSet
+import IETFree.Rigidity.RigidStep
+import IETFree.Rigidity.Sequences
+import IETFree.Rigidity.Transport
+import IETFree.Rigidity.Veech
+import IETFree.UniqueErgodicity.Basic
+import IETFree.UniqueErgodicity.Germ
+import IETFree.UniqueErgodicity.GermIterate
+import IETFree.UniqueErgodicity.IET
+import IETFree.UniqueErgodicity.Limits
+import IETFree.UniqueErgodicity.Main
+import IETFree.UniqueErgodicity.MainTheorem
+import IETFree.UniqueErgodicity.MeasPrep
+import IETFree.UniqueErgodicity.Split
+import IETFree.UniqueErgodicity.SubtypeConv
+import IETFree.UniqueErgodicity.Transfer
+import IETFree.UniqueErgodicity.TransferConv
+import IETFree.UniqueErgodicity.CompactTool
 
 /-!
-Root module of the `IETFree` library: the Lean formalisation of
+# Interval exchange transformations
 
-  S. Gouëzel, *almost every pair of interval exchange transformations does not generate a free
-  group*.
+Root module of the `IETFree` library.  The tree has four thematic subdirectories above a
+single-exchange layer:
 
-`import IETFree` pulls in every module of the library — the import list below is *generated*, by
-`lake exe mk_all --lib IETFree`, so a new module is added there and not by hand (a regeneration
-replaces the whole file, so this docstring has to be put back afterwards).  It includes
-`ChallengeWeakSolved` (the solution of the comparator challenge, which nothing else imports; it also
-carries the single `#print axioms main` of the library).  The two statement files `Challenge.lean`
-and `ChallengeWeak.lean` sit one directory above `IETFree/` and are not part of this module.  The
-individual modules are
+* `IETFree/CutSet`, `IETFree/CutSetMeasure`, `IETFree/IET` — **one exchange**: cut sets and their
+  cells, the measure theory of a piecewise translation, the predicate `IsIET`, the explicit
+  construction `mkIETFun` / `mkIETEquiv` / `mkIET1'`, the simplex and its measure `simplexVolume`,
+  the type `IET a b` with its group structure, and the two notions the main theorem is stated with,
+  `Invariant` and `UniqueErgodic`.  `unitMeas` (Lebesgue measure on `[0, 1)`) lives here too, since
+  everything above uses it.  `IETFree/Basic` holds the two-bijection datum `IETDatum₂` and
+  `IsRigidByTranslations`.
 
-* `IETFree.CutSet`, `IETFree.CutSetMeasure`, `IETFree.IET` — interval exchanges: cut sets and their
-  cells, the measure theory of a piecewise translation, then the predicate `IsIET`, the explicit
-  construction `mkIETFun` / `mkIETEquiv` / `mkIET1`, the classification of an exchange by its
-  cut-set data, and the type `IET a b` with its group structure;
-* `IETFree.Diophantine` — the Diophantine condition and Proposition 2.5;
-* `IETFree.Commensurable`, `IETFree.Centralizer` — the free-group theory (LS 2.19 and the
-  centralizer lemmas);
-* `IETFree.MeasureTools` — `unitMeas`, words in two generators and their supports;
-* `IETFree.TranslationVector`, `IETFree.SingularityBound` — the lattice bounds on displacements and
-  on the singularities of `w(f, g)`;
-* `IETFree.Irreducible` — Section 2 (Lemmas 2.7–2.10 and Theorem 2.6);
-* the Section 3 modules, i.e. the reduction of the general case to the irreducible case, split in
-  dependency order:
+* `IETFree/Pair/` — **two exchanges**: the free-group development (computability, the centralizer,
+  the lattice bounds, Section 2's irreducible case, and Section 3's reduction to blocks: the length
+  map, the good regions, the block rescalings, Lemmas 3.2–3.4 and the assembly of the per-block
+  words).
 
-  * `IETFree.ReductionData` — the blocks and the pair-splitting singularities, the good parameter
-    set `O` (`IsBadParam`, `goodParams`) and the covering step;
-  * `IETFree.Presentation` — the presentation `IsCompPresentation` of `g ∘ f`, its combinatorial
-    type `IsCompType` and the length vector `compLen`, plus the singularity functions and the cuts
-    as affine functions of the free parameters;
-  * `IETFree.IntegerAffine` — integer-affine functions of the parameters: closure properties,
-    extraction of the data, sign constancy on a convex region, and the truncation lemmas;
-  * `IETFree.SingularityList` — the marked singularity list `s` (`singAffine`, `withEnds`,
-    `exists_markedList`) and the affine description `markedPos` of the images of its points under
-    `f`;
-  * `IETFree.GoodRegion` — the image side `B`, the partial-sum identity, and the local presentation
-    `exists_compPresentation_on_ball` and the type `GoodRegion`, the pointwise presentation
-    `G.pres q hq` / `G.type q hq`, and the bundled tuples `BlockIdx` / `Block` / `Fits`;
-  * `IETFree.LengthMap` — Lemma 3.1: the length vector determines the parameters
-    (`compLen_injective`) and the affine length map, whose absolute continuity is the pointwise
-    `BlockData.compLen_absolutelyContinuousAt`;
-  * `IETFree.SubintervalTransfer` — the measure-theoretic transfer to a rescaled sub-interval: the
-    normalisation `y ↦ y / ∑ y` pulls null sets back to null sets;
-  * `IETFree.BlockRescaling` — the rescaling of an exchange to an invariant interval, the
-    irreducibility of the block permutation, and the block length vector and permutation
-    (`blockLam`, `blockPerm`, `mkIET1_rescale_subinterval`);
-  * `IETFree.GeneratorChange` — the change of generators `(f, g) ↦ (g ∘ f, g)` and the transport of
-    a word from the rescaled block back to the block;
-  * `IETFree.InvariantInterval` — the restriction of `g` itself to an invariant interval, rescaled,
-    with the same permutation;
-  * `IETFree.BlockEndpoints` — the consequences of the explicit shape of the singularity list (the
-    endpoints of a block are marked points), the almost-sure bookkeeping of Lemma 3.4, and the
-    lengths of a block at a point of the region (`cellLen`, `blockLam`, `Block.lam`, `Block.perm`);
-  * `IETFree.BlockAETransfer` — the almost-sure transfer of Masur–Veech and Veech's rigidity to the
-    rescaled block;
-  * `IETFree.BlockDiophantine` — the integer-affine data of a block and the Diophantine transfer to
-    the block pair;
-  * `IETFree.BlockData` — A3: the almost-sure block data over a countable family of good regions
-    (`exists_ae_block_good`);
-  * `IETFree.BlockIrreducibility` — Lemma 3.2 (`block_irreducible_on_good`);
-  * `IETFree.BlockAssembly` — the per-block words combined into one word trivial on `[0, 1)`
-    (`exists_word_trivial_on_all_of_blocks`);
-  * `IETFree.BlockDatum` — the datum of `g ∘ f` on a block, the invariance of the block, and the
-    rescaled composition (`blockRescaled`, `comp_conj_rescale`, `restrict_rescale`);
-  * `IETFree.BlockLemma` — Lemma 3.4 (`exists_word_trivial_on_block`) and Theorem 1.1
-    (`main_theorem_of_blocks`).
+* `IETFree/RauzyVeech/` — the Rauzy–Veech induction: the step and the path matrices, the diagram,
+  the volume of path cylinders, the columns and their spread, the ray criterion, the towers and
+  their floors, and (in `RichPath/`) the proof that the greedy path is rich.  It also carries
+  `InvariantMeasure` and `MainComponents`, the invariant-measure side the induction steps use.
 
-* `Challenge.lean`, `ChallengeWeak.lean` — the two statement files, one directory above `IETFree/`
-  (modules `Challenge` and `ChallengeWeak`); they import only `Mathlib` and are imported by nothing.
-  `Challenge` is display only (the frozen, unconditional challenge);
-  `ChallengeWeak` is the comparator challenge of `comparator.json` (Theorem 1.1 with Masur–Veech and
-  Veech's rigidity as hypotheses), and `IETFree.ChallengeWeakSolved` is its solution: it proves
-  `main` and `coe_mkIETEquiv` from the library, and fills the definition hole `mkIETEquiv` with the
-  library's definition.
+* `IETFree/Rigidity/` — Veech's rigidity: a.e. rigidity by translations of an irreducible exchange,
+  proved by the Rauzy–Veech induction.
+
+* `IETFree/UniqueErgodicity/` — **unique ergodicity** of an exchange: the a.e. theorem and its
+  assembly (`MainTheorem`), and the Birkhoff-averages form, uniqueness of the invariant measure
+  giving uniform convergence of the Birkhoff averages through the split interval and its germ map.
+  The measure-theoretic input is in `IETFree/RauzyVeech/`: `InvariantMeasure` (Lebesgue as an
+  invariant measure, the cells and the length vector of a measure, and the uniqueness step) and
+  `MainComponents` (the notions the ray criterion is phrased with).
+
+The theorem that uses them all is `IETFree/ChallengeSolved.lean`: the unconditional form of
+Theorem 1.1, in the words of `Challenge.lean` (the comparator challenge one directory above).
 -/
