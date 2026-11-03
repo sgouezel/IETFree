@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RichPath.Stopping
+public import IETFree.RauzyVeech.RichPath.Stopping
 
 /-!
 # The first stop of a bad word is unclean
@@ -13,6 +14,8 @@ import IETFree.RauzyVeech.RichPath.Stopping
 crossing — has a *first* stop event `j ≤ δ.length`, all of whose earlier indices are not stop
 events, and whose prefix `δ.take j` is not `Clean`.  This is the elementary step of the `Γ₃`
 bookkeeping of `IETFree/RauzyVeech/RichPath/Stopping.lean`. -/
+
+@[expose] public section
 
 
 open Finset IETDatum₂ MeasureTheory NodeHeight
@@ -59,3 +62,5 @@ theorem bad_first_stop {P : IETDatum₂ α n} {A' : Finset α} {w δ : List Bool
     · exact Or.inr ⟨by omega, hEA, hclean⟩
 
 end Stopping
+
+end

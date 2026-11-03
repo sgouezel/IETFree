@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.Path
+public import IETFree.RauzyVeech.Path
 
 /-!
 # Every letter is a name infinitely often along a Rauzy–Veech path
@@ -31,6 +32,8 @@ letter is a *main name* infinitely often. Proof strategy:
   orders, and the set of letters sitting there has cardinal `|F|`: a proper invariant initial
   segment for `perm`, contradicting irreducibility.
 -/
+
+@[expose] public section
 
 open Filter
 open scoped BigOperators NNReal
@@ -875,3 +878,5 @@ theorem name_infinite (P : IETDatum₂ α n) (hP : P.Irreducible) (γ : ℕ → 
     exact (hk x y hx' hy').2
 
 end MeshShrink
+
+end

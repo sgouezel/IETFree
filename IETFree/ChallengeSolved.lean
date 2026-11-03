@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.BlockLemma
-import IETFree.UniqueErgodicity.IET
+public import IETFree.Pair.BlockLemma
+public import IETFree.UniqueErgodicity.IET
 
 /-!
 The **solution of the challenge**: `Challenge.main`, the unconditional form of Theorem 1.1, proved
@@ -42,6 +43,8 @@ repackaged into the permutations `mkIETEquiv p_i π 0` by `evalWord_toEquiv_eq_o
 This file is the only place in the library that mentions the challenge's vocabulary
 (`evalWordEquiv`), and it carries the single `#print axioms` of the tree.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -263,3 +266,5 @@ theorem main {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
 
 -- The axiom check of the library: the single `#print axioms` of the tree, for the main theorem.
 #print axioms main
+
+end

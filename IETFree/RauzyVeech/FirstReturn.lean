@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.Step
-import IETFree.RauzyVeech.Nesting
+public import IETFree.RauzyVeech.Step
+public import IETFree.RauzyVeech.Nesting
 
 /-!
 # The first return map of an interval exchange into a Rauzy subinterval
@@ -30,6 +31,8 @@ two rightmost cells), and the induced subinterval is `[0, c)` with `c = Λ - λ 
   (`Tower.returnB_eq_one`, `Tower.returnB_eq_two`);
 * `Tower.tower_formula_one_step`: the tower formula at level one for an invariant measure.
 -/
+
+@[expose] public section
 
 open MeasureTheory Finset
 open scoped BigOperators ENNReal NNReal
@@ -969,3 +972,5 @@ theorem tower_formula_one_step (hlt : lam (topCell π) < lam botCell) (μ : Meas
 end
 
 end Tower
+
+end

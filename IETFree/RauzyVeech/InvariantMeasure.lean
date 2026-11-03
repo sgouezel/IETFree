@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.TopBotFormalism
-import IETFree.RauzyVeech.SimplexAe
+public import IETFree.TopBotFormalism
+public import IETFree.RauzyVeech.SimplexAe
 
 /-!
 # Invariant probability measures of an exchange
@@ -43,6 +44,8 @@ bottom cells partition `Ico 0 1`.
 Indeed, two invariant measures have length vectors `c • lam` and `d • lam` with `c = d = 1` (their
 coordinates sum to `1` and `∑ lam = 1`), hence equal length vectors, hence are equal by injectivity;
 and Lebesgue is one of them. -/
+
+@[expose] public section
 
 open MeasureTheory
 open scoped BigOperators ENNReal NNReal
@@ -271,3 +274,5 @@ theorem masurVeech_of_components {α : Type*} [Fintype α] [Nonempty α] {n : �
     (fun μ _ hmass => sum_lambdaOf P μ hmem hmass) h_inj'
 
 end InvariantMeasure
+
+end

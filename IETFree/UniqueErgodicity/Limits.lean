@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.CutSetMeasure
+public import IETFree.CutSetMeasure
 
 /-!
 # The one-sided limits of an interval exchange
@@ -21,6 +22,8 @@ periodic point of the left limit bounds a periodic interval, and the orbit of a 
 interval carries an invariant probability measure which is not Lebesgue.  This is what shows that
 unique ergodicity forbids periodic left limits.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped Topology BigOperators ENNReal NNReal
@@ -453,3 +456,4 @@ theorem noPeriodicLeftLimit_of_unique (h : IsCutSet f a b s)
     exists_invariant_ne_of_periodic_leftLimit h ⟨x, hx, k, hk, hper⟩
   exact hνne (hH1 ν hν hνIco)
 
+end

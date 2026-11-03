@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.ClosureSimplex
-import IETFree.RauzyVeech.InvariantMeasure
+public import IETFree.RauzyVeech.ClosureSimplex
+public import IETFree.RauzyVeech.InvariantMeasure
 
 /-!
 # From the tower formula to the `qApply` hypothesis of the ray criterion
@@ -15,6 +16,8 @@ as `qApply (Q (γ k)) (y k)` with `y k ≥ 0`.  The level-`n` tower formula give
 `ℝ≥0∞`-valued sum with coefficients `(Q a b).toNat`.  This file is the translation: `Measure.real`
 is `toReal`, the sum of `toReal`s is the `toReal` of the sum when everything is finite, and `(Q a
 b).toNat : ℝ = Q a b` because `Q` has nonnegative entries. -/
+
+@[expose] public section
 
 
 open MeasureTheory Matrix Filter
@@ -72,3 +75,4 @@ theorem ray_of_shrink_and_tower (P : IETDatum₂ α n) {lam : α → ℝ≥0} (h
 
 end TowerGlue
 
+end

@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.BlockEndpoints
-import IETFree.Pair.SubintervalTransfer
+public import IETFree.Pair.BlockEndpoints
+public import IETFree.Pair.SubintervalTransfer
 
 /-!
 The almost-sure transfer of Masur–Veech and Veech's rigidity to a block.
@@ -27,6 +28,8 @@ The transfer is assembled in `IETFree.BlockData` (`ae_block_of_ae_simplexVolume`
 the earlier version of this file stated that transfer for the *global* monotonicity hypothesis
 `∀ q, StrictMono fun k => s k q`, which `GoodRegion` cannot supply, so those statements are gone.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -211,3 +214,5 @@ theorem ae_blockFree_of_ae_simplexVolume {n : ℕ} [NeZero n] {k l : ℕ} (hkl :
     ((absolutelyContinuous_map_blockFree hkl hln).ae_le hQ)
 
 end AETransport
+
+end

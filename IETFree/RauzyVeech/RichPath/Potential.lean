@@ -3,11 +3,12 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RichPath.Stopping
-import IETFree.RauzyVeech.RichPath.StraddleMass
-import IETFree.RauzyVeech.RichPath.MinimalExit
-import IETFree.RauzyVeech.RichPath.LevelMass
+public import IETFree.RauzyVeech.RichPath.Stopping
+public import IETFree.RauzyVeech.RichPath.StraddleMass
+public import IETFree.RauzyVeech.RichPath.MinimalExit
+public import IETFree.RauzyVeech.RichPath.LevelMass
 
 /-!
 # The unclean mass at a straddling node is at most `k/(2d)` — the `A'`-sum supermartingale
@@ -64,6 +65,8 @@ Write `S(u) = ∑_{b ∈ A'} st u b` for the `A'`-sum (the potential).
 
 No assumptions beyond `P.Irreducible` and `2 ≤ n` are used.
 -/
+
+@[expose] public section
 
 open Finset NodeHeight
 open scoped BigOperators
@@ -948,3 +951,4 @@ theorem straddleMassCard_of_unclean (P : IETDatum₂ α n) (hP : P.Irreducible) 
 
 end Potential
 
+end

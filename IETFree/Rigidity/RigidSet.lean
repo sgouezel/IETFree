@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Rigidity.Defs
-import IETFree.RauzyVeech.InvariantMeasure
-import IETFree.RauzyVeech.TowerTiling
+public import IETFree.Rigidity.Defs
+public import IETFree.RauzyVeech.InvariantMeasure
+public import IETFree.RauzyVeech.TowerTiling
 
 /-!
 # The rigid set at a good node
@@ -38,6 +39,8 @@ words; here only the levels up to `|γ|` exist, and the prefix sequence cannot b
 §2–§7 re-prove the tower statements by induction on the word, which is the form the rigid step
 needs: `SH_list`, `FR_list`, `TL_node`, `CV_node`, `sigma_disjoint_node`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
@@ -1106,3 +1109,5 @@ theorem exists_rigid_set {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [N
   exact ⟨τ, B, hBsub, hBmeas, hBvol, by nlinarith [hτle, hbig, hLe], hexact⟩
 
 end IETFree.Rigidity
+
+end

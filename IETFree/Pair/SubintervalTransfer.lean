@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.LengthMap
+public import IETFree.Pair.LengthMap
 
 /-!
 The transfer of almost-sure statements to a rescaled sub-interval.
@@ -28,6 +29,8 @@ The file proves the two ingredients, both free of any interval-exchange structur
   cells `k, …, k + r - 1`: split the coordinates into the block and the rest (`splitMapLast`, an
   injective affine map, `splitMapLast_injective`), then normalise.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -636,3 +639,5 @@ theorem absolutelyContinuous_map_rescaleSub {n : ℕ} (hn : 0 < n) {k r : ℕ} (
     · refine key (splitMapLast (n := n) (k := k) (r := m + 1))
         (splitMapLast_linear_injective hn (by omega) hk2) (finrank_split (by omega)) (fun x => ?_)
       rw [splitMapLast_apply (n := n) (k := k) (r := m + 1) x]
+
+end

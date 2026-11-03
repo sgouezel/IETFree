@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import Mathlib
-import IETFree.CutSet
-import IETFree.IET
+public import Mathlib
+public import IETFree.CutSet
+public import IETFree.IET
 
 /-!
 # The split interval
@@ -22,6 +23,8 @@ projection and the two germs of a point of `[0,1]`, show that every point is one
 of its projection, describe the one-sided neighbourhoods, and define the germ map of an interval
 exchange, together with its equivariance property on right germs.
 -/
+
+@[expose] public section
 
 open Set Function Filter Topology
 open scoped BigOperators
@@ -385,3 +388,4 @@ end SplitI
 
 end IETFree.UniqueErgodicity
 
+end

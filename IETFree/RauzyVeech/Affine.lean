@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.SimplexAe
-import IETFree.RauzyVeech.Volume
+public import IETFree.RauzyVeech.SimplexAe
+public import IETFree.RauzyVeech.Volume
 
 /-!
 # The analytic layer of the volume computation
@@ -24,6 +25,8 @@ This is the analytic layer of the volume computation, on top of the geometric la
 The hypotheses that the project's statements carry — column sums `1` and `det M ≠ 0` — are exactly
 the ones used below (`AffineVolume.volume_image_inducedMap_of_det`,
 `AffineVolume.inducedMap_mem_region`, `AffineVolume.inducedMap_mem_region'`). -/
+
+@[expose] public section
 
 
 open MeasureTheory Matrix
@@ -720,3 +723,5 @@ theorem simplexVolumeOn_eq_map {α : Type*} [Fintype α] {n : ℕ} (P : IETDatum
 theorem simplexVolumeOn_fin (n : ℕ) : simplexVolumeOn (Fin n) = simplexVolume n := by
   have h := simplexVolumeOn_eq_map (P := IETDatum₂.ofPerm (Equiv.refl (Fin n)))
   simpa using h
+
+end

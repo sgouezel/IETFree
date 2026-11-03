@@ -3,11 +3,12 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.MainComponents
-import IETFree.RauzyVeech.RichPath.BoundedLag
-import IETFree.RauzyVeech.CylinderRecurrence
-import IETFree.RauzyVeech.RichPath.NodeHeight
+public import IETFree.RauzyVeech.MainComponents
+public import IETFree.RauzyVeech.RichPath.BoundedLag
+public import IETFree.RauzyVeech.CylinderRecurrence
+public import IETFree.RauzyVeech.RichPath.NodeHeight
 
 /-!
 # Richness of the greedy path from the graded induction
@@ -31,6 +32,8 @@ work that turns it into richness. Contents:
 The step from the estimate to richness itself is `RichPath.richGreedyPath`
 (`IETFree/RauzyVeech/RichPath/RichGreedyPath.lean`), which uses §3–§5 below.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped NNReal ENNReal BigOperators Topology
@@ -439,3 +442,4 @@ theorem ZpinLev_inter_Nbad (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 �
 
 end RichPath
 
+end

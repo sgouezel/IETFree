@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RichPath.MassGrowth
-import IETFree.RauzyVeech.RichPath.LevelMass
-import IETFree.RauzyVeech.RichPath.Potential
+public import IETFree.RauzyVeech.RichPath.MassGrowth
+public import IETFree.RauzyVeech.RichPath.LevelMass
+public import IETFree.RauzyVeech.RichPath.Potential
 
 /-!
 # The induction step, from `Γ₂` and `Γ₃`: the assembly
@@ -21,6 +22,8 @@ The unconditional proof of the `Γ₃` estimate itself is in
 `IETFree/RauzyVeech/RichPath/Potential.lean`
  (`Potential.straddleMassCard_of_unclean`).
 -/
+
+@[expose] public section
 
 open Finset
 open scoped BigOperators
@@ -75,3 +78,4 @@ theorem inductionStep_of_straddleMass (P : IETDatum₂ α n) (hP : P.Irreducible
 
 end Assemble
 
+end

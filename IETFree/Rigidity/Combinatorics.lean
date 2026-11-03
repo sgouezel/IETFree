@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Rigidity.Defs
-import IETFree.RauzyVeech.PairReach
+public import IETFree.Rigidity.Defs
+public import IETFree.RauzyVeech.PairReach
 
 /-!
 # An extreme vertex, runs of `true` steps, and the big cell
@@ -29,6 +30,8 @@ extreme vertex the pivot is `0`, so one `true` step fixes the bottom position `0
 remaining `n - 1` positions by one, whence the letters in the last bottom position cycle through
 all the letters other than `b`, one per step.
 -/
+
+@[expose] public section
 
 open scoped BigOperators
 
@@ -410,3 +413,5 @@ theorem bigCell_of_mem_cone {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
         nlinarith [hδ0]
 
 end IETFree.Rigidity
+
+end

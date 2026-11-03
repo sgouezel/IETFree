@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.Nesting
+public import IETFree.RauzyVeech.Nesting
 
 /-!
 # Two steps of the ray criterion
@@ -17,6 +18,8 @@ the cylinder `Δ(γ)`.  Consequently, if the cylinders of a family of words have
 point `lam`, then every nonnegative `Σ` of mass `1` in all the cones `C(w n)` equals `lam`.  This is
 how the tower formula (`λ(μ) ∈ C(γ_n)` for all `n`, §10.4) and the shrinking of the cylinders
 (§10.5) combine into "the length vector of an invariant measure lies in the ray of `lam`". -/
+
+@[expose] public section
 
 open MeasureTheory Metric Filter
 open scoped NNReal ENNReal BigOperators Topology
@@ -74,3 +77,4 @@ theorem mem_simplexCyl_of_cone (P : IETDatum₂ α n) {w : List Bool} {Sig : α 
 
 end RayCriterion
 
+end

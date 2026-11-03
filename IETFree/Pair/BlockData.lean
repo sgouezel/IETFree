@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.BlockEndpoints
-import IETFree.Pair.BlockAETransfer
-import IETFree.Pair.BlockDiophantine
+public import IETFree.Pair.BlockEndpoints
+public import IETFree.Pair.BlockAETransfer
+public import IETFree.Pair.BlockDiophantine
 
 /-!
 The almost-sure block data of Lemma 3.4 over a countable family of good regions (A3).
@@ -38,6 +39,8 @@ monotonicity of its list only on the open set `O`, so there is no global
 composition at a point is `G.cellLen hq` (which is `compLenVec G.s q (monoAt G hq)`), and the block
 length vector is `G.blockLam hq k hkl hln`; both live in `IETFree.BlockEndpoints`.
 -/
+
+@[expose] public section
 
 
 open MeasureTheory Filter Topology
@@ -389,3 +392,5 @@ theorem exists_ae_block_good (π : Equiv.Perm (Fin d)) (σ : Equiv.Perm (Fin e))
   exact ⟨ι, hι, Gfam, hcov, @ae_block_good d e _ _ π σ ι hι Gfam⟩
 
 end BlockData
+
+end

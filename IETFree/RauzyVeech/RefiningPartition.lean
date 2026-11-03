@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import Mathlib
+public import Mathlib
 
 /-!
 # A finite measure on `ℝ` is determined by a refining sequence of partitions of mesh → 0
@@ -36,6 +37,8 @@ be an interval either.  The argument is purely metric and runs as follows.
 The mesh hypothesis `hmesh` is stated as "any two points of an atom are `< ε` apart", so no
 boundedness of the atoms is needed: `Metric.diam` of an *unbounded* set is `0` in Mathlib, and a
 diameter formulation would therefore need the atom bounded as a side condition. -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped Topology ENNReal
@@ -197,3 +200,5 @@ theorem measure_restrict_eq_of_refining_partitions [IsFiniteMeasure μ] [IsFinit
     (hB.inter hImeas) Set.inter_subset_right
 
 end RefiningPartition
+
+end

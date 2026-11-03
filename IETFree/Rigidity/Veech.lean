@@ -3,12 +3,13 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RichPath.RichGreedyPath
-import IETFree.Rigidity.Combinatorics
-import IETFree.Rigidity.Hit
-import IETFree.Rigidity.Matrix
-import IETFree.Rigidity.RigidStep
+public import IETFree.RauzyVeech.RichPath.RichGreedyPath
+public import IETFree.Rigidity.Combinatorics
+public import IETFree.Rigidity.Hit
+public import IETFree.Rigidity.Matrix
+public import IETFree.Rigidity.RigidStep
 
 /-!
 # The hitting lemma, and the a.e. rigidity statement
@@ -45,6 +46,8 @@ The quantifier order is `∀ᵐ lam, ∀ ε > 0, ∀ N₀, ∃ …`: the conclus
 many precisions `ε = 1/(k+1)` (`ae_all_iff`) and transported to every `ε > 0` by monotonicity in
 `ε`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
@@ -419,3 +422,5 @@ theorem ae_rigid_step {α : Type*} [Fintype α] {n : ℕ} [NeZero n]
 
 end Internal
 end IETFree.Rigidity
+
+end

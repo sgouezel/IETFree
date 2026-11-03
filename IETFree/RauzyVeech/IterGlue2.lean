@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.IterGlue
-import IETFree.RauzyVeech.RauzyPath
+public import IETFree.RauzyVeech.IterGlue
+public import IETFree.RauzyVeech.RauzyPath
 
 /-!
 # `IterOK` glue, part 2: the greedy path is an `IterOK` word
@@ -15,6 +16,8 @@ contains the point) satisfies `IterOK` — the Rauzy type rule — and its renor
 (`Tower.lamAfter`) stays strictly positive.  The two statements are proved simultaneously:
 positivity is what lets `IsRenorm.unique` identify the comparison from `mem_simplexCyl_append_iff`
 with the `StepOK` of the algorithm. -/
+
+@[expose] public section
 
 open MeasureTheory
 open scoped BigOperators ENNReal NNReal
@@ -123,3 +126,4 @@ theorem iterOK_pathWord (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ 
 
 end IterGlue2
 
+end

@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RefiningPartition
+public import IETFree.RauzyVeech.RefiningPartition
 
 /-!
 # Injectivity of the length map: the measure-theoretic reduction
@@ -13,6 +14,8 @@ Two probability measures on `ℝ` carried by `[0, 1)` which agree on every atom 
 of partitions of `[0, 1)` with mesh → `0` are equal.  This is the last step of the injectivity of
 the length map: the towers supply the partitions (the level-`n` floors), the tower formula plus `det
 Q(γ) = 1` supplies the agreement on atoms, and `RefiningPartition` does the rest. -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped NNReal ENNReal BigOperators Topology
@@ -43,3 +46,4 @@ theorem measure_eq_of_floors {μ ν : Measure ℝ} [IsFiniteMeasure μ] [IsFinit
 
 end LengthInjective
 
+end

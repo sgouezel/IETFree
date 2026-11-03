@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.InvariantMeasure
-import IETFree.RauzyVeech.TowerLevelOne
+public import IETFree.RauzyVeech.InvariantMeasure
+public import IETFree.RauzyVeech.TowerLevelOne
 
 /-!
 # The tower tiling of `[0, 1)`, almost everywhere
@@ -15,6 +16,8 @@ of the renormalised lengths, pairwise disjoint and covering `[0, 1)`, with the l
 refining the level-`k` one and the mesh going to `0` (`ae_towerTiling`, from `towerTiling` along the
 greedy word `towerTiling_pathWord`).  This is the geometric input of the injectivity of the length
 map, `length_injective_of_tower`. -/
+
+@[expose] public section
 
 
 open MeasureTheory Filter
@@ -1287,3 +1290,4 @@ theorem length_injective_of_tower (P : IETDatum₂ α n) (hP : P.Irreducible) (h
 
 end TowerInjectivity
 
+end

@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RichPath.NodeHeight
+public import IETFree.RauzyVeech.RichPath.NodeHeight
 
 /-!
 # The new-large-letter step `Γ₄`
@@ -22,6 +23,8 @@ appears).  This file proves **`Γ₄`**, in the form the `k → k+1` step consum
   truncation in "`P(Γ₄ | π) ≥ P(Γ₃ | π)`"), together with `take_succ_eq_of_head`,
   `exists_head_drop`.
 -/
+
+@[expose] public section
 
 
 open MeasureTheory Finset NodeHeight
@@ -513,3 +516,4 @@ open scoped MeasureTheory
 
 end LargeLetter
 
+end

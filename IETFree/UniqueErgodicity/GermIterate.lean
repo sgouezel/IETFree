@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.UniqueErgodicity.Germ
-import IETFree.UniqueErgodicity.Limits
+public import IETFree.UniqueErgodicity.Germ
+public import IETFree.UniqueErgodicity.Limits
 
 /-!
 # The iterate bridge for the left germs of the germ map
@@ -21,6 +22,8 @@ measure-theoretic part: under (H2) the orbit of a left germ in `(0, 1]` is infin
 Everything is proved first for an arbitrary exchange `T` with cut set `s` on `[0, 1)`, as in
 `Germ.lean`, and then specialised to `T = mkIETEquiv lam π 0` and `s = mkIETCuts lam 0 1`.
 -/
+
+@[expose] public section
 
 open Set Function Filter Topology
 open scoped BigOperators NNReal
@@ -318,3 +321,4 @@ end Concrete
 
 end IETFree.UniqueErgodicity
 
+end

@@ -3,11 +3,12 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Rigidity.Defs
-import IETFree.RauzyVeech.IterGlue2
-import IETFree.RauzyVeech.MeshShrink
-import IETFree.RauzyVeech.RichPath.RichPathAssembly
+public import IETFree.Rigidity.Defs
+public import IETFree.RauzyVeech.IterGlue2
+public import IETFree.RauzyVeech.MeshShrink
+public import IETFree.RauzyVeech.RichPath.RichPathAssembly
 
 /-!
 # Hitting a fixed word at arbitrarily late times
@@ -27,6 +28,8 @@ The hitting lemma of §3.3 itself is assembled in `Veech.lean` (`ae_exists_hit_b
 needs, besides these three, the richness of the greedy path, and it states the bound at the node `w`
 rather than at `w ++ γ₀`, which is the node the rigid step is run at.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal Topology
@@ -108,3 +111,5 @@ theorem tendsto_baseLen_pathWord {α : Type*} [Fintype α] [DecidableEq α] {n :
 
 
 end IETFree.Rigidity
+
+end

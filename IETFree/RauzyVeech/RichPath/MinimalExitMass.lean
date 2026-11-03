@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RichPath.MassFunction
-import IETFree.RauzyVeech.RichPath.GradedInduction
+public import IETFree.RauzyVeech.RichPath.MassFunction
+public import IETFree.RauzyVeech.RichPath.GradedInduction
 
 /-!
 # The mass bound of `Γ₂` along a blocked run
@@ -25,6 +26,8 @@ maximum `𝔐`, `CylinderMass.cond` the conditional mass of a continuation):
   corresponding product over `Cb`.
 
 These are the inputs of `MassGrowth.exists_extMassGen_sharp`. -/
+
+@[expose] public section
 
 open Finset
 open scoped BigOperators
@@ -298,3 +301,4 @@ growth constant remains. -/
 
 end MinimalExitMass
 
+end

@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.CylinderVolume
-import IETFree.RauzyVeech.Nesting
+public import IETFree.RauzyVeech.CylinderVolume
+public import IETFree.RauzyVeech.Nesting
 
 /-!
 # Column sums and volumes of path cylinders
@@ -17,6 +18,8 @@ sibling cylinders and of incomparable prefixes (`disjoint_simplexCyl_cons_cons`,
 `disjoint_simplexCyl_of_not_isPrefix`), the antichain formula `volume_iUnion_antichain`, and
 multiplicativity of the volume along extensions (`volume_append_mul`, `volume_simplexCyl_lt_top`).
 These are the `BalancedCylinders` facts of the volume computation. -/
+
+@[expose] public section
 
 open MeasureTheory Matrix
 open scoped BigOperators ENNReal NNReal
@@ -260,3 +263,5 @@ theorem volume_simplexCyl_lt_top (P : IETDatum₂ α n) (γ : List Bool) :
   exact volume_region_lt_top _
 
 end BalancedCylinders
+
+end

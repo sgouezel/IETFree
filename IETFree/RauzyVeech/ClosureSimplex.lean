@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RayCriterion
-import IETFree.RauzyVeech.BoundedSimplex
+public import IETFree.RauzyVeech.RayCriterion
+public import IETFree.RauzyVeech.BoundedSimplex
 
 /-!
 # The closed cylinder: nonnegative `Q`-images of nonnegative vectors
@@ -34,6 +35,8 @@ Auxiliary identities, stated separately:
 * `totSum_eq_sum_colR` — the sum of the row sums is the sum of the column sums;
 * `qApply_add_div` — the coordinates of `Q ((y + t)/(1 + t W))`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal Topology
@@ -253,3 +256,4 @@ theorem eq_of_nonneg_preimage_of_diam {w : ℕ → List Bool} {lam : α → ℝ�
 
 end RayCriterion
 
+end

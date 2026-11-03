@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import Mathlib
+public import Mathlib
 
 /-!
 The challenge statement, in the shortest form that can be checked: the *unconditional* form of
@@ -24,6 +25,8 @@ The declarations are at the root namespace, and their names are the library's.
 The declarations mirror the library's (`IETFree/IET.lean`) name for name and body for body, so that
 the comparator can compare the statements declaration by declaration; `IETFree/ChallengeSolved.lean`
 proves them. -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
@@ -45,13 +48,18 @@ noncomputable def translationVector {n : ℕ} (π : Equiv.Perm (Fin n)) (lam : F
 noncomputable def idxSet {n : ℕ} (lam : Fin n → ℝ≥0) (x : ℝ) : Finset (Fin n) :=
   Finset.univ.filter (fun i : Fin n => leftEnd lam i ≤ x)
 
+/-- The set of intervals whose left endpoint is at most `x` is never empty.  Like every declaration
+copied into `Challenge.lean`, its proof must generate no auxiliary declaration — `simp` here would,
+and the comparator would then see two different constants.  `refine`/`exact` are safe. -/
+theorem idxSet_nonempty {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (x : ℝ) (hx : 0 ≤ x) :
+    (idxSet lam x).Nonempty := by
+  refine ⟨0, Finset.mem_filter.2 ⟨Finset.mem_univ 0, ?_⟩⟩
+  exact le_of_eq_of_le (Finset.sum_eq_zero fun j hj =>
+    absurd (Finset.mem_filter.1 hj).2 (Fin.not_lt_zero j)) hx
+
 /-- The index of the interval, in the arrangement with lengths `lam`, that contains `x`. -/
 noncomputable def idx {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (x : ℝ) (hx : 0 ≤ x) : Fin n :=
-  (idxSet lam x).max'
-    (by
-      refine ⟨0, ?_⟩
-      simp only [idxSet, Finset.mem_filter, Finset.mem_univ, true_and]
-      simpa [leftEnd] using hx)
+  (idxSet lam x).max' (idxSet_nonempty lam x hx)
 
 /-- **The interval exchange transformation**, as a bare function, with lengths `lam` and
 permutation `π`, placed on `[a, a + ∑ lam)`. -/
@@ -80,11 +88,18 @@ so that every coordinate of the image, including the last one `1 - ∑`, is posi
 def simplexRegion (d : ℕ) : Set (Fin (d - 1) → ℝ) :=
   {v | (∀ i, 0 < v i) ∧ ∑ i, v i < 1}
 
+/-- The `d - 1` free coordinates sit below `d - 1` in the `d`-th slot of the last coordinate.
+`omega` would be shorter, but it generates an auxiliary declaration, and auxiliaries are private to
+their module: this statement is copied verbatim into `Challenge.lean`, and the comparator compares
+the two proof terms, so the copies would no longer be the same declaration. -/
+theorem simplexMap_val_lt (d : ℕ) (i : Fin d) (h : ¬ i.val + 1 = d) : i.val < d - 1 :=
+  Nat.lt_pred_iff.2 (Nat.lt_of_le_of_ne (Nat.succ_le_of_lt i.isLt) h)
+
 /-- The parametrisation of the simplex: the `d - 1` free coordinates, the last being `1 - ∑`. -/
 noncomputable def simplexMap (d : ℕ) (v : Fin (d - 1) → ℝ) : Fin d → ℝ≥0 :=
   fun i =>
     if h : i.val + 1 = d then (1 - ∑ j, v j).toNNReal
-    else (v ⟨i.val, by have := i.isLt; omega⟩).toNNReal
+    else (v ⟨i.val, simplexMap_val_lt d i h⟩).toNNReal
 
 /-- **Lebesgue measure on the simplex**: Lebesgue measure on the `d - 1` free coordinates,
 restricted to the region where their total mass is less than `1`, transported by the
@@ -104,3 +119,5 @@ theorem main {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
       ∃ w : FreeGroup (Fin 2), w ≠ 1 ∧
         evalWordEquiv w (mkIETEquiv p.1 π 0) (mkIETEquiv p.2 σ 0) = 1 := by
   sorry
+
+end

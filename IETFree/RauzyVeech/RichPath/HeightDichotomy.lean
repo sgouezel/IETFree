@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RichPath.LargeLetter
-import IETFree.RauzyVeech.RichPath.LevelMass
-import IETFree.RauzyVeech.RichPath.BadFirstStop
+public import IETFree.RauzyVeech.RichPath.LargeLetter
+public import IETFree.RauzyVeech.RichPath.LevelMass
+public import IETFree.RauzyVeech.RichPath.BadFirstStop
 
 /-!
 # The mass form of the `Γ₃` step, and the `k → k+1` dichotomy
@@ -34,6 +35,8 @@ proves the source's `k → k+1` dichotomy in its `γ_s`-relative form with the c
   (`sum_cond_kerckhoff_singleton`, `sum_bad_singleton_le`), in the packaged forms
   `singleton_mass` and `card_one_mass`.
 -/
+
+@[expose] public section
 
 
 open Finset NodeHeight
@@ -337,3 +340,4 @@ theorem card_one_mass (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
 
 end HeightDichotomy
 
+end

@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.TopBotFormalism
-import IETFree.IET
+public import IETFree.TopBotFormalism
+public import IETFree.IET
 
 /-!
 Proposition 2.5 of the paper (`ae_diophantine`): almost every pair of length vectors is Diophantine.
@@ -25,6 +26,8 @@ Diophantine condition `IsDiophC … (expo p q)` with `expo p q = p + q + 3`, whi
 `IsDiophantine`.  Finally the a.e. statement is transported through the measurable parametrisation
 `simplexMap (p+1) × simplexMap (q+1)` by `Measure.map_prod_map`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -1200,3 +1203,5 @@ theorem IsDiophantine.of_int_combination (hdio : IsDiophantine lam mu) {K : ℕ}
     exact le_trans hmul hfin
 
 end IntCombination
+
+end

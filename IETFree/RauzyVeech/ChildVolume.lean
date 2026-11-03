@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.CylinderVolume
-import IETFree.RauzyVeech.Nesting
+public import IETFree.RauzyVeech.CylinderVolume
+public import IETFree.RauzyVeech.Nesting
 
 /-!
 # The region model of the simplex, and positivity of cylinder volumes
@@ -29,6 +30,8 @@ and it grows by the column of the name.
 The volume of the child cylinder (Lemma 3 of the source) is the ratio `vol Δ(γ ++ [δ]) / vol Δ(γ) =
 ∏_b colsum_b(γ) / colsum_b(γ ++ δ)`, proved in `IETFree/RauzyVeech/BalancedSet.lean` as
 `BalancedCylinders.volume_append_mul`. -/
+
+@[expose] public section
 
 open MeasureTheory Matrix
 open scoped BigOperators ENNReal NNReal
@@ -166,3 +169,5 @@ theorem volume_simplexCyl_pos (P : IETDatum₂ α n) (γ : List Bool) :
 end Positivity
 
 end RegionVolume
+
+end

@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RauzyReach
-import IETFree.RauzyVeech.RichPath.CylinderMass
-import IETFree.RauzyVeech.Peel
+public import IETFree.RauzyVeech.RauzyReach
+public import IETFree.RauzyVeech.RichPath.CylinderMass
+public import IETFree.RauzyVeech.Peel
 
 /-!
 **Bounded lag at a balanced node.**
@@ -23,6 +24,8 @@ Constants: `K = returnBound P + 1 + |γ₀|` and `δ = (1 / (C * d * M))^d`, whe
 * §2 the nonempty return word `padWord` and its three properties;
 * §3 the uniform matrix bound `lagBound`.
 -/
+
+@[expose] public section
 
 
 open scoped BigOperators ENNReal NNReal
@@ -168,3 +171,4 @@ theorem pathQ_padWord_le (P : IETDatum₂ α n) (γ₀ : List Bool) (Q : IETDatu
 
 end BoundedLag
 
+end

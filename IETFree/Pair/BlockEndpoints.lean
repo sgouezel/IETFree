@@ -3,11 +3,12 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.LengthMap
-import IETFree.Pair.SubintervalTransfer
-import IETFree.Pair.BlockRescaling
-import IETFree.Pair.InvariantInterval
+public import IETFree.Pair.LengthMap
+public import IETFree.Pair.SubintervalTransfer
+public import IETFree.Pair.BlockRescaling
+public import IETFree.Pair.InvariantInterval
 
 /-!
 The consequences of the explicit shape of the singularity list, and the almost-sure bookkeeping of
@@ -31,6 +32,8 @@ with `cellLen_pos` and `cellLen_sum`), `blockLam` (the block rescaled to mass `1
 `blockLam_sum`, `blockLam_coe` and the `rfl` rewrite rule `blockLam_def`), `blockLam_congr`, and the
 structure API `Block.lam` (with `lam_sum`) and `Block.perm`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -437,3 +440,5 @@ measures: `ae_goodParams_real` and `ae_diophantine_real` are stated for the prod
 restricted Lebesgue measures on the free regions, while the block statements (`ae_BlockGoodPt`) are
 stated for the restriction of Lebesgue measure to the region `O` of a `GoodRegion`.  The two are
 reconciled by absolute continuity against the ambient Lebesgue measure on the parameter space. -/
+
+end

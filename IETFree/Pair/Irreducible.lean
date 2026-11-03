@@ -3,18 +3,19 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.InvariantMeasure
-import IETFree.TopBotFormalism
-import IETFree.UniqueErgodicity.MainTheorem
-import IETFree.Rigidity.DimOne
-import IETFree.Rigidity.Sequences
-import IETFree.Rigidity.Transport
-import IETFree.UniqueErgodicity.IET
-import IETFree.Pair.Diophantine
-import IETFree.Pair.MeasureTools
-import IETFree.Pair.Centralizer
-import IETFree.Pair.SingularityBound
+public import IETFree.RauzyVeech.InvariantMeasure
+public import IETFree.TopBotFormalism
+public import IETFree.UniqueErgodicity.MainTheorem
+public import IETFree.Rigidity.DimOne
+public import IETFree.Rigidity.Sequences
+public import IETFree.Rigidity.Transport
+public import IETFree.UniqueErgodicity.IET
+public import IETFree.Pair.Diophantine
+public import IETFree.Pair.MeasureTools
+public import IETFree.Pair.Centralizer
+public import IETFree.Pair.SingularityBound
 
 /-!
 Section 2 of the paper: the irreducible case.
@@ -28,6 +29,8 @@ The measure-theoretic tools (`unitMeas` and its API, the words in two generators
 Lemma 2.10) are in `MeasureTools.lean`; Proposition 2.5 and the Diophantine definitions are in
 `Diophantine.lean`.  Both are imported below.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal commutatorElement
@@ -663,3 +666,5 @@ theorem irreducible_case {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin
 
 /-! **Proposition 2.5** (`ae_diophantine`) is proved in `Diophantine.lean`, which this file imports;
 its statement and the definitions `coeffMax`, `IsDiophantine`, `simplex` used above live there. -/
+
+end

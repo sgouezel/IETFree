@@ -14994,6 +14994,123 @@ strict per-file recipe, and so is the renamed file; no line of `IETFree/` or `IE
 30 899 declarations compared, the permitted axioms, and `OK`; `IET2.zip` rebuilt and verified
 byte-identical.
 
+### Addendum 172: the tree is on Lean's module system
+
+Owner's instruction: *"I want to submit the project to Palomar.  For this, it should use Lean's
+module system (...).  Can you convert the project to the module system?"*  Palomar requires every
+regular `.lean` file of a submitted repository to start with `module` (and to stay under 10 000
+lines), so the whole tree was ported; the Challenge keeps its own 1 000-line and 100 KiB limits.
+
+**The mechanical pass.**  All 117 `.lean` files — the 114 library modules, the umbrella
+`IETFree.lean`, `Challenge.lean` and `Comparator/Check.lean` — got `module` after their copyright
+block, every `import` became `public import`, and everything after the module docstring now sits in
+a `@[expose] public section` closed by a final `end`.  No declaration, statement or proof changed.
+The blanket exposure is what makes the port semantics-neutral: `@[expose]` keeps every definition's
+body visible to its clients, so the `rfl`s, the `simp [def]`s and the definitional unfolding that
+the library relies on across modules still work.  The first full build after the pass was green
+without a single repair.
+
+**The comparator caught what the build could not.**  `Comparator/Check.lean` rejected the pair with
+`differs: simplexMap._proof_2` and `differs: idx._proof_5`.  The cause is a property of modules: the
+auxiliary declarations that a `by` block generates are private to their module and are renamed
+`_private.<Module>.0.<name>`.  The same source text in `Challenge.lean` and in `IETFree/IET.lean`
+therefore elaborates to proof terms that mention differently named constants, and the comparator —
+which compares the *values* of every declaration reachable from the statements, proofs included —
+sees two different constants.  Hoisting the proofs into named lemmas only moved the problem one
+level (`simplexMap_val_lt._proof_1_1`, `idxSet_nonempty._simp_1_2`).
+
+**The fix.**  The two proofs are now written in **term mode**, with no `by` block anywhere:
+`simplexMap_val_lt` is `Nat.lt_pred_iff.2 (Nat.lt_of_le_of_ne (Nat.succ_le_of_lt i.isLt) h)` and
+`idxSet_nonempty` is a `Finset.mem_filter` membership proved with `Finset.sum_eq_zero`; `simplexMap`
+then uses `simplexMap_val_lt` and `idx` uses `idxSet_nonempty`, so neither definition carries a
+proof subterm at all.  Both files carry the same text, and both docstrings state why the proofs are
+not `by` blocks, so that a later simplification cannot silently break the comparison.  With that,
+the comparator stand-in compares 30 825 declarations and reports `OK`.
+
+**Knock-on edits.**  `SlowBuild.sh`'s import lexer now accepts `public import` (it derives the
+module order from the umbrella's imports).  The README's 162 line anchors and its 26 `file:line`
+labels were recomputed against the new files — every file grew by its header, and `IET.lean` by the
+two lemmas — and they all sit on a declaration's first line again.  The size figures moved to 46 196
+lines and 4 542 declarations (2 571 of them hand-written, 3 974 reachable), the difference in the
+total being the renamed generated declarations.
+
+**Still Palomar's own.**  `comparator.json` carries `"enable_nanoda": false`, and the intake
+standard requires `true`; that is the owner's call, since it changes what the genuine comparator
+runs.  The Solution module is `IETFree.ChallengeSolved` rather than `Solution.lean`, which the
+standard allows because `comparator.json` names it.
+
+**Checks.**  `lake build` green at 8823 jobs; `#print axioms main` still `[propext,
+Classical.choice, Quot.sound]`; the comparator stand-in `OK`; the module checker of the
+`lean-project-architecture` skill passes on all 117 files; no file near the 10 000-line cap (largest
+1 482), and `Challenge.lean` is 122 lines and 6 458 bytes; no line of `IETFree/` or `IETFree.lean`
+is over 100 characters.  Not verified: a build from an empty `.lake/build` (the owner's standing
+instruction forbids deleting it) and the genuine comparator, which needs `landrun`, `lean4export`
+and a Lake sandbox that this VM does not have.
+
+### Addendum 173: `enable_nanoda` is on
+
+Owner's instruction: *"Flip enable_nanoda to true in comparator.json and check that the submission
+still passes."*  `comparator.json` now carries `"enable_nanoda": true`; nothing else in the tree
+changed.
+
+**What the switch does.**  Palomar's submission standard, §2.3, says that `enable_nanoda` *"is
+accepted for Comparator compatibility but is intentionally non-authoritative.  Its submitted value
+is ignored, and the field may be absent.  Palomar always writes a separate protected configuration
+with NanoDa enabled."*  So the flip changes nothing about what Palomar executes; it makes the file
+agree with what the verifier will do, and with the stricter reading of the
+`lean-project-architecture` checker.
+
+**Checks.**  `Comparator/Check.lean` still reports `OK` — 30 825 declarations compared, statements
+agree, permitted axioms only — because it reads the five keys it needs and ignores `enable_nanoda`.
+The module checker from the `lean-project-architecture` skill, run on `IET2/comparator.json`, no
+longer raises the switch.
+
+**What the same checker still raises, and why it is older than this change.**  It wants the named
+Solution module to declare both targets in its own source: `comparator.json: solution_module
+IETFree.ChallengeSolved does not declare public theorem coe_mkIETEquiv`.  `coe_mkIETEquiv` is
+declared in `IETFree/IET.lean`, where two library proofs use it (`IET.lean` and
+`UniqueErgodicity/IET.lean`), and the solution file sits *above* the library in the import DAG, so
+the declaration cannot move into it.  The Palomar standard does not impose that rule: §2.3 lists the
+four required keys and says nothing about where the declarations live, and Comparator looks
+`theorem_names` up in the *exported environment* of the solution module — `safeExport solutionModule
+exportTargets` exports the module together with its imports, and `compareAt` then finds the names
+there.  So the pair satisfies the policy and the comparator as written; the checker applies a
+stricter convention of its own.  Nothing was restructured for it.
+
+### Addendum 174: it is the auxiliaries, not the tactics
+
+Owner's challenge: *"I am convinced by your Comparator explanation that we need named theorems, but
+not by the argument that their proofs have to be term mode.  Can you try again, replacing the term
+mode proof in idxSet_nonempty by a tactic proof (both in the Challenge and in the library), and see
+if it breaks Comparator?"*  The experiment was run in this order.
+
+1. `idxSet_nonempty` proved by `refine ⟨0, ?_⟩; simp only [idxSet, Finset.mem_filter,
+Finset.mem_univ, true_and]; simpa [leftEnd] using hx`, in both files, everything else untouched: the
+comparator reported `PROBLEM: differs: idxSet_nonempty` (30 823 declarations compared).
+
+2. The two proof terms, printed with `pp.all`, differ in exactly two places:
+`_private.Challenge.0.idxSet_nonempty._simp_1_2` against
+`_private.IETFree.IET.0.idxSet_nonempty._simp_1_2`, and the same pair for `_simp_1_3`.  Nothing else
+in the term moves.
+
+3. The same statement proved by `refine ⟨0, Finset.mem_filter.2 ⟨Finset.mem_univ 0, ?_⟩⟩` followed
+by `exact le_of_eq_of_le (Finset.sum_eq_zero fun j hj => absurd (Finset.mem_filter.1 hj).2
+(Fin.not_lt_zero j)) hx`: `OK`, 30 825 declarations.
+
+So the owner is right about the tactics and I was wrong about the reason.  A tactic proof is fine.
+What breaks the comparison is a proof term that mentions an *auxiliary* declaration, because
+auxiliaries are named `_private.<Module>.0.<name>` and the module is part of the name.  `simp`
+generates them, and so does `omega` (the earlier run showed `simplexMap_val_lt._proof_1_1`);
+`refine` and `exact` do not, and then the proof term is the same text in both modules.
+
+The tree keeps the tactic proof in `idxSet_nonempty`, with a docstring saying why it must not use
+`simp`, and keeps `simplexMap_val_lt` in term mode, where `omega` is exactly the tactic that
+generates the auxiliary.  Addendum 172's sentence "the two proofs are now written in term mode"
+overstates the rule; this addendum states it correctly.
+
+**Checks.**  `lake build` green at 8823 jobs; the comparator stand-in `OK` at 30 825 declarations,
+the permitted axioms only; `#print axioms main` unchanged.
+
 ---
 
 # Part II — the Masur–Veech campaigns (verbatim records, blueprints and graphs)

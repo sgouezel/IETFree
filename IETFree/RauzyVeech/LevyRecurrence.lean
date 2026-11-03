@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import Mathlib
+public import Mathlib
 
 /-!
 # Lévy's upward theorem applied to a cylinder filtration: the abstract recurrence lemma
@@ -23,6 +24,8 @@ Note the level σ-algebra: `F n = MeasurableSpace.comap (π n) ⊤` with the **d
 `Y n`, so that its measurable sets are the unions of atoms.  (`⊥` would be wrong: on
 `MeasurableSpace` the bottom element is the *indiscrete* σ-algebra, `measurableSet_bot_iff`, which
 would make every level trivial.  The literal bottom version is degenerate and is not used.) -/
+
+@[expose] public section
 
 
 open MeasureTheory Filter
@@ -238,3 +241,4 @@ theorem levy_recurrence {Y : ℕ → Type*} [∀ n, MeasurableSpace (Y n)]
 
 end LevyRecurrence
 
+end

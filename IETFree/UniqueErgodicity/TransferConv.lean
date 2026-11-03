@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.UniqueErgodicity.Basic
-import IETFree.UniqueErgodicity.Split
+public import IETFree.UniqueErgodicity.Basic
+public import IETFree.UniqueErgodicity.Split
 
 /-!
 # Transferring uniform Birkhoff convergence along a factor
@@ -29,6 +30,8 @@ cannot converge to `∫ ψ dμ`, so the unrestricted form is false.  `UniqueErgo
 
 The statement is purely about iterates of a section, so it is stated for arbitrary types.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped BigOperators
@@ -193,3 +196,4 @@ theorem uniformBirkhoff_of_proj {D : Set ℝ} [Countable D] (G : SplitI D → Sp
 
 end IETFree.UniqueErgodicity
 
+end

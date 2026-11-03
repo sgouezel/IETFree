@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.Irreducible
+public import IETFree.Pair.Irreducible
 
 /-!
 The reduction data: the blocks and the pair-splitting singularities, the good parameter set `O`, and
@@ -26,6 +27,8 @@ the last length of each vector being `1` minus their sum.  The choice is essenti
 lengths as coordinates (or even with the `d + e - 2` "redundant" ones) the relation
 `-1 + ∑ λᵢ = 0` holds on the whole simplex and every parameter is bad.  See `HISTORY.md`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -950,3 +953,5 @@ theorem ae_diophantine_real {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (
     ((measurable_simplexMap d).prodMap (measurable_simplexMap e)).aemeasurable hmap'
   rw [hν] at h
   exact h
+
+end

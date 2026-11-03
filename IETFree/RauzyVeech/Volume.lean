@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.TopBotFormalism
+public import IETFree.TopBotFormalism
 
 /-!
 # Volumes on the simplex
@@ -22,6 +23,8 @@ Proved here (the geometric layer):
 
 The analytic layer is in `IETFree/RauzyVeech/Affine.lean`: the determinant `det (inducedMap M) =
 det M`, the change-of-variables formula, Lemma 1 and the consequences for `simplexVolumeOn`. -/
+
+@[expose] public section
 
 open MeasureTheory
 open scoped BigOperators ENNReal NNReal
@@ -166,3 +169,5 @@ theorem chart_inducedMap {n : ℕ} {M : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ}
             rw [hk]
   · intro i
     rw [chart_castSucc, inducedMap]
+
+end

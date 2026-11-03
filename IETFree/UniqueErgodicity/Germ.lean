@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.UniqueErgodicity.Split
-import IETFree.UniqueErgodicity.Limits
+public import IETFree.UniqueErgodicity.Split
+public import IETFree.UniqueErgodicity.Limits
 
 /-!
 # The germ map of an interval exchange
@@ -22,6 +23,8 @@ We prove that `D` is invariant under `T`, that the left germ of `0` does not bel
 part, that `T̃` maps the split interval to itself, is injective, preserves the right part, and is
 continuous (Lemmas 3.1–3.5 of the blueprint).
 -/
+
+@[expose] public section
 
 open Set Function Filter Topology
 open scoped BigOperators NNReal
@@ -961,3 +964,4 @@ end Concrete
 
 end IETFree.UniqueErgodicity
 
+end

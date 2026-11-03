@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.TrueStep
+public import IETFree.RauzyVeech.TrueStep
 
 /-!
 # The one-step length identity
@@ -12,6 +13,8 @@ import IETFree.RauzyVeech.TrueStep
 `hatLam ε lam` is the inverse of `rvMat ε` on length vectors, *provided the type condition* `λ (last
 (!ε)) ≤ λ (last ε)` holds — `hatLam` uses truncated subtraction, so without it the identity fails. 
 This is the one-step input of `IterOK` for the greedy path. -/
+
+@[expose] public section
 
 open MeasureTheory Matrix
 open scoped BigOperators ENNReal NNReal
@@ -100,3 +103,4 @@ theorem qApply_lamAfter (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ 
 
 end IterGlue
 
+end

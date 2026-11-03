@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.RichPath.StraddleMass
-import IETFree.RauzyVeech.RichPath.MinimalExit
-import IETFree.RauzyVeech.RichPath.RichPathAssembly
+public import IETFree.RauzyVeech.RichPath.StraddleMass
+public import IETFree.RauzyVeech.RichPath.MinimalExit
+public import IETFree.RauzyVeech.RichPath.RichPathAssembly
 
 /-!
 # `Γ₂`'s mass constant made dependent on the balance constant of the node
@@ -21,6 +22,8 @@ constant form, which is false; the exit family's mass decays like `Cb⁻²`).
 chase of the balance step with `1/C₂` replaced by `1/(M Cb)` throughout: since
 `NodeHeight.BalanceStep` takes an arbitrary `K : ℝ → ℝ`, nothing else moves. `one_div_mul_two_eq` is
 the elementary arithmetic used in the chase. -/
+
+@[expose] public section
 
 
 open Finset
@@ -292,3 +295,4 @@ theorem balanceStep_of_extMassGen (P : IETDatum₂ α n) (hP : P.Irreducible) (h
 
 end Induction
 
+end

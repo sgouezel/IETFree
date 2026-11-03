@@ -3,10 +3,11 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.InvariantMeasure
-import IETFree.TopBotFormalism
-import IETFree.RauzyVeech.ColDiam
+public import IETFree.RauzyVeech.InvariantMeasure
+public import IETFree.TopBotFormalism
+public import IETFree.RauzyVeech.ColDiam
 
 /-!
 # The ray condition, and the positive blocks that yield it
@@ -34,6 +35,8 @@ and its entries are bounded uniformly.  That bound is a *lemma*, not a hypothesi
 `IETDatum₂.exists_uniform_bound'` gives one constant `C₁ ≥ 1` bounding the entries of a strictly
 positive Rauzy matrix at every irreducible vertex, for every `2 ≤ n`
 (`IETFree/RauzyVeech/PairReach.lean`). -/
+
+@[expose] public section
 
 open MeasureTheory Filter
 open scoped NNReal ENNReal BigOperators Topology
@@ -64,3 +67,5 @@ has length vector proportional to `λ`. -/
 def RayCondition (P : IETDatum₂ α n) (lam : α → ℝ≥0) : Prop :=
   ∀ μ : ProbabilityMeasure ℝ, Invariant μ (P.toIET lam) → (μ : Measure ℝ) (Set.Ico (0:ℝ) 1) = 1 →
     ∃ c : ℝ, InvariantMeasure.lambdaOf μ P lam = c • (fun a : α => (lam a : ℝ))
+
+end

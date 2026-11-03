@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.TopBotFormalism
+public import IETFree.TopBotFormalism
 
 /-!
 Almost every point of `simplexVolumeOn α` lies in the simplex `simplexOn α`.
@@ -18,6 +19,8 @@ The file is self-contained apart from `IETFree.TopBotFormalism` (which provides 
 **The statement as written (only `[Fintype α]`) is false**: for the empty alphabet the simplex
 `simplexOn α` is empty while `simplexVolumeOn α` is a probability measure.  Every use in the project
 has `α ≃ Fin n` with `n ≠ 0`, so the extra hypothesis is available. -/
+
+@[expose] public section
 
 
 open MeasureTheory
@@ -95,3 +98,5 @@ theorem ae_mem_simplexOn_of_nonempty {α : Type*} [Fintype α] [Nonempty α] :
 **false**: `simplexOn (Fin 0)` is empty, while `simplexVolumeOn (Fin 0)` is a probability measure
 (the length vector of the empty family of intervals is the empty vector, and `Fin 0 → ℝ≥0` is a
 one-point space).  We record the counterexample, but it is not needed below. -/
+
+end

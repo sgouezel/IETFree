@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import Mathlib
+public import Mathlib
 
 /-!
 # The word read by an infinite type sequence
@@ -13,6 +14,8 @@ import Mathlib
 of length `n` of the greedy path.  `pfx_succ` records the one-letter recursion, which is what the
 cylinder arguments use (`simplexCyl P (pfx p k)` is antitone in `k`).
 -/
+
+@[expose] public section
 
 open MeasureTheory Set Filter
 open scoped BigOperators ENNReal NNReal Topology
@@ -28,3 +31,5 @@ theorem pfx_succ (p : ℕ → Bool) (n : ℕ) : pfx p (n + 1) = pfx p n ++ [p n]
   congr 1
 
 end PrefixWord
+
+end

@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.GoodRegion
+public import IETFree.Pair.GoodRegion
 
 /-!
 Lemma 3.1: the length vector of `g ∘ f` determines the parameters; the affine length map.
@@ -26,6 +27,8 @@ The length vector is only ever used at a single point (`compLenVec s q (monoAt G
 of a `GoodRegion`; the absolute continuity of the pushforward is therefore proved pointwise, in
 `compLenAffine_absolutelyContinuousAt`/`compLen_absolutelyContinuousAt`, in `IETFree.BlockData`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -514,3 +517,4 @@ theorem ae_of_ae_of_absolutelyContinuous {α β : Type*} [MeasurableSpace α] [M
     {P : β → Prop} (hP : ∀ᵐ y ∂ν', P y) : ∀ᵐ x ∂μ, P (φ x) :=
   ae_of_ae_map hφ (hac.ae_le hP)
 
+end

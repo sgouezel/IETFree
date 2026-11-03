@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.FirstReturn
+public import IETFree.RauzyVeech.FirstReturn
 
 /-!
 # Iterating the exchange: measurability, the level map, and the renormalised data
@@ -14,6 +15,8 @@ import IETFree.RauzyVeech.FirstReturn
 * `mapsTo_exch`: an exchange maps its interval `[a, b)` into itself;
 * the level cells `cellHat` of the tower, and their renormalised data.
 -/
+
+@[expose] public section
 
 open MeasureTheory
 open scoped BigOperators ENNReal NNReal
@@ -77,3 +80,5 @@ from every point of the level-`k` base. -/
 end
 
 end TowerN
+
+end

@@ -3,14 +3,15 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.InvariantMeasure
-import IETFree.RauzyVeech.TrueStep
-import IETFree.RauzyVeech.MeshShrink
-import IETFree.RauzyVeech.LengthInjective
-import IETFree.RauzyVeech.TowerGlue
-import IETFree.RauzyVeech.RauzyPath
-import IETFree.RauzyVeech.IterGlue2
+public import IETFree.RauzyVeech.InvariantMeasure
+public import IETFree.RauzyVeech.TrueStep
+public import IETFree.RauzyVeech.MeshShrink
+public import IETFree.RauzyVeech.LengthInjective
+public import IETFree.RauzyVeech.TowerGlue
+public import IETFree.RauzyVeech.RauzyPath
+public import IETFree.RauzyVeech.IterGlue2
 
 /-!
 # Injectivity of the length map, from the tower decomposition
@@ -22,6 +23,8 @@ that are linear functions of the length vector (`cellAt_mass_eq`, `floor_mass_eq
 `length_injective_of_tower_of_floors`), so a refining-partition argument (`LengthInjective`) forces
 two measures with the same length vector to agree.  The tiling that feeds `FloorPartitionData`
 almost everywhere is proved in `IETFree/RauzyVeech/TowerTiling.lean`. -/
+
+@[expose] public section
 
 
 open MeasureTheory Filter
@@ -271,3 +274,4 @@ theorem length_injective_of_tower_of_tiling (P : IETDatum₂ α n) (hP : P.Irred
 
 end TowerInjectivity
 
+end

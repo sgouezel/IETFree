@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.TowerInjectivity
-import IETFree.RauzyVeech.TowerCells
+public import IETFree.RauzyVeech.TowerInjectivity
+public import IETFree.RauzyVeech.TowerCells
 
 /-!
 # The level-one Rauzy-Veech tower in `IETDatum₂` letters (both step types)
@@ -13,6 +14,8 @@ import IETFree.RauzyVeech.TowerCells
 Base case of the induction proving `TowerInjectivity.TowerTiling`: for one Rauzy step `e` at the
 vertex `P` with lengths `L`, the floors `T^j '' cellAt P [e] L b`, `j < hgt1 P e b`, are a partition
 of `Ico 0 (∑ L)`; the heights are the column sums of the elementary matrix `rvMat e`. -/
+
+@[expose] public section
 
 
 open MeasureTheory Filter
@@ -446,3 +449,4 @@ theorem mulVec_rvMat (Q : Matrix α α ℤ) (V : IETDatum₂ α n) (e : Bool)
 
 end TowerInjectivity
 
+end

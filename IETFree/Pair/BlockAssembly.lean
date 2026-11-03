@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.BlockIrreducibility
+public import IETFree.Pair.BlockIrreducibility
 
 /-!
 From per-block words to a single word trivial on `[0, 1)`.
@@ -16,6 +17,8 @@ combined with commutators and conjugates (`commutator_apply_eq_self_left`,
 `commutator_apply_eq_self_right`, `conj_apply_eq_self`, `evalWord_mapsTo_of_invariant`), which act
 as the identity on a set invariant under the two generators.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal commutatorElement
@@ -230,3 +233,5 @@ theorem exists_word_trivial_on_all_of_blocks {d e : ℕ} [NeZero d] [NeZero e] (
   · obtain ⟨i, hi⟩ := hcover x hx
     exact hwt x ⟨hx, i, Finset.mem_univ i, hi⟩
   · exact (evalWord w D.toIET E.toIET).isIET.eq_of_notMem hx
+
+end

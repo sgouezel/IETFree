@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.PairReach
-import IETFree.RauzyVeech.RauzyReach
+public import IETFree.RauzyVeech.PairReach
+public import IETFree.RauzyVeech.RauzyReach
 
 /-!
 # The positive block of the Rauzy matrix
@@ -24,6 +25,8 @@ return word given by the strong connectivity of the Rauzy diagram
 length), and bounds the entries of the resulting cycle by a maximum over the finitely many words of
 bounded length. No length vector enters the constant.
 -/
+
+@[expose] public section
 
 open scoped BigOperators
 
@@ -134,3 +137,5 @@ theorem exists_pos_cycle {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [N
         _ ≤ ((cycleCap Q v L : ℕ) : ℤ) + 2 := by linarith
 
 end IETFree.Rigidity
+
+end

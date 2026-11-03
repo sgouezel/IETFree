@@ -3,9 +3,10 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.RauzyVeech.PosBlock
-import IETFree.RauzyVeech.MainComponents
+public import IETFree.RauzyVeech.PosBlock
+public import IETFree.RauzyVeech.MainComponents
 
 /-!
 # The peeling: bounded positive blocks along a greedy path make the columns coalesce
@@ -26,6 +27,8 @@ blocks makes the product tend to `0`.
 No measure theory is involved.  The dictionary to the geometry is `ColShrink.diam_le_of_cols_close`
 read through the spread of `PosBlock.lean`; the passage to the ray condition is
 `IETFree/RauzyVeech/RayPointwise.lean`. -/
+
+@[expose] public section
 
 
 open Filter
@@ -326,3 +329,4 @@ theorem peel_of_contract (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤
 
 end PosBlock
 
+end

@@ -3,8 +3,9 @@ Copyright (c) 2026 Sébastien Gouëzel. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
+module
 
-import IETFree.Pair.ReductionData
+public import IETFree.Pair.ReductionData
 
 /-!
 The presentation of `g ∘ f`: the length vector `ν` and the permutation `ρ`.
@@ -23,6 +24,8 @@ changes only where it vanishes", on a ball: `pos_on_ball_of_vanish_imp` / `sign_
 `sum_len_eq_of_tiling` (a tiling of `[0, 1)` by intervals gives the partial sums), and
 `exists_ball_strictMono`.
 -/
+
+@[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -918,3 +921,5 @@ theorem exists_ball_strictMono {d e m : ℕ} (F : Fin m → ParamAffine d e) {q�
     (h : StrictMono fun i => F i q₀) :
     ∃ ε : ℝ, 0 < ε ∧ ∀ q ∈ Metric.ball q₀ ε, StrictMono fun i => F i q :=
   exists_ball_lt_of_lt F fun _ _ hij => h hij
+
+end
