@@ -128,10 +128,10 @@ single-exchange layer:
 * `IETFree/CutSet`, `IETFree/CutSetMeasure`, `IETFree/IET` — **one exchange**: cut sets and their
   cells, the measure theory of a piecewise translation, the predicate `IsIET`, the explicit
   construction `mkIETFun` / `mkIETEquiv` / `mkIET1'`, the simplex and its measure `simplexVolume`,
-  the type `IET a b` with its group structure, and the two notions the main theorem is stated with,
-  `Invariant` and `UniqueErgodic`.  `unitMeas` (Lebesgue measure on `[0, 1)`) lives here too, since
-  everything above uses it.  `IETFree/Basic` holds the two-bijection datum `IETDatum₂` and
-  `IsRigidByTranslations`.
+  the type `IET a b` with its group structure, and the three notions the main theorem is stated
+  with, `Invariant`, `UniqueErgodic` and `IsRigidByTranslations`.  `unitMeas` (Lebesgue measure on
+  `[0, 1)`) lives here too, since everything above uses it.  `IETFree/Basic` holds the
+  two-bijection datum `IETDatum₂`.
 
 * `IETFree/Pair/` — **two exchanges**: the free-group development (computability, the centralizer,
   the lattice bounds, Section 2's irreducible case, and Section 3's reduction to blocks: the length

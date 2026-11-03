@@ -861,32 +861,6 @@ theorem pow_apply_iterate (f : IET a b) (n : ℕ) : ∀ x : ℝ, (f ^ n) x = f^[
 
 end IET
 
-/-! ## Invariant measures, and unique ergodicity
-
-The notions the main theorem is stated with, here rather than higher up: they are shared by
-`IETFree/Pair/` (the free-group development) and by `IETFree/UniqueErgodicity/` (which turns
-unique ergodicity into uniform convergence of Birkhoff averages). -/
-
-/-- Invariance of a probability measure under an exchange: `μ ∘ f⁻¹ = μ`.
-
-**The measure is required to live on `[0, 1)`**, which is the `μ (Ico 0 1) = 1` of `UniqueErgodic`
-below: an exchange is the identity off the interval it is built on (`mkIETFun_of_notMem`), so every
-probability measure on `[0, 1)ᶜ` is invariant, and the unrestricted `∃! μ, Invariant μ f` is false
-for every exchange (the Dirac mass at `2` is invariant alongside Lebesgue's); with
-`μ (Ico 0 1) = 1`, `μ ↦ μ|_{[0,1)}` is injective.  Why no hypothesis on the length vector is needed
-is a remark about the a.e. statement, in `IETFree/Basic.lean`. -/
-def Invariant (μ : ProbabilityMeasure ℝ) (f : IET 0 1) : Prop := (μ : Measure ℝ).map ⇑f = μ
-
-/-- **Definition 2.1 of the paper**: unique ergodicity — there is exactly one invariant probability
-measure carried by `[0, 1)`.
-
-This is the weak form.  The strong form — the Birkhoff averages of every continuous test function
-converge to their integral, uniformly over the initial point — is not the definition: it is the
-theorem `IETFree.UniqueErgodicity.uniformBirkhoff_of_uniqueErgodic`, proved by the transfer
-argument of `IETFree/UniqueErgodicity/` and stated there as `UniformBirkhoff`. -/
-def UniqueErgodic (f : IET 0 1) : Prop :=
-  ∃! μ : ProbabilityMeasure ℝ, Invariant μ f ∧ (μ : Measure ℝ) (Set.Ico (0 : ℝ) 1) = 1
-
 /-- The exchange `mkIETEquiv` as an element of `IET 0 1`, when the total length is `1`. -/
 noncomputable def mkIET1' {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
     (h : (∑ i, lam i) = 1) : IET 0 1 where
@@ -978,6 +952,44 @@ theorem IET.unitMeas_preimage (f : IET 0 1) {A : Set ℝ} (hA : MeasurableSet A)
 theorem IET.unitMeas_real_preimage (f : IET 0 1) {A : Set ℝ} (hA : MeasurableSet A) :
     unitMeas.real (⇑f ⁻¹' A) = unitMeas.real A := by
   rw [Measure.real, Measure.real, IET.unitMeas_preimage f hA]
+
+/-! ## Invariant measures, unique ergodicity, and rigidity
+
+The notions the main theorem is stated with, here rather than higher up: they are shared by
+`IETFree/Pair/` (the free-group development), `IETFree/UniqueErgodicity/` (which turns unique
+ergodicity into uniform convergence of Birkhoff averages) and `IETFree/Rigidity/`.  All three are
+stated with the reference measure `unitMeas` above, which is why they come after it. -/
+
+/-- Invariance of a probability measure under an exchange: `μ ∘ f⁻¹ = μ`.
+
+**The measure is required to live on `[0, 1)`**, which is the `μ (Ico 0 1) = 1` of `UniqueErgodic`
+below: an exchange is the identity off the interval it is built on (`mkIETFun_of_notMem`), so every
+probability measure on `[0, 1)ᶜ` is invariant, and the unrestricted `∃! μ, Invariant μ f` is false
+for every exchange (the Dirac mass at `2` is invariant alongside Lebesgue's); with
+`μ (Ico 0 1) = 1`, `μ ↦ μ|_{[0,1)}` is injective.  Why no hypothesis on the length vector is needed
+is a remark about the a.e. statement, in `IETFree/Basic.lean`. -/
+def Invariant (μ : ProbabilityMeasure ℝ) (f : IET 0 1) : Prop := (μ : Measure ℝ).map ⇑f = μ
+
+/-- **Definition 2.1 of the paper**: unique ergodicity — there is exactly one invariant probability
+measure carried by `[0, 1)`.
+
+This is the weak form.  The strong form — the Birkhoff averages of every continuous test function
+converge to their integral, uniformly over the initial point — is not the definition: it is the
+theorem `IETFree.UniqueErgodicity.uniformBirkhoff_of_uniqueErgodic`, proved by the transfer
+argument of `IETFree/UniqueErgodicity/` and stated there as `UniformBirkhoff`. -/
+def UniqueErgodic (f : IET 0 1) : Prop :=
+  ∃! μ : ProbabilityMeasure ℝ, Invariant μ f ∧ (μ : Measure ℝ) (Set.Ico (0 : ℝ) 1) = 1
+
+/-- **Definition 2.2 of the paper**: rigid by translations — some powers of the exchange are
+translations on sets whose measure tends to `1`.  That almost every irreducible exchange is rigid is
+Veech's rigidity theorem, `veechRigidity` in `IETFree/Pair/Irreducible.lean`, proved by the campaign
+of `IETFree/Rigidity/` (`Rigidity.ae_isRigidByTranslations`). -/
+def IsRigidByTranslations (f : IET 0 1) : Prop :=
+  ∃ q : ℕ → ℕ, ∃ t : ℕ → ℝ, ∃ B : ℕ → Set ℝ,
+    Tendsto q atTop atTop ∧ Tendsto t atTop (nhds 0) ∧
+      (∀ n, B n ⊆ Set.Ico (0 : ℝ) 1) ∧ (∀ n, MeasurableSet (B n)) ∧
+        Tendsto (fun n => unitMeas.real (B n)) atTop (nhds 1) ∧
+          ∀ (n : ℕ) (x : ℝ), x ∈ B n → ((f ^ q n) x) = x + t n
 
 /-! ## Measurability of the simplex chart -/
 

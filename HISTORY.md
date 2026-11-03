@@ -14647,6 +14647,103 @@ the library ≤ 100 characters per line.  Measurements unchanged, as they should
 a documentation pass: 114 modules (13 in `UniqueErgodicity/`), 4 509 declarations, 3 941 reachable
 from `main`, 46 028 lines.
 
+### Addendum 165: `Basic.lean` is the Marmi–Moussa–Yoccoz module; `IsRigidByTranslations` moves
+
+Owner's instruction: *"Now cleanup the file Basic.lean, as follows.  Instead of the first lines
+`This is the first module of the unique-ergodicity side of the library (… )`, say that it defines
+interval exchange transformations as used in the Marmi-Moussa-Yoccoz framework for Rauzy induction,
+with a top and a bottom permutation and a fixed alphabet, and that this files translates between
+this point of view and the point of view with a single permutation of Fin n.  Also the
+`IsRigidByTranslations` definition should not be there, move it to a file where it makes more
+sense.  It could be IET.lean for instance, next to the unique ergodicity definition."*
+
+**The docstring of `Basic.lean`.**  It no longer introduces the module as the first one of a
+campaign: the title is `# Interval exchanges in the Marmi–Moussa–Yoccoz framework`, and the opening
+paragraph says what the module defines — over a **fixed alphabet**, a **top** permutation `piTop :
+α ≃ Fin n` and a **bottom** permutation `piBottom : α ≃ Fin n`, with a length vector `α → ℝ≥0`, the
+combinatorial datum `IETDatum₂ α n` being the source's $(A,\pi_0,\pi_1)$.  A second paragraph says
+that the file translates between that point of view and the single-permutation one: `perm` is the
+source's `π₁ ∘ π₀⁻¹` (`piBottom.symm.trans piTop`), `toIET` is the exchange obtained from the
+single-permutation API, `ofPerm` turns a `π : Equiv.Perm (Fin n)` into the datum with top
+permutation `π` and bottom permutation the identity, and `IETDatum₂.ofPerm π` *is* `mkIET1 π`
+(`ofPerm_perm`, `ofPerm_toIET`) — so the Rauzy induction runs on the two-permutation datum while
+the paper's statements are read on the single permutation.  The rest of the bullets stay, minus the
+one about rigidity; `perm` is described by its formula rather than by the product `piTop *
+piBottom.symm`, which is the same permutation written in the other order.
+
+**`IsRigidByTranslations` moves to `IET.lean`.**  It is Definition 2.2 of the paper, the third
+notion the main theorem is stated with, so it belongs with `Invariant` and `UniqueErgodic` rather
+than with the two-bijection datum.  It is now next to them (`IET.lean`, section "Invariant
+measures, unique ergodicity, and rigidity"), with a docstring that says what rigidity is and where
+it is proved (`veechRigidity` in `Pair/Irreducible.lean`, by the campaign of `Rigidity/`).  Since
+its statement uses `unitMeas`, that whole section moved down, after the definition of `unitMeas`
+and its preservation lemmas; nothing between the old and the new positions used the three notions,
+so the move is invisible to every consumer (the names are unchanged, and `Basic.lean` imports
+`IET.lean`, so no import changed either — the file even loses an unused `open Filter` and an unused
+`open scoped ENNReal`).
+
+**Checks.**  Full `lake build` — the owner asked for one — green at 8823 jobs (2 min 36 s, every
+module recompiled by the move), no warnings; `#print axioms main` still `[propext,
+Classical.choice, Quot.sound]`; `Comparator/Check.lean` accepts the pair on 30 899 declarations;
+`IET.lean` and `Basic.lean` warning-free under the lakefile's options and under the strict per-file
+recipe; the library ≤ 100 characters per line; the README's links re-audited after the move (the
+anchors of `Invariant`, `UniqueErgodic`, `IsRigidByTranslations`, `mkIET1`, `unitMeas`,
+`IsIrreduciblePerm` and `IETDatum₂` all moved and were re-derived; the one anchor the audit cannot
+confirm mechanically is `IsIET`, whose label matches both `def IsIET` at 34 and the `abbrev` of the
+same name at 499 — the link points at the former, which is what its text says).  Declarations 4 509
+→ 4 509, reachable 3 941 → 3 941, modules 114 → 114, lines 46 028 → 46 038 (the longer `Basic.lean`
+docstring, net of the definition that left it).
+
+### Addendum 166: the owner's README, merged with the current state
+
+Owner's instruction: *"I have updated a previous version of the file README.md myself.  I am
+attaching my modified version.  Can you incorporate my changes (order change, new sentences,
+wording) in the updates version?"*
+
+**What the owner changed**, and is now in `README.md`:
+
+* the whole "Layout and build" section moved from just after the status block to **after** "The
+  comparator challenge", so that the document reads status → what is proved → comparator → layout
+  and build → reproducing it;
+* the autoformalization paragraph moved after the status paragraph and reworded ("produced by
+  **supervised** autoformalization … under human guidance for API choices and proof construction");
+* a new sentence in the status paragraph: the formalization "notably includes a full development of
+  Rauzy–Veech induction in Marmi–Moussa–Yoccoz formalism, culminating in the proof that a.e.
+  interval exchange transformation for an irreducible permutation is uniquely ergodic (essentially
+  following Kerckhoff's argument) and rigid (using Veech's argument rephrased in terms of
+  Kerckhoff's framework to avoid the need of ergodicity of the projectivized Rauzy–Veech
+  induction)";
+* in "What is proved", the three bullets are reordered to Masur–Veech, Veech's rigidity, Section 2
+  and 3 (the last one, `main_of_library`, came first before);
+* two rows added to the layout table (`Comparator/Check.lean` with `Comparator/README.md`, and
+  `HISTORY.md` with `NOTES.md`);
+* "The two inputs from the literature, now proved" → "The two inputs from the literature", "They are
+  now **proved**" → "They are **proved**", "Everything else in the paper is proved" → "Everything in
+  the paper is proved";
+* (typography, done here and not by the owner): the two campaign names take the en-dash the rest of
+  the document uses, and two trailing spaces were dropped.
+
+**What had to be restored**, because the attached file was based on the README of Addendum 164 and
+not on the one of Addendum 165: the addenda count in the autoformalization paragraph (154 →
+**165**), the layout sentence and the `IET.lean` row (three notions, the third being
+`IsRigidByTranslations`, which now lives in `IET.lean` — Definition 2.2's row and third column
+point there, `IET.lean:987`), the `Basic.lean` row (interval exchanges in the Marmi–Moussa–Yoccoz
+framework, `toIET`/`perm`/`ofPerm`, anchor 73), the line count (46 028 → **46 038**), the module
+counts of the literature table (`59 + 12` → **61 + 13**), and every line anchor that the move of
+the notions in `IET.lean` had shifted — `mkIET1` 925 → 899, `Invariant` 878 → 971, `UniqueErgodic`
+887 → 980, `IsIrreduciblePerm` 1023 → 1035, `unitMeas` 961 → 935, plus the `file:line` cells of the
+correspondence table that follow them.  The third bullet now says "its two inputs are the two
+bullets above" — the attached file still said "the next two bullets", which was true when
+`main_of_library` came first.
+
+**Checks.**  The link audit of Addendum 164 re-run on the merged file: 172 links, every target
+exists, and each of the 152 line anchors is the line of the declaration its label names (the only
+unverifiable one remains `IsIET`, whose label matches both a `def` at 34 and an `abbrev` at 499 and
+whose link points at the former); the 26 `file:line` cells are self-consistent and in step with
+their rows.  No Lean file changed, so `lake build` is the no-op it should be (8823 jobs, `main`'s
+axioms unchanged), and the measurements are those of Addendum 165: 114 modules, 4 509 declarations,
+3 941 reachable, 46 038 lines.
+
 ---
 
 # Part II — the Masur–Veech campaigns (verbatim records, blueprints and graphs)
