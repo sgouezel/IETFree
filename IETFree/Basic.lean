@@ -7,32 +7,38 @@ Authors: Sébastien Gouëzel
 import IETFree.IET
 
 /-!
-# Interval exchanges from two bijections
+# Interval exchanges in the Marmi–Moussa–Yoccoz framework
 
-This is the first module of the unique-ergodicity side of the library (`IETFree/RauzyVeech/`,
-`IETFree/Rigidity/`, `IETFree/UniqueErgodicity/`).  It fixes the objects those developments work
-with:
+This module defines interval exchange transformations as they are used in the Marmi–Moussa–Yoccoz
+framework for the Rauzy induction: over a **fixed alphabet** `α`, an exchange is described by a
+**top** permutation `piTop : α ≃ Fin n` and a **bottom** permutation `piBottom : α ≃ Fin n` — the
+two orders in which the letters are read above and below the exchange — plus a length vector
+`α → ℝ≥0`.  The main object is the combinatorial datum `IETDatum₂ α n`, the source's
+$(A,\pi_0,\pi_1)$, carrying both permutations.
 
-* `IETDatum₂ α n` — the source's combinatorial data $(A,\pi_0,\pi_1)$: **two** bijections between a
-  finite alphabet `α` and `Fin n` (`piTop`, `piBottom`), not a single permutation;
-* `Irreducible` — irreducibility of the datum (the source's admissibility, 2.5), stated through the
-  permutation `piTop * piBottom.symm`;
-* `toIET` — the exchange, obtained from the copied single-permutation API (`mkIETFun`, `mkIET1'`)
-  applied to `piTop * piBottom.symm`; it is total, with the identity as junk value off the simplex
-  (the same convention as `mkIETFun`);
+This file also translates between that point of view and the one with a **single permutation of
+`Fin n`**: `perm` is the source's permutation `π₁ ∘ π₀⁻¹` (`piBottom.symm.trans piTop`), `toIET` is
+the exchange obtained from the single-permutation API (`mkIETFun`, `mkIET1'`) applied to it, and
+`ofPerm` turns a `π : Equiv.Perm (Fin n)` into the datum whose top permutation is `π` and whose
+bottom permutation is the identity.  So `IETDatum₂.ofPerm π` *is* the library's `mkIET1 π` — the two
+viewpoints agree (`ofPerm_perm`, `ofPerm_toIET`) — and the Rauzy induction can be carried out on the
+two-permutation datum while the statements of the paper are read on the single permutation.
+
+The rest of the contents:
+
+* `Irreducible` — irreducibility of the datum (the source's admissibility, 2.5), stated through
+  `perm` (`ofPerm_irreducible_iff` reads it on a single permutation);
+* `toIET` — the exchange; it is total, with the identity as junk value off the simplex (the same
+  convention as `mkIETFun`);
 * `simplexOn`, `simplexVolumeOn` — the simplex of `α`-indexed length vectors and its
-  `(card α - 1)`-dimensional Lebesgue measure, which depends on the alphabet only;
-* `IsRigidByTranslations` — Definition 2.2 of the paper (Veech's rigidity), the second notion the
-  main theorem is stated with.  The first, `UniqueErgodic` (with `Invariant`), is in
-  `IETFree/IET.lean`, below this module, so that `IETFree/Pair/` and
-  `IETFree/UniqueErgodicity/` share it.
+  `(card α - 1)`-dimensional Lebesgue measure, which depends on the alphabet only.
 
 The single-exchange API (`IsCutSet`, `IsIET`, `mkIETFun`, `mkIET1'`, `simplexVolume`, …) is the
 library's own, from `IETFree.CutSet`, `IETFree.CutSetMeasure` and `IETFree.IET`; this module adds
 the two-bijection datum on top of it. -/
 
-open MeasureTheory Filter
-open scoped BigOperators ENNReal NNReal
+open MeasureTheory
+open scoped BigOperators NNReal
 
 /-! ## The simplex -/
 
@@ -174,11 +180,3 @@ theorem ofPerm_toIET {n : ℕ} [NeZero n] (π : Equiv.Perm (Fin n)) {lam : Fin n
   rfl
 
 end IETDatum₂
-
-/-- **Definition 2.2 of the paper**: rigid by translations. -/
-def IsRigidByTranslations (f : IET 0 1) : Prop :=
-  ∃ q : ℕ → ℕ, ∃ t : ℕ → ℝ, ∃ B : ℕ → Set ℝ,
-    Tendsto q atTop atTop ∧ Tendsto t atTop (nhds 0) ∧
-      (∀ n, B n ⊆ Set.Ico (0 : ℝ) 1) ∧ (∀ n, MeasurableSet (B n)) ∧
-        Tendsto (fun n => unitMeas.real (B n)) atTop (nhds 1) ∧
-          ∀ (n : ℕ) (x : ℝ), x ∈ B n → ((f ^ q n) x) = x + t n
