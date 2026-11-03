@@ -4,15 +4,16 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
 
-import IETFree.Basic
+import IETFree.TopBotFormalism
 import IETFree.RauzyVeech.TrueStep
 
 /-!
-# Veech rigidity: the node vocabulary of the campaign
+# Veech rigidity: the node vocabulary
 
-The campaign proves `veechRigidity` (the paper's rigidity, for the bundled exchange `mkIET1'`) from
-`RichPath.richGreedyPath`; the plan and the proof are the campaign's
-`PLAN.md` and `BLUEPRINT.md` (`HISTORY.md`, Parts II.2.2 and II.2.1).
+This is the vocabulary of a proof of Veech's rigidity — that almost every exchange is rigid by
+translations, `veechRigidity` in `IETFree/Pair/Irreducible.lean` — which runs along the greedy Rauzy
+path of the length vector and starts from the richness of that path
+(`RichPath.richGreedyPath`).
 
 This module fixes the vocabulary of a **node** of the Rauzy diagram, i.e. of a prefix `γ` of the
 greedy path of a length vector `lam`:
@@ -55,7 +56,7 @@ noncomputable def BigCell {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [
   (1 - δ) * baseLen P γ lam ≤ (Tower.lamAfter P γ lam b : ℝ)
 
 /-- The relative precision of `rigid_step`, as a function of the target precision `ε` and of the
-comparability constant `M` of the heights (Appendix A of the blueprint). -/
+comparability constant `M` of the heights (`deltaOf`). -/
 noncomputable def deltaOf (ε : ℝ) (M : ℕ) : ℝ := min (1/4) (ε / (8 * ((M : ℝ) + 2)))
 
 end IETFree.Rigidity

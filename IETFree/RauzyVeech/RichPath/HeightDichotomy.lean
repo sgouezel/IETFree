@@ -32,7 +32,7 @@ proves the source's `k → k+1` dichotomy in its `γ_s`-relative form with the c
   wins (`exitArrow_singleton_iff`), so a bad word avoids `b` up to its first stop
   (`exists_noWin_crossing_singleton`), and §1 bounds the mass of the level-`N` bad words
   (`sum_cond_kerckhoff_singleton`, `sum_bad_singleton_le`), in the packaged forms
-  `singleton_mass` and `card_one_mass`. Axiom-clean.
+  `singleton_mass` and `card_one_mass`.
 -/
 
 

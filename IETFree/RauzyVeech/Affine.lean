@@ -10,7 +10,7 @@ import IETFree.RauzyVeech.Volume
 /-!
 # The analytic layer of the volume computation
 
-Everything in this file is proved.  On top of the geometric layer of
+This is the analytic layer of the volume computation, on top of the geometric layer of
 `IETFree/RauzyVeech/Volume.lean`:
 
 * `det_sub_last_col` — the pure matrix identity `det (Q - b·1ᵀ) = det M` for a matrix with column

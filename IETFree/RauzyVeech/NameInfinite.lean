@@ -20,12 +20,12 @@ letter is a *main name* infinitely often. Proof strategy:
   often (its length is eventually a constant `δ > 0`, and each secondary occurrence drops the total
   by `δ`), so that letter is eventually never the last letter of either order, and its two positions
   are eventually constant;
-* such a letter is `Frozen`; the letters that are main names infinitely often are `Active`.  An
-  active letter can never sit *below* a frozen one, in either order: if `b` (active) sits below `x`
-  (frozen) in the `ε`-order, the block of positions below `x` is fixed (insertions, which happen
-  just after the last letter of the other order, are always above `x`), so `b` is never the last
-  letter of that order; each of its infinitely many occurrences as the main name then moves the last
-  letter of that order to just after `b`, whence shifts `x` — contradiction;
+* such a letter is `Frozen`; the letters that are main names infinitely often are *active* (not
+  `Frozen`). An active letter can never sit *below* a frozen one, in either order: if `b` (active)
+  sits below `x` (frozen) in the `ε`-order, the block of positions below `x` is fixed (insertions,
+  which happen just after the last letter of the other order, are always above `x`), so `b` is never
+  the last letter of that order; each of its infinitely many occurrences as the main name then moves
+  the last letter of that order to just after `b`, whence shifts `x` — contradiction;
 * so, eventually, all frozen letters sit below all active letters in both orders.  If there were a
   frozen letter, the frozen letters would therefore occupy the first `|F|` positions of *both*
   orders, and the set of letters sitting there has cardinal `|F|`: a proper invariant initial
@@ -726,7 +726,7 @@ theorem frozen_lt_posB' (P : IETDatum₂ α n) (γ : ℕ → Bool) (lam : ℕ �
     (fun j hj => hN j (le_trans (le_max_left N N') hj))
     (fun j hj => hN' j (le_trans (le_max_right N N') hj)) hyf
 
-/-! ## 10. The combinatorial endgame: no proper initial segment is invariant -/
+/-! ## 10. No proper initial segment is invariant -/
 
 omit [NeZero n] [DecidableEq α] in
 /-- The letters whose position in the order `e` is at most the maximum position over `S` are exactly

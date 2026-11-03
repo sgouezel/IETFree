@@ -10,12 +10,12 @@ import IETFree.RauzyVeech.MeshShrink
 import IETFree.RauzyVeech.RichPath.RichPathAssembly
 
 /-!
-# Step 1 of the Veech-rigidity campaign: hitting a fixed word at arbitrarily late times
+# Hitting a fixed word at arbitrarily late times
 
-This module is `BLUEPRINT.md` §3 of the campaign: the four glue lemmas that turn the richness of
-the greedy Rauzy path (`RichPath.richGreedyPath`) into the statement consumed by the rigid step,
-namely that for a.e. length vector the base interval at a suitable level along the greedy path is
-arbitrarily short and the path passes through a prescribed vertex followed by a prescribed word.
+This module collects the glue lemmas that turn the richness of the greedy Rauzy path
+(`RichPath.richGreedyPath`) into the statement consumed by the rigid step, namely that for a.e.
+length vector the base interval at a suitable level along the greedy path is arbitrarily short and
+the path passes through a prescribed vertex followed by a prescribed word.
 
 * `pathWord_of_mem_simplexCyl` — off the exceptional null set, membership of `lam` in the cylinder
   of `γ` says that `γ` is the greedy word of `lam` of length `|γ|`; this is

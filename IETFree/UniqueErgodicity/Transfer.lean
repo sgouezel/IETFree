@@ -9,10 +9,10 @@ import Mathlib
 /-!
 # The abstract transfer argument for the split interval
 
-This file formalises §§4.1–4.3 of Blueprint 2 in the abstract setting of a compact Hausdorff
-space `X` carrying a measurable map `p : X → ℝ` that is injective off the preimage of a
-countable set `D`, together with an injective measurable self-map `G` of `X` playing the role of
-the germ homeomorphism `T̃`.
+This file is the abstract transfer argument, in the setting of a compact Hausdorff space `X`
+carrying a measurable map `p : X → ℝ` that is injective off the preimage of a countable set `D`,
+together with an injective measurable self-map `G` of `X` playing the role of the germ
+homeomorphism `T̃`.
 
 The statements are
 
@@ -20,9 +20,9 @@ The statements are
   (Lemma 4.3);
 * `measure_singleton_eq_zero_of_injOn_orbit` — an atom with infinite orbit carries no mass
   (Lemma 4.5(i));
-* `map_map_eq_self` — vanishing of the defect, i.e. transfer of invariance (Theorem 4.6).  (The
-  abstract lift lemma of Lemma 4.1 and its two companions were pruned; the lift lemma the endgame
-  uses is the corrected `MeasPrep.lift_unique_on_Ico`.)
+* `map_map_eq_self` — vanishing of the defect, i.e. transfer of invariance (Theorem 4.6).
+
+The lift lemma that the germ-map construction uses is the corrected `MeasPrep.lift_unique_on_Ico`.
 -/
 
 open MeasureTheory Filter

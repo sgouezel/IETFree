@@ -17,9 +17,9 @@ with a row outside `A'`, for a prefix-free family of `cond`-mass `> 1/2` whose m
 *clean* exit (exit arrow, or the maximum has crossed `2d·M(q_w)`) with all `A'`-heights below
 `2d·M(q_w)`.
 
-The reduction `Induction.straddleMassCard_of_goodMass` turns this into a single numerical
-statement: the level-`N` words whose **first stop event is unclean** (`Stopping.Bad`) carry mass
-`≤ 1/2`.  This file proves the bound in the shape the node hypothesis allows:
+The reduction `Potential.straddleMassCard_of_goodMass_straddle` turns this into a single
+numerical statement: the level-`N` words whose **first stop event is unclean** (`Stopping.Bad`)
+carry mass `≤ 1/2`.  This file proves the bound in the shape the node hypothesis allows:
 
   `∑_{δ ∈ Bad at level N} cond P w δ ≤ #A' / (2·#α)`
 
@@ -62,7 +62,7 @@ Write `S(u) = ∑_{b ∈ A'} st u b` for the `A'`-sum (the potential).
   earlier), so `δ` extends a first crossing word.  Covering the bad words by the crossing words
   (`LevelMass.sum_cond_le_sum_of_covers`) finishes.
 
-Axiom-clean; no `sorry`, no `native_decide`, no new assumptions beyond `P.Irreducible` and `2 ≤ n`.
+No assumptions beyond `P.Irreducible` and `2 ≤ n` are used.
 -/
 
 open Finset NodeHeight

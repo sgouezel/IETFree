@@ -5,7 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 
 import IETFree.RauzyVeech.InvariantMeasure
-import IETFree.Basic
+import IETFree.TopBotFormalism
 
 /-!
 # The two forms of unique ergodicity: `UniqueErgodic` and `UniformBirkhoff`
@@ -19,7 +19,8 @@ The strong form is the predicate `UniformBirkhoff f` below, and the theorem that
 is `UniqueErgodicity.uniformBirkhoff_of_uniqueErgodic`.  The transfer argument of this directory
 works with the iterate `f^[i]` of the underlying function, hence the `birkhoffAverage` shape of the
 averages (`UniformBirkhoff`, not the group power `f ^ i` of `IETFree/IET.lean`); `unitMeas` is the
-library's Lebesgue measure on `[0, 1)`, from `IETFree/IET.lean`.
+library's Lebesgue measure on `[0, 1)`, from `IETFree/IET.lean`.  The references to "the blueprint"
+in this directory are to the Masur–Veech blueprint, reproduced in `HISTORY.md`, Part II.
 
 ## What is proved where
 

@@ -11,8 +11,7 @@ import IETFree.RauzyVeech.TowerTiling
 /-!
 # The rigid set at a good node
 
-This module is the geometric heart of the Veech rigidity campaign
-(`HISTORY.md`, Part II.2.1, §5.1–§5.3).  At a node `γ` of the greedy Rauzy path of a
+This module is the geometric heart of the rigid step.  At a node `γ` of the greedy Rauzy path of a
 length vector `lam`, with renormalised lengths `σ = lamAfter P γ lam`:
 
 * the exchange `T = P.toIET lam` raised to the height `height P γ b` of the letter `b` acts on the

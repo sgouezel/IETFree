@@ -11,18 +11,17 @@ import IETFree.RauzyVeech.TowerTiling
 /-!
 # Masur–Veech: a.e. unique ergodicity of interval exchange maps
 
-The main theorem of the development, proved.  It lives here rather than in `Basic.lean`, where
-`Invariant` and the combinatorial data are defined, because that module sits *below* the assembly:
-`MainComponents.lean` imports it, so the proof can only be written above it — and the two inputs of
-the proof are themselves theorems, in modules that `MainComponents` cannot see:
+Masur–Veech, for the two-bijection datum: almost every length vector gives an exchange with a unique
+invariant probability measure carried by `[0, 1)`.  The two inputs of the proof are theorems, in
+modules below this one:
 
 * richness of the greedy path with the vertices pinned — `RichPath.richGreedyPath`, in
   `IETFree/RauzyVeech/RichPath/RichGreedyPath.lean`, by the graded induction of the source;
 * the ray criterion from positive blocks — `positiveBlocksRay`, in
   `IETFree/RauzyVeech/PosBlocks.lean`.
 
-Neither is a hypothesis of anything: the three steps of the assembly below take no arguments beyond
-`P`, `hP` and `2 ≤ n`:
+Neither is a hypothesis of anything: the three steps of the assembly below take no arguments
+beyond `P`, `hP` and `2 ≤ n`:
 
 * `hasPositiveBlocks_ae` — richness, and the uniform bound on the entries, give positive blocks a.e.
   with one bound `M` (`IETDatum₂.exists_uniform_bound'`, where `2 ≤ n` enters);
@@ -109,22 +108,21 @@ theorem masurVeech_ae_unique_invariant {α : Type*} [Fintype α]
 
 /-! ### Axiom report
 
-The campaign's dependency analysis of its declaration-level graph found that every declaration of
-the Rauzy–Veech development is used in the proof of `masurVeech_ae_unique_invariant`, and the report
-of its axioms is `[propext, Classical.choice, Quot.sound]`, with no `sorryAx` and no custom axiom.
-The library's single axiom report is the one printed in `IETFree/ChallengeSolved.lean`, for the main
-theorem, whose proof reaches this one. -/
+Every declaration of the Rauzy–Veech development is used in the proof of
+`masurVeech_ae_unique_invariant`, and the report of its axioms is `[propext, Classical.choice,
+Quot.sound]`, with no `sorryAx` and no custom axiom.  The library's single axiom report is the one
+printed in `IETFree/ChallengeSolved.lean`, for the main theorem, whose proof reaches this one. -/
 
 
 /-- **Masur–Veech, single-permutation form.**  For an irreducible permutation of `n ≥ 2` letters,
 almost every length vector of the simplex gives the exchange `mkIET1 lam π` a unique invariant
 probability measure carried by `[0, 1)`.  This is the form of the theorem in the copied
 single-permutation API; no hypothesis on `lam` is needed, since `simplexVolume` is carried by
-the simplex.  The datum `IETDatum₂.ofPerm π` of `IETFree/Basic.lean` has `π` as its permutation and
-the identity as its bottom order; `IETDatum₂.ofPerm_toIET` identifies its exchange with
-`mkIET1' lam π h`, `mkIET1_of_mem` with `mkIET1 lam π` on the simplex, and `simplexVolumeOn_fin`
-identifies
-`simplexVolumeOn (Fin n)` with `simplexVolume n`, which is the whole proof. -/
+the simplex.  The datum `IETDatum₂.ofPerm π` of `IETFree/TopBotFormalism.lean` has `π` as its
+permutation and the identity as its bottom order; `IETDatum₂.ofPerm_toIET` identifies its exchange
+with `mkIET1' lam π h`, `mkIET1_of_mem` with `mkIET1 lam π` on the simplex, and
+`simplexVolumeOn_fin` identifies `simplexVolumeOn (Fin n)` with `simplexVolume n`, which is the
+whole proof. -/
 theorem masurVeech_ae_unique_invariant_perm {n : ℕ} (hn : 2 ≤ n) [NeZero n]
     (π : Equiv.Perm (Fin n)) (hπ : IsIrreduciblePerm π) :
     ∀ᵐ lam ∂(simplexVolume n), ∃! μ : ProbabilityMeasure ℝ,

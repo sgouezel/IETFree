@@ -4,12 +4,12 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
 
-import IETFree.Basic
+import IETFree.TopBotFormalism
 
 /-!
 Almost every point of `simplexVolumeOn α` lies in the simplex `simplexOn α`.
 
-The file is self-contained apart from `IETFree.Basic` (which provides `simplexOn`,
+The file is self-contained apart from `IETFree.TopBotFormalism` (which provides `simplexOn`,
 `simplexVolumeOn`, and, through `IETFree.IET`, `simplexRegion`, `simplexMap`,
  `simplexVolume`). Deliverables:
 * `ae_mem_simplexOn_of_card_ne_zero` — the statement with the hypothesis `Fintype.card α ≠ 0`;

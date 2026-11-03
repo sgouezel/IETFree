@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
 
-import IETFree.Basic
 import IETFree.ChallengeSolved
 import IETFree.CutSet
 import IETFree.CutSetMeasure
@@ -105,7 +104,9 @@ import IETFree.Rigidity.RigidStep
 import IETFree.Rigidity.Sequences
 import IETFree.Rigidity.Transport
 import IETFree.Rigidity.Veech
+import IETFree.TopBotFormalism
 import IETFree.UniqueErgodicity.Basic
+import IETFree.UniqueErgodicity.CompactTool
 import IETFree.UniqueErgodicity.Germ
 import IETFree.UniqueErgodicity.GermIterate
 import IETFree.UniqueErgodicity.IET
@@ -117,41 +118,48 @@ import IETFree.UniqueErgodicity.Split
 import IETFree.UniqueErgodicity.SubtypeConv
 import IETFree.UniqueErgodicity.Transfer
 import IETFree.UniqueErgodicity.TransferConv
-import IETFree.UniqueErgodicity.CompactTool
 
 /-!
 # Interval exchange transformations
 
-Root module of the `IETFree` library.  The tree has four thematic subdirectories above a
-single-exchange layer:
+Root module of the `IETFree` library, which formalizes Theorem 1.1 of the paper: almost every pair
+of interval exchange transformations does not generate a free group.  The tree has a single-exchange
+layer at the root, the two-bijection datum `TopBotFormalism` on top of it, four thematic
+subdirectories above them, and the challenge solution at the top.
 
 * `IETFree/CutSet`, `IETFree/CutSetMeasure`, `IETFree/IET` — **one exchange**: cut sets and their
   cells, the measure theory of a piecewise translation, the predicate `IsIET`, the explicit
   construction `mkIETFun` / `mkIETEquiv` / `mkIET1'`, the simplex and its measure `simplexVolume`,
   the type `IET a b` with its group structure, and the three notions the main theorem is stated
-  with, `Invariant`, `UniqueErgodic` and `IsRigidByTranslations`.  `unitMeas` (Lebesgue measure on
-  `[0, 1)`) lives here too, since everything above uses it.  `IETFree/Basic` holds the
-  two-bijection datum `IETDatum₂`.
+  with, `Invariant`, `UniqueErgodic` (Definition 2.1) and `IsRigidByTranslations` (Definition 2.2).
+  `unitMeas` (Lebesgue measure on `[0, 1)`) lives here too, since everything above uses it.
+
+* `IETFree/TopBotFormalism` — interval exchanges in the Marmi–Moussa–Yoccoz framework for the
+  Rauzy induction: a fixed alphabet with a top and a bottom permutation, the datum `IETDatum₂` and
+  its simplex measure, and the translation to and from the single-permutation picture (`perm`,
+  `ofPerm`).
 
 * `IETFree/Pair/` — **two exchanges**: the free-group development (computability, the centralizer,
   the lattice bounds, Section 2's irreducible case, and Section 3's reduction to blocks: the length
   map, the good regions, the block rescalings, Lemmas 3.2–3.4 and the assembly of the per-block
   words).
 
-* `IETFree/RauzyVeech/` — the Rauzy–Veech induction: the step and the path matrices, the diagram,
-  the volume of path cylinders, the columns and their spread, the ray criterion, the towers and
-  their floors, and (in `RichPath/`) the proof that the greedy path is rich.  It also carries
-  `InvariantMeasure` and `MainComponents`, the invariant-measure side the induction steps use.
+* `IETFree/RauzyVeech/` — the Rauzy–Veech induction in the Marmi–Moussa–Yoccoz formalism: the step
+  and the path matrices, the diagram, the volume of path cylinders, the columns and their spread,
+  the ray criterion, the towers and their floors, and (in `RichPath/`) the proof that the greedy
+  path is rich.  This is where almost every irreducible exchange is proved uniquely ergodic (after
+  Kerckhoff) and rigid by translations (Veech's argument, phrased in Kerckhoff's framework), and it
+  carries the invariant-measure side the induction steps use: `InvariantMeasure` (Lebesgue's
+  measure, the cells and the length vector of a measure, and the uniqueness step) and
+  `MainComponents` (the notions the ray criterion is phrased with).
 
 * `IETFree/Rigidity/` — Veech's rigidity: a.e. rigidity by translations of an irreducible exchange,
   proved by the Rauzy–Veech induction.
 
 * `IETFree/UniqueErgodicity/` — **unique ergodicity** of an exchange: the a.e. theorem and its
-  assembly (`MainTheorem`), and the Birkhoff-averages form, uniqueness of the invariant measure
-  giving uniform convergence of the Birkhoff averages through the split interval and its germ map.
-  The measure-theoretic input is in `IETFree/RauzyVeech/`: `InvariantMeasure` (Lebesgue as an
-  invariant measure, the cells and the length vector of a measure, and the uniqueness step) and
-  `MainComponents` (the notions the ray criterion is phrased with).
+  assembly (`MainTheorem`), and the strong form — uniqueness of the invariant measure gives uniform
+  convergence of the Birkhoff averages — through the compact-space tool `CompactTool` (Tool 1 of the
+  source), the split interval and its germ map, together with Lemma 2.9 (`exists_uniform_birkhoff`).
 
 The theorem that uses them all is `IETFree/ChallengeSolved.lean`: the unconditional form of
 Theorem 1.1, in the words of `Challenge.lean` (the comparator challenge one directory above).

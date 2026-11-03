@@ -967,7 +967,7 @@ below: an exchange is the identity off the interval it is built on (`mkIETFun_of
 probability measure on `[0, 1)ᶜ` is invariant, and the unrestricted `∃! μ, Invariant μ f` is false
 for every exchange (the Dirac mass at `2` is invariant alongside Lebesgue's); with
 `μ (Ico 0 1) = 1`, `μ ↦ μ|_{[0,1)}` is injective.  Why no hypothesis on the length vector is needed
-is a remark about the a.e. statement, in `IETFree/Basic.lean`. -/
+is a remark about the a.e. statement, in `IETFree/TopBotFormalism.lean`. -/
 def Invariant (μ : ProbabilityMeasure ℝ) (f : IET 0 1) : Prop := (μ : Measure ℝ).map ⇑f = μ
 
 /-- **Definition 2.1 of the paper**: unique ergodicity — there is exactly one invariant probability
@@ -982,8 +982,8 @@ def UniqueErgodic (f : IET 0 1) : Prop :=
 
 /-- **Definition 2.2 of the paper**: rigid by translations — some powers of the exchange are
 translations on sets whose measure tends to `1`.  That almost every irreducible exchange is rigid is
-Veech's rigidity theorem, `veechRigidity` in `IETFree/Pair/Irreducible.lean`, proved by the campaign
-of `IETFree/Rigidity/` (`Rigidity.ae_isRigidByTranslations`). -/
+Veech's rigidity theorem, `veechRigidity` in `IETFree/Pair/Irreducible.lean`, is proved in
+`IETFree/Rigidity/` (`Rigidity.ae_isRigidByTranslations`). -/
 def IsRigidByTranslations (f : IET 0 1) : Prop :=
   ∃ q : ℕ → ℕ, ∃ t : ℕ → ℝ, ∃ B : ℕ → Set ℝ,
     Tendsto q atTop atTop ∧ Tendsto t atTop (nhds 0) ∧

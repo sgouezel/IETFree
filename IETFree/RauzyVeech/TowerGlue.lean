@@ -45,7 +45,8 @@ theorem real_eq_qApply (P : IETDatum₂ α n) (μ : Measure ℝ) {lam : α → �
     rw [← Int.cast_natCast, Int.toNat_of_nonneg (hQ a b)]
   rw [ENNReal.toReal_mul, ENNReal.toReal_natCast, hcoee]
 
-/-- **The last mile of the ray criterion.** If the cylinders along a path through `lam` shrink to
+/-- **From the tower formula to the ray criterion.** If the cylinders along a path through `lam`
+shrink to
 `lam` (nested, bounded, diameters `→ 0`) and the length vector of an invariant probability measure
 on `[0,1)` lies in `qApply (Q (w k))` of a nonnegative vector for every `k` — which is what the
 level-`n` tower formula gives — then that length vector *is* `lam`. So the ray parameter is `c = 1`.

@@ -14,14 +14,12 @@ import IETFree.RauzyVeech.RichPath.Potential
 Contents (namespace `Assemble`):
 
 * the `Γ₂`-mass `g2Mass`, with `g2Mass_pos`;
-* `straddleMass_of_cards_ge_two`: the reduction of the `Γ₃` mass estimate to the card form for `2 ≤
-  #A'`;
 * the `Γ₂`-free assembly of the induction step: `balanceStep_of_straddleMass` and
   `inductionStep_of_straddleMass`.
 
 The unconditional proof of the `Γ₃` estimate itself is in
 `IETFree/RauzyVeech/RichPath/Potential.lean`
- (`Potential.straddleMassCard_of_unclean`). Axiom-clean.
+ (`Potential.straddleMassCard_of_unclean`).
 -/
 
 open Finset

@@ -11,25 +11,19 @@ import IETFree.Pair.MeasureTools
 **Translation vectors are lattice vectors with coefficients in `{-1, 0, 1}`.**
 
 For the exchange with lengths `lam` and permutation `π`, the displacement of a point `x` of the
-  `i`-th
-interval is
+`i`-th interval is
 
 `translationVector π lam i = ∑_{π j < π i} lam j - ∑_{j < i} lam j`,
 
 an integer combination of the lengths whose coefficients all lie in `{-1, 0, 1}`.  This is the base
 case of the "translation-vector bound" used in the proof of the paper's Theorem 2.6: after composing
-words, coefficients grow at most like the word length (run `translation-vector-bound`), which turns
-the Diophantine lower bound into `C / |w| ^ c ≤ ℓ` for the length `ℓ` of a nontrivial translation
-interval of `w(f, g)`.
+words, coefficients grow at most like the word length, which turns the Diophantine lower bound into
+`C / |w| ^ c ≤ ℓ` for the length `ℓ` of a nontrivial translation interval of `w(f, g)`.
 
-The generator-level statement handed to the discovery run is the abstract form: *if every
-  displacement
-of `f` and of `g` is a lattice vector with coefficients in `{-1, 0, 1}`, then every displacement of
-  a
-word of length `n` is a lattice vector with coefficients in `[-n, n]`*.  The lemmas here supply that
-hypothesis for `f = g = mkIETFun lam π 0` (`mkIETFun_sub_eq_sum_dispCoeff`), together with the
-bookkeeping
-  that
+The statement proved here, in the abstract form, is: *if every displacement of `f` and of `g` is a
+lattice vector with coefficients in `{-1, 0, 1}`, then every displacement of a word of length `n` is
+a lattice vector with coefficients in `[-n, n]`*.  The lemmas here supply that hypothesis for
+`f = g = mkIETFun lam π 0` (`mkIETFun_sub_eq_sum_dispCoeff`), together with the bookkeeping that
 identifies the coercion of `evalWord w f g` with the corresponding permutation lift
 (`evalWord_apply_coe`).
 -/

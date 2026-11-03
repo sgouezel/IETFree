@@ -14,7 +14,7 @@ The graded induction of the source in the cylinder-mass language of
 `CylinderMass.cond P w δ` the
 conditional mass of `Δ(wδ)` over `Δ(w)`.
 
-Proved here, axiom-clean:
+Proved here:
 
 * the functionals `mmin s q = min_{b ∈ s} q b` and `Mk k q = max_{#s = k} mmin s q`, with
   `Mk_card` (`Mk (#α) = min`) and `le_Mk_one` (`Mk 1 = max`);
@@ -25,12 +25,12 @@ Proved here, axiom-clean:
   fixed `A'`, losing the factor `1/#{k-subsets}`), `prefixFree_comp` and `sum_comp` (gluing composed
   families: the masses multiply), and `gradedStep_succ` (the `k → k+1` step, given `BalanceStep`).
 
-`NodeHeight.BalanceStep P C` (the source's `Γ₂`–`Γ₄`: extend each path to a vertex whose row ends
+`NodeHeight.BalanceStep P K` (the source's `Γ₂`–`Γ₄`: extend each path to a vertex whose row ends
 outside `A'`, bound the `A'`-coordinates with Kerckhoff's lemma, and the final case analysis) is the
-one input that the results of this file are conditional on.  It is proved unconditionally, for a
-suitable `K`, in `IETFree/RauzyVeech/RichPath/InductionAssembly.lean`.
+notion that `gradedStep_succ` takes as input; it is proved, for a suitable `K`, in
+`IETFree/RauzyVeech/RichPath/InductionAssembly.lean`.
 
-Axiom-clean.
+
 -/
 
 -- section instances used in the proofs but not in every statement

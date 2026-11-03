@@ -17,8 +17,7 @@ its existence half (`NodeHeight.st = cs` is `B_w·1`, so `Mk 1` is the source's 
 
 * §1 (definitions): `Blocked` — both row ends at the node lie in `A'`; `Exit` — one lies outside;
   and `blocked_iff_not_exit`.  (The straddle criterion, the stop word and the cleanness predicate
-  used by the later induction are `MinimalExit`'s companions in `Stopping`; the local copies here
-  were pruned.)
+  used by the later induction are in `Stopping`.)
 * §2 (existence): `exists_exit` — from every node and every non-empty proper `A'` some
   continuation ends at a node with a row end outside `A'`.  The proof applies
   `IETDatum₂.pairReach_all` to a pair `(a, θ)` with `θ ∉ A'`, so it even prescribes *both* row ends.

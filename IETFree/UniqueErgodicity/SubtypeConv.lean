@@ -11,8 +11,8 @@ import IETFree.UniqueErgodicity.MeasPrep
 # Restricting the germ map to its invariant part
 
 Tool 1 is applied to the compact space `↥(SplitI.rightPart D)`, not to the whole split interval:
-the two deleted points of Blueprint 2 Remark 2.7 are isolated fixed points, so unique ergodicity
-holds on `rightPart` only.  This file is the glue between the two formulations: it identifies the
+the two points removed by `SplitI.rightPart` are isolated fixed points, so unique ergodicity holds
+on `rightPart` only.  This file is the glue between the two formulations: it identifies the
 Birkhoff averages of a self-map `G` of the split interval, started at a point of `rightPart`, with
 the Birkhoff averages of the restricted map of the subtype, and transfers uniform convergence
 accordingly.
@@ -60,7 +60,7 @@ theorem birkhoffAverage_restrictTo (G : SplitI D → SplitI D)
   exact Finset.sum_congr rfl fun i _ => by rw [coe_iterate_restrictTo G hG i z hz]
 
 /-- **Uniform convergence on the subtype gives uniform convergence on the invariant part.** This is
-the form in which Tool 1's conclusion is consumed by `TransferConv.uniqueErgodicFun_of_proj`. -/
+the form in which Tool 1's conclusion is consumed by `uniformBirkhoff_of_proj`. -/
 theorem forall_mem_rightPart_of_subtype (G : SplitI D → SplitI D)
     (hG : Set.MapsTo G (SplitI.rightPart D) (SplitI.rightPart D)) (ψ : SplitI D → ℝ) {c : ℝ}
     (h : ∀ ε : ℝ, 0 < ε → ∃ N : ℕ, 0 < N ∧ ∀ n ≥ N, ∀ w : ↥(SplitI.rightPart D),

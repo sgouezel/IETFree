@@ -35,7 +35,7 @@ This file delivers the **skeleton** of that induction, in the cylinder-mass lang
   the form the analysis of `RichPathAssembly.lean` consumes.
 * §6 `InductionStep P` is not a weakening: `inductionStep_of_balance` derives it from
   `NodeHeight.BalanceStep P K` (whose content is `Γ₂`--`Γ₄`), and it is proved unconditionally in
-  `IETFree/RauzyVeech/RichPath/RichGreedyPath.lean`. Axiom-clean.
+  `IETFree/RauzyVeech/RichPath/RichGreedyPath.lean`.
 -/
 
 open Finset

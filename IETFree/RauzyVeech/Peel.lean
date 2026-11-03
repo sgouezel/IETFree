@@ -24,8 +24,8 @@ is essential: the factor of a block is `1 - 1/(d·M_block)`, so only a bound com
 blocks makes the product tend to `0`.
 
 No measure theory is involved.  The dictionary to the geometry is `ColShrink.diam_le_of_cols_close`
-read through the spread of `PosBlock.lean`, and the last mile is
-`IETFree/RauzyVeech/RayPointwise.lean`. Axiom-clean. -/
+read through the spread of `PosBlock.lean`; the passage to the ray condition is
+`IETFree/RauzyVeech/RayPointwise.lean`. -/
 
 
 open Filter

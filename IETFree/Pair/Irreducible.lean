@@ -5,7 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 
 import IETFree.RauzyVeech.InvariantMeasure
-import IETFree.Basic
+import IETFree.TopBotFormalism
 import IETFree.UniqueErgodicity.MainTheorem
 import IETFree.Rigidity.DimOne
 import IETFree.Rigidity.Sequences
@@ -22,7 +22,7 @@ Section 2 of the paper: the irreducible case.
 The ambient interval is `[0, 1)`, and the two conditions of the paper — unique ergodicity and
 rigidity by translations — are `UniqueErgodic` and `IsRigidByTranslations`, stated for exchanges in
 the sense of `IET 0 1`; the first is in `IETFree/IET.lean` (with `Invariant`), the second in
-`IETFree/Basic.lean`.
+`IETFree/TopBotFormalism.lean`.
 
 The measure-theoretic tools (`unitMeas` and its API, the words in two generators, the toolbox for
 Lemma 2.10) are in `MeasureTools.lean`; Proposition 2.5 and the Diophantine definitions are in
@@ -36,7 +36,7 @@ open scoped BigOperators ENNReal NNReal commutatorElement
 
 The two inputs the block development of Section 3 consumes: Masur–Veech (a.e. unique ergodicity)
 and Veech's rigidity by translations.  They are theorems, not hypotheses — the Rauzy–Veech induction
-(`IETFree/RauzyVeech/`) proves the first, the rigidity campaign (`IETFree/Rigidity/`) the second,
+(`IETFree/RauzyVeech/`) proves the first, the rigidity development (`IETFree/Rigidity/`) the second,
 and what Section 3 uses below is those proofs. -/
 
 /-- **Masur–Veech**: for `d ≥ 2` and every irreducible permutation, almost every length vector gives
@@ -62,7 +62,7 @@ theorem masurVeech {d : ℕ} (hd : 2 ≤ d) [NeZero d] {π : Equiv.Perm (Fin d)}
 /-- **Veech rigidity**: for every irreducible permutation, almost every length vector gives an
 exchange rigid by translations (Definition 2.2).
 
-Proved by the rigidity campaign: `Rigidity.ae_fin_one` covers `d = 1`, and for `2 ≤ d` the a.e.
+Proved in `IETFree/Rigidity/`: `Rigidity.ae_fin_one` covers `d = 1`, and for `2 ≤ d` the a.e.
 statement for the two-bijection datum (`Rigidity.ae_isRigidByTranslations`) is transported to the
 single-permutation form by `Rigidity.ae_isRigidByTranslations_mkIET1`. -/
 theorem veechRigidity {d : ℕ} [NeZero d] {π : Equiv.Perm (Fin d)} (hπ : IsIrreduciblePerm π) :

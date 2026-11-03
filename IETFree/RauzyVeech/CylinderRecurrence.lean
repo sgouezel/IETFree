@@ -24,7 +24,7 @@ the simplex of length vectors, which is the form in which richness of the greedy
 * the two measure facts the recurrence consumes on this partition: a set which agrees with `Z`
   outside `Nbad` has the same measure (`measure_eq_of_sdiff_Nbad_eq`), and the mass of a level atom
   is at most the mass of the simplex (`measure_le_measure_sdiff_Nbad`,
- `simplexVolumeOn_univ`). Axiom-clean.
+ `simplexVolumeOn_univ`).
 -/
 
 

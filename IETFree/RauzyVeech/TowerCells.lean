@@ -11,9 +11,7 @@ import IETFree.RauzyVeech.TowerLevelN
 # The cell of the first-return map inside its domain cell
 
 `cellHat_subset_dom` places the cell of the first-return map inside the corresponding domain cell of
-the level-`k` exchange — the inclusion used by the tower decomposition.  (The `Q`-multiplicity
-form of the tower formula, and the level-`k` exchange and domain cells themselves, were pruned: they
-are not on the path of the final proof of the main theorem.) -/
+the level-`k` exchange — the inclusion used by the tower decomposition. -/
 
 open MeasureTheory
 open scoped BigOperators ENNReal NNReal

@@ -24,7 +24,7 @@ The vocabulary that the `Γ₃` argument of `IETFree.Potential` runs on (`NodeHe
   predicates `GoodFirst`, `Good`, `Bad` with their `Decidable` instances, and the minimal stopping
   family `StopW`, `StopFam` (`prefixFree_stopFam`, `st_eq_of_exitArrow`).
 
-Axiom-clean; the library's single axiom report is in `IETFree/ChallengeSolved.lean`. -/
+-/
 
 
 open MeasureTheory IETDatum₂ Finset NodeHeight

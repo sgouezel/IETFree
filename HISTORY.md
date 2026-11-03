@@ -14744,6 +14744,256 @@ their rows.  No Lean file changed, so `lake build` is the no-op it should be (88
 axioms unchanged), and the measurements are those of Addendum 165: 114 modules, 4 509 declarations,
 3 941 reachable, 46 038 lines.
 
+### Addendum 167: umbrella docstring aligned; every declaration in the README is linked
+
+Owner's instruction: *"Now update the module docstring in IETFree.lean to match.  Also, make sure
+that all declarations in README.md have hyperlinks to the corresponding declarations in the Lean
+code.  This is not the case in the comparator section, and maybe elsewhere."*
+
+**The umbrella docstring** (`IETFree.lean`) now says what the README says: that the library
+formalizes Theorem 1.1 of the paper; the layout as a single-exchange layer at the root, the
+two-bijection datum `Basic` on top of it, four thematic subdirectories, the challenge solution at
+the top; the three notions with their numbers of the paper (`Invariant`, `UniqueErgodic` —
+Definition 2.1 — and `IsRigidByTranslations` — Definition 2.2); `Basic` as the Marmi–Moussa–Yoccoz
+module (fixed alphabet, top and bottom permutation, `IETDatum₂`, and the translation to and from
+the single-permutation picture via `perm`, `toIET`, `ofPerm`); `RauzyVeech/` as the induction in
+that formalism, "where almost every irreducible exchange is proved uniquely ergodic (after
+Kerckhoff) and rigid by translations (Veech's argument, phrased in Kerckhoff's framework)", with
+`InvariantMeasure` and `MainComponents`; `Rigidity/`; and `UniqueErgodicity/` with the a.e.
+theorem, its assembly, the compact-space tool `CompactTool` (Tool 1 of the source), the split
+interval and Lemma 2.9.
+
+**The README's links.**  An audit was written for this: outside the fenced code blocks, collect
+every backticked span, keep the ones that are a declaration of the library (matched against the
+declarations of `IETFree/`), a file of the repository or a directory of it, and report the ones
+that are not already the text of a markdown link.  It found **nine unlinked declarations** —
+`UniformBirkhoff` twice (in the correspondence table and in item 6 of the discrepancies), `IET`,
+`Invariant`, `UniqueErgodic` and `IsRigidByTranslations` in the layout paragraph, and `perm`,
+`ofPerm`, `toIET` in the `Basic` row — and the repository paths that the comparator section spelled
+out without links (`Challenge.lean`, `comparator.json`, `IETFree/ChallengeSolved.lean`,
+`Comparator/Check.lean`, `Comparator/run.sh`, `Comparator/run.sh`'s `fake-landrun.sh` neighbour,
+`SlowBuild.sh`, `IETFree.lean`, `formalization.yaml`), plus the directories named in prose
+(`IETFree/`, `IETFree/Pair/`, `IETFree/RauzyVeech/`, `IETFree/Rigidity/`,
+`IETFree/UniqueErgodicity/`, and the short forms `Pair/`, `RichPath/`, `Rigidity/`,
+`UniqueErgodicity/`).  All are now links: the declarations to `blob/main/<file>#L<line>`, the files
+to `blob/main/<path>`, the directories to `tree/main/<path>`; only build-directory paths
+(`.lake/build`, `.lake/packages/mathlib`, `path = "/opt/mathlib"`) and shell commands are left as
+they were.  The file mentions in the layout table already were links, and the layout table's own
+rows were not touched.
+
+**One factual fix found on the way**: the paragraph on `Comparator/run.sh` said that it uses "the
+*repository's* `fake-landrun.sh`"; that file is the comparator's own
+(`$TOOLS/scripts/fake-landrun.sh` in `run.sh`), not this repository's, and the text now says so.
+Nothing is linked there, since the file is not in this tree.
+
+**Checks.**  The link audit of Addendum 164 was re-run on the result: **217 repository links** (231
+markdown links in all, the rest being arXiv, the comparator's repository and relative links to
+`HISTORY.md`/`NOTES.md`), every target exists, and every `#L` anchor is the line of the declaration
+its label names — the only one the audit cannot confirm mechanically is still `IsIET`, whose label
+matches both a `def` at 34 and an `abbrev` at 499 and whose link points at the former.  No unlinked
+declaration or repository path remains outside the code blocks.  `lake build` green at 8823 jobs
+(the umbrella's docstring changed, so it recompiled); `#print axioms main` still `[propext,
+Classical.choice, Quot.sound]`; the library ≤ 100 characters per line.  Measurements unchanged: 114
+modules, 4 509 declarations, 3 941 reachable, 46 038 lines.
+
+### Addendum 168: module docstrings describe their module, not its place in the campaign
+
+Owner's instruction: *"Now do a final full pass: check all module docstrings across IETFree/ for the
+same stale context-dependent wording and fix them."*
+
+The two openings fixed earlier were `Basic.lean` ("This is the first module of the unique-ergodicity
+side of the library (…)") and `Assembly.lean` ("The last mile of the main theorem").  The sweep
+covered the 114 module docstrings for the same kind of text — a module described by its position in
+the campaign, or by the state of the tree when it was written, instead of by what it contains.
+
+**What was rewritten.**  In `Rigidity/` (nine modules): the titles "… of the Veech rigidity
+campaign", "Step 1 of the Veech-rigidity campaign", "Provider: `Internal.ae_rigid_step`",
+"Provider: `Internal.rigid_step`" became descriptions of the content ("The rigid step", "The
+hitting lemma, and the a.e. rigidity statement", "An extreme vertex, runs of `true` steps, and the
+big cell", …); the openings that cited `PLAN.md`/`BLUEPRINT.md` (files that no longer exist) now go
+straight to the mathematics; "the frozen `ae_rigid_step`", "part of the frozen type/anchor",
+`hstop`'s comments, "§5.5–§5.6", "the blueprint's sketch", "§8.2 of the blueprint handles `d = 1`"
+and the swarm provenance of `Sequences.lean` ("Proof taken from the packet `smvz…`") are gone, as
+is the audit provenance of `DimOne.lean`.  In `UniqueErgodicity/`: "Theorem 2 of Blueprint 2" →
+"Theorem 2: uniform Birkhoff convergence from a unique invariant measure", "This is the endgame of
+the campaign", "Notation for the campaign's exchange" (three times), "the measure-theoretic endgame
+(P5)", "the measure theoretic endgame", "the two deleted points of Blueprint 2 Remark 2.7", "an
+earlier revision carried local copies … while that module was still in flight", "the lift lemma of
+Lemma 4.1 … were pruned; the lift lemma the endgame needs", "The main theorem of the development,
+proved.  It lives here rather than in `Basic.lean` …", the swarm/probe provenance in `Split.lean`,
+and the "campaign's dependency analysis" in `MainTheorem.lean`'s axiom report.  In `RauzyVeech/`:
+"The last mile" (`Peel`, `RayPointwise`), "The last mile of the ray criterion" (`TowerGlue`), "the
+cylinder tree this module used to carry … was pruned" (`PrefixWord`), "the local copies here were
+pruned" (`MinimalExit`), "What is left of the `Γ₃` interface … is no longer a named `Prop`"
+(`StraddleMass`), "were pruned: they are not on the path of the final proof of the main theorem"
+(`TowerCells`), "The combinatorial endgame" (`NameInfinite`), "Everything in this file is proved"
+(`Affine`), "one input that the results of this file are conditional on" (`NodeHeight`).  In
+`Pair/`: `Centralizer.lean`'s module docstring was a 390-line plan with P-numbered nodes,
+"**PROVED**"/"**NOT NEEDED**"/"still to do" markers, "*Estimate:* 20–40 lines" and "a day's work";
+it is now a 65-line description of the theorem (Lyndon–Schupp 2.19), of the route actually taken
+(norms, commensurability, `exists_common_zpow`), of what Mathlib provides and of the maintenance
+pitfalls, and its P/§D-numbered section headers became plain titles; the plan sections that no
+longer correspond to the file were dropped, as was "Parts B and C of the plan: not in the tree";
+`Diophantine.lean`'s discovery-run provenance, `IntegerAffine.lean`'s "lemmas that used to close
+the file", `SingularityBound.lean`'s "proved by the run `singularity-bound-2`" and
+`TranslationVector.lean`'s "statement handed to the discovery run" are gone too.  Finally the
+eighteen "Axiom-clean." sentences trailing module docstrings were removed: the axiom report is a
+single `#print axioms main`, and a per-module claim can go stale independently of the code.
+
+**What was kept.**  Citations of the source ("the paper", "Lemma 3.4", "the source's `Γ₂`") and of
+the blueprint, which is reproduced in `HISTORY.md`, Part II — with one sentence added to
+`UniqueErgodicity/Basic.lean` saying so, since the blueprint is not otherwise in the tree.  The
+mathematical content of every docstring is unchanged.
+
+**Checks.**  `rg` for the vocabulary of the campaign over `IETFree/` — `campaign`, `endgame`,
+`last mile`, `Provider:`, `pruned`, `were deleted`, `earlier revision`, `in flight`, `PLAN.md`,
+`BLUEPRINT.md`, `**PROVED**`, `still to do`, `discovery run`, `worker`, `swarm`, `Axiom-clean`,
+`.ultramath` — now returns **0 hits** (the only "frozen" left is `NameInfinite`'s mathematical
+predicate `Frozen`).  `lake build` green at 8823 jobs, no warnings; `#print axioms main` still
+`[propext, Classical.choice, Quot.sound]`; the 26 most-edited modules are warning-free under the
+lakefile's options and under the strict per-file recipe; the library ≤ 100 characters per line.
+Declarations 4 509 → 4 509, reachable 3 941 → 3 941, modules 114 → 114, lines **46 038 → 45 672**
+(the plan document removed from `Centralizer.lean` accounts for most of the 366; the last two
+re-wrapped openings, at the end of the pass, are counted here).
+
+
+### Addendum 169: no docstring names a declaration that no longer exists
+
+Addendum 168 removed the campaign vocabulary from the module docstrings.  It did not check the
+*names* they cite, and the session had renamed or deleted a fair number of declarations on the way
+(`GradedFull`, `uniqueErgodic_of_unique_invariant` → `uniformBirkhoff_mkIET1`, `UniqueErgodic` split
+into a weak predicate and `UniformBirkhoff`, …).  So the sweep was finished with a mechanical check
+rather than with an eye.
+
+**The check.**  The environment was dumped once — `env.header.moduleNames[i]` against
+`env.header.moduleData[i].constNames` over the 115 modules named `IETFree…`, 4 509 declarations,
+into `.scratch/tmp/decls-now.txt` — and joined with Mathlib's declared names
+(`/opt/nucleus/docs/names.tsv`, 906 705 names).  Every backticked identifier in every comment of
+`IETFree/` was then looked up: first the qualified ones (`A.b.c`), then the unqualified ones
+carrying an underscore or an inner capital.  A token resolves if it is a project or Mathlib
+declaration, a module basename or a namespace segment; two passes returned 49 and 6 unresolved
+names, and each was read in place.  Five were stale references; the rest are binders (`h_out`,
+`h_ray`, `lamN`, `q_w`), notation (`S_N`, `Q_k`, `a_i`) or Lean attributes (`implicit_reducible`).
+
+**The five fixes.**
+
+* `RefiningPartition.lean` announced two corollaries,
+  `measure_restrict_eq_of_refining_partitions_diam` and
+  `measure_restrict_eq_of_refining_Ico_partitions`, neither of which exists: the file's lemma is
+  `measure_restrict_eq_of_refining_partitions`, and it states the mesh hypothesis pointwise.  The
+  paragraph keeps the mathematical point — `Metric.diam` of an *unbounded* set is `0` in Mathlib, so
+  a diameter formulation would need boundedness of the atom as a side condition — without naming a
+  corollary.
+* `RichPath/InductionAssembly.lean` listed `straddleMass_of_cards_ge_two` among its contents; the
+  `Γ₃` reduction lives in `Potential.lean` as `straddleMassCard_of_goodMass_straddle`, which the
+  same docstring already points to.  The bullet is gone.
+* `UniqueErgodicity/SubtypeConv.lean` said its lemma is consumed by
+  `TransferConv.uniqueErgodicFun_of_proj`; the consumer is `uniformBirkhoff_of_proj`, renamed in
+  Addendum 161 when the strong form became `UniformBirkhoff`.
+* `RichPath/Potential.lean` attributed the `Γ₃` reduction to
+  `Induction.straddleMassCard_of_goodMass`; it is `Potential.straddleMassCard_of_goodMass_straddle`.
+* `RauzyVeech/NameInfinite.lean` wrote `Active` in backticks as the complement of `Frozen`; there is
+  no such declaration (`Frozen` is one, and an active letter is a letter that is not `Frozen`).  The
+  word is italic now, with `¬ Frozen` said once.
+
+**Left alone, deliberately.**  `IET.lean`'s "hence `coe_mkIETEquiv` and not `mkIETEquiv_apply`"
+names the lemma that is *not* stated, and the contrast is the point of the sentence.
+`IETFree.BlockData`, `UniqueErgodicity.CompactTool` and the like are module paths, not declarations.
+
+**README anchors.**  The line numbers the README's links carry were re-audited against the tree
+rather than trusted: 217 repository targets, all of them present, and 126 links naming a
+declaration, each compared with the first line of the nearest declaration at or above the target.
+Four of those links named the right declaration but landed in its docstring or in the previous
+declaration (three links to `UniformBirkhoff` one line above the `def`, `coeffMax` inside
+`IsDiophantine`), and five targets sat one to five lines into the statement they name
+(`masurVeech_ae_unique_invariant`, `uniformBirkhoff_of_uniqueErgodic`, `exists_uniform_birkhoff`,
+`ae_diophantine`, `IsDiophantine`).  All of them now sit on the declaration's first line, and the
+four `file:line` pointer labels that show the number in their own text were moved with them.
+
+**Checks.**  `lake build` green at 8823 jobs; `#print axioms main` unchanged; the five modules
+warning-free under the strict per-file recipe of Addendum 168; no line of `IETFree/` over 100
+characters (counted in Python — `awk length` counts bytes, and the 946 "long lines" it reports are
+unicode arrows and `λ`s).  Declarations 4 509 → 4 509, reachable 3 941 → 3 941, modules 114 → 114,
+lines **45 672 → 45 667**.
+
+
+### Addendum 170: the definition hole is for brevity, and definitions are `implemented`
+
+Two corrections from the owner, about vocabulary and about a reason, not about mathematics.
+
+**On the hole.**  The README said that the challenge leaves `mkIETEquiv` a definition hole because
+the library proves its two inverse laws through a `private` core whose name cannot exist in another
+module.  Owner: *"This is not the real reason.  The point is just that the proof that this defines a
+bijection is not completely trivial, so it is not in the Challenge file to keep it as short and easy
+to read as possible."*  The README and `Comparator/README.md` now give that reason.  The `private`
+core survives in both as a statement about what the comparator can compare — a verbatim copy of the
+body is impossible, so a body comparison would fail whatever text the challenge carried — and not as
+the reason for the hole.  The comparator record earlier in this file ("The private-core obstruction,
+and why `mkIETEquiv` is a definition hole") is the record of that mechanical finding; the reason for
+the hole is the one above.
+
+**On the status column.**  Owner: *"for definitions the last column says 'proved'.  It is not the
+right term, one cannot prove a definition.  'implemented', maybe?"*  In the correspondence table of
+`README.md`, and in the `alignment` block of `formalization.yaml` — which the README promises are
+the same rows with the same statuses — Definition 2.1, Definition 2.2, Definition 2.3 and the
+Section 3 row (splitting singularity / fixed interval / pair-splitting singularity) are now
+`implemented`; `proved` stays for theorems and lemmas, `not-formalized` for the two items of the
+paper that are not in the tree, and one line in each file states the vocabulary.  Definition 2.1's
+cell also stopped calling `UniformBirkhoff` "the theorem": it is a predicate, derived from
+`UniqueErgodic` by `uniformBirkhoff_of_uniqueErgodic`.
+
+**Stale fields in `formalization.yaml`, fixed in passing.**  The `alignment` block still had the
+layout of before Addenda 161–162: Definition 2.1 and Definition 2.2 at
+`IETFree/Pair/Irreducible.lean` (they are in `IETFree/IET.lean`), Lemma 2.9 at
+`Pair/Irreducible.lean` (it moved to `UniqueErgodicity/IET.lean`), nine `Pair/` modules named
+without their directory, and a note under Definition 2.1 that still described `UniqueErgodic` as
+uniform convergence, i.e. the strong form.  Every `module:` path in the block is now an existing file
+and every `lean:` name a declaration of the tree, and the 21 rows match the README table row for
+row.
+
+**Checks.**  `formalization.yaml` parses — 21 entries, statuses `proved`, `implemented`,
+`not-formalized` — and the README table was compared with it programmatically, row by row, with no
+mismatch.  No Lean source changed: `lake build` replays green at 8823 jobs.  `IET2.zip` rebuilt and
+re-verified byte-identical to the tree.
+
+### Addendum 171: `IETFree/Basic.lean` is `IETFree/TopBotFormalism.lean`
+
+Owner's instruction: *"Rename the file Basic.lean to TopBotFormalism.lean, and fix all references to
+the old name throughout all files."*  The module `IETFree.Basic` is now `IETFree.TopBotFormalism`;
+the file's content, its namespace `IETDatum₂` and its declarations are untouched.  The other
+`Basic.lean` — `IETFree/UniqueErgodicity/Basic.lean`, which holds the predicate `UniformBirkhoff` —
+keeps its name, and the rename removes the ambiguity between the two.
+
+**What referenced it.**  Thirteen modules imported it —
+`Rigidity/{Defs,DimOne,Sequences,Transport}`, `Pair/{Diophantine,Irreducible}`,
+`RauzyVeech/{InvariantMeasure,MainComponents,SimplexAe,Step,Volume}`, `UniqueErgodicity/Basic` and
+the umbrella itself — and five docstrings cite the module path (`IET.lean`,
+`UniqueErgodicity/MainTheorem.lean`, `Pair/Irreducible.lean`, `RauzyVeech/SimplexAe.lean`,
+`IETFree.lean`), plus the two current-facing documents: the layout table and the root-layer sentence
+of `README.md`, and the layout section of `NOTES.md`, where the `UniqueErgodicity/Basic` mention now
+carries its directory so the two files stay apart.  Nothing else could have: the `.gitignore`
+patterns are wildcards, `SlowBuild.sh` derives its module list from the umbrella's imports,
+`formalization.yaml` only ever named `UniqueErgodicity/Basic.lean`, and the comparator reads only
+`Challenge` and `IETFree.ChallengeSolved`.
+
+**The umbrella's import list.**  `IETFree.lean` is documented as carrying the sorted list of the
+library's modules, and it did not: `IETFree.UniqueErgodicity.CompactTool` had been appended at the
+end by Addendum 164, and the renamed module had to move from the first line to its place between
+`Rigidity.Veech` and `UniqueErgodicity.Basic`.  The 114 imports are now exactly sorted and distinct.
+
+**Not rewritten.**  `HISTORY.md` itself.  Its 94 mentions of `Basic` say what the tree was when each
+entry was written — its header's module list is even headed "Stale as of Addendum 150" — and the
+addenda of this kind (162–164, and this one) are the map from the old name to the new.  Scrubbing
+the ledger would rewrite the record; say the word if it should be done anyway.
+
+**Checks.**  `lake build` green at 8823 jobs and `#print axioms main` still `[propext,
+Classical.choice, Quot.sound]`; the fifteen modules whose text changed are warning-free under the
+strict per-file recipe, and so is the renamed file; no line of `IETFree/` or `IETFree.lean` is over
+100 characters; declarations 4 509 → 4 509, reachable 3 941 → 3 941, modules 114 → 114, lines 45 667
+→ 45 667; the comparator stand-in (`.lake/build` environment, `Comparator/Check.lean`) still reports
+30 899 declarations compared, the permitted axioms, and `OK`; `IET2.zip` rebuilt and verified
+byte-identical.
+
 ---
 
 # Part II — the Masur–Veech campaigns (verbatim records, blueprints and graphs)

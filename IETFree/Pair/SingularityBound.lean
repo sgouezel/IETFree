@@ -30,8 +30,8 @@ translation interval whose length is a *nonzero* lattice combination with coeffi
 `≤ 2|w| + 3` and at most the measure of the support of `w(f, g)` — exactly the input the Diophantine
 condition bounds below by `C / |w| ^ c`.
 
-The bound is proved by the run `singularity-bound-2`, and ported here;
-the pieces are `step` (the cut set of `A * e'` is `Ce ∪ C.image e'.symm`, with the preimage of a cut
+The proof has two pieces: `step` (the cut set of `A * e'` is `Ce ∪ C.image e'.symm`, with the
+preimage of a cut
 computed by subtracting the displacement of `e'`) and `inv_translate_aux` (the cuts of `f⁻¹` are
 `Sf.image f`).
 -/

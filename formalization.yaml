@@ -31,8 +31,7 @@ project:
   authors_note: >-
     `authors` lists the human author of the project: the paper, the mathematical statements, the
     frozen interfaces and the build are theirs. The proof scripts themselves were written by AI agents
-    inside SAIR Open Math OS; that is what the `automation` block records. Adjust this field if you
-    want the agents credited as authors of the formalization rather than as its tooling.
+    inside SAIR Open Math OS; that is what the `automation` block records. 
   responsible_maintainers:
     - "Sébastien Gouëzel"
   license: "Apache-2.0"
@@ -277,7 +276,9 @@ review:
   notes: >-
     No human referee and no independent human reviewer has checked this development against the
     paper; the author of the paper reviewed that the state of the library is acceptable, but did not
-    verify it line by line. What has been done: every module is compiled and the axioms of the main
+    verify it line by line. The challenge file has been crafted by the human author, to make sure that
+    the theorem it claims corresponds to the main theorem of the paper.
+    What has been done: every module is compiled and the axioms of the main
     theorem printed (`#print axioms main`, `[propext, Classical.choice, Quot.sound]`); and the
     development went through the audits recorded in the ledger (`HISTORY.md`) — two refutations of
     mis-formalized statements, an audit of the hypotheses of every declaration (the derivable ones
@@ -297,6 +298,8 @@ review:
 
 alignment:
   namespace: "IETFree"
+  # status: "proved" for a theorem or lemma, "implemented" for a definition, "not-formalized" for an
+  # item of the paper that is not in the tree.
   statements:
     - source: "Theorem 1.1 (main theorem)"
       lean: "main"
@@ -322,11 +325,13 @@ alignment:
         An illustration in the introduction; not part of this development.
     - source: "Definition 2.1 (uniquely ergodic)"
       lean: "UniqueErgodic"
-      module: "IETFree/Pair/Irreducible.lean"
-      status: "proved"
+      module: "IETFree/IET.lean"
+      status: "implemented"
       note: >-
-        Uniform convergence of Birkhoff averages of every continuous test function; stronger than
-        the definition, see fidelity.
+        The weak form: a unique invariant probability measure carried by `[0, 1)`.  The strong form,
+        uniform convergence of the Birkhoff averages of every continuous test function, is the
+        predicate `UniformBirkhoff` (`IETFree/UniqueErgodicity/Basic.lean`), proved from this one by
+        `uniformBirkhoff_of_uniqueErgodic` (`IETFree/UniqueErgodicity/IET.lean`).
     - source: "a.e. interval exchange is uniquely ergodic (Masur; Veech)"
       lean: "masurVeech"
       module: "IETFree/Pair/Irreducible.lean"
@@ -337,8 +342,8 @@ alignment:
         necessary on a single cell.
     - source: "Definition 2.2 (rigid by translations)"
       lean: "IsRigidByTranslations"
-      module: "IETFree/Pair/Irreducible.lean"
-      status: "proved"
+      module: "IETFree/IET.lean"
+      status: "implemented"
     - source: "Proposition 2.4 (a.e. exchange is rigid by translations)"
       lean: "veechRigidity"
       module: "IETFree/Pair/Irreducible.lean"
@@ -349,7 +354,7 @@ alignment:
     - source: "Definition 2.3 (Diophantine pair)"
       lean: "IsDiophantine"
       module: "IETFree/Pair/Diophantine.lean"
-      status: "proved"
+      status: "implemented"
       note: "With `coeffMax` for the maximum of the coefficients."
     - source: "Proposition 2.5 (almost every pair is Diophantine)"
       lean: "ae_diophantine"
@@ -370,7 +375,7 @@ alignment:
       status: "proved"
     - source: "Lemma 2.9, display (2.2) (uniform Birkhoff bound)"
       lean: "exists_uniform_birkhoff"
-      module: "IETFree/Pair/Irreducible.lean"
+      module: "IETFree/UniqueErgodicity/IET.lean"
       status: "proved"
     - source: "Lemma 2.10 (one commutator step: the support shrinks by a factor 18ε)"
       lean: "iterate_word"
@@ -381,7 +386,7 @@ alignment:
         step.
     - source: "Lemma 3.1 (the length map of gf is an invertible affine map)"
       lean: "compLen_injective, compLen_absolutelyContinuousAt, absolutelyContinuous_map_blockFree"
-      module: "IETFree/LengthMap.lean, IETFree/BlockData.lean, IETFree/BlockAETransfer.lean"
+      module: "IETFree/Pair/LengthMap.lean, IETFree/Pair/BlockData.lean, IETFree/Pair/BlockAETransfer.lean"
       status: "proved"
       note: >-
         Split into injectivity of the affine map and absolute continuity of what it pushes
@@ -389,10 +394,10 @@ alignment:
     - source: "splitting singularity / fixed interval / pair-splitting singularity (Section 3)"
       lean: "IETDatum.IsSplitting, IETDatum.InFixedCell, IsPairSplitting"
       module: "IETFree/Pair/ReductionData.lean"
-      status: "proved"
+      status: "implemented"
     - source: "Lemma 3.2 (between consecutive pair-splitting singularities the permutation is irreducible)"
       lean: "block_irreducible_on_good, irreduciblePerm_blockPerm"
-      module: "IETFree/BlockIrreducibility.lean, IETFree/BlockDatum.lean"
+      module: "IETFree/Pair/BlockIrreducibility.lean, IETFree/Pair/BlockDatum.lean"
       status: "proved"
       note: >-
         Intrinsic form `IsCompIrreducibleOn` on the two data, then transported to `IsIrreduciblePerm`
@@ -410,7 +415,7 @@ alignment:
         one-cell block is a separate case.
     - source: "Theorem 1.1 in block form, and the assembly of the per-block words"
       lean: "main_theorem_of_blocks, exists_word_trivial_on_all_of_blocks"
-      module: "IETFree/BlockLemma.lean, IETFree/BlockAssembly.lean"
+      module: "IETFree/Pair/BlockLemma.lean, IETFree/Pair/BlockAssembly.lean"
       status: "proved"
       note: >-
         The a.e. statement for the data of the composition, with the blocks and their words as
@@ -418,7 +423,7 @@ alignment:
         block is trivial on all of [0,1).
     - source: "the open regions of Section 3, and their countable cover"
       lean: "GoodRegion, exists_goodRegion, exists_countable_goodRegion_cover"
-      module: "IETFree/GoodRegion.lean, IETFree/BlockEndpoints.lean"
+      module: "IETFree/Pair/GoodRegion.lean, IETFree/Pair/BlockEndpoints.lean"
       status: "proved"
       note: >-
         An open ball around a good parameter, carrying the list s, the permutation ρ, the cut and
