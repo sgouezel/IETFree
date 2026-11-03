@@ -31,7 +31,7 @@ The uniform bound `M` is what makes the product of the contraction factors tend 
 uniform positivity supply it a.e. with a single `M` (`MainTheorem.hasPositiveBlocks_ae`), which is
 why the assembly `MainTheorem.main_of_components` needs nothing else from this file.  Positivity of
 the coordinates of `lam` is not assumed: a positive block at time `0` gives it
-(`RayPointwise.mem_simplexCyl_nil_of_mem`). Axiom-clean. -/
+(`RayPointwise.mem_simplexCyl_nil_of_mem`). -/
 
 
 open MeasureTheory Filter

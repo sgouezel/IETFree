@@ -361,18 +361,14 @@ theorem one_mem_splitSet (T : ℝ ≃ ℝ) (s : Finset ℝ) : (1 : ℝ) ∈ spli
 
 end IETFree.UniqueErgodicity
 
-/-! ## The one-sided behaviour of the germs (Blueprint 2, Lemma 2.4(iv)(v))
+/-! ## The one-sided behaviour of the germs (the blueprint's Lemma 2.4(iv)(v))
 
-These are the lemmas that *pin the naming* of the two germs, and they were missing from this file
-while the campaign was being formalised: `rightGerm x` is the point approached by the right germs
-of `y > x` and `leftGerm x` the one approached by the right germs of `y < x`, and the two differ
-exactly at the split points.  Without them the left/right convention of `side`, and hence of the
-germ map's second coordinate, could only be checked by hand — a consistently mirrored convention
-would satisfy every proof in the campaign.  Also here: `side`'s formula (Blueprint §3.1) and the
-identification of `upSet`/`downSet` with the displayed sets of Blueprint §2.3.
-
-Proofs: the audit probe `.ultramath/smvz94nqt/m1/ProbeCAll.lean` (swarm `smvz94nqt`), which found
-them absent and proved them; landed here unchanged apart from the namespace.
+These are the lemmas that *pin the naming* of the two germs: `rightGerm x` is the point approached
+by the right germs of `y > x` and `leftGerm x` the one approached by the right germs of `y < x`,
+and the two differ exactly at the split points.  Without them the left/right convention of `side`,
+and hence of the germ map's second coordinate, could only be checked by hand — a consistently
+mirrored convention would satisfy every proof downstream.  Also here: `side`'s formula (blueprint
+§3.1) and the identification of `upSet`/`downSet` with the displayed sets of blueprint §2.3.
 -/
 
 namespace IETFree.UniqueErgodicity

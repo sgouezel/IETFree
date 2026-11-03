@@ -7,17 +7,17 @@ Authors: Sébastien Gouëzel
 import IETFree.Rigidity.RigidSet
 
 /-!
-# Provider: `Internal.rigid_step`
+# The rigid step
 
-The abstract rigid step of the Veech rigidity campaign (`HISTORY.md`, Part II.2.1,
-§5.4–§5.6): at a node `γ` of an `IterOK` word whose `b`-cell is big (`BigCell`, relative precision
+The abstract rigid step of the proof of Veech's rigidity: at a node `γ` of an `IterOK` word whose
+`b`-cell is big (`BigCell`, relative precision
 `deltaOf ε M`),
 whose heights are dominated by the height of `b` (with constant `M`), and whose base is short
 (`baseLen ≤ min ε (1/(2N₀))`), there are a time `q ≥ N₀`, a translation vector `t` with `|t| ≤ ε`,
 and a measurable set `B ⊆ [0,1)` of measure `≥ 1 - ε` on which `T^[q]` is the translation
 `x ↦ x + t`.
 
-The proof is the one of §5.5–§5.6:
+The proof runs as follows:
 
 * the degenerate cases first: for `ε ≥ 1` the conclusion is trivial (`q := N₀`, `t := 0`, `B := ∅`),
   and `N₀ = 0` makes the hypotheses contradictory, since `hΛ` then gives `baseLen ≤ 0` while
@@ -30,7 +30,7 @@ The proof is the one of §5.5–§5.6:
   arithmetic of Appendix A turns the two into `|t| ≤ ε` and `|B| ≥ 1 - ε`, and the domination into
   `q = h_b ≥ N₀`.
 
-The hypothesis `hstop` is part of the frozen type but is **not used** by the proof: the tower
+The hypothesis `hstop` is carried by the statement but is **not used** by the proof: the tower
 statements at the node `γ` are those of `Rigidity/RigidSet.lean`, which needs `IterOK P lam γ` only.
 -/
 
@@ -241,7 +241,7 @@ private theorem rigid_arith {L s hb ε : ℝ} {M N₀ : ℕ}
 `q = height P γ b ≥ N₀` steps, the exact translation `x ↦ x + t` with `|t| ≤ ε` on a measurable set
 `B ⊆ [0,1)` of measure at least `1 - ε`.
 
-The hypothesis `hstop` is part of the frozen anchor but is not used by the proof: the tower
+The hypothesis `hstop` is carried by the statement but is not used by the proof: the tower
 statements at a single node need `IterOK P lam γ` only (`Rigidity/RigidSet.lean`). -/
 theorem rigid_step {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
     (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
@@ -258,7 +258,7 @@ theorem rigid_step {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero 
       1 - ε ≤ (volume B).toReal ∧
       ∀ x ∈ B, (⇑(P.toIET lam))^[q] x = x + t := by
   classical
-  -- `hstop` belongs to the frozen interface, but the proof does not need it
+  -- `hstop` is part of the interface, but the proof does not need it
   have _hstop := hstop
   rcases lt_or_ge 1 ε with hε1 | hε1
   · refine ⟨N₀, 0, ∅, le_rfl, ?_, Set.empty_subset _, MeasurableSet.empty, ?_, ?_⟩

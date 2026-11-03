@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
 
-import IETFree.Basic
+import IETFree.TopBotFormalism
 import IETFree.IET
 
 /-!
@@ -13,11 +13,6 @@ Proposition 2.5 of the paper (`ae_diophantine`): almost every pair of length vec
 This file is separate from `Irreducible.lean` only to keep that file to a reasonable length; it is
 imported there, and it carries the Section-2 definitions (`coeffMax`, `IsDiophantine`, `simplex`)
 that both files need, next to the proof that uses them.
-
-**Provenance.** The proof was produced by the discovery run `ae-diophantine` (worker `t000002`, 926
-lines, no `sorry`, checked by the run's Lean before being reported solved) and is ported here
-unchanged; only the inlined copies of `coeffMax`, `IsDiophantine`, `simplex`, `simplexRegion`,
-`simplexMap` and `simplexVolume` were deleted in favour of the library's.
 
 **Route.** Working in the free coordinates `(v, w) ∈ simplexRegion (p+1) × simplexRegion (q+1)`
 (where `d = p + 1`, `e = q + 1` and `simplexMap` is affine), for each integer vector

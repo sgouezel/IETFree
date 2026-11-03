@@ -20,7 +20,7 @@ appears).  This file proves **`Γ₄`**, in the form the `k → k+1` step consum
 * `sum_cond_le_one`, `sum_cond_fibre_le`, **`exists_prefixFree_mass`**: the minimal prefixes of a
   covering family carry at least its mass (replacing the paper's non-injective, non-prefix-free
   truncation in "`P(Γ₄ | π) ≥ P(Γ₃ | π)`"), together with `take_succ_eq_of_head`,
-  `exists_head_drop`. Axiom-clean.
+  `exists_head_drop`.
 -/
 
 

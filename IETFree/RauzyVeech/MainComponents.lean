@@ -5,7 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 
 import IETFree.RauzyVeech.InvariantMeasure
-import IETFree.Basic
+import IETFree.TopBotFormalism
 import IETFree.RauzyVeech.ColDiam
 
 /-!

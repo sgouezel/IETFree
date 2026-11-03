@@ -8,10 +8,9 @@ import IETFree.RauzyVeech.PairReach
 import IETFree.RauzyVeech.RauzyReach
 
 /-!
-# The positive block of the Veech rigidity campaign
+# The positive block of the Rauzy matrix
 
-This module proves the two combinatorial lemmas of §4.3 of the rigidity blueprint (`HISTORY.md`,
-Part II.2.1):
+This module proves the two lemmas on nonnegative integer matrices behind Veech's positive block:
 
 * `colsum_le_of_one_le`: a positive right factor makes the column sums of a nonnegative integer
   matrix comparable, with the comparability constant given by the largest entry of the factor

@@ -31,7 +31,7 @@ diameter of the cylinder is at most twice the spread of the normalised columns.
 
 No measure theory is involved.  The peeling of the blocks along a greedy path is
 `IETFree/RauzyVeech/Peel.lean`; the assembly is
- `IETFree/RauzyVeech/PosBlocks.lean`. Axiom-clean.
+ `IETFree/RauzyVeech/PosBlocks.lean`.
 -/
 
 

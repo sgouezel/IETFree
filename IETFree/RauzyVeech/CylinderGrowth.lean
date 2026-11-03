@@ -29,7 +29,7 @@ Rauzy diagram there is a finite path whose matrix `Q = Path.Q` has all entries `
 * `exists_pos_word`: `PairReach` gives, from every irreducible vertex, a word whose `Q`-matrix has
   all entries `≥ 1`, and `exists_uniform_bound`: the uniform constant `C₁` of Lemma 2.
 
-Axiom-clean.  `PairReach` itself is proved in `IETFree/RauzyVeech/PairReach.lean`. -/
+`PairReach` itself is proved in `IETFree/RauzyVeech/PairReach.lean`. -/
 
 open scoped BigOperators
 

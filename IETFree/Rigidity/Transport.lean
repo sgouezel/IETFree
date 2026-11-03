@@ -4,17 +4,18 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
 
-import IETFree.Basic
+import IETFree.TopBotFormalism
 import IETFree.RauzyVeech.Affine
 
 /-!
 # Transport of the a.e. rigidity statement along `ofPerm`
 
-BLUEPRINT §8.1, step 6 (R4) of the Veech campaign.  The rigidity statement is proved for the
+The rigidity statement is proved for the
 two-bijection datum `P = IETDatum₂.ofPerm π`, i.e. the single-permutation datum written with the
 identity as bottom order; the source's single-permutation form is `mkIET1' lam π h`.  Nothing in
 this file is specific to `d ≥ 2`: only `[NeZero d]` is needed, as in the statement of
-`veechRigidity` (`IETFree/Pair/Irreducible.lean`, §8.2 of the blueprint handles `d = 1` separately).
+`veechRigidity` (`IETFree/Pair/Irreducible.lean`; the case `d = 1` is separate,
+`Rigidity/DimOne.lean`).
 The transport is purely a rewriting:
 
 * `simplexVolumeOn_fin d` identifies the measure `simplexVolumeOn (Fin d)` with the copied

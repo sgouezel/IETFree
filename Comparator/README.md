@@ -47,11 +47,16 @@ were deleted, and the library's two `Prop`s `MasurVeech`/`VeechRigidity` became 
 
 `mkIETEquiv` is `:= sorry` in the challenge, and listed in `definition_names`. Comparator then
 compares only its name, statement and safety, and checks that the solution's version is accepted by
-the kernel and uses no axiom outside the permitted list. This is needed because the library proves
-the two inverse laws of `mkIETEquiv` through the `private` core `mkIETFunCore` in
-`IETFree/IET.lean`: a private name lives in its own module only, so no other module can ever declare
-that constant, and the comparison of the body could not succeed. Emptying `definition_names` shows
-this directly — `Check.lean` then reports `differs: mkIETEquiv._proof_1`.
+the kernel and uses no axiom outside the permitted list.
+
+The challenge leaves it a hole to keep the file short and easy to read: `mkIETEquiv` packages the
+exchange `mkIETFun lam π a` as an `Equiv ℝ ℝ`, whose inverse is the exchange of the inverse
+permutation with the lengths reordered, and the two inverse laws behind that packaging are not
+completely trivial. A verbatim copy is not open to the challenge either: the library proves the
+right-inverse law from the `private` `mkIETFunCore_inv_right` in `IETFree/IET.lean`, a private name
+lives in its own module only, so the same term cannot be written in `Challenge.lean`. Emptying
+`definition_names` shows the mismatch directly — `Check.lean` then reports
+`differs: mkIETEquiv._proof_1`.
 
 The hole is pinned down by `coe_mkIETEquiv`, a *theorem target*: the solution has to prove that its
 `mkIETEquiv` is the map of `mkIETFun`, which is exactly the property the proof uses.

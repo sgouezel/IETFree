@@ -10,10 +10,10 @@ import IETFree.RauzyVeech.RichPath.RichPathAssembly
 /-!
 # The balance constant of the induction step
 
-What is left of the `Γ₃` interface of the induction.  The `Γ₃` mass estimate itself is no longer a
-named `Prop`: it is the statement of `Potential.straddleMassCard_of_goodMass_straddle` (from a
-clean-stop mass bound) and `Potential.straddleMassCard_of_unclean` (unconditionally, for every
-cardinality), both in `Potential.lean`.
+The `Γ₃` mass estimate of the induction is the statement of
+`Potential.straddleMassCard_of_goodMass_straddle` (from a clean-stop mass bound) and
+`Potential.straddleMassCard_of_unclean` (unconditionally, for every cardinality), both in
+`Potential.lean`.
 
 This file keeps the other half of the step — the balance constant `KeeGen` delivered by `Γ₂`, and
 the fact that `A'`-balance is preserved by the growth bound (`bal_of_growth`) — which

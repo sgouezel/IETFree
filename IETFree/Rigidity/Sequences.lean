@@ -4,20 +4,19 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
 
-import IETFree.Basic
+import IETFree.TopBotFormalism
 import IETFree.Rigidity.Veech
 
 /-!
 # From "arbitrarily large return times" to rigidity by translations
 
-BLUEPRINT §7.  The frozen `ae_rigid_step` says, for a.e. length vector and every `ε > 0` and every
+The almost-everywhere weak-rigidity statement `ae_rigid_step` says, for a.e. length vector and
+every `ε > 0` and every
 `N₀`, that there is an exact translation `x ↦ x + t` on a set of measure `≥ 1 - ε` after `q ≥ N₀`
 steps.  Taking `ε k = 1/(k+1)` and `N₀ = k` turns it into the sequence form of
 `IsRigidByTranslations`: `q k ≥ k` so `q → ∞`, `|t k| ≤ 1/(k+1)` so `t → 0`, and the measure of
 `B k` is squeezed between `1 - 1/(k+1)` and `1`.
 
-Proof taken from the packet `smvzh8n6y` (member `m1`, `perm_body.lean`); made public here.
-Axioms: `[propext, Classical.choice, Quot.sound]`.
 -/
 
 open MeasureTheory Filter

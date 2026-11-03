@@ -8,9 +8,10 @@ import IETFree.Rigidity.Defs
 import IETFree.RauzyVeech.PairReach
 
 /-!
-# The combinatorial package of the Veech rigidity campaign
+# An extreme vertex, runs of `true` steps, and the big cell
 
-This module proves §4.1–§4.2 of the rigidity blueprint (`HISTORY.md`, Part II.2.1).
+This module proves the two combinatorial facts about vertices of the Rauzy diagram that the positive
+block of the rigid step rests on.
 
 * `exists_vertex_last_true_eq_piBottom_zero` — the **extreme vertex**: from every irreducible
   datum some reachable vertex has a letter `b` that is last in the top order and first in the

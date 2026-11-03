@@ -16,13 +16,8 @@ singularity functions of `IETFree.Presentation` are integer affine (`isIntAffine
 `isIntAffine_imageLeftAffine`, …), and it extracts the data (`intAffineData`) that the Diophantine
 transfer consumes.
 
-The sign-constancy and truncation lemmas that used to close the file — `lt_or_gt_of_ne_of_convex`,
-`lt_or_gt_of_ne_of_convex_intAffine`, `Convex.exists_isIntAffine_max`, `…_min`, `…_posPart`,
-`…_truncatedLength`, together with the two lemmas only they used
-(`lt_or_gt_of_ne_of_isPreconnected`, `IsIntAffine.continuous`) — are gone.  They wanted `Convex ℝ O`
-for a region `O`, which no `GoodRegion` supplies; the assembly builds its integer-affine families
-directly, and the live truncation lemma is `GoodRegion.exists_isIntAffine_truncatedLengths` in
-`IETFree.BlockDiophantine`.
+The truncation lemma that the assembly uses is `GoodRegion.exists_isIntAffine_truncatedLengths` in
+`IETFree.BlockDiophantine`, where the integer-affine families are built directly.
 -/
 
 open MeasureTheory Filter Topology

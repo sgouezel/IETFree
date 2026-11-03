@@ -13,9 +13,9 @@ import IETFree.UniqueErgodicity.SubtypeConv
 import IETFree.UniqueErgodicity.GermIterate
 
 /-!
-# Theorem 2 of Blueprint 2
+# Theorem 2: uniform Birkhoff convergence from a unique invariant measure
 
-This is the endgame of the campaign.  The results:
+The results:
 
 * `uniqueErgodicOn_rightPart` — **Theorem 4.11**: the germ map `T̃` of the interval exchange
   `mkIETEquiv lam π 0`, restricted to the compact space `[0⁺, 1⁻]` of right germs of `[0, 1)`, is
@@ -31,7 +31,7 @@ This is the endgame of the campaign.  The results:
   of a finite union of half-open intervals, the form in which the free-group development consumes
   unique ergodicity (`IETFree/Pair/Irreducible.lean`).
 
-The proof of Theorem 4.11 is the transfer argument of Blueprint 2 §4: push an invariant probability
+The proof of Theorem 4.11 is the transfer argument: push an invariant probability
 `ν` of `[0⁺, 1⁻]` to the whole split interval, write `J` for the finite set of points at which the
 left limit and the exchange differ, check that the only obstruction to `proj_*ν` being invariant is
 the mass of the left germs `leftGerm c`, `c ∈ J`, and kill that mass — by the orbit argument for
@@ -43,11 +43,9 @@ Theorem 2 then applies Tool 1 (`tendsto_uniform_birkhoffAverage`) to the restric
 to `[0⁺, 1⁻]`, whose unique invariant probability is the lift above, and transfers the convergence
 back to the exchange along the right-germ section.
 
-The iterate bridge for the left germs is *imported*, not repeated:
-`UniqueErgodicity/GermIterate.lean` provides `germMapOf_leftGerm`,
-`proj_iterate_germMapOf_leftGerm` and `germMapOf_orbit_infinite`, and this file uses them directly.
-(An earlier revision carried local copies, written while that module was still in flight; they were
-removed once it landed, and the one bridge lemma it used about the left limit alone was pruned too.)
+The iterate bridge for the left germs is in `UniqueErgodicity/GermIterate.lean`, which provides
+`germMapOf_leftGerm`, `proj_iterate_germMapOf_leftGerm` and `germMapOf_orbit_infinite`; this file
+uses them directly.
 -/
 
 open MeasureTheory Filter Set Topology
@@ -55,19 +53,19 @@ open scoped ENNReal NNReal BigOperators
 
 namespace IETFree.UniqueErgodicity
 
-/-! ## Notation for the campaign's exchange -/
+/-! ## Notation for the exchange of the germ map -/
 
-/-- The split set of the campaign's exchange `mkIETEquiv lam π 0`, for the cut set
+/-- The split set of the exchange `mkIETEquiv lam π 0`, for the cut set
 `mkIETCuts lam 0 1`. -/
 abbrev ietSplitSet {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n)) : Set ℝ :=
   splitSet (mkIETEquiv lam π 0) (mkIETCuts lam 0 1)
 
-/-- The right part `[0⁺, 1⁻]` of the split interval of the campaign's exchange. -/
+/-- The right part `[0⁺, 1⁻]` of the split interval of that exchange. -/
 abbrev ietRightPart {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n)) :
     Set (SplitI (ietSplitSet lam π)) :=
   SplitI.rightPart (ietSplitSet lam π)
 
-/-- The germ map of the campaign's exchange, restricted to the right part `[0⁺, 1⁻]`. -/
+/-- The germ map of that exchange, restricted to the right part `[0⁺, 1⁻]`. -/
 noncomputable abbrev ietGermRight {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
     (hsum : (∑ i, (lam i : ℝ)) ≤ 1) : ↥(ietRightPart lam π) → ↥(ietRightPart lam π) :=
   restrictTo (germMap lam π hsum) (mapsTo_rightPart lam π hsum)

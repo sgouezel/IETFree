@@ -11,21 +11,22 @@ import IETFree.Rigidity.Matrix
 import IETFree.Rigidity.RigidStep
 
 /-!
-# Provider: `Internal.ae_rigid_step`
+# The hitting lemma, and the a.e. rigidity statement
 
-Blueprint §6: the assembly of the campaign's a.e. statement (R2) from two modules
+The assembly of the a.e. rigidity statement from two ingredients:
 
 * `Rigidity/Hit.lean` — the hitting lemma, used below in the strengthened form `ae_exists_hit_base`
-  (proved here privately: the shipped form bounded the base length at the *deeper* node);
+  (proved here privately, bounding the base length at `w` itself rather than at the *deeper* node
+  `w ++ γ₀`);
 * `Rigidity/RigidStep.lean` — the rigid step `IETFree.Rigidity.Internal.rigid_step`.
 
-The §4.4 good node is assembled here as well, as the private `exists_good_node_uniform`: it is the
+The good node is assembled here as well, as the private `exists_good_node_uniform`: it is the
 form the rigid step needs, and it is stated with `M` before `δ` (see below).
 
 For a.e. length vector and every `ε > 0` and `N₀`, an exact small translation on a set of measure
 `≥ 1 - ε` after `q ≥ N₀` steps.
 
-Three points of care, invisible in the blueprint's sketch:
+Three points of care:
 
 * `rigid_step` needs `BigCell` at the precision `deltaOf ε M` where `M` is the comparability
   constant of the heights *of the same node*, so `M` must be quantified **before** `δ`

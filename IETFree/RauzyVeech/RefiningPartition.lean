@@ -33,12 +33,9 @@ be an interval either.  The argument is purely metric and runs as follows.
 * A finite measure on `ℝ` is inner regular by compact sets, so agreement on all closed subsets
   of `I` upgrades to agreement on all Borel subsets of `I`.
 
-The mesh hypothesis `hmesh` is stated as "any two points of an atom are `< ε` apart".  The
-`Metric.diam` formulation is the corollary `measure_restrict_eq_of_refining_partitions_diam`, which
-needs the atoms to be bounded -- `Metric.diam` of an *unbounded* set is `0` in Mathlib, so the two
-formulations are not interchangeable without that hypothesis. 
-`measure_restrict_eq_of_refining_Ico_partitions` is the version for partitions into half-open
-intervals, where measurability and boundedness of the atoms are automatic. -/
+The mesh hypothesis `hmesh` is stated as "any two points of an atom are `< ε` apart", so no
+boundedness of the atoms is needed: `Metric.diam` of an *unbounded* set is `0` in Mathlib, and a
+diameter formulation would therefore need the atom bounded as a side condition. -/
 
 open MeasureTheory Filter
 open scoped Topology ENNReal

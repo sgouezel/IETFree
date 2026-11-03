@@ -10,13 +10,13 @@ import IETFree.UniqueErgodicity.Limits
 /-!
 # The iterate bridge for the left germs of the germ map
 
-Blueprint 2, §3.  The germ map `T̃` of an interval exchange sends the left germ of a split point
+The germ map `T̃` of an interval exchange sends the left germ of a split point
 `x` to the left germ of the left limit `L x` (the landed `Germ.lean` only records the dual
 statement for right germs, `germMap_rightGerm`).  We prove this left-germ equivariance, deduce
 from it the iterate bridge `T̃^[n] (leftGerm c) = leftGerm (L^[n] c)` together with its projection
 form `proj (T̃^[n] (leftGerm c)) = L^[n] c`, and the dual projection form for right germs.
-The last statement of the file, `germMap_orbit_infinite`, records the consequence used by the
-measure theoretic endgame: under (H2) the orbit of a left germ in `(0, 1]` is infinite.
+The last statement of the file, `germMap_orbit_infinite`, records the consequence used in the
+measure-theoretic part: under (H2) the orbit of a left germ in `(0, 1]` is infinite.
 
 Everything is proved first for an arbitrary exchange `T` with cut set `s` on `[0, 1)`, as in
 `Germ.lean`, and then specialised to `T = mkIETEquiv lam π 0` and `s = mkIETCuts lam 0 1`.

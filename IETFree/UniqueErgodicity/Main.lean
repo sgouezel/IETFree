@@ -8,7 +8,7 @@ import IETFree.UniqueErgodicity.MainTheorem
 import IETFree.UniqueErgodicity.Basic
 
 /-!
-# Theorem 3 of Blueprint 2: the a.e. Birkhoff form of Masur–Veech
+# The a.e. Birkhoff form of Masur–Veech
 
 `masurVeech_ae_unique_invariant_perm` states that for almost every length vector of the simplex the
 exchange `mkIET1' lam π h` has a unique invariant probability measure carried by `[0, 1)`.  That
@@ -16,13 +16,12 @@ measure is Lebesgue measure on `[0, 1)`: the latter is invariant
 (`InvariantMeasure.invariant_unitMeas`) and has mass `1` there, so the uniqueness forces the two to
 coincide.
 
-This measure form *is* unique ergodicity (`UniqueErgodic`, `IETFree/IET.lean`): Theorem 2 of the
-blueprint (`UniqueErgodicity.uniformBirkhoff_mkIET1`, and `uniformBirkhoff_of_uniqueErgodic` for
-an arbitrary exchange) upgrades it to uniform convergence of the Birkhoff averages, and Lemma 2.9
+This measure form *is* unique ergodicity (`UniqueErgodic`, `IETFree/IET.lean`): Theorem 2
+(`UniqueErgodicity.uniformBirkhoff_mkIET1`, and `uniformBirkhoff_of_uniqueErgodic` for an arbitrary
+exchange) upgrades it to uniform convergence of the Birkhoff averages, and Lemma 2.9
 (`UniqueErgodicity.exists_uniform_birkhoff`) is the form the free-group development consumes.
 
-Nothing else is used: no positivity of the lengths, and no condition on the left limit
-(blueprint §7).
+Nothing else is used: no positivity of the lengths, and no condition on the left limit.
 -/
 
 open MeasureTheory Filter

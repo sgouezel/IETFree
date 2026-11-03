@@ -12,7 +12,8 @@ import IETFree.UniqueErgodicity.Transfer
 /-!
 # Measurability preparation for the split interval
 
-This file collects the measure-theoretic facts that the endgame (P5, `IET.lean`) needs from the
+This file collects the measure-theoretic facts that the germ-map construction (`IET.lean`) needs
+from the
 split interval, and none of which is in `Split.lean`, `Limits.lean` or `Transfer.lean`:
 
 * `splitSet_countable`: the split set is countable (the `hD` hypothesis of the lift lemma);

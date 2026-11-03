@@ -29,7 +29,7 @@ The passage from "columns close" to "cylinders shrink" is
 rewritten with `IETDatum₂.pfx_pathStep`.  The stopping-set hypothesis is only required *along the
 greedy path* (`lam ∉ cylStop P (pathWord P lam k)`), not for every word: this is
 `iterOK_pathWord_of_notMem_cylStop` below, which re-runs the proof of `IterGlue2.iterOK_pathWord`
-against `IETDatum₂.mem_pathWord_of_notMem_cylStop`. Axiom-clean. -/
+against `IETDatum₂.mem_pathWord_of_notMem_cylStop`. -/
 
 
 open MeasureTheory Filter
@@ -138,7 +138,7 @@ theorem tendsto_diam_pathWord_of_cols (P : IETDatum₂ α n) {lam : α → ℝ�
 
 /-! ## 4. The ray condition from the coalescence of the normalised columns -/
 
-/-- **The last mile.**  A pointwise ray criterion: if the normalised columns of the Rauzy–Veech
+/-- **The pointwise ray criterion.**  If the normalised columns of the Rauzy–Veech
 matrices along the greedy path of `lam` eventually pairwise agree, then every invariant probability
 measure carried by `[0,1)` has length vector proportional to `lam`. -/
 theorem rayCondition_of_cols (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)

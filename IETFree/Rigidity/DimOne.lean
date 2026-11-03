@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
 
-import IETFree.Basic
+import IETFree.TopBotFormalism
 import IETFree.RauzyVeech.Affine
 import IETFree.RauzyVeech.SimplexAe
 
@@ -15,10 +15,6 @@ import IETFree.RauzyVeech.SimplexAe
 statement.  It is true and not vacuous: every `π : Equiv.Perm (Fin 1)` is irreducible and the
 exchange `mkIET1' lam π h` is the identity on the simplex, so rigidity holds with `q n = n`,
 `t = 0`, `B n = Set.Ico 0 1`.  This is the `d = 1` half of its proof.
-
-Proofs taken from the probe of the audit `smvzfapws`/m1 (`A3Probe.lean`), where the `d = 1` branch
-was first established; names and docstrings adapted.  Axioms: `[propext, Classical.choice,
-Quot.sound]`.
 -/
 
 open MeasureTheory Filter

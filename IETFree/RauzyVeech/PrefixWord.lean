@@ -12,9 +12,6 @@ import Mathlib
 `pfx p n` is the word read by the infinite type sequence `p` during its first `n` steps: the prefix
 of length `n` of the greedy path.  `pfx_succ` records the one-letter recursion, which is what the
 cylinder arguments use (`simplexCyl P (pfx p k)` is antitone in `k`).
-
-The cylinder tree this module used to carry is not on the path of the main theorem and was pruned;
-`pfx` and its recursion are all the Rauzy–Veech development needs.
 -/
 
 open MeasureTheory Set Filter
