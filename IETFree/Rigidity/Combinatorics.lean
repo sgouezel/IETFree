@@ -81,20 +81,20 @@ private lemma rvMat_true_eq {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
   simp only [IETDatum₂.rvMat, Emat, Matrix.add_apply, Matrix.one_apply, Matrix.of_apply]
   by_cases hac : a = c
   · subst hac
-    rw [if_pos rfl, if_pos rfl]
+    rw [ite_eq_left rfl, ite_eq_left rfl]
     by_cases hb : a = P.last true
-    · rw [if_pos hb, if_neg (fun h => hne (hb.symm.trans h.symm))]
+    · rw [ite_eq_left hb, ite_eq_right (fun h => hne (hb.symm.trans h.symm))]
       simp
-    · rw [if_neg hb]
+    · rw [ite_eq_right hb]
       simp
-  · rw [if_neg hac, if_neg hac, zero_add]
+  · rw [ite_eq_right hac, ite_eq_right hac, zero_add]
     by_cases hb : a = P.last true <;> by_cases hc : P.last false = c
-    · rw [if_pos ⟨hb, hc.symm⟩, if_pos hb, if_pos hc]
+    · rw [ite_eq_left ⟨hb, hc.symm⟩, ite_eq_left hb, ite_eq_left hc]
       simp
-    · rw [if_neg (fun h => hc h.2.symm), if_pos hb, if_neg hc]
+    · rw [ite_eq_right (fun h => hc h.2.symm), ite_eq_left hb, ite_eq_right hc]
       simp
-    · rw [if_neg (fun h => hb h.1), if_neg hb]
-    · rw [if_neg (fun h => hb h.1), if_neg hb]
+    · rw [ite_eq_right (fun h => hb h.1), ite_eq_right hb]
+    · rw [ite_eq_right (fun h => hb h.1), ite_eq_right hb]
 
 /-- Multiplying `1 + E_{b,v}` on the right by the elementary matrix of a step whose `last false`
 letter is `c₀`: the rows add when `v b = 0`. -/
@@ -358,9 +358,9 @@ theorem bigCell_of_mem_cone {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
     rw [h1]
     by_cases h : a = b <;> simp [h]
   have hσb : IETDatum₂.qApply M σ' b = σ' b + ∑ c, (v c : ℝ) * σ' c := by
-    rw [happly b, if_pos rfl]
+    rw [happly b, ite_eq_left rfl]
   have hσc (c) (hc : c ≠ b) : IETDatum₂.qApply M σ' c = σ' c := by
-    rw [happly c, if_neg hc, add_zero]
+    rw [happly c, ite_eq_right hc, add_zero]
   -- split the total mass at the letter `b`
   set S : ℝ := ∑ c ∈ Finset.univ.erase b, σ' c with hS
   have hsum : ∑ c, IETDatum₂.qApply M σ' c = IETDatum₂.qApply M σ' b + S := by

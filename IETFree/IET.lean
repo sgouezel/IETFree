@@ -276,11 +276,6 @@ theorem lt_upperEnd_idx {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) {x : ℝ}
     have hE : leftEnd lam k' = upperEnd lam k := by
       rw [leftEnd, upperEnd]
       congr 1
-      ext j
-      simp only [Finset.mem_filter, Finset.mem_univ, true_and]
-      rw [Fin.lt_def, Fin.le_def, hk']
-      dsimp only [Fin.val_mk]
-      omega
     have : k' ≤ k := le_idx lam x hx.1 (by rw [hE]; exact hcon)
     omega
   · have hd : k.val + 1 = n := by have := k.isLt; omega
@@ -373,13 +368,13 @@ private theorem mkIETFunCore_of_mem {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥
     {x : ℝ} (hx : x ∈ Set.Ico 0 (∑ i, (lam i : ℝ))) :
     mkIETFunCore lam π x = x + translationVector π lam (idx lam x hx.1) := by
   unfold mkIETFunCore
-  exact dif_pos hx
+  exact dite_eq_left hx
 
 private theorem mkIETFunCore_of_notMem {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin
   n))
     {x : ℝ} (hx : x ∉ Set.Ico 0 (∑ i, (lam i : ℝ))) : mkIETFunCore lam π x = x := by
   unfold mkIETFunCore
-  exact dif_neg hx
+  exact dite_eq_right hx
 
 /-- The image of the `i`-th interval lies in the image interval of `i`. -/
 theorem image_point_mem {n : ℕ} (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
@@ -456,13 +451,13 @@ theorem mkIETFun_of_mem {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equ
     mkIETFun lam π a x
       = x + translationVector π lam (idx lam (x - a) (by linarith [hx.1])) := by
   unfold mkIETFun
-  exact dif_pos hx
+  exact dite_eq_left hx
 
 theorem mkIETFun_of_notMem {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
     (a : ℝ) {x : ℝ} (hx : x ∉ Set.Ico a (a + ∑ i, (lam i : ℝ))) :
     mkIETFun lam π a x = x := by
   unfold mkIETFun
-  exact dif_neg hx
+  exact dite_eq_right hx
 
 /-- The shifted formula is the shift of the formula at `0`. -/
 private theorem mkIETFun_eq_shift {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0)
@@ -472,12 +467,12 @@ private theorem mkIETFun_eq_shift {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0)
   by_cases hy : y ∈ Set.Ico a (a + ∑ i, (lam i : ℝ))
   · have hy' : y - a ∈ Set.Ico 0 (∑ i, (lam i : ℝ)) :=
       ⟨by linarith [hy.1], by linarith [hy.2]⟩
-    rw [dif_pos hy, dif_pos hy']
+    rw [dite_eq_left hy, dite_eq_left hy']
     ring
   · have hy' : y - a ∉ Set.Ico 0 (∑ i, (lam i : ℝ)) := by
       intro h
       exact hy ⟨by linarith [h.1], by linarith [h.2]⟩
-    rw [dif_neg hy, dif_neg hy']
+    rw [dite_eq_right hy, dite_eq_right hy']
     ring
 
 theorem mkIETFun_inv_left {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
@@ -637,7 +632,8 @@ theorem isCutSet_mkIETCuts {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : 
           · exfalso; linarith [hy.2]
         have hsep : a + T ∈ cuts := by
           rw [hcuts]
-          exact Finset.mem_union_right _ (by rw [if_pos hTt]; exact Finset.mem_singleton_self _)
+          exact Finset.mem_union_right _
+            (by rw [ite_eq_left hTt]; exact Finset.mem_singleton_self _)
         exact absurd ⟨a + T, hsep, by
           constructor
           · linarith [hxT.2, min_le_left x y, min_le_right x y]
@@ -654,7 +650,8 @@ theorem isCutSet_mkIETCuts {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : 
           · exfalso; linarith [hx.2]
         have hsep : a + T ∈ cuts := by
           rw [hcuts]
-          exact Finset.mem_union_right _ (by rw [if_pos hTt]; exact Finset.mem_singleton_self _)
+          exact Finset.mem_union_right _
+            (by rw [ite_eq_left hTt]; exact Finset.mem_singleton_self _)
         exact absurd ⟨a + T, hsep, by
           constructor
           · linarith [hyT.2, min_le_left x y, min_le_right x y]
@@ -915,12 +912,12 @@ noncomputable def mkIET1 {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Eq
 /-- On the simplex, the total `mkIET1` is `mkIET1'`. -/
 theorem mkIET1_of_mem {n : ℕ} [NeZero n] {lam : Fin n → ℝ≥0} {π : Equiv.Perm (Fin n)}
     (h : (∑ i, lam i) = 1) : mkIET1 lam π = mkIET1' lam π h := by
-  rw [mkIET1, dif_pos h]
+  rw [mkIET1, dite_eq_left h]
 
 /-- Off the simplex, the total `mkIET1` is the identity. -/
 theorem mkIET1_of_notMem {n : ℕ} [NeZero n] {lam : Fin n → ℝ≥0} {π : Equiv.Perm (Fin n)}
     (h : ¬ (∑ i, lam i) = 1) : mkIET1 lam π = 1 := by
-  rw [mkIET1, dif_neg h]
+  rw [mkIET1, dite_eq_right h]
 
 /-- **The function of the total `mkIET1` on the simplex** is `mkIETFun lam π 0`. -/
 theorem coe_mkIET1 {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
@@ -1029,14 +1026,14 @@ theorem measurable_simplexMap (d : ℕ) : Measurable (simplexMap d) := by
 theorem simplexMap_last {m : ℕ} (v : Fin m → ℝ) :
     simplexMap (m + 1) v (Fin.last m) = (1 - ∑ j, v j).toNNReal := by
   simp only [simplexMap]
-  rw [dif_pos (by simp)]
+  rw [dite_eq_left (by simp)]
   rfl
 
 /-- The `j`-th coordinate of `simplexMap (m + 1) v` is `v j` (a `NNReal`). -/
 theorem simplexMap_castSucc {m : ℕ} (v : Fin m → ℝ) (j : Fin m) :
     simplexMap (m + 1) v j.castSucc = (v j).toNNReal := by
   simp only [simplexMap]
-  rw [dif_neg (by simp [Fin.val_castSucc]; omega)]
+  rw [dite_eq_right (by simp [Fin.val_castSucc]; omega)]
   congr 1
 
 /-! ## Irreducibility of a permutation -/

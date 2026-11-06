@@ -104,7 +104,7 @@ theorem leftEnd_lt_leftEnd {m : ℕ} {lam : Fin m → ℝ≥0} (hpos : Positive 
   · split_ifs with hji
     · exact le_rfl
     · exact (lam j).coe_nonneg
-  · rw [if_neg (lt_irrefl i)]
+  · rw [ite_eq_right (lt_irrefl i)]
     exact_mod_cast hpos i
 
 /-- **At a good parameter pair, no image of a cut of `f` is a cut of `g`.** -/
@@ -330,7 +330,7 @@ theorem withEnds_mid {d e : ℕ} {n : ℕ} (hn : 1 ≤ n) (A : Fin (n - 1) → P
     simp only []
     have := k.isLt
     omega
-  simp only [withEnds, dif_neg h1, dif_neg h2]
+  simp only [withEnds, dite_eq_right h1, dite_eq_right h2]
   congr 1
 
 theorem withEnds_apply_eq {d e n : ℕ} (hn : 1 ≤ n) (A : Fin (n - 1) → ParamAffine d e)
@@ -338,12 +338,12 @@ theorem withEnds_apply_eq {d e n : ℕ} (hn : 1 ≤ n) (A : Fin (n - 1) → Para
     withEnds hn A j q = if h0 : j.val = 0 then 0 else if h1 : j.val = n then 1
       else A ⟨j.val - 1, by have := j.isLt; omega⟩ q := by
   by_cases h0 : j.val = 0
-  · simp only [withEnds, dif_pos h0]
+  · simp only [withEnds, dite_eq_left h0]
     rfl
   · by_cases h1 : j.val = n
-    · simp only [withEnds, dif_neg h0, dif_pos h1]
+    · simp only [withEnds, dite_eq_right h0, dite_eq_left h1]
       rfl
-    · simp only [withEnds, dif_neg h0, dif_neg h1]
+    · simp only [withEnds, dite_eq_right h0, dite_eq_right h1]
 
 /-- **The marked list `0, A, 1` is strictly increasing** at a point where `A` is, with all its
 values in `(0, 1)`. -/
@@ -354,24 +354,24 @@ theorem strictMono_withEnds {d e n : ℕ} (hn : 1 ≤ n) (A : Fin (n - 1) → Pa
   simp only []
   rw [withEnds_apply_eq, withEnds_apply_eq]
   rcases eq_or_ne j.val 0 with hj | hj
-  · rw [dif_pos hj]
+  · rw [dite_eq_left hj]
     rcases eq_or_ne j'.val 0 with hj' | hj'
     · omega
-    rw [dif_neg hj']
+    rw [dite_eq_right hj']
     rcases eq_or_ne j'.val n with hj'n | hj'n
-    · rw [dif_pos hj'n]; norm_num
-    · rw [dif_neg hj'n]
+    · rw [dite_eq_left hj'n]; norm_num
+    · rw [dite_eq_right hj'n]
       exact h0 ⟨j'.val - 1, by have := j'.isLt; omega⟩
-  · rw [dif_neg hj]
+  · rw [dite_eq_right hj]
     rcases eq_or_ne j.val n with hjn | hjn
-    · rw [dif_pos hjn]; omega
-    · rw [dif_neg hjn]
+    · rw [dite_eq_left hjn]; omega
+    · rw [dite_eq_right hjn]
       have hj'0 : ¬ (j'.val = 0) := by omega
-      rw [dif_neg hj'0]
+      rw [dite_eq_right hj'0]
       rcases eq_or_ne j'.val n with hj'n | hj'n
-      · rw [dif_pos hj'n]
+      · rw [dite_eq_left hj'n]
         exact h1 ⟨j.val - 1, by have := j.isLt; omega⟩
-      · rw [dif_neg hj'n]
+      · rw [dite_eq_right hj'n]
         exact hA (by simp only [Fin.lt_def]; omega)
 
 /-- On the open simplex region the `i`-th cut of `f` is positive for `i ≠ 0`. -/
@@ -631,7 +631,7 @@ theorem mem_mkIETCuts_one {n : ℕ} {lam : Fin n → ℝ≥0} (hpos : Positive l
   · rintro ⟨h | h, -⟩
     · obtain ⟨i, -, hi⟩ := Finset.mem_image.mp h
       exact ⟨i, by simpa using hi⟩
-    · rw [if_neg (by linarith)] at h
+    · rw [ite_eq_right (by linarith)] at h
       exact absurd h (by simp)
   · rintro ⟨i, rfl⟩
     refine ⟨Or.inl (Finset.mem_image.mpr ⟨i, Finset.mem_univ i, by simp⟩), ?_⟩
@@ -782,7 +782,7 @@ noncomputable def imageLenAffineRight {d e : ℕ} [NeZero e] (j : Fin e) : Param
 theorem imageLenAffineRight_apply_last {d e : ℕ} [NeZero e] {j : Fin e} (h : j.val + 1 = e)
     (q : PReal d e) :
     imageLenAffineRight (d := d) j q = 1 - ∑ m : Fin (e - 1), q.2 m := by
-  rw [imageLenAffineRight, dif_pos h]
+  rw [imageLenAffineRight, dite_eq_left h]
   have hsub (f g : ParamAffine d e) : (f - g) q = f q - g q := rfl
   rw [hsub, AffineMap.sum_apply]
   simp [rightCoordAffine_apply]
@@ -791,14 +791,14 @@ theorem imageLenAffineRight_apply_free {d e : ℕ} [NeZero e] {j : Fin e} (h : �
     (q : PReal d e) :
     imageLenAffineRight (d := d) j q
       = q.2 ⟨j.val, by have h1 := j.isLt; have h2 := NeZero.pos e; omega⟩ := by
-  simp only [imageLenAffineRight, dif_neg h, rightCoordAffine_apply]
+  simp only [imageLenAffineRight, dite_eq_right h, rightCoordAffine_apply]
 
 /-- On the open simplex region, `imageLenAffineRight j` is the `j`-th length of `simplexMap`. -/
 theorem imageLenAffineRight_eq {d e : ℕ} [NeZero e] {q : PReal d e}
     (hq : q.2 ∈ simplexRegion e) (j : Fin e) :
     imageLenAffineRight (d := d) j q = (simplexMap e q.2 j : ℝ) := by
   by_cases h : j.val + 1 = e
-  · rw [imageLenAffineRight_apply_last h, simplexMap, dif_pos h,
+  · rw [imageLenAffineRight_apply_last h, simplexMap, dite_eq_left h,
       Real.coe_toNNReal _ (by linarith [hq.2])]
   · have hj' : j.val < e - 1 := by
       have h2 := NeZero.pos e
@@ -818,8 +818,8 @@ theorem imageLeftAffineRight_apply {d e : ℕ} [NeZero e] (σ : Equiv.Perm (Fin 
   rw [imageLeftAffineRight, AffineMap.sum_apply]
   refine Finset.sum_congr rfl (fun m _ => ?_)
   by_cases h : σ m < σ k
-  · rw [if_pos h, if_pos h]
-  · rw [if_neg h, if_neg h]
+  · rw [ite_eq_left h, ite_eq_left h]
+  · rw [ite_eq_right h, ite_eq_right h]
     rfl
 
 /-- On the open simplex region the left end of the image of the `k`-th cell of `g` is the affine
@@ -830,8 +830,8 @@ theorem imageLeftAffineRight_eq {d e : ℕ} [NeZero e] (σ : Equiv.Perm (Fin e))
   rw [imageLeftAffineRight_apply, imageLeft, Finset.sum_filter]
   refine Finset.sum_congr rfl (fun m _ => ?_)
   by_cases hmk : σ m < σ k
-  · rw [if_pos hmk, if_pos hmk, imageLenAffineRight_eq hq]
-  · rw [if_neg hmk, if_neg hmk]
+  · rw [ite_eq_left hmk, ite_eq_left hmk, imageLenAffineRight_eq hq]
+  · rw [ite_eq_right hmk, ite_eq_right hmk]
 
 /-- **The upper end of the `j`-th cell of `g`**, as an affine function of the free parameters: it is
 `1` for the last cell and the next cut otherwise. -/
@@ -847,11 +847,11 @@ theorem upperEndAffineRight_eq {d e : ℕ} [NeZero e] {q : PReal d e}
     rw [← NNReal.coe_sum]; exact_mod_cast simplexMap_mem_simplex_fin hq.1 hq.2
   rw [upperEndAffineRight]
   by_cases h : j.val + 1 = e
-  · rw [dif_pos h]
+  · rw [dite_eq_left h]
     rw [upperEnd_of_max (simplexMap e q.2) (fun m => by
       rw [Fin.le_def]; have := m.isLt; omega), hsum]
     rfl
-  · rw [dif_neg h, cutAffineRight_eq_leftEnd (d := d) hq]
+  · rw [dite_eq_right h, cutAffineRight_eq_leftEnd (d := d) hq]
     have h1 : j.val + 1 < e := by have := j.isLt; have := NeZero.pos e; omega
     rw [leftEnd_eq_upperEnd_of_succ _ h1]
 
@@ -892,7 +892,7 @@ theorem markedPos_inl {d e n : ℕ} [NeZero d] (π : Equiv.Perm (Fin d))
     markedPos (e := e) π τ ⟨m.val + 1, by have := m.isLt; omega⟩
       = imageLeftAffine π ⟨i.val + 1, by have := i.isLt; omega⟩ := by
   have h0 : ¬ ((⟨m.val + 1, by have := m.isLt; omega⟩ : Fin n).val = 0) := by simp
-  simp only [markedPos, dif_neg h0]
+  simp only [markedPos, dite_eq_right h0]
   rw [show (⟨(⟨m.val + 1, by have := m.isLt; omega⟩ : Fin n).val - 1,
       by have := m.isLt; omega⟩ : Fin (n - 1)) = m from Fin.ext (by simp), hτ]
 
@@ -902,7 +902,7 @@ theorem markedPos_inr {d e n : ℕ} [NeZero d] (π : Equiv.Perm (Fin d))
     markedPos (e := e) π τ ⟨m.val + 1, by have := m.isLt; omega⟩
       = cutAffineRight (d := d) ⟨j'.val + 1, by have := j'.isLt; omega⟩ := by
   have h0 : ¬ ((⟨m.val + 1, by have := m.isLt; omega⟩ : Fin n).val = 0) := by simp
-  simp only [markedPos, dif_neg h0]
+  simp only [markedPos, dite_eq_right h0]
   rw [show (⟨(⟨m.val + 1, by have := m.isLt; omega⟩ : Fin n).val - 1,
       by have := m.isLt; omega⟩ : Fin (n - 1)) = m from Fin.ext (by simp), hτ]
 

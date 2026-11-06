@@ -258,7 +258,7 @@ theorem exists_path_between (P : IETDatum₂ α n) :
   have hf (Q Q' : IETDatum₂ α n) (h : Reach Q Q') : IETDatum₂.vertex Q (f Q Q') = Q' := by
     have h1 : f Q Q' = Classical.choose h := by
       simp only [f]
-      exact dif_pos h
+      exact dite_eq_left h
     rw [h1]
     exact Classical.choose_spec h
   refine ⟨Finset.univ.sup (fun p : IETDatum₂ α n × IETDatum₂ α n => (f p.1 p.2).length),
@@ -283,7 +283,7 @@ theorem returnWord_spec {P Q : IETDatum₂ α n} (h : Reach P Q) :
     IETDatum₂.vertex Q (returnWord P Q) = P := by
   have h1 : returnWord P Q = Classical.choose (reach_back (P := P) h) := by
     simp only [returnWord]
-    exact dif_pos h
+    exact dite_eq_left h
   rw [h1]
   exact Classical.choose_spec (reach_back (P := P) h)
 

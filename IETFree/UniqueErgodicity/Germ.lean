@@ -69,7 +69,7 @@ theorem eq_rightGerm_of_side_true {z : SplitI D} (h : SplitI.side z = true) :
     z = SplitI.rightGerm (D := D) (SplitI.proj z) (SplitI.proj_mem_Icc z) := by
   by_cases hxD : SplitI.proj z ∈ D
   · have hcoord : z.1.2 ⟨SplitI.proj z, hxD⟩ = true := by
-      rw [SplitI.side, dif_pos hxD] at h
+      rw [SplitI.side, dite_eq_left hxD] at h
       exact h
     exact SplitI.eq_rightGerm_of_coord_true (SplitI.proj_mem_Icc z) hxD rfl hcoord
   · have h2 : SplitI.rightGerm (D := D) (SplitI.proj z) (SplitI.proj_mem_Icc z)
@@ -84,7 +84,7 @@ theorem eq_leftGerm_of_side_false {z : SplitI D} (h : SplitI.side z = false) :
     z = SplitI.leftGerm (D := D) (SplitI.proj z) (SplitI.proj_mem_Icc z) := by
   by_cases hxD : SplitI.proj z ∈ D
   · have hcoord : z.1.2 ⟨SplitI.proj z, hxD⟩ = false := by
-      rw [SplitI.side, dif_pos hxD] at h
+      rw [SplitI.side, dite_eq_left hxD] at h
       exact h
     exact SplitI.eq_leftGerm_of_coord_false (SplitI.proj_mem_Icc z) hxD rfl hcoord
   · have h2 : SplitI.rightGerm (D := D) (SplitI.proj z) (SplitI.proj_mem_Icc z)
@@ -98,7 +98,7 @@ theorem eq_leftGerm_of_side_false {z : SplitI D} (h : SplitI.side z = false) :
 theorem mem_of_side_eq_false {z : SplitI D} (h : SplitI.side z = false) :
     SplitI.proj z ∈ D := by
   by_contra hxD
-  rw [SplitI.side, dif_neg hxD] at h
+  rw [SplitI.side, dite_eq_right hxD] at h
   simp at h
 
 /-- The point of `upSet x` projecting to `x` is the right germ of `x`. -/
@@ -417,25 +417,25 @@ theorem side_germMapOf (hT : IsCutSet (⇑T) 0 1 s) (z : SplitI (splitSet T s)) 
       rw [proj_germMapOf]; exact hD
     have h2 : SplitI.side (germMapOf hT z)
         = (germMapOf hT z).1.2 ⟨SplitI.proj (germMapOf hT z), h1⟩ := by
-      rw [SplitI.side, dif_pos h1]
+      rw [SplitI.side, dite_eq_left h1]
     rw [h2]
     exact germCoordOf_self hT z hD
   · have h1 : SplitI.proj (germMapOf hT z) ∉ splitSet T s := by
       rwa [proj_germMapOf]
     unfold SplitI.side
-    rw [dif_neg h1]
+    rw [dite_eq_right h1]
     by_cases hDz : SplitI.proj z ∈ splitSet T s
-    · rw [dif_pos hDz]
+    · rw [dite_eq_left hDz]
       have hz : SplitI.side z ≠ false := by
         intro hz
         rw [germProjOf_of_side_false hT hz] at hD
         exact hD (leftLimit_mem_splitSet hT (SplitI.proj_mem_Icc z) hDz)
       have hz' : SplitI.side z = z.1.2 ⟨SplitI.proj z, hDz⟩ := by
-        rw [SplitI.side, dif_pos hDz]
+        rw [SplitI.side, dite_eq_left hDz]
       cases hv : z.1.2 ⟨SplitI.proj z, hDz⟩ with
       | false => exact absurd (by rw [hz', hv]) hz
       | true => rfl
-    · rw [dif_neg hDz]
+    · rw [dite_eq_right hDz]
 
 /-- **Lemma 3.2**: the germ map sends the right germ of `x` to the right germ of `T x`. -/
 theorem germMapOf_rightGerm (hT : IsCutSet (⇑T) 0 1 s) {x : ℝ}
@@ -567,8 +567,8 @@ variable {T : ℝ ≃ ℝ} {s : Finset ℝ}
 /-- The point with a given projection and a projection off the split set is unique. -/
 theorem eq_of_proj_eq_of_notMem {D : Set ℝ} {z z' : SplitI D}
     (h : SplitI.proj z = SplitI.proj z') (hx : SplitI.proj z ∉ D) : z = z' := by
-  have hsz : SplitI.side z = true := by rw [SplitI.side, dif_neg hx]
-  have hsz' : SplitI.side z' = true := by rw [SplitI.side, dif_neg (h ▸ hx)]
+  have hsz : SplitI.side z = true := by rw [SplitI.side, dite_eq_right hx]
+  have hsz' : SplitI.side z' = true := by rw [SplitI.side, dite_eq_right (h ▸ hx)]
   refine (eq_rightGerm_of_side_true hsz).trans ?_
   rw [rightGerm_congr _ _ h]
   exact (eq_rightGerm_of_side_true hsz').symm

@@ -160,12 +160,12 @@ theorem balanceStep_of_extMassGen (P : IETDatum₂ α n) (hP : P.Irreducible) (h
   set F : List Bool → Finset (List Bool) :=
     fun η => if h : η ∈ T2 then Classical.choose (hexG η h) else ∅ with hF
   have hF_spec (η) (h : η ∈ T2) : F η = Classical.choose (hexG η h) := by
-    simp only [hF, dif_pos h]
+    simp only [hF, dite_eq_left h]
   have hF_pf (η) : NodeHeight.PrefixFree (F η) := by
     by_cases h : η ∈ T2
     · rw [hF_spec η h]
       exact (Classical.choose_spec (hexG η h)).1
-    · simp only [hF, dif_neg h]
+    · simp only [hF, dite_eq_right h]
       exact NodeHeight.prefixFree_empty
   have hF_mass (η) (h : η ∈ T2) :
       1 / 2 < ∑ δ ∈ F η, CylinderMass.cond P (w ++ η) δ := by
@@ -208,7 +208,7 @@ theorem balanceStep_of_extMassGen (P : IETDatum₂ α n) (hP : P.Irreducible) (h
           4 * (Fintype.card α : ℝ) * (C2 * Cb) * C2 *
             min (NodeHeight.mmin (insert θ A') (NodeHeight.st P (w ++ gam η δ)))
               (NodeHeight.Mk 1 (NodeHeight.st P w)) := by
-    simp only [hgam, dif_pos h]
+    simp only [hgam, dite_eq_left h]
     exact Classical.choose_spec (hdich η h.1 δ h.2)
   -- the composed family and its minimal elements
   set S : Finset (List Bool) := T2.biUnion (fun η => (F η).image (fun δ => η ++ δ)) with hS

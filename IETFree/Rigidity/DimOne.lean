@@ -51,8 +51,8 @@ theorem mkIETFun_fin_one {lam : Fin 1 → ℝ≥0} (h : lam ∈ simplexOn (Fin 1
     simp
   unfold mkIETFun
   by_cases hx : x ∈ Set.Ico (0 : ℝ) (0 + ∑ i, (lam i : ℝ))
-  · rw [dif_pos hx, translationVector_fin_one, add_zero]
-  · rw [dif_neg hx]
+  · rw [dite_eq_left hx, translationVector_fin_one, add_zero]
+  · rw [dite_eq_right hx]
 
 theorem mkIETFun_fin_one_eq_id {lam : Fin 1 → ℝ≥0} (h : lam ∈ simplexOn (Fin 1))
     (π : Equiv.Perm (Fin 1)) : mkIETFun lam π 0 = id :=

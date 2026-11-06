@@ -160,7 +160,7 @@ theorem scd_lt_nm (hP : P.Irreducible) (hn : 2 ≤ n)
     (hw : ∀ k, IETDatum₂.IsRenorm P (PrefixWord.pfx p k) lam (w k)) (k : ℕ) :
     w k (scd P p k) < w k (nm P p k) := by
   have hpos : 0 < w (k + 1) (nm P p k) := (hw (k + 1)).1 (nm P p k)
-  rw [renorm_sub P p lam w hP hn hw k (nm P p k), if_pos rfl] at hpos
+  rw [renorm_sub P p lam w hP hn hw k (nm P p k), ite_eq_left rfl] at hpos
   linarith
 
 /-- **`HType` of `MeshShrink`**, for the renormalised vectors. -/
@@ -184,9 +184,9 @@ theorem hnext (hP : P.Irreducible) (hn : 2 ≤ n)
       w (k + 1) a := by
     rw [MeshShrink.nextR, ← nm_eq_mn, ← scd_eq_sc]
     by_cases ha : a = nm P p k
-    · rw [if_pos ha, coe_wnn w (fun k => (hw k).1) k, coe_wnn w (fun k => (hw k).1) k,
-        h, if_pos ha]
-    · rw [if_neg ha, coe_wnn w (fun k => (hw k).1) k, h, if_neg ha, sub_zero]
+    · rw [ite_eq_left ha, coe_wnn w (fun k => (hw k).1) k, coe_wnn w (fun k => (hw k).1) k,
+        h, ite_eq_left ha]
+    · rw [ite_eq_right ha, coe_wnn w (fun k => (hw k).1) k, h, ite_eq_right ha, sub_zero]
   change Real.toNNReal (w (k + 1) a) = Real.toNNReal (MeshShrink.nextR (wnn w) k _ _ a)
   rw [harg]
 
@@ -325,9 +325,9 @@ theorem Cs_succ_le (hP : P.Irreducible) (hn : 2 ≤ n) (k : ℕ) (b : α) :
     Cs P p k b ≤ Cs P p (k + 1) b := by
   rw [Cs_succ P p hP hn k b]
   by_cases h : b = scd P p k
-  · rw [if_pos h]
+  · rw [ite_eq_left h]
     exact le_add_of_nonneg_right (Cs_nonneg P p k (nm P p k))
-  · rw [if_neg h, add_zero]
+  · rw [ite_eq_right h, add_zero]
 
 /-- The column sums are monotone in time. -/
 theorem Cs_mono (hP : P.Irreducible) (hn : 2 ≤ n) (b : α) {i j : ℕ} (hij : i ≤ j) :
@@ -339,7 +339,7 @@ theorem Cs_mono (hP : P.Irreducible) (hn : 2 ≤ n) (b : α) {i j : ℕ} (hij : 
 /-- **At a time when `b` is the secondary name the column sum grows by at least one.** -/
 theorem Cs_succ_add (hP : P.Irreducible) (hn : 2 ≤ n) (k : ℕ) {b : α}
     (h : scd P p k = b) : Cs P p k b + 1 ≤ Cs P p (k + 1) b := by
-  rw [Cs_succ P p hP hn k b, if_pos h.symm]
+  rw [Cs_succ P p hP hn k b, ite_eq_left h.symm]
   have := Cs_one_le P p k (nm P p k)
   linarith
 

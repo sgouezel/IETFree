@@ -15878,6 +15878,74 @@ comparator stand-in `OK` at 30 825 declarations; no line over 100 characters; th
 anchors recomputed; lines 45 829 → 45 739 (45 568 in the 114 modules); 630 `have`s now carry
 binders left of the colon; `IET2.zip` rebuilt and verified byte-identical.
 
+### Addendum 192: the move to Lean 4.35.0 / Mathlib v4.35.0
+
+Owner's instruction: *"Let's go with 4.35.0 — do the update and fix whatever breaks, file by file."*
+The VM's toolchain had been moved under us: `/opt/lean`, `/opt/mathlib` and `/opt/cslib` became
+symlinks to `*.4.35.0-56a005855ea1` trees on 2026-11-06 07:17, with the old ones kept as `*.orig`.
+Lean 4.35.0, Mathlib at tag **v4.35.0** (commit `56a0058`, which is the tag's commit), CSLib rebuilt
+against them.  The project was pinned to v4.33.1 and its dependencies' build directories were
+**read-only symlinks into `/opt`**, so the day the toolchain moved `lake build` could no longer run:
+Lake wanted to rebuild the dependencies and could not write there.
+
+**The update.**  `lean-toolchain` and the `lakefile.toml` mathlib rev set to `v4.35.0`, `lake
+update` (the nine dependencies moved to the revisions of Mathlib v4.35.0's own manifest; the
+mathlib post-update hook found the oleans already present).  Then the build directories of the
+nine packages were replaced by **writable copies** of the `/opt` ones (6.7 GB for Mathlib, ~370
+MB for the rest) — not the project's own `.lake/build`, which is untouched.  Only then could
+Lake write the trace files it needs.
+
+**What broke, in the order the build found it** — six distinct API moves, nine files, and nothing
+mathematical:
+
+* `FreeGroup.induction_on`: the motive binder `C` became `motive` and the case `C1` became `one`
+  (`Pair/BlockAssembly`, `Pair/BlockRescaling`, `Pair/Centralizer`, `Pair/GeneratorChange`,
+  `ChallengeSolved`);
+* `IsMulTorsionFree.pow_left_injective` is now the alias of `eq_of_pow_eq_pow_of_commute`, which
+  takes a `Commute` proof (`Pair/Centralizer`, two sites);
+* `Measure.isProbabilityMeasure_map` is gone — the map of a probability measure is a probability
+  measure by **instance** now (`UniqueErgodicity/IET`, three sites, `inferInstance`);
+* `Measure.map_smul` gained an `AEMeasurable f μ` argument (`UniqueErgodicity/Limits`);
+* the two-argument `Finset.prod_le_prod` is `Finset.prod_le_prod₀`; the name went to the
+  one-argument monoid version (`RauzyVeech/RichPath/BoundedLag`);
+* `congr 1` now closes the goal where 4.33 left a `Fin`-extensionality goal, so the following
+  `ext j …; omega` was *no goals* (`IET`, `RauzyVeech/InvariantMeasure`).
+
+**The deprecations, swept once.**  The first green build reported 563 warnings in six families:
+`if_pos` (191) → `ite_eq_left`, `if_neg` (233) → `ite_eq_right`, `dif_pos` (67) → `dite_eq_left`,
+`dif_neg` (56) → `dite_eq_right`, `if_true` (11) → `ite_true`, `if_false` (5) → `ite_false`.  Each
+was renamed **everywhere at once** rather than at the sites the compiler happened to report: one
+token-wise replacement over the tree, then every touched file compiled on its own — **57 files
+changed, 0 reverted** — and the next full build had **0 warnings**.  Ten lines then passed the 100
+character limit (the new names are longer) and were wrapped.
+
+**Checks.**  `lake build` green at **9164 jobs, 0 errors, 0 warnings** (8823 on 4.33.1);
+`#print axioms main` = `[propext, Classical.choice, Quot.sound]`; `Comparator/Check.lean` **OK** at
+**31 547** declarations (30 825 before — Mathlib grew); `runLinter` clean on `IETFree` and
+`Challenge`; no line over 100 characters; 114 modules, 45 739 lines unchanged; `IET2.zip` rebuilt
+and verified.
+
+**Comparator: the move to core, and all three routes green.**  Upstream's own README now opens with
+"this project has been merged into core as of Lean release v4.35.0 in the form of `lake comparator`
+and the accompanying `lake check`", and advises moving to it.  On this tree:
+
+* **`lake comparator`** — the core tool, reading the same `comparator.json` (challenge, solution,
+  theorem names, definition holes, permitted axioms), building and exporting both modules inside a
+  `bwrap` sandbox and replaying the solution: **`Lean default kernel accepts the solution`**.
+  Its nanoda step cannot run on this VM — `bwrap` cannot bind `/opt/lean/bin/nanoda_bin` because
+  `/opt/lean` is a symlink to `/opt/lean.4.35.0-56a005855ea1` and the sandbox will not create the
+  missing parents — so that run ends `nanoda exited with 1` after the kernel accepted; with a config
+  that omits `enable_nanoda` it is a clean pass.
+* **`Comparator/Check.lean`** — the in-tree comparison, run on every build: `OK` at 31 547
+  declarations.
+* **The standalone tool** — comparator at `865edc1`, its revision on Lean 4.35.0, with the
+  `lean4export` it pins, and `MATHLIB` pointed at the project's own writable Mathlib copy (the
+  scratch project cannot write into `/opt`): `nanoda kernel accepts the solution`, `Lean default
+  kernel accepts the solution`, `== accepted`.
+
+`Comparator/run.sh`'s default revision is now `865edc1`, and `README.md`, `Comparator/README.md` and
+`NOTES.md` describe the core route first and the two others after it.
+
 ---
 
 # Part II — the Masur–Veech campaigns (verbatim records, blueprints and graphs)

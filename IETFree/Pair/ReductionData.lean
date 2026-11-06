@@ -701,7 +701,7 @@ theorem simplexMap_castLE {d : ℕ} [NeZero d] {v : Fin (d - 1) → ℝ} (i : Fi
     rw [Fin.val_castLE]
     have h2 := NeZero.pos d
     omega
-  simp only [simplexMap, dif_neg hlt]
+  simp only [simplexMap, dite_eq_right hlt]
   congr 1
 
 /-- **`toReal` is the inverse of `simplexMap` on the free region**: at a point with positive

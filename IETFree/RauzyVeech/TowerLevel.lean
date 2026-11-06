@@ -78,12 +78,12 @@ theorem tower_formula_one_step_mult (hlt : lam (topCell π) < lam botCell) (μ :
     exact multOne_cast_mul (f := fun j => μ (cellHat π lam j)) (topCell_ne_botCell hlt) i j
   rw [hsum, Finset.sum_add_distrib,
     Finset.sum_ite_eq Finset.univ i (fun j => μ (cellHat π lam j))]
-  simp only [Finset.mem_univ, if_true]
+  simp only [Finset.mem_univ, ite_true]
   by_cases hi : i = botCell
-  · simp only [hi, if_true]
+  · simp only [hi, ite_true]
     rw [Finset.sum_ite_eq' Finset.univ (topCell π) (fun j => μ (cellHat π lam j))]
     simp
-  · rw [if_neg hi]
+  · rw [ite_eq_right hi]
     simp [hi]
 
 /-! ## 2. Auxiliary facts towards induced invariance  The following facts are independently useful

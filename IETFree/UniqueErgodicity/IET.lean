@@ -96,7 +96,7 @@ theorem clampIco_mem (x : ℝ) : clampIco x ∈ Set.Ico (0 : ℝ) 1 := by
   · norm_num
 
 theorem clampIco_eq_self {x : ℝ} (hx : x ∈ Set.Ico (0 : ℝ) 1) : clampIco x = x := by
-  rw [clampIco, if_pos hx.2, clampI_eq_self ⟨hx.1, hx.2.le⟩]
+  rw [clampIco, ite_eq_left hx.2, clampI_eq_self ⟨hx.1, hx.2.le⟩]
 
 theorem clampIco_mem_Icc (x : ℝ) : clampIco x ∈ Set.Icc (0 : ℝ) 1 :=
   ⟨(clampIco_mem x).1, (clampIco_mem x).2.le⟩
@@ -202,7 +202,7 @@ theorem map_proj_eq_unitMeas_of_invariant {n : ℕ} [NeZero n] (lam : Fin n → 
   -- the pushforward of `ν` to the whole split interval
   set ν₀ : ProbabilityMeasure (SplitI (ietSplitSet lam π)) :=
     ⟨(ν : Measure ↥(ietRightPart lam π)).map Subtype.val,
-      Measure.isProbabilityMeasure_map measurable_subtype_coe.aemeasurable⟩ with hν₀
+      inferInstance⟩ with hν₀
   have hν₀' : (ν₀ : Measure (SplitI (ietSplitSet lam π)))
       = (ν : Measure ↥(ietRightPart lam π)).map Subtype.val := by
     rw [hν₀]
@@ -360,7 +360,7 @@ theorem map_proj_eq_unitMeas_of_invariant {n : ℕ} [NeZero n] (lam : Fin n → 
   -- (H1) identifies the pushforward
   have hprob : IsProbabilityMeasure ((ν₀ : Measure (SplitI (ietSplitSet lam π))).map
         (SplitI.proj (D := ietSplitSet lam π))) :=
-    Measure.isProbabilityMeasure_map measurable_proj.aemeasurable
+    inferInstance
   have hfinal : (ν₀ : Measure (SplitI (ietSplitSet lam π))).map
         (SplitI.proj (D := ietSplitSet lam π)) = unitMeas :=
     hH1 ⟨((ν₀ : Measure (SplitI (ietSplitSet lam π)))).map
@@ -493,7 +493,7 @@ theorem uniformBirkhoff_mkIET1 {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0)
   -- the lift of Lebesgue measure to `[0⁺, 1⁻]`
   set μ₀ : ProbabilityMeasure ↥(ietRightPart lam π) :=
     ⟨unitMeas.map (germSectionIco (D := ietSplitSet lam π)),
-      Measure.isProbabilityMeasure_map measurable_germSectionIco.aemeasurable⟩ with hμ₀
+      inferInstance⟩ with hμ₀
   -- uniqueness of the invariant probability on `[0⁺, 1⁻]`
   have huniq (ν : ProbabilityMeasure ↥(ietRightPart lam π)) (hν : (ν : Measure
       ↥(ietRightPart lam π)).map (ietGermRight lam π hsum.le)

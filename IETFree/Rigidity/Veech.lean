@@ -87,7 +87,7 @@ private theorem hatLam_pos {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} 
   intro a
   rw [Tower.hatLam]
   by_cases ha : a = P.last e
-  · rw [if_pos ha]
+  · rw [ite_eq_left ha]
     subst ha
     cases e with
     | false =>
@@ -96,7 +96,7 @@ private theorem hatLam_pos {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} 
     | true =>
       rw [TowerTrue.stepOK_true_iff] at hstep
       exact tsub_pos_of_lt hstep
-  · rw [if_neg ha]
+  · rw [ite_eq_right ha]
     exact hpos a
 
 /-- The renormalised length vector stays strictly positive along an `IterOK` word. -/

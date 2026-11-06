@@ -233,13 +233,13 @@ noncomputable def IsCutSet.cellLen (hs : IsCutSet f a b s) (i : Fin s.card) : �
 theorem IsCutSet.cellPos_of_lt (hs : IsCutSet f a b s) {k : ℕ} (hk : k < s.card) :
     hs.cellPos k = hs.cellStarts ⟨k, hk⟩ := by
   unfold IsCutSet.cellPos
-  exact dif_pos hk
+  exact dite_eq_left hk
 
 /-- Past the last index the position function is `b`. -/
 theorem IsCutSet.cellPos_top (hs : IsCutSet f a b s) :
     hs.cellPos s.card = b := by
   unfold IsCutSet.cellPos
-  exact dif_neg (by omega)
+  exact dite_eq_right (by omega)
 
 /-- **The lengths of the cells sum to `b - a`**: the cells tile `[a, b)`. -/
 theorem IsCutSet.sum_cellLen (hs : IsCutSet f a b s) :
@@ -273,7 +273,7 @@ theorem IsCutSet.cellPos_succ (hs : IsCutSet f a b s) (i : Fin s.card) :
   · exact Or.inl ⟨h, hs.cellPos_of_lt h⟩
   · refine Or.inr ⟨by omega, ?_⟩
     unfold IsCutSet.cellPos
-    rw [dif_neg h]
+    rw [dite_eq_right h]
 
 /-- A cell is nondegenerate. -/
 theorem IsCutSet.cellStarts_lt_cellPos (hs : IsCutSet f a b s) (i : Fin s.card) :
@@ -290,7 +290,7 @@ theorem IsCutSet.cellPos_le (hs : IsCutSet f a b s) (k : ℕ) : hs.cellPos k ≤
   · rw [hs.cellPos_of_lt h]
     exact le_of_lt (hs.cellStarts_mem_Ico ⟨k, h⟩).2
   · unfold IsCutSet.cellPos
-    rw [dif_neg h]
+    rw [dite_eq_right h]
 
 /-- The right end of a cell is at most the left end of any later cell. -/
 theorem IsCutSet.cellPos_le_cellStarts (hs : IsCutSet f a b s) {i j : Fin s.card} (hij : i < j) :

@@ -100,12 +100,12 @@ noncomputable def leftLimit (h : IsCutSet f a b s) (x : ℝ) : ℝ :=
   if hx : a < x then x + (f (cutBelow h x hx) - cutBelow h x hx) else x
 
 theorem leftLimit_of_le (h : IsCutSet f a b s) {x : ℝ} (hx : x ≤ a) : leftLimit h x = x := by
-  rw [leftLimit, dif_neg (not_lt.mpr hx)]
+  rw [leftLimit, dite_eq_right (not_lt.mpr hx)]
 
 /-- **Lemma 1.8**: on the cell `(c, c']`, `leftLimit` is `y ↦ y + (f c - c)`. -/
 theorem leftLimit_eq_add (h : IsCutSet f a b s) {x : ℝ} (hx : x ∈ Set.Ioc a b) :
     leftLimit h x = x + (f (cutBelow h x hx.1) - cutBelow h x hx.1) := by
-  rw [leftLimit, dif_pos hx.1]
+  rw [leftLimit, dite_eq_left hx.1]
 
 /-- **The left limit is the limit from the left.** -/
 theorem tendsto_left (h : IsCutSet f a b s) {x : ℝ} (hx : x ∈ Set.Ioc a b) :
@@ -395,7 +395,7 @@ theorem exists_invariant_ne_of_periodic_leftLimit (h : IsCutSet f a b s)
   · rw [isProbabilityMeasure_iff, Measure.smul_apply, hν₀_univ]
     exact ENNReal.inv_mul_cancel hk0 hktop
   · simp only [ProbabilityMeasure.coe_mk]
-    rw [Measure.map_smul, hmap]
+    rw [Measure.map_smul _ h.measurable.aemeasurable, hmap]
   · simp only [ProbabilityMeasure.coe_mk]
     rw [Measure.smul_apply, hν₀_apply]
     have h1 (i) (hi : i ∈ Finset.range k) : Measure.dirac ((f^[i]) y) (Set.Ico a b) = 1 := by

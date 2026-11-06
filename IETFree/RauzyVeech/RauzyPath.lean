@@ -109,18 +109,18 @@ theorem pathBranch_eq_true_iff (P : IETDatum₂ α n) (x : α → ℝ≥0) (γ :
     pathBranch P x γ = true ↔ x ∈ simplexCyl P (γ ++ [true]) := by
   unfold pathBranch
   by_cases h : x ∈ simplexCyl P (γ ++ [true])
-  · rw [if_pos h]
+  · rw [ite_eq_left h]
     simp [h]
-  · rw [if_neg h]
+  · rw [ite_eq_right h]
     simp [h]
 
 theorem pathBranch_eq_false_iff (P : IETDatum₂ α n) (x : α → ℝ≥0) (γ : List Bool) :
     pathBranch P x γ = false ↔ x ∉ simplexCyl P (γ ++ [true]) := by
   unfold pathBranch
   by_cases h : x ∈ simplexCyl P (γ ++ [true])
-  · rw [if_pos h]
+  · rw [ite_eq_left h]
     simp [h]
-  · rw [if_neg h]
+  · rw [ite_eq_right h]
     simp [h]
 
 /-- **The greedy word** of `x`: start with the empty word and append, at each step, the type of the

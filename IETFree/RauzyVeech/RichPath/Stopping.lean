@@ -457,7 +457,7 @@ theorem st_eq_of_exitArrow (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 �
   have h := CylinderMass.cs_append_singleton P hP hn (w ++ μ) e b
   have hne : b ≠ (IETDatum₂.vertex P (w ++ μ)).last (!e) := fun hb' => hlose (hb' ▸ hb)
   simp only [NodeHeight.st]
-  rw [h, if_neg hne, add_zero]
+  rw [h, ite_eq_right hne, add_zero]
 
 omit [DecidableEq α] in
 /-- The exit part of `StopW`, read back on a `take` of a long word: the exit arrow is the letter

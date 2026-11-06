@@ -294,9 +294,9 @@ theorem HH_succ (hP : P.Irreducible) (hn : 2 ≤ n)
             else 0 := by
         congr 1
         by_cases hb : b = V.last (!e)
-        · simp only [if_pos hb]
-        · rw [if_neg hb]
-          exact Finset.sum_eq_zero (fun a _ => by simp only [if_neg hb])
+        · simp only [ite_eq_left hb]
+        · rw [ite_eq_right hb]
+          exact Finset.sum_eq_zero (fun a _ => by simp only [ite_eq_right hb])
 
 theorem cellAt_nil_eq (k : ℕ) (b : α) :
     Tower.cellAt (TowerStep.VV P γ k) [] (TowerStep.LL P γ lam k) b
@@ -392,7 +392,7 @@ theorem FR_all (hzero : γ 0 = []) (hstep : ∀ k, γ (k + 1) = γ k ++ [p k])
           Function.iterate_one]
       have hHs : TowerStep.HH P γ (k + 1) b
           = TowerStep.HH P γ k b + TowerStep.HH P γ k ((TowerStep.VV P γ k).last (p k)) := by
-        rw [HH_succ hP hn hstep]; simp only [if_pos hb]
+        rw [HH_succ hP hn hstep]; simp only [ite_eq_left hb]
       cases hp : p k with
       | false =>
         have hb' : b = (TowerStep.VV P γ k).last true := by rw [hb, hp]; rfl
@@ -443,11 +443,11 @@ theorem FR_all (hzero : γ 0 = []) (hstep : ∀ k, γ (k + 1) = γ k ++ [p k])
           _ = TowerStep.KK P γ lam k (TowerStep.KK P γ lam k y) := i2
           _ = TowerStep.KK P γ lam (k + 1) y := key.symm
     · have hg1 : hgt1 (TowerStep.VV P γ k) (p k) b = 1 := by
-        rw [hgt1_eq _ hne]; simp only [if_neg hb, add_zero]
+        rw [hgt1_eq _ hne]; simp only [ite_eq_right hb, add_zero]
       have key : TowerStep.KK P γ lam (k + 1) y = TowerStep.KK P γ lam k y := by
         rw [← hfr, hg1, Function.iterate_one]
       have hHs : TowerStep.HH P γ (k + 1) b = TowerStep.HH P γ k b := by
-        rw [HH_succ hP hn hstep]; simp only [if_neg hb, add_zero]
+        rw [HH_succ hP hn hstep]; simp only [ite_eq_right hb, add_zero]
       have hy1 : y ∈ TowerStep.CC P γ lam k b := by
         cases hp : p k with
         | false => exact CC_succ_sub_false hstep k b hp hy
@@ -495,7 +495,7 @@ theorem SH_all (hzero : γ 0 = []) (hstep : ∀ k, γ (k + 1) = γ k ++ [p k])
     by_cases hb : b = (TowerStep.VV P γ k).last (!(p k))
     · have hHs : TowerStep.HH P γ (k + 1) b
           = TowerStep.HH P γ k b + TowerStep.HH P γ k ((TowerStep.VV P γ k).last (p k)) := by
-        rw [HH_succ hP hn hstep]; simp only [if_pos hb]
+        rw [HH_succ hP hn hstep]; simp only [ite_eq_left hb]
       cases hp : p k with
       | false =>
         have hb' : b = (TowerStep.VV P γ k).last true := by rw [hb, hp]; rfl
@@ -562,7 +562,7 @@ theorem SH_all (hzero : γ 0 = []) (hstep : ∀ k, γ (k + 1) = γ k ++ [p k])
           rw [e1, Function.iterate_add_apply, hfr, hτ2 _ hmem2, ← hfr, hτ1 y hmem1]
           ring
     · have hHs : TowerStep.HH P γ (k + 1) b = TowerStep.HH P γ k b := by
-        rw [HH_succ hP hn hstep]; simp only [if_neg hb, add_zero]
+        rw [HH_succ hP hn hstep]; simp only [ite_eq_right hb, add_zero]
       have hsub : TowerStep.CC P γ lam (k + 1) b ⊆ TowerStep.CC P γ lam k b := by
         cases hp : p k with
         | false => exact CC_succ_sub_false hstep k b hp
@@ -722,7 +722,7 @@ theorem hgt1_eq_one_of_ne (hP : P.Irreducible) (hn : 2 ≤ n) (k : ℕ) (e : Boo
     hgt1 (TowerStep.VV P γ k) e c = 1 := by
   have hne (e : Bool) : (TowerStep.VV P γ k).last e ≠ (TowerStep.VV P γ k).last (!e) := VV_last_ne
       (P := P) (γ := γ) hP hn k e
-  rw [hgt1_eq _ hne]; simp only [if_neg hc, add_zero]
+  rw [hgt1_eq _ hne]; simp only [ite_eq_right hc, add_zero]
 
 theorem HH_succ_ge (hP : P.Irreducible) (hn : 2 ≤ n)
     (hstep : ∀ k, γ (k + 1) = γ k ++ [p k]) (k : ℕ) (b : α) :
@@ -746,10 +746,10 @@ theorem HH_succ_ne (hP : P.Irreducible) (hn : 2 ≤ n)
   cases e with
   | false =>
     simp only [Bool.not_false] at hc ⊢
-    rw [if_neg hc, add_zero]
+    rw [ite_eq_right hc, add_zero]
   | true =>
     simp only [Bool.not_true] at hc ⊢
-    rw [if_neg hc, add_zero]
+    rw [ite_eq_right hc, add_zero]
 
 theorem HH_succ_scd (hP : P.Irreducible) (hn : 2 ≤ n)
     (hstep : ∀ k, γ (k + 1) = γ k ++ [p k]) (k : ℕ) (e : Bool) (hp : p k = e) :
@@ -758,8 +758,8 @@ theorem HH_succ_scd (hP : P.Irreducible) (hn : 2 ≤ n)
         + TowerStep.HH P γ k ((TowerStep.VV P γ k).last e) := by
   rw [HH_succ hP hn hstep, hp]
   cases e with
-  | false => rw [Bool.not_false, if_pos rfl]
-  | true => rw [Bool.not_true, if_pos rfl]
+  | false => rw [Bool.not_false, ite_eq_left rfl]
+  | true => rw [Bool.not_true, ite_eq_left rfl]
 
 theorem cover_step_false (hzero : γ 0 = []) (hstep : ∀ k, γ (k + 1) = γ k ++ [p k])
     (hP : P.Irreducible) (hn : 2 ≤ n) (hlam : lam ∈ simplexOn α)

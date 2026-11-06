@@ -165,11 +165,6 @@ theorem leftEnd_succ_eq_upperEnd (lam : Fin n → ℝ≥0) (i : Fin n) (h : i.va
     leftEnd lam ⟨i.val + 1, h⟩ = upperEnd lam i := by
   rw [leftEnd, upperEnd]
   congr 1
-  ext j
-  simp only [Finset.mem_filter, Finset.mem_univ, true_and]
-  rw [Fin.lt_def, Fin.le_def]
-  dsimp only [Fin.val_mk]
-  omega
 
 omit [NeZero n] in
 /-- Distinct intervals of the arrangement are ordered. -/

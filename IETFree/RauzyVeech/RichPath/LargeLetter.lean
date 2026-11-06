@@ -282,7 +282,7 @@ theorem newLetter_words
     with hee_def
   have hee (i) (h : i < δ.length) : (δ.drop i).head? = some (ee i) := by
     rw [hee_def]
-    simp only [dif_pos h]
+    simp only [dite_eq_left h]
     exact Classical.choose_spec (hex i h)
   have htake (i) (h : i < δ.length) : δ.take (i + 1) = δ.take i ++ [ee i] := take_succ_eq_of_head δ
       i (ee i) (hee i h)
@@ -391,7 +391,7 @@ theorem sum_cond_fibre_le (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 �
   set uu : List Bool → List Bool :=
     fun δ => if h : δ ∈ S then Classical.choose (hex δ h) else [] with huu
   have huu_eq (δ) (h : δ ∈ S) : uu δ = Classical.choose (hex δ h) := by
-    simp only [huu, dif_pos h]
+    simp only [huu, dite_eq_left h]
   have hgoal (δ) (h : δ ∈ S) : δ = t ++ uu δ := by
     rw [huu_eq δ h]
     exact Classical.choose_spec (hex δ h)
@@ -463,7 +463,7 @@ theorem exists_prefixFree_mass (P : IETDatum₂ α n) (hP : P.Irreducible) (hn :
   set g : List Bool → List Bool :=
     fun δ => if h : δ ∈ S then Classical.choose (hcov2 δ h) else [] with hg
   have hg_eq (δ) (h : δ ∈ S) : g δ = Classical.choose (hcov2 δ h) := by
-    simp only [hg, dif_pos h]
+    simp only [hg, dite_eq_left h]
   have hgT (δ) (h : δ ∈ S) : g δ ∈ T := by
     rw [hg_eq δ h]
     exact (Classical.choose_spec (hcov2 δ h)).1

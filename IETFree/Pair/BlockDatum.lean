@@ -828,7 +828,7 @@ theorem mkIET1_of_all_one {r : ℕ} [NeZero r] {lam : Fin r → ℝ≥0} (π : E
   rw [IET.one_apply]
   rw [mkIET1_eq_mkIETFun, mkIETFun]
   by_cases hx : x ∈ Set.Ico (0 : ℝ) (0 + ∑ i, (lam i : ℝ))
-  · rw [dif_pos hx]
+  · rw [dite_eq_left hx]
     have htv : translationVector π lam (idx lam (x - 0) (by linarith [hx.1])) = 0 := by
       rw [translationVector, imageLeft, leftEnd]
       have h1 : Finset.univ.filter (fun j : Fin r => π j < π (idx lam (x - 0) (by linarith [hx.1])))
@@ -848,6 +848,6 @@ theorem mkIET1_of_all_one {r : ℕ} [NeZero r] {lam : Fin r → ℝ≥0} (π : E
       rw [h1, h3]
       simp
     rw [htv, add_zero]
-  · rw [dif_neg hx]
+  · rw [dite_eq_right hx]
 
 end

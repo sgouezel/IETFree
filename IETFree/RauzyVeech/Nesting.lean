@@ -136,11 +136,11 @@ theorem cone_rvMat (P : IETDatum₂ α n) (ε : Bool) (hne : P.last ε ≠ P.las
     refine ⟨fun a => ?_, ?_⟩
     · rw [qApply_rvMat_apply P ε hne]
       by_cases ha : a = P.last ε
-      · rw [ha, if_pos rfl]
+      · rw [ha, ite_eq_left rfl]
         have h1' := hy (P.last ε)
         have h2' := hy (P.last (!ε))
         linarith
-      · rw [if_neg ha]
+      · rw [ite_eq_right ha]
         have h1' := hy a
         linarith
     · rw [h1, h2]
@@ -152,19 +152,19 @@ theorem cone_rvMat (P : IETDatum₂ α n) (ε : Bool) (hne : P.last ε ≠ P.las
     · intro a
       simp only []
       by_cases ha : a = P.last ε
-      · rw [ha, if_pos rfl]
+      · rw [ha, ite_eq_left rfl]
         have h1' := hw (P.last ε)
         linarith
-      · rw [if_neg ha]
+      · rw [ite_eq_right ha]
         exact hw a
     · funext a
       rw [qApply_rvMat_apply P ε hne]
       by_cases ha : a = P.last ε
       · rw [ha]
-        simp only [hne', if_neg, not_false_eq_true, if_true]
+        simp only [hne', ite_eq_right, not_false_eq_true, ite_true]
         ring
-      · rw [if_neg ha]
-        simp only [if_neg ha, add_zero]
+      · rw [ite_eq_right ha]
+        simp only [ite_eq_right ha, add_zero]
 
 /-! ## 3. Renormalised length vectors and the two descriptions of `simplexCyl` -/
 
@@ -369,7 +369,7 @@ theorem sum_add_single_mul (c c' : α) (t : ℝ) (y : α → ℝ) (a : α) :
         (∑ b, (if a = c ∧ b = c' then t * y b else 0)) := by
     rw [Finset.sum_congr rfl (fun b _ => hexp b), Finset.sum_add_distrib]
   rw [hsplit, Finset.sum_ite_eq' Finset.univ a (fun b => y b)]
-  simp only [Finset.mem_univ, if_true]
+  simp only [Finset.mem_univ, ite_true]
   by_cases ha : a = c
   · have h2 (b) : (if a = c ∧ b = c' then t * y b else 0) =
         (if b = c' then t * y b else 0) := by
@@ -379,7 +379,7 @@ theorem sum_add_single_mul (c c' : α) (t : ℝ) (y : α → ℝ) (a : α) :
       Finset.sum_ite_eq' Finset.univ c' (fun b => t * y b)]
     simp [ha]
   · have h2 (b) : (if a = c ∧ b = c' then t * y b else 0) = (0 : ℝ) := by
-      rw [if_neg (fun h => ha h.1)]
+      rw [ite_eq_right (fun h => ha h.1)]
     rw [Finset.sum_congr rfl (fun b _ => h2 b), Finset.sum_const_zero, add_zero]
     simp [ha]
 
@@ -418,7 +418,7 @@ theorem qApply_rvMatInv_qApply_rvMat (P : IETDatum₂ α n) (ε : Bool)
   funext a
   rw [qApply_rvMatInv_apply P ε hne]
   by_cases ha : a = P.last ε
-  · rw [ha, if_pos rfl]
+  · rw [ha, ite_eq_left rfl]
     have hq : qApply (P.rvMat ε) y (P.last (!ε)) = y (P.last (!ε)) := by
       rw [qApply_rvMat_apply P ε hne]
       simp [Ne.symm hne]
@@ -427,7 +427,7 @@ theorem qApply_rvMatInv_qApply_rvMat (P : IETDatum₂ α n) (ε : Bool)
       simp
     rw [hq, hq']
     ring
-  · rw [if_neg ha]
+  · rw [ite_eq_right ha]
     have hq' : qApply (P.rvMat ε) y a = y a := by
       rw [qApply_rvMat_apply P ε hne]
       simp [ha]
@@ -796,7 +796,7 @@ theorem qApply_rvMat_qApply_rvMatInv (P : IETDatum₂ α n) (ε : Bool)
   funext a
   rw [qApply_rvMat_apply P ε hne]
   by_cases ha : a = P.last ε
-  · rw [ha, if_pos rfl]
+  · rw [ha, ite_eq_left rfl]
     have hq : qApply (P.rvMatInv ε) y (P.last (!ε)) = y (P.last (!ε)) := by
       rw [qApply_rvMatInv_apply P ε hne]
       simp [Ne.symm hne]
@@ -805,7 +805,7 @@ theorem qApply_rvMat_qApply_rvMatInv (P : IETDatum₂ α n) (ε : Bool)
       simp
     rw [hq, hq']
     ring
-  · rw [if_neg ha]
+  · rw [ite_eq_right ha]
     have hq' : qApply (P.rvMatInv ε) y a = y a := by
       rw [qApply_rvMatInv_apply P ε hne]
       simp [ha]

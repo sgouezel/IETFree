@@ -173,7 +173,7 @@ lemma toWord_pow_eq_append (a : FreeGroup α) {k : ℕ} (hk : k ≠ 0) :
       ((List.replicate k (FreeGroup.reduceCyclically a.toWord)).flatten ++
         FreeGroup.invRev (FreeGroup.reduceCyclically.conjugator a.toWord)) := by
   rw [FreeGroup.toWord_pow,
-    FreeGroup.reduceCyclically.reduce_flatten_replicate FreeGroup.isReduced_toWord, if_neg hk,
+    FreeGroup.reduceCyclically.reduce_flatten_replicate FreeGroup.isReduced_toWord, ite_eq_right hk,
     List.append_assoc]
 
 lemma toWord_pow_length (a : FreeGroup α) {k : ℕ} (hk : k ≠ 0) :

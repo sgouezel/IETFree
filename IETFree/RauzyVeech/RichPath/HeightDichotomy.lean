@@ -206,7 +206,7 @@ theorem noWin_of_last_ne (P : IETDatum₂ α n) (w μ : List Bool) (b : α)
 theorem getD_take_take {δ : List Bool} {g j : ℕ} (hg : g < j) :
     (δ.take j).getD g false = δ.getD g false := by
   rw [List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD, List.getElem?_take,
-    if_pos hg]
+    ite_eq_left hg]
 
 /-- **A bad word stops at an unclean crossing, hence avoids the tracking letter up to that point.**
 For `A' = {b}`: some `j ≤ |δ|` with `b` never winning on `δ.take j` and the `b`-height above the

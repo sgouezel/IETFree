@@ -146,12 +146,12 @@ theorem SplitI.measurable_side {D : Set ℝ} [Countable D] :
     · intro hz
       by_cases hzD : SplitI.proj z ∈ D
       · refine Or.inr ⟨⟨SplitI.proj z, hzD⟩, rfl, ?_⟩
-        rwa [SplitI.side, dif_pos hzD] at hz
+        rwa [SplitI.side, dite_eq_left hzD] at hz
       · exact Or.inl hzD
     · rintro (hz | ⟨d, hzd, hzcoord⟩)
-      · rw [SplitI.side, dif_neg hz]
+      · rw [SplitI.side, dite_eq_right hz]
       · have hzdD : SplitI.proj z ∈ D := hzd ▸ d.2
-        rw [SplitI.side, dif_pos hzdD,
+        rw [SplitI.side, dite_eq_left hzdD,
           show (⟨SplitI.proj z, hzdD⟩ : D) = d from Subtype.ext hzd]
         exact hzcoord
   have hmeas : MeasurableSet {z : SplitI D | SplitI.side z = true} := by
@@ -166,9 +166,9 @@ theorem SplitI.measurable_side {D : Set ℝ} [Countable D] :
           if z ∈ {z : SplitI D | SplitI.side z = true} then true else false := by
     funext z
     by_cases hz : z ∈ {z : SplitI D | SplitI.side z = true}
-    · rw [if_pos hz]
+    · rw [ite_eq_left hz]
       exact hz
-    · rw [if_neg hz]
+    · rw [ite_eq_right hz]
       cases hsz : SplitI.side z with
       | false => rfl
       | true => exact absurd hsz hz

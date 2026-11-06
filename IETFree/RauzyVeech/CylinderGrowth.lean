@@ -57,8 +57,8 @@ theorem rvMat_name_secondary (P : IETDatum₂ α n) (e : Bool) :
     P.rvMat e (P.last e) (P.last (!e)) = 1 := by
   rw [IETDatum₂.rvMat]
   by_cases h : P.last e = P.last (!e)
-  · rw [if_pos h]
-  · rw [if_neg h, if_pos ⟨rfl, rfl⟩]
+  · rw [ite_eq_left h]
+  · rw [ite_eq_right h, ite_eq_left ⟨rfl, rfl⟩]
 
 /-- **`Q(γ[e]) = Q(γ) · V`**: appending a letter multiplies on the right by the elementary
 matrix of the vertex reached by `γ`. -/
@@ -258,7 +258,7 @@ theorem exists_uniform_bound (h : ∀ (Q : IETDatum₂ α n), Q.Irreducible → 
   have hWspec (P : IETDatum₂ α n) (hP : P.Irreducible) : ∀ a b, 1 ≤ Path.Q P (W P) a b := by
     intro a b
     have hEq : W P = Classical.choose (exists_pos_word P (h P hP) hP) := by
-      simp only [hW, dif_pos hP]
+      simp only [hW, dite_eq_left hP]
     rw [hEq]
     exact Classical.choose_spec (exists_pos_word P (h P hP) hP) a b
   have hnonneg (P : IETDatum₂ α n) (a b : α) : 0 ≤ ((Path.Q P (W P) a b : ℤ) : ℝ) := by
@@ -418,13 +418,13 @@ theorem true_block_suffix_val (P : IETDatum₂ α n) (j : ℕ) (i : Fin n)
       intro hle
       rw [Fin.le_iff_val_le_val, hpiv, hih] at hle
       omega
-    rw [if_neg h1]
+    rw [ite_eq_right h1]
     have h2 : ¬ (P.piBottom.symm i = (vertex P (List.replicate j true)).last false) := by
       intro hcon
       have h3 : ((vertex P (List.replicate j true)).piBottom (P.piBottom.symm i)).val = n - 1 := by
         rw [hcon, (vertex P (List.replicate j true)).last_bottom, lastPos_val]
       omega
-    rw [if_neg h2]
+    rw [ite_eq_right h2]
     rw [fin_add_one_val (p := (vertex P (List.replicate j true)).piBottom (P.piBottom.symm i))
       (by omega)]
     omega

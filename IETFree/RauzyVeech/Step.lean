@@ -90,11 +90,11 @@ def removeFun (p : Fin n) (_h : p.val + 1 < n) (k : Fin n) : Fin n :=
 
 lemma insertFun_of_le {p : Fin n} (h : p.val + 1 < n) {k : Fin n} (hk : k.val ≤ p.val) :
     insertFun p h k = k := by
-  rw [insertFun, if_pos hk]
+  rw [insertFun, ite_eq_left hk]
 
 lemma insertFun_lastPos {p : Fin n} (h : p.val + 1 < n) :
     insertFun p h (IETDatum₂.lastPos n) = ⟨p.val + 1, h⟩ := by
-  rw [insertFun, if_neg (by rw [lastPos_val]; omega), if_pos rfl]
+  rw [insertFun, ite_eq_right (by rw [lastPos_val]; omega), ite_eq_left rfl]
 
 lemma insertFun_of_gt {p : Fin n} (h : p.val + 1 < n) {k : Fin n} (hk : p.val < k.val)
     (hk' : k ≠ IETDatum₂.lastPos n) :
@@ -102,33 +102,33 @@ lemma insertFun_of_gt {p : Fin n} (h : p.val + 1 < n) {k : Fin n} (hk : p.val < 
   have hk2 : k.val + 1 ≤ n - 1 := by
     have hne : k.val ≠ n - 1 := fun hh => hk' (Fin.ext (by rw [lastPos_val, hh]))
     omega
-  rw [insertFun, if_neg (by omega), if_neg hk', Fin.val_mk, Nat.min_eq_left hk2]
+  rw [insertFun, ite_eq_right (by omega), ite_eq_right hk', Fin.val_mk, Nat.min_eq_left hk2]
 
 lemma removeFun_of_le {p : Fin n} (h : p.val + 1 < n) {k : Fin n} (hk : k.val ≤ p.val) :
     removeFun p h k = k := by
-  rw [removeFun, if_pos hk]
+  rw [removeFun, ite_eq_left hk]
 
 lemma removeFun_insertFun {p : Fin n} (h : p.val + 1 < n) (k : Fin n) :
     removeFun p h (insertFun p h k) = k := by
   by_cases h1 : k.val ≤ p.val
   · rw [insertFun_of_le h h1, removeFun_of_le h h1]
   · by_cases h2 : k = IETDatum₂.lastPos n
-    · rw [h2, insertFun_lastPos h, removeFun, if_neg (by simp), if_pos (by simp)]
+    · rw [h2, insertFun_lastPos h, removeFun, ite_eq_right (by simp), ite_eq_left (by simp)]
     · have hk : p.val < k.val := by
         have := k.isLt
         omega
       have hval := insertFun_of_gt h hk h2
-      rw [removeFun, if_neg (by rw [hval]; omega), if_neg (by rw [hval]; omega)]
+      rw [removeFun, ite_eq_right (by rw [hval]; omega), ite_eq_right (by rw [hval]; omega)]
       exact Fin.ext (by rw [Fin.val_mk, hval]; omega)
 
 lemma insertFun_removeFun {p : Fin n} (h : p.val + 1 < n) (k : Fin n) :
     insertFun p h (removeFun p h k) = k := by
   by_cases h1 : k.val ≤ p.val
-  · rw [removeFun, if_pos h1, insertFun_of_le h h1]
-  · rw [removeFun, if_neg h1]
+  · rw [removeFun, ite_eq_left h1, insertFun_of_le h h1]
+  · rw [removeFun, ite_eq_right h1]
     by_cases h2 : k.val = p.val + 1
-    · rw [if_pos h2, insertFun_lastPos h, Fin.ext_iff, h2]
-    · rw [if_neg h2]
+    · rw [ite_eq_left h2, insertFun_lastPos h, Fin.ext_iff, h2]
+    · rw [ite_eq_right h2]
       have hk : p.val + 1 < k.val := by
         have := k.isLt
         omega
@@ -159,19 +159,19 @@ noncomputable def insertEquiv (p : Fin n) : Equiv.Perm (Fin n) :=
 lemma insertEquiv_apply_le {p : Fin n} {k : Fin n} (hk : k.val ≤ p.val) :
     insertEquiv p k = k := by
   by_cases h : p.val + 1 < n
-  · rw [insertEquiv, dif_pos h]
+  · rw [insertEquiv, dite_eq_left h]
     exact insertFun_of_le h hk
-  · rw [insertEquiv, dif_neg h]
+  · rw [insertEquiv, dite_eq_right h]
     rfl
 
 lemma insertEquiv_lastPos {p : Fin n} (h : p.val + 1 < n) :
     insertEquiv p (IETDatum₂.lastPos n) = ⟨p.val + 1, h⟩ := by
-  rw [insertEquiv, dif_pos h]
+  rw [insertEquiv, dite_eq_left h]
   exact insertFun_lastPos h
 
 lemma insertEquiv_apply_gt {p : Fin n} {k : Fin n} (h : p.val + 1 < n) (hk : p.val < k.val)
     (hk' : k ≠ IETDatum₂.lastPos n) : (insertEquiv p k).val = k.val + 1 := by
-  rw [insertEquiv, dif_pos h]
+  rw [insertEquiv, dite_eq_left h]
   exact insertFun_of_gt h hk hk'
 
 omit [Fintype α] in
@@ -182,15 +182,15 @@ theorem trans_insertEquiv_apply_val {α : Type*} [DecidableEq α] {n : ℕ} [NeZ
       if (e a).val ≤ p.val then (e a).val else if a = c then p.val + 1 else (e a).val + 1 := by
   rw [Equiv.trans_apply]
   by_cases h1 : (e a).val ≤ p.val
-  · rw [if_pos h1, insertEquiv_apply_le h1]
-  · rw [if_neg h1]
+  · rw [ite_eq_left h1, insertEquiv_apply_le h1]
+  · rw [ite_eq_right h1]
     have hp : p.val + 1 < n := by
       have := (e a).isLt
       omega
     by_cases h2 : a = c
     · subst h2
-      rw [if_pos rfl, hc, insertEquiv_lastPos (p := p) hp]
-    · rw [if_neg h2]
+      rw [ite_eq_left rfl, hc, insertEquiv_lastPos (p := p) hp]
+    · rw [ite_eq_right h2]
       have hne : e a ≠ IETDatum₂.lastPos n := by
         intro hh
         exact h2 (e.injective (by rw [hh, hc]))
@@ -323,17 +323,17 @@ theorem rvStep_piBottom_true_apply (P : IETDatum₂ α n) (a : α) :
       else P.piBottom a + 1 := by
   apply Fin.ext
   by_cases h1 : P.piBottom a ≤ P.piBottom (P.last true)
-  · rw [if_pos h1,
+  · rw [ite_eq_left h1,
       rvStep_piBottom_true_apply_val,
-      if_pos (show (P.piBottom a).val ≤ (P.piBottom (P.last true)).val from h1)]
+      ite_eq_left (show (P.piBottom a).val ≤ (P.piBottom (P.last true)).val from h1)]
   · have hpv : (P.piBottom (P.last true)).val < (P.piBottom a).val := by
       omega
     have hp : (P.piBottom (P.last true)).val + 1 < n := by
       have := (P.piBottom a).isLt
       omega
-    rw [if_neg h1]
+    rw [ite_eq_right h1]
     by_cases h2 : a = P.last false
-    · rw [if_pos h2, h2, rvStep_piBottom_true_apply_last P hp, Fin.val_mk, fin_add_one_val hp]
+    · rw [ite_eq_left h2, h2, rvStep_piBottom_true_apply_last P hp, Fin.val_mk, fin_add_one_val hp]
     · have hp' : (P.piBottom a).val + 1 < n := by
         have hne : (P.piBottom a).val ≠ n - 1 := by
           intro hh
@@ -342,10 +342,10 @@ theorem rvStep_piBottom_true_apply (P : IETDatum₂ α n) (a : α) :
             exact Fin.ext (by rw [lastPos_val, hh])))
         have := (P.piBottom a).isLt
         omega
-      rw [if_neg h2,
+      rw [ite_eq_right h2,
         rvStep_piBottom_true_apply_val,
-        if_neg (show ¬ ((P.piBottom a).val ≤ (P.piBottom (P.last true)).val) from h1),
-        if_neg h2]
+        ite_eq_right (show ¬ ((P.piBottom a).val ≤ (P.piBottom (P.last true)).val) from h1),
+        ite_eq_right h2]
       exact (fin_add_one_val hp').symm
 
 end Step
@@ -510,7 +510,7 @@ theorem sum_rvMat_mul (c c' : α) (y : α → ℝ) (a : α) :
         (∑ b, (if a = c ∧ b = c' then y b else 0)) := by
     rw [Finset.sum_congr rfl (fun b _ => hexp b), Finset.sum_add_distrib]
   rw [hsplit, Finset.sum_ite_eq' Finset.univ a (fun b => y b)]
-  simp only [Finset.mem_univ, if_true]
+  simp only [Finset.mem_univ, ite_true]
   by_cases ha : a = c
   · have h2 (b) : (if a = c ∧ b = c' then y b else 0) = (if b = c' then y b else 0) := by
       rw [ha]
@@ -518,7 +518,7 @@ theorem sum_rvMat_mul (c c' : α) (y : α → ℝ) (a : α) :
     rw [Finset.sum_congr rfl (fun b _ => h2 b), Finset.sum_ite_eq' Finset.univ c' (fun b => y b)]
     simp [ha]
   · have h2 (b) : (if a = c ∧ b = c' then y b else 0) = (0 : ℝ) := by
-      rw [if_neg (fun h => ha h.1)]
+      rw [ite_eq_right (fun h => ha h.1)]
     rw [Finset.sum_congr rfl (fun b _ => h2 b), Finset.sum_const_zero, add_zero]
     simp [ha]
 

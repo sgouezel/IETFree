@@ -66,7 +66,7 @@ noncomputable def evalWordEquiv (w : FreeGroup (Fin 2)) (f g : Equiv ℝ ℝ) : 
 theorem evalWord_toEquiv (F G : IET 0 1) (w : FreeGroup (Fin 2)) :
     (evalWord w F G).toEquiv = evalWordEquiv w F.toEquiv G.toEquiv := by
   induction w using FreeGroup.induction_on with
-  | C1 => rfl
+  | one => rfl
   | of x => by_cases hx : x = 0 <;> simp [hx, evalWordEquiv, evalWord]
   | inv_of x ih =>
       have h1 : ((evalWord (FreeGroup.of x) F G)⁻¹).toEquiv

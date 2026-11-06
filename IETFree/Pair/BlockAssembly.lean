@@ -79,7 +79,7 @@ theorem evalWord_mapsTo_of_invariant {d e : ℕ} [NeZero d] [NeZero e] (D : IETD
     ∀ x ∈ T, (evalWord w D.toIET E.toIET) x ∈ T := by
   revert w
   refine fun w =>
-    FreeGroup.induction_on (C := fun w => ∀ x ∈ T, (evalWord w D.toIET E.toIET) x ∈ T)
+    FreeGroup.induction_on (motive := fun w => ∀ x ∈ T, (evalWord w D.toIET E.toIET) x ∈ T)
       w ?_ ?_ ?_ ?_
   · intro x hx
     rwa [evalWord_one, IET.one_apply]

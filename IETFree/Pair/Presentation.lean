@@ -207,7 +207,7 @@ theorem simplexMap_of_lt {d : ℕ} {v : Fin (d - 1) → ℝ} (hv : v ∈ simplex
     {j : Fin d} (hj : j.val < d - 1) :
     (simplexMap d v j : ℝ) = v ⟨j.val, hj⟩ := by
   have hne : j.val + 1 ≠ d := by omega
-  rw [simplexMap, dif_neg hne, Real.coe_toNNReal _ (le_of_lt (hv.1 _))]
+  rw [simplexMap, dite_eq_right hne, Real.coe_toNNReal _ (le_of_lt (hv.1 _))]
 
 /-- **Membership in the simplex from the free region**, in the index form `Fin (n - 1)` (the
 version in `Diophantine.lean` is stated for `p + 1`). -/
@@ -267,12 +267,12 @@ theorem leftEnd_ne_sum_lam_of_good {d e : ℕ} [NeZero d] [NeZero e]
   set a : Fin d → ℤ := fun i => -if i ∈ S then 1 else 0 with ha
   have hbfun (i : Fin e) : ((b i : ℝ) * (p.2 i : ℝ)) = if i < j then (p.2 i : ℝ) else 0 := by
     by_cases hij : i < j
-    · simp only [hb, if_pos hij]; push_cast; ring
-    · simp only [hb, if_neg hij]; push_cast; ring
+    · simp only [hb, ite_eq_left hij]; push_cast; ring
+    · simp only [hb, ite_eq_right hij]; push_cast; ring
   have hafun (i : Fin d) : ((a i : ℝ) * (p.1 i : ℝ)) = -(if i ∈ S then (p.1 i : ℝ) else 0) := by
     by_cases hik : i ∈ S
-    · simp only [ha, if_pos hik]; push_cast; ring
-    · simp only [ha, if_neg hik]; push_cast; ring
+    · simp only [ha, ite_eq_left hik]; push_cast; ring
+    · simp only [ha, ite_eq_right hik]; push_cast; ring
   have hbval : (∑ i, (b i : ℝ) * (p.2 i : ℝ)) = leftEnd p.2 j := by
     simp only [hbfun, leftEnd, ← Finset.sum_filter]
   have haval : (∑ i, (a i : ℝ) * (p.1 i : ℝ)) = -∑ i ∈ S, (p.1 i : ℝ) := by
@@ -294,7 +294,7 @@ theorem leftEnd_ne_sum_lam_of_good {d e : ℕ} [NeZero d] [NeZero e]
     have := j.isLt
     omega
   simp only [hb] at h0
-  rw [if_pos hj0, if_neg hlast] at h0
+  rw [ite_eq_left hj0, ite_eq_right hlast] at h0
   exact one_ne_zero h0
 
 /-- **A singularity of `g` sits strictly inside the image of a cell of `f`**: at a good parameter
@@ -623,9 +623,9 @@ theorem cutAffine_apply {d e : ℕ} (i : Fin d) (q : PReal d e) :
   rw [cutAffine, AffineMap.sum_apply]
   refine Finset.sum_congr rfl (fun j _ => ?_)
   by_cases h : j.val < i.val
-  · rw [if_pos h, if_pos h]
+  · rw [ite_eq_left h, ite_eq_left h]
     rfl
-  · rw [if_neg h, if_neg h]
+  · rw [ite_eq_right h, ite_eq_right h]
     rfl
 
 /-- **On the open simplex region the `i`-th cut of `f` is the affine function `cutAffine i`.** -/
@@ -646,7 +646,7 @@ noncomputable def imageLenAffine {d e : ℕ} [NeZero d] (j : Fin d) : ParamAffin
 theorem imageLenAffine_apply_last {d e : ℕ} [NeZero d] {j : Fin d} (h : j.val + 1 = d)
     (q : PReal d e) :
     imageLenAffine (e := e) j q = 1 - ∑ m : Fin (d - 1), q.1 m := by
-  rw [imageLenAffine, dif_pos h]
+  rw [imageLenAffine, dite_eq_left h]
   have hsub (f g : ParamAffine d e) : (f - g) q = f q - g q := rfl
   rw [hsub, AffineMap.sum_apply]
   simp [leftCoordAffine_apply]
@@ -655,7 +655,7 @@ theorem imageLenAffine_apply_free {d e : ℕ} [NeZero d] {j : Fin d} (h : ¬ j.v
     (q : PReal d e) :
     imageLenAffine (e := e) j q
       = q.1 ⟨j.val, by have h1 := j.isLt; have h2 := NeZero.pos d; omega⟩ := by
-  simp only [imageLenAffine, dif_neg h, leftCoordAffine_apply]
+  simp only [imageLenAffine, dite_eq_right h, leftCoordAffine_apply]
 
 /-- **The left end of the image of the `k`-th cell, as an affine function of the free
 parameters.** -/
@@ -670,8 +670,8 @@ theorem imageLeftAffine_apply {d e : ℕ} [NeZero d] (π : Equiv.Perm (Fin d)) (
   rw [imageLeftAffine, AffineMap.sum_apply]
   refine Finset.sum_congr rfl (fun j _ => ?_)
   by_cases h : π j < π k
-  · rw [if_pos h, if_pos h]
-  · rw [if_neg h, if_neg h]
+  · rw [ite_eq_left h, ite_eq_left h]
+  · rw [ite_eq_right h, ite_eq_right h]
     rfl
 
 /-- **On the open simplex region the left end of the image of the `k`-th cell is the affine
@@ -682,21 +682,21 @@ theorem imageLeftAffine_eq {d e : ℕ} [NeZero d] (π : Equiv.Perm (Fin d)) {q :
   rw [imageLeftAffine_apply, imageLeft, Finset.sum_filter]
   refine Finset.sum_congr rfl (fun j _ => ?_)
   by_cases hjk : π j < π k
-  · rw [if_pos hjk, if_pos hjk]
+  · rw [ite_eq_left hjk, ite_eq_left hjk]
     by_cases hj : j.val + 1 = d
-    · rw [imageLenAffine_apply_last hj, simplexMap, dif_pos hj,
+    · rw [imageLenAffine_apply_last hj, simplexMap, dite_eq_left hj,
         Real.coe_toNNReal _ (by linarith [hq.2])]
     · have hj' : j.val < d - 1 := by
         have h2 := NeZero.pos d
         omega
       rw [imageLenAffine_apply_free hj, simplexMap_of_lt hq hj']
-  · rw [if_neg hjk, if_neg hjk]
+  · rw [ite_eq_right hjk, ite_eq_right hjk]
 
 /-- On the open simplex region, `imageLenAffine j` is the `j`-th length of `simplexMap`. -/
 theorem imageLenAffine_eq {d e : ℕ} [NeZero d] {q : PReal d e} (hq : q.1 ∈ simplexRegion d)
     (j : Fin d) : imageLenAffine (e := e) j q = (simplexMap d q.1 j : ℝ) := by
   by_cases h : j.val + 1 = d
-  · rw [imageLenAffine_apply_last h, simplexMap, dif_pos h,
+  · rw [imageLenAffine_apply_last h, simplexMap, dite_eq_left h,
       Real.coe_toNNReal _ (by linarith [hq.2])]
   · have hj' : j.val < d - 1 := by
       have h2 := NeZero.pos d
@@ -732,9 +732,9 @@ theorem cutAffineRight_apply {d e : ℕ} (j : Fin e) (q : PReal d e) :
   rw [cutAffineRight, AffineMap.sum_apply]
   refine Finset.sum_congr rfl (fun m _ => ?_)
   by_cases h : m.val < j.val
-  · rw [if_pos h, if_pos h]
+  · rw [ite_eq_left h, ite_eq_left h]
     rfl
-  · rw [if_neg h, if_neg h]
+  · rw [ite_eq_right h, ite_eq_right h]
     rfl
 
 /-- **On the open simplex region the `j`-th cut of `g` is the affine function
@@ -749,9 +749,9 @@ theorem pos_simplexMap {m : ℕ} {v : Fin (m - 1) → ℝ} (hv : v ∈ simplexRe
     (i : Fin m) : 0 < simplexMap m v i := by
   rw [← NNReal.coe_pos]
   by_cases h : i.val + 1 = m
-  · rw [simplexMap, dif_pos h, Real.coe_toNNReal _ (by linarith [hv.2])]
+  · rw [simplexMap, dite_eq_left h, Real.coe_toNNReal _ (by linarith [hv.2])]
     linarith [hv.2]
-  · rw [simplexMap, dif_neg h, Real.coe_toNNReal _ (le_of_lt (hv.1 _))]
+  · rw [simplexMap, dite_eq_right h, Real.coe_toNNReal _ (le_of_lt (hv.1 _))]
     exact hv.1 _
 
 /-- **Step 2 of the local presentation: each cut of `g` sits strictly inside a cell of `f`.**

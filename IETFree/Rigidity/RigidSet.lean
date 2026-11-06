@@ -286,9 +286,9 @@ private theorem height_succ {P : IETDatum₂ α n} (hP : P.Irreducible) (hn : 2 
               (∑ a, (IETDatum₂.Path.Q P γ a ((IETDatum₂.vertex P γ).last e)).toNat) else 0) := by
         congr 1
         by_cases hb : b = (IETDatum₂.vertex P γ).last (!e)
-        · simp only [if_pos hb]
-        · rw [if_neg hb]
-          exact Finset.sum_eq_zero (fun a _ => by simp only [if_neg hb])
+        · simp only [ite_eq_left hb]
+        · rw [ite_eq_right hb]
+          exact Finset.sum_eq_zero (fun a _ => by simp only [ite_eq_right hb])
 
 /-- The one-step heights are at most two. -/
 private theorem hgt1_le_two (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
@@ -300,7 +300,7 @@ private theorem hgt1_le_two (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 
 private theorem hgt1_eq_one_of_ne (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     (e : Bool) {c : α} (hc : c ≠ P.last (!e)) : TowerInjectivity.hgt1 P e c = 1 := by
   rw [TowerInjectivity.hgt1_eq _ (fun e' => IETDatum₂.last_ne_last_not P hP hn e')]
-  simp only [if_neg hc, add_zero]
+  simp only [ite_eq_right hc, add_zero]
 
 /-! ## 4. The nesting of the level-one cells, in the notation of the node -/
 
@@ -396,11 +396,11 @@ private theorem FR_list {P : IETDatum₂ α n} {lam : α → ℝ≥0} (hP : P.Ir
     by_cases hb : b = (IETDatum₂.vertex P γ).last (!e)
     · have hheight : height P (γ ++ [e]) b
           = height P γ b + height P γ ((IETDatum₂.vertex P γ).last e) := by
-        rw [hHs, if_pos hb]
+        rw [hHs, ite_eq_left hb]
       have hnode : nodeExch P (γ ++ [e]) lam y
           = nodeExch P γ lam (nodeExch P γ lam y) := by
         have hg2 : TowerInjectivity.hgt1 (IETDatum₂.vertex P γ) e b = 2 := by
-          rw [TowerInjectivity.hgt1_eq _ hne, if_pos hb]
+          rw [TowerInjectivity.hgt1_eq _ hne, ite_eq_left hb]
         rw [nodeExch_append, ← hfr, hg2, nodeExch_eq P γ lam,
           show (2 : ℕ) = 1 + 1 from rfl, Function.iterate_add_apply, Function.iterate_one]
       cases e with
@@ -446,10 +446,10 @@ private theorem FR_list {P : IETDatum₂ α n} {lam : α → ℝ≥0} (hP : P.Ir
                 (nodeExch P γ lam y) := by rw [i1]
           _ = nodeExch P γ lam (nodeExch P γ lam y) := i2
     · have hheight : height P (γ ++ [e]) b = height P γ b := by
-        rw [hHs, if_neg hb, add_zero]
+        rw [hHs, ite_eq_right hb, add_zero]
       have hnode : nodeExch P (γ ++ [e]) lam y = nodeExch P γ lam y := by
         have hg1 : TowerInjectivity.hgt1 (IETDatum₂.vertex P γ) e b = 1 := by
-          rw [TowerInjectivity.hgt1_eq _ hne, if_neg hb, add_zero]
+          rw [TowerInjectivity.hgt1_eq _ hne, ite_eq_right hb, add_zero]
         rw [nodeExch_append, nodeExch_eq P γ lam, ← hfr, hg1, Function.iterate_one]
       have hy1 : y ∈ Tower.cellAt P γ lam b := by
         cases e with
@@ -487,7 +487,7 @@ private theorem SH_list {P : IETDatum₂ α n} {lam : α → ℝ≥0} (hP : P.Ir
     by_cases hb : b = (IETDatum₂.vertex P γ).last (!e)
     · have hheight : height P (γ ++ [e]) b
           = height P γ b + height P γ ((IETDatum₂.vertex P γ).last e) := by
-        rw [hHs, if_pos hb]
+        rw [hHs, ite_eq_left hb]
       cases e with
       | false =>
         have hb' : b = (IETDatum₂.vertex P γ).last true := by simpa using hb
@@ -552,7 +552,7 @@ private theorem SH_list {P : IETDatum₂ α n} {lam : α → ℝ≥0} (hP : P.Ir
           rw [e1, Function.iterate_add_apply, hfr, hτ2 _ hmem2, ← hfr, hτ1 y hmem1]
           ring
     · have hheight : height P (γ ++ [e]) b = height P γ b := by
-        rw [hHs, if_neg hb, add_zero]
+        rw [hHs, ite_eq_right hb, add_zero]
       rw [hheight] at hj
       obtain ⟨τ, hτ⟩ := ih hOK' b j hj
       refine ⟨τ, fun y hy => hτ y ?_⟩
@@ -713,7 +713,7 @@ private theorem height_le_succ_false {P : IETDatum₂ α n} (hP : P.Irreducible)
 private theorem height_succ_ne {P : IETDatum₂ α n} (hP : P.Irreducible) (hn : 2 ≤ n)
     (γ : List Bool) (e : Bool) {c : α} (hc : c ≠ (IETDatum₂.vertex P γ).last (!e)) :
     height P (γ ++ [e]) c = height P γ c := by
-  rw [height_succ hP hn γ e c, if_neg hc, add_zero]
+  rw [height_succ hP hn γ e c, ite_eq_right hc, add_zero]
 
 /-- The height recursion at the secondary letter of a true step. -/
 private theorem height_succ_true_scd {P : IETDatum₂ α n} (hP : P.Irreducible) (hn : 2 ≤ n)
@@ -721,7 +721,7 @@ private theorem height_succ_true_scd {P : IETDatum₂ α n} (hP : P.Irreducible)
     height P (γ ++ [true]) ((IETDatum₂.vertex P γ).last false)
       = height P γ ((IETDatum₂.vertex P γ).last false)
         + height P γ ((IETDatum₂.vertex P γ).last true) := by
-  rw [height_succ hP hn γ true, Bool.not_true, if_pos rfl]
+  rw [height_succ hP hn γ true, Bool.not_true, ite_eq_left rfl]
 
 /-- The height recursion at the secondary letter of a false step. -/
 private theorem height_succ_false_scd {P : IETDatum₂ α n} (hP : P.Irreducible) (hn : 2 ≤ n)
@@ -729,7 +729,7 @@ private theorem height_succ_false_scd {P : IETDatum₂ α n} (hP : P.Irreducible
     height P (γ ++ [false]) ((IETDatum₂.vertex P γ).last true)
       = height P γ ((IETDatum₂.vertex P γ).last true)
         + height P γ ((IETDatum₂.vertex P γ).last false) := by
-  rw [height_succ hP hn γ false, Bool.not_false, if_pos rfl]
+  rw [height_succ hP hn γ false, Bool.not_false, ite_eq_left rfl]
 
 /-- **The level-one decomposition of the level base.**  The base interval at the node `γ` is the
 disjoint union of the first `hgt1` iterates of the level-`γ ++ [e]` cells. -/

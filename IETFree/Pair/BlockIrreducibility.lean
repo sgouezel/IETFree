@@ -98,7 +98,7 @@ theorem mkIETCuts_eq_markCuts (D : IETDatum n) : mkIETCuts D.lam 0 1 = D.markCut
       c ∈ Set.Ico (0 : ℝ) 1 := by
     obtain ⟨i, -, rfl⟩ := Finset.mem_image.mp hc
     exact ⟨leftEnd_nonneg D.lam i, by rw [← hsum]; exact D.leftEnd_lt_sum i⟩
-  rw [mkIETCuts, hsum, if_neg (lt_irrefl (1 : ℝ)), Finset.union_empty]
+  rw [mkIETCuts, hsum, ite_eq_right (lt_irrefl (1 : ℝ)), Finset.union_empty]
   simp only [zero_add]
   rw [Finset.filter_true_of_mem hmem]
   simp only [IETDatum.markCuts, IETDatum.mark_castSucc]
@@ -288,7 +288,7 @@ theorem splitting_of_imageLeft_relation {d e : ℕ} [NeZero d] [NeZero e]
       have := n.isLt
       have := NeZero.pos d
       omega
-    simp only [hlast, if_false] at hi
+    simp only [hlast, ite_false] at hi
     split_ifs at hi <;> omega
   · -- `t = 0`: all coefficients vanish, and the two set equalities are the splitting conditions
     have hiff (i : Fin d) : (π i).val < (π k).val ↔ i.val < n.val := by
@@ -314,7 +314,7 @@ theorem splitting_of_imageLeft_relation {d e : ℕ} [NeZero d] [NeZero e]
       have := l.isLt
       have := NeZero.pos e
       omega
-    simp only [hlast, if_false] at hj
+    simp only [hlast, ite_false] at hj
     split_ifs at hj <;> omega
 
 
@@ -384,11 +384,11 @@ theorem splitting_of_imageLeft_relation_add {d e : ℕ} [NeZero d] [NeZero e]
     · exfalso
       have hpmk : (π m).val < (π k).val := by
         by_contra hc
-        rw [if_neg hc] at hmt
+        rw [ite_eq_right hc] at hmt
         omega
       have hk1 : a k = 1 := by rw [haconst k, h1]
       simp only [ha_def] at hk1
-      rw [if_neg (lt_irrefl _)] at hk1
+      rw [ite_eq_right (lt_irrefl _)] at hk1
       split_ifs at hk1 <;> omega
   -- hence every coefficient vanishes
   have ha (i) : a i = 0 := by rw [haconst i, ha0]
@@ -859,7 +859,7 @@ theorem leftEnd_eq_zero_of_imageLeft_eq {d e : ℕ} [NeZero d] [NeZero e]
       simp only [lastIdx]
       have h2 := NeZero.pos d
       omega
-    rw [if_neg h]
+    rw [ite_eq_right h]
     simp
   have hzero (i) : a i = 0 := by rw [haconst i, hlast]
   have hn0 : n = 0 := by
@@ -867,7 +867,7 @@ theorem leftEnd_eq_zero_of_imageLeft_eq {d e : ℕ} [NeZero d] [NeZero e]
     simp only [ha_def] at h
     by_contra hne
     have hpos : 0 < n.val := Nat.pos_of_ne_zero (fun h0 => hne (Fin.ext h0))
-    rw [if_pos (show (⟨0, NeZero.pos d⟩ : Fin d).val < n.val from hpos)] at h
+    rw [ite_eq_left (show (⟨0, NeZero.pos d⟩ : Fin d).val < n.val from hpos)] at h
     simp at h
   rw [hn0, leftEnd_zero]
 

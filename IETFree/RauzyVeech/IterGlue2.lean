@@ -119,9 +119,9 @@ theorem iterOK_pathWord (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ 
       intro a
       rw [Tower.hatLam]
       by_cases ha : a = (IETDatum₂.vertex P γ).last e
-      · rw [if_pos ha]
+      · rw [ite_eq_left ha]
         exact tsub_pos_of_lt (by rw [ha]; exact hcmp)
-      · rw [if_neg ha]
+      · rw [ite_eq_right ha]
         exact hpos a
 
 end IterGlue2

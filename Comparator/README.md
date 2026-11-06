@@ -125,6 +125,31 @@ of the repository's own Lake project (`lakefile.toml` declares a library for `IE
 of the two statement files), so these `lake build` commands work as written once `lake exe cache get`
 has been run.
 
+### The core tool: `lake comparator` — the route to use
+
+Comparator moved into Lean core at v4.35.0, and upstream's own README now deprecates the standalone
+repository in favour of it.  The core tool reads the same `comparator.json` (the
+`challenge_module`, `solution_module`, `theorem_names`, `definition_names` and `permitted_axioms`
+fields are the ones this repository sets), builds and exports both modules inside a `bwrap` sandbox,
+and replays the solution through Lean's kernel:
+
+```sh
+lake exe cache get      # once
+lake build              # once, so that the manifest and the oleans are in place
+lake comparator         # reads ./comparator.json
+```
+
+On this tree it prints `Lean default kernel accepts the solution` and `Your solution is okay!`.
+Two caveats, both about this VM rather than the tool:
+
+* `lake comparator` honours `enable_nanoda` from the config, but `bwrap` cannot bind
+  `/opt/lean/bin/nanoda_bin` here, because `/opt/lean` is a **symlink** into
+  `/opt/lean.4.35.0-56a005855ea1` and the sandbox cannot create the missing parent directories.  The
+  run then ends with `nanoda exited with 1` although Lean's kernel accepted.  Dropping
+  `enable_nanoda` (as in a scratch copy of the config) gives a clean pass; the standalone tool below
+  is what exercises nanoda here.
+* `bwrap` needs unprivileged user namespaces, which this VM provides.
+
 ### In this VM, with the repository's `fake-landrun` shim — done, and it accepts
 
 `landrun` is not installed here, but the comparator ships `scripts/fake-landrun.sh`, which runs the
@@ -132,16 +157,15 @@ command unsandboxed.  That is enough to run the *genuine*
 comparison (real exports, real declaration-by-declaration comparison, real axiom check, real kernel
 replay); only the sandbox is shimmed.  What it took:
 
-1. **The right revision.** Comparator's `master` and its `lean4export` are pinned to Lean v4.35.0,
-   while this library is Lean 4.33.1 (its Mathlib is built for it; oleans are not portable across
-   versions).  The last comparator commit with a v4.33 toolchain is `3927ad3`, and it pins
-   `lean4export` at `15f6055` (the `v4.33.0` tag).  Build both with the local toolchain:
+1. **The right revision.** Comparator moved into Lean core at v4.35.0 (`lake comparator`,
+   `lake check`), and this library is on that toolchain.  The standalone repository still works;
+   use the revision whose toolchain matches, `865edc1` for Lean 4.35.0, with whatever
+   `lean4export` it pins:
 
    ```sh
    git clone https://github.com/leanprover/comparator && cd comparator
-   git checkout 3927ad3
-   echo "leanprover/lean4:v4.33.1" > lean-toolchain     # the installed toolchain
-   lake build comparator lean4export                    # both build against Lean core only
+   git checkout 865edc1                                  # the revision on Lean 4.35.0
+   lake build comparator lean4export                     # both build against Lean core only
    ```
 
    (`landrun` absent, so nothing else is needed; `Export.Parse`, `Comparator.Compare` and

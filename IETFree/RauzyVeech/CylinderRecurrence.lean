@@ -119,9 +119,9 @@ theorem measurableSet_pathWord_eq (P : IETDatum₂ α n) (hP : P.Irreducible) (h
       rw [hset]
       refine MeasurableSet.inter (ih u hu) ?_
       by_cases hb : b
-      · rw [if_pos hb]
+      · rw [ite_eq_left hb]
         exact IETDatum₂.measurableSet_simplexCyl P hP hn _
-      · rw [if_neg hb]
+      · rw [ite_eq_right hb]
         exact (IETDatum₂.measurableSet_simplexCyl P hP hn _).compl
 
 theorem measurableSet_lvl (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) (k : ℕ)
