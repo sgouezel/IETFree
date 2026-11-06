@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.PosBlock
 public import IETFree.RauzyVeech.MainComponents
+public import IETFree.RauzyVeech.PosBlock
 
 /-!
 # The peeling: bounded positive blocks along a greedy path make the columns coalesce
@@ -28,15 +28,12 @@ No measure theory is involved.  The dictionary to the geometry is `ColShrink.dia
 read through the spread of `PosBlock.lean`; the passage to the ray condition is
 `IETFree/RauzyVeech/RayPointwise.lean`. -/
 
-@[expose] public section
-
-
-open Filter
+open Filter IETDatum₂
 open scoped NNReal BigOperators
 
-namespace PosBlock
+@[expose] public section
 
-open IETDatum₂
+namespace PosBlock
 
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α] {n : ℕ} [NeZero n]
 
@@ -152,7 +149,6 @@ omit [Nonempty α] in
 theorem exists_chain (P : IETDatum₂ α n) (lam : α → ℝ≥0) (M : ℕ)
     (hb : ∀ k : ℕ, ∃ B : Blk P lam M, k ≤ B.m) :
     ∃ B : ℕ → Blk P lam M, ∀ j, (B j).m + (B j).v.length ≤ (B (j + 1)).m := by
-  classical
   choose B hB using hb
   exact ⟨fun j => B (Nat.rec 0 (fun _ e => (B e).m + (B e).v.length) j), fun j => hB _⟩
 
@@ -272,10 +268,10 @@ theorem peel (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) {M : ℕ
     ∀ ε > 0, ∀ᶠ k in atTop, ∀ b b' a,
       |ColShrink.ncol P (IETDatum₂.pathWord P lam k) b a
         - ColShrink.ncol P (IETDatum₂.pathWord P lam k) b' a| ≤ ε := by
-  classical
   -- `hstop` is not needed by the peelling: by `pathWord_eq_of_mem` membership in a child cylinder
-  -- already determines the branch, and the two children are disjoint.
-  have hstop' : ∀ k, lam ∉ IETDatum₂.cylStop P (IETDatum₂.pathWord P lam k) := hstop
+  -- already determines the branch, and the two children are disjoint.  The `have` is what keeps
+  -- the unused hypothesis mentioned, so that the unused-variable linter stays quiet.
+  have _hstop := hstop
   intro ε hε
   have hcard : (1 : ℝ) ≤ (Fintype.card α : ℝ) := by
     have h : 1 ≤ Fintype.card α := Fintype.card_pos

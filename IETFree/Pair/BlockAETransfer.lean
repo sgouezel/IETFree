@@ -89,9 +89,8 @@ theorem eq_of_forall_lt_last_eq_of_sum_eq {r : ℕ} (hr : 0 < r) {f g : Fin r �
       Finset.mem_singleton, hlastdef, Fin.ext_iff]
     constructor
     · intro hge
-      have hlt := i.isLt
       omega
-    · intro heq hlt
+    · intro heq i.isLt
       omega
   have hsplit (φ : Fin r → ℝ) : (∑ i ∈ T, φ i) + φ last = ∑ i, φ i := by
     have hlast' : φ last = ∑ i ∈ Tᶜ, φ i := by rw [hTcompl, Finset.sum_singleton]
@@ -132,8 +131,6 @@ theorem blockLam_eq_simplexMap_rescaleSub {n : ℕ} [NeZero n] {k l : ℕ} (hkl 
     ((blockLam (simplexMap n x) k hkl hln hpos i : ℝ≥0) : ℝ)
         = ((simplexMap (l - k) (rescaleSub k (l - k) x) i : ℝ≥0) : ℝ) := by
     rw [blockLam_coe, simplexMap_of_lt hy hi]
-    change (simplexMap n x ⟨k + i.val, by omega⟩ : ℝ) / blockMass (simplexMap n x) k hln
-      = blockLen k (l - k) x ⟨i.val, by omega⟩ / ∑ j, blockLen k (l - k) x j
     rw [← cellLen_eq_coe_simplexMap hx (k + i.val) (by omega), hmass]
     rfl
   have hf : (∑ i : Fin (l - k),
@@ -169,8 +166,7 @@ theorem blockFree_simplexMap {n : ℕ} {k l : ℕ} {x : Fin (n - 1) → ℝ}
   unfold blockFree
   congr 1
   funext i
-  have hj : (⟨i.val, by omega⟩ : Fin n).val < n - 1 := i.isLt
-  exact simplexMap_of_lt (v := x) hx hj
+  exact simplexMap_of_lt (v := x) hx i.isLt
 
 /-- **The projective formula for the rescaled block length vector is absolutely continuous**: the
 pushforward of `simplexVolume n` under `ν ↦ simplexMap (l - k) (blockFree k l ν)` is absolutely

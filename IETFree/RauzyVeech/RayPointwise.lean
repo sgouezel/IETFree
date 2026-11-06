@@ -5,14 +5,14 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.CylinderGrowth
-public import IETFree.RauzyVeech.IterGlue2
-public import IETFree.RauzyVeech.TowerGlue
-public import IETFree.RauzyVeech.InvariantMeasure
 public import IETFree.RauzyVeech.ClosureSimplex
-public import IETFree.RauzyVeech.RayPath
 public import IETFree.RauzyVeech.ColDiam
+public import IETFree.RauzyVeech.CylinderGrowth
+public import IETFree.RauzyVeech.InvariantMeasure
+public import IETFree.RauzyVeech.IterGlue2
 public import IETFree.RauzyVeech.MainComponents
+public import IETFree.RauzyVeech.RayPath
+public import IETFree.RauzyVeech.TowerGlue
 
 /-!
 # The pointwise ray criterion: coalescence of the normalised columns gives the ray condition
@@ -109,7 +109,7 @@ theorem mem_simplexCyl_nil_of_mem (P : IETDatum₂ α n) {γ : List Bool} {x : �
   obtain ⟨y, hy, hxy⟩ := h.1
   refine (IETDatum₂.mem_simplexCyl_nil_iff P x).mpr ⟨h.2, fun a => ?_⟩
   have hxa : (x a : ℝ) = ∑ b, (IETDatum₂.Path.Q P γ a b : ℝ) * y b := congrFun hxy a
-  have hnn : ∀ b, 0 ≤ (IETDatum₂.Path.Q P γ a b : ℝ) * y b := fun b =>
+  have hnn (b) : 0 ≤ (IETDatum₂.Path.Q P γ a b : ℝ) * y b :=
     mul_nonneg (by exact_mod_cast IETDatum₂.Path.Q_nonneg P γ a b) (le_of_lt (hy b))
   have hle : (IETDatum₂.Path.Q P γ a a : ℝ) * y a
       ≤ ∑ b, (IETDatum₂.Path.Q P γ a b : ℝ) * y b :=
@@ -155,9 +155,8 @@ theorem rayCondition_of_cols (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2
   intro μ hμ hmass
   have hiter := iterOK_pathWord_of_notMem_cylStop P hP hn h0 hstop
   -- the path hypotheses of the ray criterion
-  have hmem : ∀ k,
+  have hmem (k) :
       lam ∈ IETDatum₂.simplexCyl P (PrefixWord.pfx (IETDatum₂.pathStep P lam) k) := by
-    intro k
     rw [IETDatum₂.pfx_pathStep]
     exact IETDatum₂.mem_pathWord_of_notMem_cylStop P hP hn h0 hstop k
   have hanti : Antitone fun k =>
@@ -171,11 +170,10 @@ theorem rayCondition_of_cols (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2
       (IETDatum₂.simplexCyl P (PrefixWord.pfx (IETDatum₂.pathStep P lam) k))) atTop (𝓝 0) := by
     simpa only [IETDatum₂.pfx_pathStep] using tendsto_diam_pathWord_of_cols P hcols
   -- the tower formula in `qApply` form along the greedy path
-  have htower : ∀ k, ∃ y : α → ℝ, (∀ a, 0 ≤ y a) ∧
+  have htower (k) : ∃ y : α → ℝ, (∀ a, 0 ≤ y a) ∧
       (fun a => InvariantMeasure.lambdaOf μ P lam a)
         = IETDatum₂.qApply
           (IETDatum₂.Path.Q P (PrefixWord.pfx (IETDatum₂.pathStep P lam) k)) y := by
-    intro k
     set γ := PrefixWord.pfx (IETDatum₂.pathStep P lam) k with hγ
     have hγ' : γ = IETDatum₂.pathWord P lam k := IETDatum₂.pfx_pathStep P lam k
     have hOK : TowerTrue.IterOK P lam γ := by

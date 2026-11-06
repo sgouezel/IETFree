@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.RayPath
 public import IETFree.RauzyVeech.NameInfinite
+public import IETFree.RauzyVeech.RayPath
 
 /-!
 # Corollary 2: the base interval of the Rauzy induction shrinks to a point
@@ -219,7 +219,7 @@ theorem nm_const_of_type_const (k : ℕ) :
     have h1 : p (j + 1) = p j := by
       rw [hc (j + 1) (by omega) le_rfl, hc j hkj (by omega)]
     have h2 : nm P p (j + 1) = nm P p j := by
-      change (V P p (j + 1)).last (p (j + 1)) = (V P p j).last (p j)
+      simp only [nm]
       rw [V_succ, h1, IETDatum₂.rvStep_last_self]
     rw [h2, ih (fun i h1' h2' => hc i h1' (by omega))]
 
@@ -238,11 +238,10 @@ secondary name (`secondary_eq_of_type_ne`). -/
 theorem scd_frequently (hP : P.Irreducible) (hn : 2 ≤ n)
     (hw : ∀ k, IETDatum₂.IsRenorm P (PrefixWord.pfx p k) lam (w k)) (b : α) :
     ∃ᶠ k in atTop, scd P p k = b := by
-  classical
-  have hpos (k : ℕ) (a : α) : 0 < wnn w k a := 
+  have hpos (k : ℕ) (a : α) : 0 < wnn w k a :=
     Real.toNNReal_pos.mpr ((hw k).1 a)
-  have hmn : ∀ a : α, ∃ᶠ k in atTop, MeshShrink.mn P p k = a := fun a =>
-    MeshShrink.name_infinite P hP p (wnn w) hpos (htype P p lam w hP hn hw)
+  have hmn (a : α) : ∃ᶠ k in atTop, MeshShrink.mn P p k = a := MeshShrink.name_infinite P hP p (wnn
+      w) hpos (htype P p lam w hP hn hw)
       (hnext P p lam w hP hn hw) a
   have hcard : 2 ≤ Fintype.card α := by
     rw [Fintype.card_congr P.piTop, Fintype.card_fin]
@@ -251,9 +250,8 @@ theorem scd_frequently (hP : P.Irreducible) (hn : 2 ≤ n)
   by_contra hcon
   rw [not_frequently] at hcon
   obtain ⟨N, hN⟩ := eventually_atTop.mp hcon
-  have key : ∀ k, N ≤ k → nm P p k = b →
-      ∃ j, k ≤ j ∧ nm P p j = b ∧ scd P p (j + 1) = b := by
-    intro k _ hkb
+  have key (k) (_ : N ≤ k) (hkb : nm P p k = b) : ∃ j, k ≤ j ∧ nm P p j = b ∧ scd P p
+      (j + 1) = b := by
     by_cases hS : ∃ j, k ≤ j ∧ p j ≠ p k
     · have hfind := Nat.find_spec hS
       set j₀ := Nat.find hS with hj₀def
@@ -262,8 +260,7 @@ theorem scd_frequently (hP : P.Irreducible) (hn : 2 ≤ n)
       have hne : j₀ ≠ k := fun h => hj₀p (by rw [h])
       obtain ⟨m, hm⟩ : ∃ m, j₀ = m + 1 := ⟨j₀ - 1, by omega⟩
       have hmk : k ≤ m := by omega
-      have hconst : ∀ i, k ≤ i → i ≤ m → p i = p k := by
-        intro i hi1 hi2
+      have hconst (i) (hi1 : k ≤ i) (hi2 : i ≤ m) : p i = p k := by
         by_contra hpi
         have h1 : j₀ ≤ i := Nat.find_min' hS ⟨hi1, hpi⟩
         omega
@@ -273,7 +270,7 @@ theorem scd_frequently (hP : P.Irreducible) (hn : 2 ≤ n)
       refine ⟨m, hmk, hnm, ?_⟩
       have hsc : scd P p (m + 1) =
           (IETDatum₂.rvStep (V P p m) (p m)).last (!(p (m + 1))) := by
-        change (V P p (m + 1)).last (!(p (m + 1))) = _
+        simp only [scd]
         rw [V_succ]
       rw [hsc]
       have hne' : p (m + 1) ≠ p m := by
@@ -284,7 +281,7 @@ theorem scd_frequently (hP : P.Irreducible) (hn : 2 ≤ n)
       exact hnm
     · exfalso
       push Not at hS
-      have hall : ∀ j, k ≤ j → nm P p j = b := fun j hj => by
+      have hall (j) (hj : k ≤ j) : nm P p j = b := by
         rw [nm_const_of_type_const P p k j hj (fun i h1 _ => hS i h1)]
         exact hkb
       have hfin : ∀ᶠ j in atTop, MeshShrink.mn P p j ≠ b' := by
@@ -396,9 +393,9 @@ theorem Cs_mul_le_Lam (hw : ∀ k, IETDatum₂.IsRenorm P (PrefixWord.pfx p k) l
     (k : ℕ) (b : α) : (Cs P p k b : ℝ) * w k b ≤ Lam lam := by
   have hnn (a c : α) : 0 ≤ (Qm P p k a c : ℝ) * w k c :=
     mul_nonneg (by exact_mod_cast IETDatum₂.Path.Q_nonneg P _ a c) (le_of_lt ((hw k).1 c))
-  have hterm : ∀ a ∈ (Finset.univ : Finset α),
-      (Qm P p k a b : ℝ) * w k b ≤ ∑ c, (Qm P p k a c : ℝ) * w k c := fun a _ =>
-    Finset.single_le_sum (f := fun c => (Qm P p k a c : ℝ) * w k c)
+  have hterm (a) (ha : a ∈ (Finset.univ : Finset α)) :
+      (Qm P p k a b : ℝ) * w k b ≤ ∑ c, (Qm P p k a c : ℝ) * w k c := Finset.single_le_sum (f :=
+          fun c => (Qm P p k a c : ℝ) * w k c)
       (fun c _ => hnn a c) (Finset.mem_univ b)
   have h1 : (∑ a, (Qm P p k a b : ℝ)) * w k b
       ≤ ∑ a, ∑ c, (Qm P p k a c : ℝ) * w k c := by
@@ -414,8 +411,7 @@ theorem coord_le (hw : ∀ k, IETDatum₂.IsRenorm P (PrefixWord.pfx p k) lam (w
     (k : ℕ) (b : α) : w k b ≤ Lam lam / (Cs P p k b : ℝ) := by
   have hpos : (0 : ℝ) < (Cs P p k b : ℝ) := by
     have h := Cs_one_le P p k b
-    have h' : (1 : ℤ) ≤ Cs P p k b := h
-    have h'' : (1 : ℝ) ≤ (Cs P p k b : ℝ) := by exact_mod_cast h'
+    have h'' : (1 : ℝ) ≤ (Cs P p k b : ℝ) := by exact_mod_cast h
     linarith
   rw [le_div_iff₀ hpos, mul_comm]
   exact Cs_mul_le_Lam P p lam w hw k b
@@ -467,8 +463,7 @@ theorem eventually_coord_lt (hP : P.Irreducible) (hn : 2 ≤ n)
 theorem tendsto_total (hP : P.Irreducible) (hn : 2 ≤ n)
     (hw : ∀ k, IETDatum₂.IsRenorm P (PrefixWord.pfx p k) lam (w k)) :
     Tendsto (fun k => total w k) atTop (𝓝 0) := by
-  have hnn : ∀ k, (0 : ℝ) ≤ total w k := fun k =>
-    Finset.sum_nonneg fun b _ => le_of_lt ((hw k).1 b)
+  have hnn (k) : (0 : ℝ) ≤ total w k := Finset.sum_nonneg fun b _ => le_of_lt ((hw k).1 b)
   rw [tendsto_order]
   refine ⟨fun a ha => ?_, fun a ha => ?_⟩
   · filter_upwards [Filter.Eventually.of_forall hnn] with k hk

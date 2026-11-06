@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.RayCriterion
 public import IETFree.RauzyVeech.BoundedSimplex
+public import IETFree.RauzyVeech.RayCriterion
 
 /-!
 # The closed cylinder: nonnegative `Q`-images of nonnegative vectors
@@ -110,18 +110,16 @@ theorem mem_closure_simplexCyl_of_nonneg (P : IETDatum₂ α n) {w : List Bool} 
     (hSig0 : ∀ a, 0 ≤ Sig a) (hsum : ∑ a, Sig a = 1)
     (hSig : ∃ y : α → ℝ, (∀ a, 0 ≤ y a) ∧ Sig = IETDatum₂.qApply (IETDatum₂.Path.Q P w) y) :
     (fun a => (⟨Sig a, hSig0 a⟩ : ℝ≥0)) ∈ closure (IETDatum₂.simplexCyl P w) := by
-  classical
   obtain ⟨y, hy, rfl⟩ := hSig
   set Q := IETDatum₂.Path.Q P w with hQdef
-  have hQnn : ∀ a b, (0 : ℝ) ≤ (Q a b : ℝ) := fun a b => by
+  have hQnn (a) (b) : (0 : ℝ) ≤ (Q a b : ℝ) := by
     have h := IETDatum₂.Path.Q_nonneg P w a b
     exact_mod_cast h
   have hWnn : 0 ≤ totSum Q := totSum_nonneg Q hQnn
-  have hxsum : ∑ a, IETDatum₂.qApply Q y a = 1 := hsum
-  have hxnn : ∀ a, 0 ≤ IETDatum₂.qApply Q y a := fun a => by
+  have hxnn (a) : 0 ≤ IETDatum₂.qApply Q y a := by
     rw [IETDatum₂.qApply_apply]
     exact Finset.sum_nonneg fun b _ => mul_nonneg (hQnn a b) (hy b)
-  have hx1 : ∀ a, IETDatum₂.qApply Q y a ≤ 1 := fun a => by
+  have hx1 (a) : IETDatum₂.qApply Q y a ≤ 1 := by
     have h := Finset.single_le_sum (f := fun a => IETDatum₂.qApply Q y a)
       (fun a _ => hxnn a) (Finset.mem_univ a)
     linarith
@@ -138,13 +136,11 @@ theorem mem_closure_simplexCyl_of_nonneg (P : IETDatum₂ α n) {w : List Bool} 
     have h := mul_nonneg htpos.le hWnn
     linarith
   set z : α → ℝ := fun a => (y a + t) / (1 + t * totSum Q) with hz
-  have hzpos : ∀ a, 0 < z a := fun a =>
-    div_pos (by linarith [hy a]) hdenpos
+  have hzpos (a) : 0 < z a := div_pos (by linarith [hy a]) hdenpos
   set xt : α → ℝ := IETDatum₂.qApply Q z with hxt
-  have hxtpt : ∀ a, xt a =
-      (IETDatum₂.qApply Q y a + t * rowSum Q a) / (1 + t * totSum Q) := fun a =>
-    qApply_add_div Q y t a
-  have hxtnn : ∀ a, 0 ≤ xt a := fun a => by
+  have hxtpt (a) : xt a =
+      (IETDatum₂.qApply Q y a + t * rowSum Q a) / (1 + t * totSum Q) := qApply_add_div Q y t a
+  have hxtnn (a) : 0 ≤ xt a := by
     rw [hxtpt a]
     refine div_nonneg ?_ hdenpos.le
     have h1 := rowSum_nonneg Q hQnn a
@@ -153,7 +149,7 @@ theorem mem_closure_simplexCyl_of_nonneg (P : IETDatum₂ α n) {w : List Bool} 
   -- the mass of `Q y`, from Fubini (`sum_qApply_cast`)
   have hfub : ∑ b, BoundedSimplex.colR Q b * y b = 1 := by
     rw [← sum_qApply_cast Q y]
-    exact hxsum
+    exact hsum
   have hmass : ∑ a, xt a = 1 := by
     have hstep (b : α) :
       BoundedSimplex.colR Q b * ((y b + t) / (1 + t * totSum Q)) =
@@ -174,8 +170,7 @@ theorem mem_closure_simplexCyl_of_nonneg (P : IETDatum₂ α n) {w : List Bool} 
     mem_simplexCyl_of_cone P hxtnn hmass hcone
   refine ⟨fun a => (⟨xt a, hxtnn a⟩ : ℝ≥0), hmem, ?_⟩
   -- the estimate `|xt a - (Q y) a| ≤ 2 t W`
-  have hbound : ∀ a, |xt a - IETDatum₂.qApply Q y a| ≤ 2 * t * totSum Q := by
-    intro a
+  have hbound (a) : |xt a - IETDatum₂.qApply Q y a| ≤ 2 * t * totSum Q := by
     have hRnn : 0 ≤ rowSum Q a := rowSum_nonneg Q hQnn a
     have hRle : rowSum Q a ≤ totSum Q := rowSum_le_totSum Q hQnn a
     have hx1a : IETDatum₂.qApply Q y a ≤ 1 := hx1 a
@@ -234,15 +229,15 @@ theorem eq_of_nonneg_preimage_of_diam {w : ℕ → List Bool} {lam : α → ℝ�
     (hsum : ∑ a, Sig a = 1) (hy : ∀ k a, 0 ≤ y k a)
     (hSig : ∀ k, Sig = IETDatum₂.qApply (IETDatum₂.Path.Q P (w k)) (y k)) :
     Sig = fun a => (lam a : ℝ) := by
-  have hQnn : ∀ a b, (0 : ℝ) ≤ (IETDatum₂.Path.Q P (w 0) a b : ℝ) := fun a b => by
+  have hQnn (a) (b) : (0 : ℝ) ≤ (IETDatum₂.Path.Q P (w 0) a b : ℝ) := by
     have h := IETDatum₂.Path.Q_nonneg P (w 0) a b
     exact_mod_cast h
-  have hSig0 : ∀ a, 0 ≤ Sig a := fun a => by
+  have hSig0 (a) : 0 ≤ Sig a := by
     rw [hSig 0, IETDatum₂.qApply_apply]
     exact Finset.sum_nonneg fun b _ => mul_nonneg (hQnn a b) (hy 0 b)
-  have hclos : ∀ k, (fun a => (⟨Sig a, hSig0 a⟩ : ℝ≥0)) ∈
-      closure (IETDatum₂.simplexCyl P (w k)) := fun k =>
-    mem_closure_simplexCyl_of_nonneg P hSig0 hsum ⟨y k, hy k, hSig k⟩
+  have hclos (k) : (fun a => (⟨Sig a, hSig0 a⟩ : ℝ≥0)) ∈
+      closure (IETDatum₂.simplexCyl P (w k)) := mem_closure_simplexCyl_of_nonneg P hSig0 hsum ⟨y k,
+          hy k, hSig k⟩
   have hsub : (fun a => (⟨Sig a, hSig0 a⟩ : ℝ≥0)) ∈
       ⋂ k, closure (IETDatum₂.simplexCyl P (w k)) := Set.mem_iInter.mpr hclos
   have hsingle : (fun a => (⟨Sig a, hSig0 a⟩ : ℝ≥0)) ∈ ({lam} : Set (α → ℝ≥0)) := by

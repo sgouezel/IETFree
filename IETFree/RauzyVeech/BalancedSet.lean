@@ -19,15 +19,12 @@ sibling cylinders and of incomparable prefixes (`disjoint_simplexCyl_cons_cons`,
 multiplicativity of the volume along extensions (`volume_append_mul`, `volume_simplexCyl_lt_top`).
 These are the `BalancedCylinders` facts of the volume computation. -/
 
-@[expose] public section
-
-open MeasureTheory Matrix
+open MeasureTheory Matrix IETDatum₂
 open scoped BigOperators ENNReal NNReal
 
+@[expose] public section
 
 namespace BalancedCylinders
-
-open IETDatum₂
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -42,8 +39,7 @@ sum changes, and it is multiplied by `c`. -/
 theorem colsum_mul_single {ι : Type*} [Fintype ι] [DecidableEq ι] (M : Matrix ι ι ℤ)
     (i j : ι) (c : ℤ) (b : ι) :
     (∑ a, (M * Matrix.single i j c) a b) = if b = j then (∑ a, M a i) * c else 0 := by
-  have h1 : ∀ a, (M * Matrix.single i j c) a b = if b = j then M a i * c else 0 := by
-    intro a
+  have h1 (a) : (M * Matrix.single i j c) a b = if b = j then M a i * c else 0 := by
     rw [Matrix.mul_apply]
     rw [Finset.sum_eq_single i]
     · by_cases hb : b = j
@@ -208,7 +204,7 @@ theorem volume_append_mul (P : IETDatum₂ α n) (γ δ : List Bool) :
     simplexVolumeOn α (simplexCyl P (γ ++ δ)) =
       (∏ b, (colsumNN (Path.Q P γ) b) * (colsumNN (Path.Q P (γ ++ δ)) b)⁻¹) *
         simplexVolumeOn α (simplexCyl P γ) := by
-  have ha0 : ∀ b, colsumNN (Path.Q P γ) b ≠ 0 := fun b => ne_of_gt (colsumNN_pos P γ b)
+  have ha0 (b) : colsumNN (Path.Q P γ) b ≠ 0 := ne_of_gt (colsumNN_pos P γ b)
   have hkey : (∏ b, (colsumNN (Path.Q P γ) b) * (colsumNN (Path.Q P (γ ++ δ)) b)⁻¹) *
       (∏ b, (colsumNN (Path.Q P γ) b)⁻¹) = ∏ b, (colsumNN (Path.Q P (γ ++ δ)) b)⁻¹ := by
     rw [← Finset.prod_mul_distrib]
@@ -229,8 +225,7 @@ theorem volume_region_lt_top (m : ℕ) : volume (region m) < ⊤ := by
     refine ⟨le_of_lt (hv.1 i), ?_⟩
     have h1 : v i ≤ ∑ j, v j :=
       Finset.single_le_sum (f := v) (fun j _ => le_of_lt (hv.1 j)) (Finset.mem_univ i)
-    have h2 := hv.2
-    linarith
+    linarith [h1, hv.2]
   refine lt_of_le_of_lt (measure_mono hsub) ?_
   exact IsCompact.measure_lt_top (isCompact_univ_pi fun _ => isCompact_Icc)
 

@@ -94,9 +94,8 @@ theorem imageLeft_add_le_of_invariant {n : ℕ} {lam : Fin n → ℝ≥0}
     {π : Equiv.Perm (Fin n)} {k i : Fin n}
     (hklt : k.val + 1 < n) (hinv : ∀ m : Fin n, m ≤ k → π m ≤ k) (hik : i ≤ k) :
     imageLeft π lam i + (lam i : ℝ) ≤ leftEnd lam ⟨k.val + 1, hklt⟩ := by
-  classical
   -- `π` preserves `{m | m ≤ k}` both ways
-  have hiff : ∀ m : Fin n, π m ≤ k ↔ m ≤ k := by
+  have hiff (m : Fin n) : π m ≤ k ↔ m ≤ k := by
     have hS : (Finset.univ.filter (fun m : Fin n => m ≤ k)).image π
         = Finset.univ.filter (fun m : Fin n => m ≤ k) := by
       refine Finset.eq_of_subset_of_card_le ?_ ?_
@@ -105,7 +104,6 @@ theorem imageLeft_add_le_of_invariant {n : ℕ} {lam : Fin n → ℝ≥0}
         simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hm ⊢
         exact hinv m hm
       · rw [Finset.card_image_of_injective _ π.injective]
-    intro m
     refine ⟨fun h => ?_, hinv m⟩
     have hmem : π m ∈ (Finset.univ.filter (fun m : Fin n => m ≤ k)).image π := by
       rw [hS]
@@ -168,7 +166,6 @@ theorem irreduciblePerm_of_no_invariant_cut {n : ℕ} [NeZero n] {lam : Fin n �
       rw [hsum1]; exact hx
     set i := idx lam x hx'.1 with hi
     have hxi : leftEnd lam i ≤ x := idx_mem lam x hx'.1
-    have hlt : x < leftEnd lam k' := hxc
     -- the cell index is `≤ k`
     have hik : i ≤ k := by
       by_contra hcon
@@ -212,7 +209,6 @@ is characterized by an *interval of image coordinates* (`P i₀ ≤ P j < P i₀
 theorem listImageLeft_lt {n : ℕ} {ρ : Equiv.Perm (Fin n)} {S : Fin (n + 1) → ℝ}
     (hpos : ∀ j : Fin n, 0 < S j.succ - S j.castSucc) {j₁ j₂ : Fin n} (h : ρ j₁ < ρ j₂) :
     listImageLeft ρ S j₁ < listImageLeft ρ S j₂ := by
-  classical
   set A := Finset.univ.filter (fun j : Fin n => ρ j < ρ j₁) with hA
   set B := Finset.univ.filter (fun j : Fin n => ρ j < ρ j₂) with hB
   have hsub : A ⊆ B := by
@@ -301,8 +297,8 @@ theorem leftEnd_eq_sum_range (lam : Fin n → ℝ≥0) (i : Fin n) :
     intro m hm
     simp only [Finset.mem_range] at hm ⊢
     omega
-  have hvanish : ∀ m ∈ Finset.range n, m ∉ Finset.range i.val → leftEndNat lam i m = 0 := by
-    intro m hm hnot
+  have hvanish (m) (hm : m ∈ Finset.range n) (hnot : m ∉ Finset.range i.val) :
+      leftEndNat lam i m = 0 := by
     rw [Finset.mem_range] at hm hnot
     rw [leftEndNat_of_lt hm, if_neg (by simp only [Fin.lt_def]; omega)]
   rw [h1, ← Finset.sum_subset hsub hvanish]
@@ -486,7 +482,6 @@ theorem imageLeft_blockPerm_aux {n : ℕ} {lam : Fin n → ℝ≥0} {π : Equiv.
     imageLeft π lam ⟨k + j.val, by omega⟩ - leftEnd lam ⟨k, by omega⟩
       = blockMass lam k hln
         * imageLeft (blockPerm π k hkl hln hstab) (blockLam lam k hkl hln hpos) j := by
-  classical
   have hjlt : k + j.val < l := by have := j.isLt; omega
   -- ### the block part, as the image of the block indices
   have hset : (Finset.univ.filter (fun t : Fin (l - k) =>
@@ -617,7 +612,6 @@ theorem idx_rescaleMap_aux {n : ℕ} [NeZero n] {lam : Fin n → ℝ≥0}
   set l := I.l
   have hkl : k < l := I.hkl
   have hln : l ≤ n := I.hln
-  classical
   set M := blockMass lam k hln with hMdef
   set L := leftEnd lam ⟨k, by omega⟩ with hLdef
   have hM : 0 < M := by rw [hMdef]; exact blockMass_pos hpos k hkl hln
@@ -705,7 +699,6 @@ theorem mkIET1_rescale_subinterval {n : ℕ} [NeZero n] {lam : Fin n → ℝ≥0
   have hkl : k < l := I.hkl
   have hln : l ≤ n := I.hln
   intro x hx
-  classical
   set M := blockMass lam k hln with hMdef
   set L := leftEnd lam ⟨k, by omega⟩ with hLdef
   have hM : 0 < M := by rw [hMdef]; exact blockMass_pos hpos k hkl hln

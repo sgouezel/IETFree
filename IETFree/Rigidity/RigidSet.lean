@@ -5,9 +5,9 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.Rigidity.Defs
 public import IETFree.RauzyVeech.InvariantMeasure
 public import IETFree.RauzyVeech.TowerTiling
+public import IETFree.Rigidity.Defs
 
 /-!
 # The rigid set at a good node
@@ -101,17 +101,14 @@ private theorem rigid_set_abstract (T : ℝ → ℝ) {u v Le τ δ : ℝ} {h : �
     ∃ B : Set ℝ, B ⊆ Set.Ico (0:ℝ) 1 ∧ MeasurableSet B ∧
       (1 - 2 * δ) * Le * (h : ℝ) ≤ (volume B).toReal ∧
       ∀ x ∈ B, T^[h] x = x + τ := by
-  classical
   -- the inner set, an interval
   set E : Set ℝ := Set.Ico (max u (u - τ)) (min v (v - τ)) with hE
-  have hEin : ∀ y ∈ E, y ∈ Set.Ico u v := by
-    intro y hy
+  have hEin (y) (hy : y ∈ E) : y ∈ Set.Ico u v := by
     rw [hE] at hy
     simp only [Set.mem_Ico] at hy ⊢
     exact ⟨le_trans (le_max_left u (u - τ)) hy.1,
       lt_of_lt_of_le hy.2 (min_le_left v (v - τ))⟩
-  have hEshift : ∀ y ∈ E, y + τ ∈ Set.Ico u v := by
-    intro y hy
+  have hEshift (y) (hy : y ∈ E) : y + τ ∈ Set.Ico u v := by
     rw [hE] at hy
     simp only [Set.mem_Ico] at hy ⊢
     exact ⟨by linarith [le_max_right u (u - τ), hy.1],
@@ -134,8 +131,7 @@ private theorem rigid_set_abstract (T : ℝ → ℝ) {u v Le τ δ : ℝ} {h : �
   have hEvol : (volume E).toReal = (v - u) - |τ| := by
     rw [hE, Real.volume_Ico, ENNReal.toReal_ofReal hElen, hEle]
   -- the floors of `E` are intervals of the same length
-  have hfloor : ∀ j, j < h → ∃ a b : ℝ, T^[j] '' E = Set.Ico a b ∧ b - a = (v - u) - |τ| := by
-    intro j hj
+  have hfloor (j) (hj : j < h) : ∃ a b : ℝ, T^[j] '' E = Set.Ico a b ∧ b - a = (v - u) - |τ| := by
     obtain ⟨ρ, hρ⟩ := hSH j (le_of_lt hj)
     refine ⟨max u (u - τ) + ρ, min v (v - τ) + ρ, ?_, ?_⟩
     · rw [hE]
@@ -143,19 +139,16 @@ private theorem rigid_set_abstract (T : ℝ → ℝ) {u v Le τ δ : ℝ} {h : �
         (fun y hy => hρ y (hEin y (by rw [hE]; exact hy)))
     · have := hEle
       linarith
-  have hmeas : ∀ j, j < h → MeasurableSet (T^[j] '' E) := by
-    intro j hj
+  have hmeas (j) (hj : j < h) : MeasurableSet (T^[j] '' E) := by
     obtain ⟨a, b, h1, -⟩ := hfloor j hj
     rw [h1]
     exact measurableSet_Ico
-  have hvolfloor : ∀ j, j < h → (volume (T^[j] '' E)).toReal = (v - u) - |τ| := by
-    intro j hj
+  have hvolfloor (j) (hj : j < h) : (volume (T^[j] '' E)).toReal = (v - u) - |τ| := by
     obtain ⟨a, b, h1, h2⟩ := hfloor j hj
     have h0 : 0 ≤ b - a := by rw [h2, ← hEvol]; exact ENNReal.toReal_nonneg
     rw [h1, Real.volume_Ico, ENNReal.toReal_ofReal h0, h2]
-  have hdisjE : ∀ j j', j < h → j' < h → j ≠ j' →
-      Disjoint (T^[j] '' E) (T^[j'] '' E) :=
-    fun j j' hj hj' hne => (hdisj j j' hj hj' hne).mono
+  have hdisjE (j j') (hj : j < h) (hj' : j' < h) (hne : j ≠ j') : Disjoint (T^[j] '' E)
+      (T^[j'] '' E) := (hdisj j j' hj hj' hne).mono
       (Set.image_mono (fun y hy => hEin y hy)) (Set.image_mono (fun y hy => hEin y hy))
   refine ⟨⋃ j ∈ Finset.range h, T^[j] '' E, ?_, ?_, ?_, ?_⟩
   · intro x hx
@@ -254,14 +247,12 @@ private theorem height_succ {P : IETDatum₂ α n} (hP : P.Irreducible) (hn : 2 
     height P (γ ++ [e]) b = height P γ b
       + if b = (IETDatum₂.vertex P γ).last (!e) then
           height P γ ((IETDatum₂.vertex P γ).last e) else 0 := by
-  classical
-  have hne : ∀ e' : Bool, (IETDatum₂.vertex P γ).last e' ≠ (IETDatum₂.vertex P γ).last (!e') :=
-    fun e' => IETDatum₂.vertex_last_ne_not P hP hn γ e'
-  have hQ : ∀ a, IETDatum₂.Path.Q P (γ ++ [e]) a b
+  have hne (e' : Bool) : (IETDatum₂.vertex P γ).last e' ≠ (IETDatum₂.vertex P γ).last (!e') :=
+      IETDatum₂.vertex_last_ne_not P hP hn γ e'
+  have hQ (a) : IETDatum₂.Path.Q P (γ ++ [e]) a b
       = IETDatum₂.Path.Q P γ a b
         + if b = (IETDatum₂.vertex P γ).last (!e) then
             IETDatum₂.Path.Q P γ a ((IETDatum₂.vertex P γ).last e) else 0 := by
-    intro a
     rw [IETDatum₂.Path.Q_append, IETDatum₂.Path.Q_singleton, Matrix.mul_apply]
     exact TowerInjectivity.mulVec_rvMat (IETDatum₂.Path.Q P γ) (IETDatum₂.vertex P γ) e
       (hne e) a b
@@ -379,7 +370,6 @@ private theorem FR_list {P : IETDatum₂ α n} {lam : α → ℝ≥0} (hP : P.Ir
     (hlam : lam ∈ simplexOn α) {γ : List Bool} (hOK : TowerTrue.IterOK P lam γ) :
     ∀ (b : α) (y : ℝ), y ∈ Tower.cellAt P γ lam b →
       (⇑(P.toIET lam))^[height P γ b] y = nodeExch P γ lam y := by
-  classical
   induction γ using List.reverseRecOn with
   | nil =>
     intro b y _
@@ -387,9 +377,9 @@ private theorem FR_list {P : IETDatum₂ α n} {lam : α → ℝ≥0} (hP : P.Ir
   | append_singleton γ e ih =>
     intro b y hy
     obtain ⟨hOK', hS⟩ := (IterGlue2.iterOK_append_singleton P lam γ e).mp hOK
-    have hne : ∀ e' : Bool,
+    have hne (e' : Bool) :
         (IETDatum₂.vertex P γ).last e' ≠ (IETDatum₂.vertex P γ).last (!e') :=
-      fun e' => IETDatum₂.vertex_last_ne_not P hP hn γ e'
+            IETDatum₂.vertex_last_ne_not P hP hn γ e'
     have hy' : y ∈ Tower.cellAt (IETDatum₂.vertex P γ) [e] (Tower.lamAfter P γ lam) b := by
       rw [← TowerInjectivity.cellAt_succ]
       exact hy
@@ -480,7 +470,6 @@ private theorem SH_list {P : IETDatum₂ α n} {lam : α → ℝ≥0} (hP : P.Ir
     (hlam : lam ∈ simplexOn α) {γ : List Bool} (hOK : TowerTrue.IterOK P lam γ) :
     ∀ (b : α) (j : ℕ), j ≤ height P γ b → ∃ τ : ℝ,
       ∀ y ∈ Tower.cellAt P γ lam b, (⇑(P.toIET lam))^[j] y = y + τ := by
-  classical
   induction γ using List.reverseRecOn with
   | nil =>
     intro b j hj
@@ -588,7 +577,6 @@ theorem exists_translation_eq_on_cellAt {α : Type*} [Fintype α] [DecidableEq �
     {γ : List Bool} {b : α} (hOK : TowerTrue.IterOK P lam γ) :
     ∃ τ : ℝ, (∀ y ∈ Tower.cellAt P γ lam b, (⇑(P.toIET lam))^[height P γ b] y = y + τ) ∧
       |τ| ≤ baseLen P γ lam - (Tower.lamAfter P γ lam b : ℝ) := by
-  classical
   refine ⟨translationVector (IETDatum₂.vertex P γ).perm
       ((IETDatum₂.vertex P γ).lengthsInBottom (Tower.lamAfter P γ lam))
       ((IETDatum₂.vertex P γ).piBottom b), ?_, ?_⟩
@@ -751,11 +739,11 @@ private theorem LVL1_node {P : IETDatum₂ α n} {lam : α → ℝ≥0} (hP : P.
       = ⋃ b, ⋃ i : Fin (TowerInjectivity.hgt1 (IETDatum₂.vertex P γ) e b),
           (nodeExch P γ lam)^[(i : ℕ)] '' Tower.cellAt P (γ ++ [e]) lam b := by
   obtain ⟨-, hS⟩ := (IterGlue2.iterOK_append_singleton P lam γ e).mp hOK
-  have hne : ∀ e' : Bool, (IETDatum₂.vertex P γ).last e' ≠ (IETDatum₂.vertex P γ).last (!e') :=
-    fun e' => IETDatum₂.vertex_last_ne_not P hP hn γ e'
-  have hcell : ∀ b : α, Tower.cellAt P (γ ++ [e]) lam b
+  have hne (e' : Bool) : (IETDatum₂.vertex P γ).last e' ≠ (IETDatum₂.vertex P γ).last (!e') :=
+      IETDatum₂.vertex_last_ne_not P hP hn γ e'
+  have hcell (b : α) : Tower.cellAt P (γ ++ [e]) lam b
       = Tower.cellAt (IETDatum₂.vertex P γ) [e] (Tower.lamAfter P γ lam) b :=
-    fun b => TowerInjectivity.cellAt_succ P γ e lam b
+          TowerInjectivity.cellAt_succ P γ e lam b
   cases e with
   | false =>
     have h := TowerInjectivity.level_tower_false (IETDatum₂.vertex P γ) hne
@@ -785,7 +773,6 @@ private theorem cover_step_false {P : IETDatum₂ α n} {lam : α → ℝ≥0} (
   obtain ⟨b', hb'⟩ := Set.mem_iUnion.mp hy'
   obtain ⟨i, hi⟩ := Set.mem_iUnion.mp hb'
   obtain ⟨z, hz1, hzy⟩ := hi
-  have hilt : (i : ℕ) < TowerInjectivity.hgt1 (IETDatum₂.vertex P γ) false b' := i.isLt
   rcases Nat.eq_zero_or_pos (i : ℕ) with hi0 | hipos
   · rw [hi0, Function.iterate_zero_apply] at hzy
     rw [← hzy] at hy
@@ -844,7 +831,6 @@ private theorem cover_step_true {P : IETDatum₂ α n} {lam : α → ℝ≥0} (h
   obtain ⟨b', hb'⟩ := Set.mem_iUnion.mp hy'
   obtain ⟨i, hi⟩ := Set.mem_iUnion.mp hb'
   obtain ⟨z, hz1, hzy⟩ := hi
-  have hilt : (i : ℕ) < TowerInjectivity.hgt1 (IETDatum₂.vertex P γ) true b' := i.isLt
   rcases Nat.eq_zero_or_pos (i : ℕ) with hi0 | hipos
   · rw [hi0, Function.iterate_zero_apply] at hzy
     rw [← hzy] at hy
@@ -911,7 +897,6 @@ private theorem CV_node {P : IETDatum₂ α n} {lam : α → ℝ≥0} (hP : P.Ir
     (hlam : lam ∈ simplexOn α) {γ : List Bool} (hOK : TowerTrue.IterOK P lam γ) :
     ∀ x ∈ Set.Ico (0:ℝ) 1, ∃ (b : α) (j : ℕ), j < height P γ b ∧
       x ∈ (⇑(P.toIET lam))^[j] '' Tower.cellAt P γ lam b := by
-  classical
   induction γ using List.reverseRecOn with
   | nil =>
     intro x hx
@@ -944,29 +929,24 @@ private theorem sigma_disjoint_node {P : IETDatum₂ α n} {lam : α → ℝ≥0
     ∀ p q : (Σ b : α, Fin (height P γ b)), p ≠ q →
       Disjoint ((⇑(P.toIET lam))^[(p.2 : ℕ)] '' Tower.cellAt P γ lam p.1)
         ((⇑(P.toIET lam))^[(q.2 : ℕ)] '' Tower.cellAt P γ lam q.1) := by
-  classical
   set fr : (Σ b : α, Fin (height P γ b)) → Set ℝ :=
     fun r => (⇑(P.toIET lam))^[(r.2 : ℕ)] '' Tower.cellAt P γ lam r.1 with hfr
   have hIco (r : (Σ b : α, Fin (height P γ b))) :
     ∃ u v : ℝ, fr r = Set.Ico u v ∧ v - u = (Tower.lamAfter P γ lam r.1 : ℝ) := by
     exact floor_Ico_node hP hn hlam hOK r.1 (r.2 : ℕ) (le_of_lt r.2.isLt)
-  have hvol : ∀ r, volume (fr r) = ENNReal.ofReal (Tower.lamAfter P γ lam r.1 : ℝ) := by
-    intro r
+  have hvol (r) : volume (fr r) = ENNReal.ofReal (Tower.lamAfter P γ lam r.1 : ℝ) := by
     obtain ⟨u, v, h1, h2⟩ := hIco r
     rw [h1, Real.volume_Ico, h2]
-  have hfin : ∀ r, volume (fr r) ≠ ⊤ := by
-    intro r
+  have hfin (r) : volume (fr r) ≠ ⊤ := by
     rw [hvol r]
     exact ENNReal.ofReal_ne_top
   have hbdd (S : Set ℝ) (hS : S ⊆ Set.Ico (0 : ℝ) 1) : volume S ≠ ⊤ := by
     refine ne_top_of_le_ne_top ?_ (measure_mono hS)
     rw [Real.volume_Ico, sub_zero, ENNReal.ofReal_one]
     exact ENNReal.one_ne_top
-  have hmeas : ∀ r, MeasurableSet (fr r) := by
-    intro r
+  have hmeas (r) : MeasurableSet (fr r) := by
     exact measurableSet_floor_node hlam γ r.1 (r.2 : ℕ)
-  have hsub : ∀ r, fr r ⊆ Set.Ico (0 : ℝ) 1 := by
-    intro r
+  have hsub (r) : fr r ⊆ Set.Ico (0 : ℝ) 1 := by
     exact floor_subset_unit hlam γ r.1 (r.2 : ℕ)
   have hsumR : (∑ r : (Σ b : α, Fin (height P γ b)),
       (Tower.lamAfter P γ lam r.1 : ℝ)) = 1 := by
@@ -981,8 +961,7 @@ private theorem sigma_disjoint_node {P : IETDatum₂ α n} {lam : α → ℝ≥0
     rw [Finset.sum_congr rfl (fun a _ => h2 a)]
     exact TL_node hP hn hlam hOK
   have hsum : (∑ r : (Σ b : α, Fin (height P γ b)), (volume (fr r)).toReal) = 1 := by
-    have h1 : ∀ r, (volume (fr r)).toReal = (Tower.lamAfter P γ lam r.1 : ℝ) := by
-      intro r
+    have h1 (r) : (volume (fr r)).toReal = (Tower.lamAfter P γ lam r.1 : ℝ) := by
       rw [hvol r, ENNReal.toReal_ofReal (Tower.lamAfter P γ lam r.1).coe_nonneg]
     simp only [h1]
     exact hsumR
@@ -1056,7 +1035,6 @@ private theorem sigma_disjoint_node {P : IETDatum₂ α n} {lam : α → ℝ≥0
       exact ENNReal.ofReal_ne_zero_iff.mpr (by linarith)
     rw [← hgoal] at hpos
     exact hpos hmem
-  change Disjoint (fr p) (fr q)
   rw [Set.disjoint_iff_inter_eq_empty, hgoal, Set.Ico_eq_empty_of_le hle]
 
 /-- **The rigid set of a good node.**  If the cell of the letter `b` occupies a proportion `≥ 1 - δ`
@@ -1073,7 +1051,6 @@ theorem exists_rigid_set {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [N
       (1 - 2 * δ) * baseLen P γ lam * (height P γ b : ℝ) ≤ (volume B).toReal ∧
       |t| ≤ δ * baseLen P γ lam ∧
       ∀ x ∈ B, (⇑(P.toIET lam))^[height P γ b] x = x + t := by
-  classical
   obtain ⟨τ, hτ, hτle⟩ := exists_translation_eq_on_cellAt P hP hn hlam hOK
   simp only [BigCell] at hbig
   set σ := Tower.lamAfter P γ lam with hσ

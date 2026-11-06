@@ -27,7 +27,6 @@ omit [DecidableEq α] [NeZero n] in
 /-- The letters whose position in the order `e` is `< k` are `k` in number. -/
 theorem card_filter_lt (e : α ≃ Fin n) {k : ℕ} (hk : k ≤ n) :
     (Finset.univ.filter (fun a => (e a).val < k)).card = k := by
-  classical
   have himg : ((Finset.univ.filter (fun a => (e a).val < k)).image (fun a => (e a).val))
       = Finset.range k := by
     ext i
@@ -44,7 +43,6 @@ omit [DecidableEq α] [NeZero n] in
 /-- The letters whose position in the order `e` is `≤ k` are `k + 1` in number. -/
 theorem card_filter_le (e : α ≃ Fin n) {k : ℕ} (hk : k < n) :
     (Finset.univ.filter (fun a => (e a).val ≤ k)).card = k + 1 := by
-  classical
   have himg : ((Finset.univ.filter (fun a => (e a).val ≤ k)).image (fun a => (e a).val))
       = Finset.range (k + 1) := by
     ext i
@@ -61,7 +59,6 @@ omit [DecidableEq α] [NeZero n] in
 /-- The letters whose position in the order `e` is `> k` are `n - k - 1` in number. -/
 theorem card_filter_gt (e : α ≃ Fin n) {k : ℕ} (_hk : k < n) :
     (Finset.univ.filter (fun a => k < (e a).val)).card = n - k - 1 := by
-  classical
   have himg : ((Finset.univ.filter (fun a => k < (e a).val)).image (fun a => (e a).val))
       = Finset.Ico (k + 1) n := by
     ext i
@@ -144,8 +141,7 @@ theorem descent_subclaim (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤
     rw [Equiv.apply_symm_apply, Fin.val_zero]
     omega
   have hSne : S.Nonempty := ⟨_, hy_mem⟩
-  have hS_sub : ∀ u ∈ S, (P.piBottom u).val ≤ ML := by
-    intro u hu
+  have hS_sub (u) (hu : u ∈ S) : (P.piBottom u).val ≤ ML := by
     rw [hML_def]
     exact Finset.le_sup (f := fun a => (P.piBottom a).val) hu
   obtain ⟨u₀, hu₀, hu₀sup⟩ :=
@@ -153,8 +149,7 @@ theorem descent_subclaim (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤
   have hML_eq : (P.piBottom u₀).val = ML := by rw [hML_def, ← hu₀sup]
   have hML_lt : ML < n := by rw [← hML_eq]; exact (P.piBottom u₀).isLt
   -- letters after `d` in the top order sit strictly after `ML` in the bottom order
-  have hstrict : ∀ a, m < (P.piTop a).val → ML < (P.piBottom a).val := by
-    intro a ha
+  have hstrict (a) (ha : m < (P.piTop a).val) : ML < (P.piBottom a).val := by
     rcases Nat.lt_trichotomy (P.piBottom a).val ML with h | h | h
     · exact absurd (hcon a ha) (by omega)
     · exfalso
@@ -279,7 +274,6 @@ theorem descent_step (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     (hm : 0 < (P.piTop (P.last false)).val) :
     ∃ w : List Bool, ((vertex P w).piTop ((vertex P w).last false)).val
       < (P.piTop (P.last false)).val := by
-  classical
   by_cases hcaseA : ∃ u, (P.piTop u).val < (P.piTop (P.last false)).val ∧
       (P.piBottom (P.last true)).val < (P.piBottom u).val
   · -- Case A: a block of `true` steps brings `u` to the last bottom position
@@ -288,16 +282,14 @@ theorem descent_step (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     have hlast : (vertex P (List.replicate (n - 1 - (P.piBottom u).val) true)).last false = u := by
       have h := exists_true_block P (P.piBottom u) hupos
       rw [Equiv.symm_apply_apply] at h
-      change (vertex P (List.replicate (n - 1 - (P.piBottom u).val) true)).piBottom.symm
-        (IETDatum₂.lastPos n) = u
+      rw [IETDatum₂.last_false]
       rw [← h, Equiv.symm_apply_apply]
     rw [hlast, true_block_piTop]
     exact huS
   · -- Case B: a `false` block followed by a `true` block
     push Not at hcaseA
-    have hA' : ∀ u, (P.piTop u).val < (P.piTop (P.last false)).val →
-        (P.piBottom u).val ≤ (P.piBottom (P.last true)).val := by
-      intro u hu
+    have hA' (u) (hu : (P.piTop u).val < (P.piTop (P.last false)).val) : (P.piBottom
+        u).val ≤ (P.piBottom (P.last true)).val := by
       have h := hcaseA u hu
       omega
     obtain ⟨c', hc'1, hc'2⟩ := descent_subclaim P hP hn hm hA'
@@ -308,7 +300,7 @@ theorem descent_step (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
       rw [hQ₁, hj₁]
       simpa using exists_false_block P (P.piTop c') hc'1
     have hQ₁_last : Q₁.last true = c' := by
-      change Q₁.piTop.symm (IETDatum₂.lastPos n) = c'
+      rw [IETDatum₂.last_true]
       rw [← hQ₁_top, Equiv.symm_apply_apply]
     -- the letter of `S` with maximal bottom position
     set S : Finset α :=
@@ -335,7 +327,7 @@ theorem descent_step (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     have hQ₂_last : Q₂.last false = u₀ := by
       have h := exists_true_block Q₁ (Q₁.piBottom u₀) hpivot
       rw [Equiv.symm_apply_apply] at h
-      change Q₂.piBottom.symm (IETDatum₂.lastPos n) = u₀
+      rw [IETDatum₂.last_false]
       rw [hQ₂, hj₂, ← h, Equiv.symm_apply_apply]
     have hQ₂_top : Q₂.piTop u₀ = P.piTop u₀ := by
       rw [hQ₂, true_block_piTop, hQ₁]
@@ -367,9 +359,8 @@ omit [DecidableEq α] in
 bottom order. -/
 theorem exists_last_false_first (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) :
     ∃ w : List Bool, (vertex P w).last false = P.piTop.symm 0 := by
-  have key : ∀ m, ∀ (Q : IETDatum₂ α n), Q.Irreducible → (Q.piTop (Q.last false)).val = m →
+  have key (m) : ∀ (Q : IETDatum₂ α n), Q.Irreducible → (Q.piTop (Q.last false)).val = m →
       ∃ w, (vertex Q w).last false = Q.piTop.symm 0 := by
-    intro m
     induction m using Nat.strong_induction_on with
     | _ m ih =>
       intro Q hQ hm
@@ -413,8 +404,7 @@ theorem exists_last_true_first (P : IETDatum₂ α n) (hP : P.Irreducible) (hn :
   rw [Equiv.symm_apply_apply] at h
   refine ⟨w₁ ++ List.replicate (n - 1 - (Q.piTop (P.piBottom.symm 0)).val) false, ?_⟩
   rw [vertex_append]
-  change (vertex Q (List.replicate (n - 1 - (Q.piTop (P.piBottom.symm 0)).val) false)).piTop.symm
-    (IETDatum₂.lastPos n) = P.piBottom.symm 0
+  rw [IETDatum₂.last_true]
   rw [← h, Equiv.symm_apply_apply]
 
 /-! ## 6. The pair manoeuvres and `PairReach` -/
@@ -438,8 +428,7 @@ theorem exists_true_block_last_of_first (Q : IETDatum₂ α n) (hx : Q.last true
   have h := exists_true_block Q (Q.piBottom u) hpos
   rw [Equiv.symm_apply_apply] at h
   refine ⟨n - 1 - (Q.piBottom u).val, ?_, ?_⟩
-  · change (vertex Q (List.replicate (n - 1 - (Q.piBottom u).val) true)).piBottom.symm
-      (IETDatum₂.lastPos n) = u
+  · rw [IETDatum₂.last_false]
     rw [← h, Equiv.symm_apply_apply]
   · rw [true_block_last_true]
     exact hx
@@ -453,8 +442,7 @@ theorem exists_false_block_last_of_pivot (Q : IETDatum₂ α n) (u : α)
   have h := exists_false_block Q (Q.piTop u) hu
   rw [Equiv.symm_apply_apply] at h
   refine ⟨n - 1 - (Q.piTop u).val, ?_, ?_⟩
-  · change (vertex Q (List.replicate (n - 1 - (Q.piTop u).val) false)).piTop.symm
-      (IETDatum₂.lastPos n) = u
+  · rw [IETDatum₂.last_true]
     rw [← h, Equiv.symm_apply_apply]
   · rw [false_block_last_false]
 
@@ -464,14 +452,13 @@ bottom-first letter `x`, every ordered pair of distinct letters occurs as `(last
 theorem pair_of_last_true_first (Q : IETDatum₂ α n) (hx : Q.last true = Q.piBottom.symm 0)
     {a b : α} (hne : a ≠ b) :
     ∃ w : List Bool, ∃ e : Bool, (vertex Q w).last e = a ∧ (vertex Q w).last (!e) = b := by
-  classical
   have hbot := exists_true_block_last_of_first Q hx
   by_cases ha : a = Q.piBottom.symm 0
   · -- `a` is the bottom-first letter: bring `b` to the bottom-last position
     obtain ⟨j, hj1, hj2⟩ := hbot b (by rw [← ha]; exact hne.symm)
     refine ⟨List.replicate j true, true, ?_, ?_⟩
     · rw [hj2, ha]
-    · change (vertex Q (List.replicate j true)).last false = b
+    · rw [Bool.not_true]
       exact hj1
   · by_cases hb : b = Q.piBottom.symm 0
     · -- `b` is the bottom-first letter: bring `a` to the bottom-last position
@@ -479,7 +466,7 @@ theorem pair_of_last_true_first (Q : IETDatum₂ α n) (hx : Q.last true = Q.piB
       refine ⟨List.replicate j true, false, ?_, ?_⟩
       · show (vertex Q (List.replicate j true)).last false = a
         exact hj1
-      · change (vertex Q (List.replicate j true)).last true = b
+      · rw [Bool.not_false]
         rw [hj2, hb]
     · -- both differ from the bottom-first letter
       obtain ⟨j₁, hj₁1, hj₁2⟩ := hbot b hb
@@ -492,11 +479,9 @@ theorem pair_of_last_true_first (Q : IETDatum₂ α n) (hx : Q.last true = Q.piB
           exists_false_block_last_of_pivot Q₁ a (by rw [hQ₁false, hQ₁top]; exact hcmp)
         refine ⟨List.replicate j₁ true ++ List.replicate j₂ false, true, ?_, ?_⟩
         · rw [vertex_append]
-          change (vertex Q₁ (List.replicate j₂ false)).last true = a
           exact hj₂1
         · rw [vertex_append]
-          change (vertex Q₁ (List.replicate j₂ false)).last false = b
-          rw [hj₂2, hQ₁false]
+          rw [← hQ₁, Bool.not_true, hj₂2, hQ₁false]
       · -- otherwise bring `a` to the bottom-last position and then `b` to the top-last one
         have hlt : (Q.piTop a).val < (Q.piTop b).val := by
           have hne' : (Q.piTop a).val ≠ (Q.piTop b).val := fun h =>
@@ -510,10 +495,8 @@ theorem pair_of_last_true_first (Q : IETDatum₂ α n) (hx : Q.last true = Q.piB
           exists_false_block_last_of_pivot Q' b (by rw [hQ'false, hQ'top]; exact hlt)
         refine ⟨List.replicate j₂ true ++ List.replicate j₃ false, false, ?_, ?_⟩
         · rw [vertex_append]
-          change (vertex Q' (List.replicate j₃ false)).last false = a
-          rw [hj₃2, hQ'false]
+          rw [← hQ', hj₃2, hQ'false]
         · rw [vertex_append]
-          change (vertex Q' (List.replicate j₃ false)).last true = b
           exact hj₃1
 
 omit [DecidableEq α] in

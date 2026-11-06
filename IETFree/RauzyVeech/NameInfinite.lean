@@ -117,7 +117,6 @@ theorem coe_next_main (P : IETDatum₂ α n) (γ : ℕ → Bool) (lam : ℕ → 
 theorem sum_next (P : IETDatum₂ α n) (γ : ℕ → Bool) (lam : ℕ → α → ℝ≥0)
     (hty : HType P γ lam) (hnxt : HNext P γ lam) (k : ℕ) :
     (∑ a, ((lam (k + 1) a : ℝ))) = (∑ a, ((lam k a : ℝ))) - ((lam k (sc P γ k) : ℝ)) := by
-  classical
   have hterm (a : α) :
     ((lam (k + 1) a : ℝ)) =
       ((lam k a : ℝ)) - (if a = mn P γ k then ((lam k (sc P γ k) : ℝ)) else 0) := by
@@ -206,7 +205,6 @@ theorem mem_cntSet (P : IETDatum₂ α n) (γ : ℕ → Bool) (a : α) {N₀ N k
 theorem cntSet_succ_of_mem (P : IETDatum₂ α n) (γ : ℕ → Bool) (a : α) {N₀ k : ℕ}
     (hk : N₀ ≤ k) (h : sc P γ k = a) :
     (cntSet P γ a N₀ (k + 1)).card = (cntSet P γ a N₀ k).card + 1 := by
-  classical
   have hnot : k ∉ cntSet P γ a N₀ k := by
     rw [mem_cntSet]; exact fun h' => absurd h'.1 (Nat.lt_irrefl k)
   have hins : cntSet P γ a N₀ (k + 1) = insert k (cntSet P γ a N₀ k) := by
@@ -231,20 +229,17 @@ theorem eventually_sc_ne_of_eventually_mn_ne (P : IETDatum₂ α n) (γ : ℕ �
     (hpos : ∀ k a, 0 < lam k a) (hty : HType P γ lam) (hnxt : HNext P γ lam)
     {a : α} {N₀ : ℕ} (hN₀ : ∀ k ≥ N₀, mn P γ k ≠ a) :
     ∀ᶠ k in atTop, sc P γ k ≠ a := by
-  classical
-  have hconst : ∀ k ≥ N₀, ((lam k a : ℝ)) = ((lam N₀ a : ℝ)) := fun k hk =>
-    coe_eq_of_not_main P γ lam hnxt hN₀ hk
+  have hconst (k) (hk : k ≥ N₀) : ((lam k a : ℝ)) = ((lam N₀ a :
+      ℝ)) := coe_eq_of_not_main P γ lam hnxt hN₀ hk
   have hδ : (0 : ℝ) < ((lam N₀ a : ℝ)) := NNReal.coe_pos.mpr (hpos N₀ a)
   -- the counting function is bounded
   have hcardmono : Monotone fun N => (cntSet P γ a N₀ N).card :=
     fun N M hNM => Finset.card_le_card (cntSet_mono P γ a N₀ hNM)
-  have hbound : ∀ N, (cntSet P γ a N₀ N).card ≤
+  have hbound (N) : (cntSet P γ a N₀ N).card ≤
       Nat.floor ((∑ a, ((lam 0 a : ℝ))) / ((lam N₀ a : ℝ)) + 1) := by
-    intro N
     have hsum_eq : ∑ k ∈ cntSet P γ a N₀ N, ((lam k (sc P γ k) : ℝ)) =
         ((cntSet P γ a N₀ N).card : ℝ) * ((lam N₀ a : ℝ)) := by
-      have h1 : ∀ k ∈ cntSet P γ a N₀ N, ((lam k (sc P γ k) : ℝ)) = ((lam N₀ a : ℝ)) := by
-        intro k hk
+      have h1 (k) (hk : k ∈ cntSet P γ a N₀ N) : ((lam k (sc P γ k) : ℝ)) = ((lam N₀ a : ℝ)) := by
         rw [mem_cntSet] at hk
         obtain ⟨-, hk₀, hksc⟩ := hk
         rw [hksc]
@@ -442,8 +437,7 @@ theorem posT_eventually_const (P : IETDatum₂ α n) (γ : ℕ → Bool) {a : α
   have hmono : Monotone fun m => posT P γ (N + m) a := by
     intro m m' hmm
     obtain ⟨d, rfl⟩ : ∃ d, m' = m + d := ⟨m' - m, by omega⟩
-    have hstep : ∀ e, posT P γ (N + m) a ≤ posT P γ (N + m + e) a := by
-      intro e
+    have hstep (e) : posT P γ (N + m) a ≤ posT P γ (N + m + e) a := by
       induction e with
       | zero => exact le_rfl
       | succ e ih =>
@@ -465,8 +459,7 @@ theorem posB_eventually_const (P : IETDatum₂ α n) (γ : ℕ → Bool) {a : α
   have hmono : Monotone fun m => posB P γ (N + m) a := by
     intro m m' hmm
     obtain ⟨d, rfl⟩ : ∃ d, m' = m + d := ⟨m' - m, by omega⟩
-    have hstep : ∀ e, posB P γ (N + m) a ≤ posB P γ (N + m + e) a := by
-      intro e
+    have hstep (e) : posB P γ (N + m) a ≤ posB P γ (N + m + e) a := by
       induction e with
       | zero => exact le_rfl
       | succ e ih =>
@@ -579,8 +572,7 @@ theorem frozen_lt_posT (P : IETDatum₂ α n) (γ : ℕ → Bool) {x : α} {N vT
       have hxy : x = y := posT_inj P γ j (by rw [hxq, h'])
       rw [← hjy] at hxy
       exact (hx j (le_trans hk hjk)).1 hxy.symm
-  have hmney : mn P γ j = y := hjy
-  have hcontr := posT_succ_false_of_gt P γ j hγj (a := x) (by rw [hmney]; exact hpiv) hxtop
+  have hcontr := posT_succ_false_of_gt P γ j hγj (a := x) (by rw [hjy]; exact hpiv) hxtop
   have h2 : posT P γ (j + 1) x = vT :=
     hconst (j + 1) (le_trans (le_trans hk hjk) (Nat.le_succ j))
   omega
@@ -665,8 +657,7 @@ theorem frozen_lt_posB (P : IETDatum₂ α n) (γ : ℕ → Bool) {x : α} {N vB
       have hxy : x = y := posB_inj P γ j (by rw [hxq, h'])
       rw [← hjy] at hxy
       exact (hx j (le_trans hk hjk)).1 hxy.symm
-  have hmney : mn P γ j = y := hjy
-  have hcontr := posB_succ_true_of_gt P γ j hγj (a := x) (by rw [hmney]; exact hpiv) hxbot
+  have hcontr := posB_succ_true_of_gt P γ j hγj (a := x) (by rw [hjy]; exact hpiv) hxbot
   have h2 : posB P γ (j + 1) x = vB :=
     hconst (j + 1) (le_trans (le_trans hk hjk) (Nat.le_succ j))
   omega
@@ -737,7 +728,6 @@ omit [NeZero n] [DecidableEq α] in
 theorem low_eq_of (e : α ≃ Fin n) (S : Finset α) (hSne : S.Nonempty)
     (h : ∀ a ∈ S, ∀ b, b ∉ S → (e a).val < (e b).val) :
     (Finset.univ.filter fun a => (e a).val ≤ S.sup (fun a => (e a).val)) = S := by
-  classical
   apply Finset.Subset.antisymm
   · intro a ha
     simp only [Finset.mem_filter, Finset.mem_univ, true_and] at ha
@@ -756,7 +746,6 @@ omit [DecidableEq α] [Fintype α] in
 theorem card_low_of (e : α ≃ Fin n) (S : Finset α) (hSne : S.Nonempty)
     (h : ∀ a ∈ S, ∀ b, b ∉ S → (e a).val < (e b).val) :
     S.card = S.sup (fun a => (e a).val) + 1 := by
-  classical
   have : Fintype α := Fintype.ofEquiv (Fin n) e.symm
   have hLow := low_eq_of e S hSne h
   have himg : (Finset.univ.filter fun a => (e a).val ≤ S.sup (fun a => (e a).val)).image
@@ -792,7 +781,6 @@ theorem no_block (Q : IETDatum₂ α n) (hQ : Q.Irreducible) (S : Finset α)
     (hSne : S.Nonempty) (hSproper : S ≠ Finset.univ)
     (hT : ∀ a ∈ S, ∀ b, b ∉ S → (Q.piTop a).val < (Q.piTop b).val)
     (hB : ∀ a ∈ S, ∀ b, b ∉ S → (Q.piBottom a).val < (Q.piBottom b).val) : False := by
-  classical
   have hcardT : S.card = S.sup (fun a => (Q.piTop a).val) + 1 := card_low_of Q.piTop S hSne hT
   have hcardB : S.card = S.sup (fun a => (Q.piBottom a).val) + 1 := card_low_of Q.piBottom S hSne hB
   have hcardα : Fintype.card α = n := by rw [Fintype.card_congr Q.piTop, Fintype.card_fin]
@@ -808,20 +796,17 @@ theorem no_block (Q : IETDatum₂ α n) (hQ : Q.Irreducible) (S : Finset α)
     omega
   have hMn : M < n := by omega
   have hMT : S.sup (fun a => (Q.piTop a).val) = M := by omega
-  have key : ∀ i : Fin n, i ≤ (⟨M, hMn⟩ : Fin n) → Q.perm i ≤ (⟨M, hMn⟩ : Fin n) := by
-    intro i hi
-    have hival : i.val ≤ M := hi
+  have key (i : Fin n) (hi : i ≤ (⟨M, hMn⟩ : Fin n)) : Q.perm i ≤ (⟨M, hMn⟩ : Fin n) := by
     have hzB : (Q.piBottom (Q.piBottom.symm i)).val = i.val := by simp
     have hzS : Q.piBottom.symm i ∈ S := by
       have hlow := low_eq_of Q.piBottom S hSne hB
       rw [← hlow]
       simp only [Finset.mem_filter, Finset.mem_univ, true_and]
-      rw [hzB]; exact hival
+      rw [hzB]; exact hi
     have hzT : (Q.piTop (Q.piBottom.symm i)).val ≤ M := by
       have h1 : (Q.piTop (Q.piBottom.symm i)).val ≤ S.sup (fun a => (Q.piTop a).val) :=
         Finset.le_sup (f := fun a => (Q.piTop a).val) hzS
       rwa [hMT] at h1
-    change (Q.perm i).val ≤ M
     rwa [show Q.perm i = Q.piTop (Q.piBottom.symm i) from rfl]
   have hall := hQ ⟨M, hMn⟩ key
   have hlast : ((⟨n - 1, by omega⟩ : Fin n)) ≤ (⟨M, hMn⟩ : Fin n) := hall _

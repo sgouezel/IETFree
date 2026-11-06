@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.UniqueErgodicity.TransferConv
 public import IETFree.UniqueErgodicity.MeasPrep
+public import IETFree.UniqueErgodicity.TransferConv
 
 /-!
 # Restricting the germ map to its invariant part

@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.Path
 public import IETFree.RauzyVeech.Affine
+public import IETFree.RauzyVeech.Path
 
 /-!
 Lemma 1 of the source (p. 16): for a finite path `γ` of the Rauzy–Veech algorithm with
@@ -242,15 +242,14 @@ theorem cone_inter_eq (N : Matrix (Fin (m + 1)) (Fin (m + 1)) ℤ)
     (hpos : ∀ b, 0 < ∑ i, N i b) :
     {x : Fin (m+1) → ℝ | x ∈ IETDatum₂.cone N ∧ ∑ i, x i = 1}
       = (fun z => rvRealMat N *ᵥ z) '' openRealSimplex m := by
-  have hC : ∀ b, (0:ℝ) < (((∑ i, N i b : ℤ)) : ℝ) := fun b => by exact_mod_cast hpos b
-  have hCne : ∀ b, (((∑ i, N i b : ℤ)) : ℝ) ≠ 0 := fun b => ne_of_gt (hC b)
+  have hC (b) : (0:ℝ) < (((∑ i, N i b : ℤ)) : ℝ) := by exact_mod_cast hpos b
+  have hCne (b) : (((∑ i, N i b : ℤ)) : ℝ) ≠ 0 := ne_of_gt (hC b)
   ext x
   constructor
   · rintro ⟨⟨y, hy, hxy⟩, hsum⟩
     subst hxy
     refine ⟨fun b => (((∑ i, N i b : ℤ)) : ℝ) * y b, ⟨fun b => mul_pos (hC b) (hy b), ?_⟩, ?_⟩
-    · have hterm : ∀ b, (((∑ i, N i b : ℤ)) : ℝ) * y b = ∑ a, (N a b : ℝ) * y b := by
-        intro b
+    · have hterm (b) : (((∑ i, N i b : ℤ)) : ℝ) * y b = ∑ a, (N a b : ℝ) * y b := by
         rw [← Finset.sum_mul, show (∑ a, (N a b : ℝ)) = (((∑ a, N a b : ℤ)) : ℝ) from by
           push_cast; rfl]
       simp only [hterm]
@@ -269,8 +268,7 @@ theorem cone_inter_eq (N : Matrix (Fin (m + 1)) (Fin (m + 1)) ℤ)
       rw [rvRealMat_mulVec_apply]
     · simp only [rvRealMat_mulVec_apply]
       rw [Finset.sum_comm]
-      have hterm : ∀ b, ∑ a, (N a b : ℝ) * ((((∑ i, N i b : ℤ)) : ℝ)⁻¹ * z b) = z b := by
-        intro b
+      have hterm (b) : ∑ a, (N a b : ℝ) * ((((∑ i, N i b : ℤ)) : ℝ)⁻¹ * z b) = z b := by
         have hCX : (∑ a, (N a b : ℝ)) = (((∑ i, N i b : ℤ)) : ℝ) := by push_cast; rfl
         rw [← Finset.sum_mul, hCX, ← mul_assoc, mul_inv_cancel₀ (hCne b), one_mul]
       simp only [hterm, hzsum]
@@ -289,17 +287,17 @@ theorem image_openRealSimplex_eq (N : Matrix (Fin (m + 1)) (Fin (m + 1)) ℤ)
     (fun z => rvRealMat N *ᵥ z) '' openRealSimplex m
       = chart m '' (inducedMap (rvRealMat N) '' region m) := by
   set M := rvRealMat N with hM
-  have hcol : ∀ j, ∑ i, M i j = 1 := rvRealMat_colsum N hpos
+  have hcol (j) : ∑ i, M i j = 1 := rvRealMat_colsum N hpos j
   have hdetne : M.det ≠ 0 := by
     rw [hM, rvRealMat_det N hdet]
     refine Finset.prod_ne_zero_iff.mpr fun b _ => ?_
-    have hb : ∀ b, (0:ℝ) < (((∑ i, N i b : ℤ)) : ℝ) := fun b => by exact_mod_cast hpos b
+    have hb (b) : (0:ℝ) < (((∑ i, N i b : ℤ)) : ℝ) := by exact_mod_cast hpos b
     exact inv_ne_zero (ne_of_gt (hb b))
-  have hM0 : ∀ i j, 0 ≤ M i j := rvRealMat_nonneg N hnn hpos
-  have hmem : ∀ v ∈ region m, inducedMap M v ∈ region m := fun v hv =>
-    AffineVolume.inducedMap_mem_region' hM0 hcol hdetne hv
-  have hchartv : ∀ v : Fin m → ℝ, M *ᵥ chart m v = chart m (inducedMap M v) :=
-    mulVec_chart hcol
+  have hM0 (i j) : 0 ≤ M i j := rvRealMat_nonneg N hnn hpos i j
+  have hmem (v) (hv : v ∈ region m) : inducedMap M v ∈ region m :=
+      AffineVolume.inducedMap_mem_region hM0 hcol hdetne hv
+  have hchartv (v : Fin m → ℝ) : M *ᵥ chart m v = chart m (inducedMap M v) :=
+    mulVec_chart hcol v
   rw [← chart_image_region]
   ext x
   constructor
@@ -400,16 +398,16 @@ theorem measurableSet_image_openRealSimplex (N : Matrix (Fin (m + 1)) (Fin (m + 
     (hpos : ∀ b, 0 < ∑ i, N i b) (hnn : ∀ a b, 0 ≤ N a b) (hdet : N.det = 1) :
     MeasurableSet ((fun z => rvRealMat N *ᵥ z) '' openRealSimplex m) := by
   set M := rvRealMat N with hM
-  have hcol : ∀ j, ∑ i, M i j = 1 := rvRealMat_colsum N hpos
+  have hcol (j) : ∑ i, M i j = 1 := rvRealMat_colsum N hpos j
   have hdetne : M.det ≠ 0 := by
     rw [hM, rvRealMat_det N hdet]
     refine Finset.prod_ne_zero_iff.mpr fun b _ => ?_
     have hb : (0:ℝ) < (((∑ i, N i b : ℤ)) : ℝ) := by exact_mod_cast hpos b
     exact inv_ne_zero (ne_of_gt hb)
-  have hM0 : ∀ i j, 0 ≤ M i j := rvRealMat_nonneg N hnn hpos
+  have hM0 (i j) : 0 ≤ M i j := rvRealMat_nonneg N hnn hpos i j
   have hsub : inducedMap M '' region m ⊆ region m := by
     rintro x ⟨v, hv, rfl⟩
-    exact AffineVolume.inducedMap_mem_region' hM0 hcol hdetne hv
+    exact AffineVolume.inducedMap_mem_region hM0 hcol hdetne hv
   have hW : MeasurableSet (inducedMap M '' region m) := by
     rw [inducedMap_image_region_eq hcol hdetne]
     exact (continuous_inducedMap M⁻¹).measurable (measurableSet_region m)
@@ -487,16 +485,15 @@ theorem volume_cylinder_fin (N : Matrix (Fin (m + 1)) (Fin (m + 1)) ℤ)
     simplexVolume (m+1) {l : Fin (m+1) → ℝ≥0 | co m l ∈ IETDatum₂.cone N ∧ ∑ i, l i = 1}
       = (∏ b, (colsumNN N b)⁻¹ : ℝ≥0) * simplexVolume (m+1) (simplexOn (Fin (m+1))) := by
   set M := rvRealMat N with hM
-  have hcol : ∀ j, ∑ i, M i j = 1 := rvRealMat_colsum N hpos
-  have hM0 : ∀ i j, 0 ≤ M i j := rvRealMat_nonneg N hnn hpos
-  have hCpos : ∀ b, (0:ℝ) < (((∑ i, N i b : ℤ)) : ℝ) := fun b => by exact_mod_cast hpos b
+  have hcol (j) : ∑ i, M i j = 1 := rvRealMat_colsum N hpos j
+  have hM0 (i j) : 0 ≤ M i j := rvRealMat_nonneg N hnn hpos i j
+  have hCpos (b) : (0:ℝ) < (((∑ i, N i b : ℤ)) : ℝ) := by exact_mod_cast hpos b
   have hdetM : M.det = ∏ b, (((∑ i, N i b : ℤ)) : ℝ)⁻¹ := by
     rw [hM]; exact rvRealMat_det N hdet
   have hdetne : M.det ≠ 0 := by
     rw [hdetM]
     exact Finset.prod_ne_zero_iff.mpr fun b _ => inv_ne_zero (ne_of_gt (hCpos b))
-  have hcnn : ∀ b, ((colsumNN N b : ℝ≥0) : ℝ) = (((∑ i, N i b : ℤ)) : ℝ) :=
-    fun b => coe_colsumNN (hpos b)
+  have hcnn (b) : ((colsumNN N b : ℝ≥0) : ℝ) = (((∑ i, N i b : ℤ)) : ℝ) := coe_colsumNN (hpos b)
   -- the set identity: the cylinder is `co ⁻¹' (M • Δ°)`
   have hset : {l : Fin (m+1) → ℝ≥0 | co m l ∈ IETDatum₂.cone N ∧ ∑ i, l i = 1}
       = co m ⁻¹' ((fun z => M *ᵥ z) '' openRealSimplex m) := by
@@ -529,7 +526,7 @@ theorem volume_cylinder_fin (N : Matrix (Fin (m + 1)) (Fin (m + 1)) ℤ)
       exact hw
     · intro hv
       obtain ⟨w, hw, rfl⟩ := hv
-      exact ⟨AffineVolume.inducedMap_mem_region' hM0 hcol hdetne hw, inducedMap M w,
+      exact ⟨AffineVolume.inducedMap_mem_region hM0 hcol hdetne hw, inducedMap M w,
         ⟨w, hw, rfl⟩, rfl⟩
   rw [hchart, AffineVolume.volume_image_inducedMap_of_det (det_linInducedMap hcol) (region m),
     hdetM,
@@ -571,9 +568,8 @@ theorem cone_comp_iff {α : Type*} [Fintype α] {m : ℕ} (Q : Matrix α α ℤ)
     have h : l (e a) = ∑ j, ((Q.submatrix (⇑e.symm) (⇑e.symm)) (e a) j : ℝ) * w j :=
       congrFun hxw (e a)
     rw [h]
-    have hstep : ∀ j, ((Q.submatrix (⇑e.symm) (⇑e.symm)) (e a) j : ℝ) * w j
-        = ((fun b => (Q a b : ℝ) * w (e b)) (e.symm j)) := by
-      intro j; simp
+    have hstep (j) : ((Q.submatrix (⇑e.symm) (⇑e.symm)) (e a) j : ℝ) * w j
+        = ((fun b => (Q a b : ℝ) * w (e b)) (e.symm j)) := by simp
     simp only [hstep]
     exact Equiv.sum_comp e.symm (fun b => (Q a b : ℝ) * w (e b))
 
@@ -588,21 +584,19 @@ theorem volume_simplexCyl {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [
   set e : α ≃ Fin (m+1) := P.piBottom with he
   set N : Matrix (Fin (m+1)) (Fin (m+1)) ℤ := Q.submatrix (⇑e.symm) (⇑e.symm) with hN
   set Ψ : (Fin (m+1) → ℝ≥0) ≃ᵐ (α → ℝ≥0) := piEquivMeas e with hΨ
-  have hΨl : ∀ l : Fin (m+1) → ℝ≥0, ⇑Ψ l = fun a => l (e a) := fun l => rfl
+  have hΨl (l : Fin (m+1) → ℝ≥0) : ⇑Ψ l = fun a => l (e a) := rfl
   -- properties of `N`
   have hNdet : N.det = 1 := by
     rw [hN, Matrix.det_submatrix_equiv_self, hQ]
     exact IETDatum₂.det_Path.Q P γ
-  have hNnn : ∀ a b, 0 ≤ N a b := by
-    intro a b
+  have hNnn (a) (b) : 0 ≤ N a b := by
     rw [hN, Matrix.submatrix_apply, hQ]
     exact IETDatum₂.Path.Q_nonneg P γ _ _
-  have hNcolsum : ∀ i, ∑ j, N j i = ∑ a, Q a (e.symm i) := by
-    intro i
+  have hNcolsum (i) : ∑ j, N j i = ∑ a, Q a (e.symm i) := by
     rw [hN]
     simp only [Matrix.submatrix_apply]
     exact Equiv.sum_comp e.symm (fun b => Q b (e.symm i))
-  have hNpos : ∀ i, 0 < ∑ j, N j i := fun i => by
+  have hNpos (i) : 0 < ∑ j, N j i := by
     rw [hNcolsum i, hQ]; exact IETDatum₂.Path.Q_colsum_pos P γ _
   -- the set identities
   have hsumΨ (l : Fin (m+1) → ℝ≥0) : (∑ a, (⇑Ψ l) a) = ∑ i, l i := by

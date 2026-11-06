@@ -37,7 +37,8 @@ theorem image_iterate_eq_preimage_symm (π : Equiv.Perm (Fin n)) (lam : Fin n �
   ext x
   constructor
   · rintro ⟨a, ha, rfl⟩
-    change (⇑(Tower.exchEquiv π lam).symm)^[j] ((⇑(Tower.exchEquiv π lam))^[j] a) ∈ A
+    rw [Set.mem_preimage]
+    simp only [← Tower.coe_exchEquiv]
     rw [Tower.exch_symm_apply_iterate π lam j a]
     exact ha
   · intro hx

@@ -104,10 +104,9 @@ theorem qApply_rvMat (P : IETDatum₂ α n) (ε : Bool) (hne : P.last ε ≠ P.l
     qApply (P.rvMat ε) y = fun a => y a + (if a = P.last ε then y (P.last (!ε)) else 0) := by
   funext a
   rw [qApply_apply]
-  have hstep : ∀ b, (P.rvMat ε a b : ℝ) * y b =
+  have hstep (b) : (P.rvMat ε a b : ℝ) * y b =
   ((if b = a then (1 : ℝ) else 0) +
     (if a = P.last ε ∧ b = P.last (!ε) then (1 : ℝ) else 0)) * y b := by
-    intro b
     rw [rvMat_cast P ε a b hne]
   rw [Finset.sum_congr rfl (fun b _ => hstep b),
     sum_rvMat_mul (P.last ε) (P.last (!ε)) y a]
@@ -151,11 +150,10 @@ theorem cone_rvMat (P : IETDatum₂ α n) (ε : Bool) (hne : P.last ε ≠ P.las
     have hne' : P.last (!ε) ≠ P.last ε := Ne.symm hne
     refine ⟨fun a => if a = P.last ε then w a - w (P.last (!ε)) else w a, ?_, ?_⟩
     · intro a
-      change 0 < (if a = P.last ε then w a - w (P.last (!ε)) else w a)
+      simp only []
       by_cases ha : a = P.last ε
       · rw [ha, if_pos rfl]
         have h1' := hw (P.last ε)
-        have h2' := hlt
         linarith
       · rw [if_neg ha]
         exact hw a
@@ -361,10 +359,9 @@ def rvMatInv (P : IETDatum₂ α n) (ε : Bool) : Matrix α α ℤ :=
 theorem sum_add_single_mul (c c' : α) (t : ℝ) (y : α → ℝ) (a : α) :
     ∑ b, ((if b = a then (1 : ℝ) else 0) + (if a = c ∧ b = c' then t else 0)) * y b
       = y a + t * (if a = c then y c' else 0) := by
-  have hexp : ∀ b, ((if b = a then (1 : ℝ) else 0) +
+  have hexp (b) : ((if b = a then (1 : ℝ) else 0) +
         (if a = c ∧ b = c' then t else 0)) * y b
       = (if b = a then y b else 0) + (if a = c ∧ b = c' then t * y b else 0) := by
-    intro b
     rw [add_mul, ite_mul, ite_mul, one_mul, zero_mul]
   have hsplit : ∑ b, ((if b = a then (1 : ℝ) else 0) +
         (if a = c ∧ b = c' then t else 0)) * y b
@@ -374,16 +371,14 @@ theorem sum_add_single_mul (c c' : α) (t : ℝ) (y : α → ℝ) (a : α) :
   rw [hsplit, Finset.sum_ite_eq' Finset.univ a (fun b => y b)]
   simp only [Finset.mem_univ, if_true]
   by_cases ha : a = c
-  · have h2 : ∀ b, (if a = c ∧ b = c' then t * y b else 0) =
+  · have h2 (b) : (if a = c ∧ b = c' then t * y b else 0) =
         (if b = c' then t * y b else 0) := by
-      intro b
       rw [ha]
       simp
     rw [Finset.sum_congr rfl (fun b _ => h2 b),
       Finset.sum_ite_eq' Finset.univ c' (fun b => t * y b)]
     simp [ha]
-  · have h2 : ∀ b, (if a = c ∧ b = c' then t * y b else 0) = (0 : ℝ) := by
-      intro b
+  · have h2 (b) : (if a = c ∧ b = c' then t * y b else 0) = (0 : ℝ) := by
       rw [if_neg (fun h => ha h.1)]
     rw [Finset.sum_congr rfl (fun b _ => h2 b), Finset.sum_const_zero, add_zero]
     simp [ha]
@@ -394,10 +389,9 @@ theorem qApply_rvMatInv (P : IETDatum₂ α n) (ε : Bool) (hne : P.last ε ≠ 
     qApply (P.rvMatInv ε) y = fun a => y a - (if a = P.last ε then y (P.last (!ε)) else 0) := by
   funext a
   rw [qApply_apply]
-  have hentry : ∀ b, (P.rvMatInv ε a b : ℝ) =
+  have hentry (b) : (P.rvMatInv ε a b : ℝ) =
           ((if b = a then (1 : ℝ) else 0) +
             (if a = P.last ε ∧ b = P.last (!ε) then (-1 : ℝ) else 0)) := by
-    intro b
     have hne' : P.last (!ε) ≠ P.last ε := Ne.symm hne
     by_cases hba : b = a
     · rw [hba]
@@ -667,9 +661,8 @@ theorem Acoef_ne_zero (P : IETDatum₂ α (m + 1)) (hP : P.Irreducible) (hn : 2 
     (γ : List Bool) : Acoef P γ ≠ 0 := by
   intro hA
   have hcc : (P.vertex γ).last true ≠ (P.vertex γ).last false := vertex_last_ne P hP hn γ
-  have hrow : ∀ b, Path.Qinv P γ ((P.vertex γ).last true) b =
+  have hrow (b) : Path.Qinv P γ ((P.vertex γ).last true) b =
       Path.Qinv P γ ((P.vertex γ).last false) b := by
-    intro b
     have h1 := congrFun hA (P.piBottom b)
     simp only [Acoef, Pi.zero_apply, Equiv.symm_apply_apply] at h1
     have h2 : (Path.Qinv P γ ((P.vertex γ).last true) b : ℝ) =

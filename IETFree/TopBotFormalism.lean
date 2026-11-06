@@ -87,9 +87,17 @@ variable {α : Type*} [Fintype α] {n : ℕ}
 lengths in bottom order). -/
 def perm (P : IETDatum₂ α n) : Equiv.Perm (Fin n) := P.piBottom.symm.trans P.piTop
 
+/-- **The permutation of a datum, as a function**: `π₁ ∘ π₀⁻¹`, in the computation form proofs
+unfolding `perm` need. -/
+theorem perm_apply (P : IETDatum₂ α n) (i : Fin n) : P.perm i = P.piTop (P.piBottom.symm i) := rfl
+
 /-- Irreducibility of the datum: no proper initial segment of the permutation is invariant (the
 source's admissibility, 2.5). -/
 def Irreducible (P : IETDatum₂ α n) : Prop := IsIrreduciblePerm P.perm
+
+/-- The definition of `Irreducible`, as an equation: the form in which proofs rewrite it. -/
+theorem Irreducible_def (P : IETDatum₂ α n) : P.Irreducible ↔ IsIrreduciblePerm P.perm :=
+  Iff.rfl
 
 /-- The length vector in bottom-order coordinates, i.e. `λ ∘ π_bottom⁻¹`. -/
 def lengthsInBottom (P : IETDatum₂ α n) (lam : α → ℝ≥0) : Fin n → ℝ≥0 :=
@@ -97,9 +105,8 @@ def lengthsInBottom (P : IETDatum₂ α n) (lam : α → ℝ≥0) : Fin n → �
 
 theorem sum_lengthsInBottom (P : IETDatum₂ α n) {lam : α → ℝ≥0} (h : lam ∈ simplexOn α) :
     (∑ i, P.lengthsInBottom lam i) = 1 := by
-  have h' : (∑ a, lam a) = 1 := h
   have h2 : (∑ i, P.lengthsInBottom lam i) = ∑ a, lam a := Equiv.sum_comp P.piBottom.symm lam
-  rw [h2, h']
+  rw [h2, h]
 
 /-- The exchange as an element of `IET 0 1`.  It is **total**: off the simplex it is the identity,
 the same junk-value convention as `mkIETFun`.  On the simplex it is `mkIET1'` of the reindexed

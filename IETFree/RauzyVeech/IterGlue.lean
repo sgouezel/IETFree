@@ -11,7 +11,7 @@ public import IETFree.RauzyVeech.TrueStep
 # The one-step length identity
 
 `hatLam ε lam` is the inverse of `rvMat ε` on length vectors, *provided the type condition* `λ (last
-(!ε)) ≤ λ (last ε)` holds — `hatLam` uses truncated subtraction, so without it the identity fails. 
+(!ε)) ≤ λ (last ε)` holds — `hatLam` uses truncated subtraction, so without it the identity fails.
 This is the one-step input of `IterOK` for the greedy path. -/
 
 @[expose] public section
@@ -83,7 +83,6 @@ theorem qApply_lamAfter (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ 
       = fun a => (lam a : ℝ) := by
   induction γ generalizing P lam with
   | nil =>
-    change IETDatum₂.qApply (1 : Matrix α α ℤ) (fun a => (lam a : ℝ)) = fun a => (lam a : ℝ)
     rw [IETDatum₂.qApply_eq]
     funext a
     simp [Matrix.one_apply]

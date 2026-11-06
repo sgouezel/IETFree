@@ -216,9 +216,8 @@ lemma commute_of_pow_eq {a b : FreeGroup α} {M N : ℕ} (hM : M ≠ 0) (hN : N 
     rw [hb] at ha
     exact ha.symm
   have hlen2' : 2 * c.length + 2 * (M * w.length) = 2 * d.length + 2 * (N * v.length) := by
-    have h' := hlen2
-    rw [Nat.mul_assoc, Nat.mul_assoc] at h'
-    exact h'
+    rw [Nat.mul_assoc, Nat.mul_assoc] at hlen2
+    exact hlen2
   have hcd_len : c.length = d.length := by omega
   have hword : c ++ ((List.replicate M w).flatten ++ FreeGroup.invRev c)
       = d ++ ((List.replicate N v).flatten ++ FreeGroup.invRev d) := by
@@ -232,9 +231,8 @@ lemma commute_of_pow_eq {a b : FreeGroup α} {M N : ℕ} (hM : M ≠ 0) (hN : N 
   have hUV : (List.replicate M w).flatten = (List.replicate N v).flatten := by
     have h1 : (List.replicate M w).flatten ++ FreeGroup.invRev c
         = (List.replicate N v).flatten ++ FreeGroup.invRev c := by
-      have h2 := hword
-      rw [← hcd] at h2
-      exact List.append_cancel_left h2
+      rw [← hcd] at hword
+      exact List.append_cancel_left hword
     exact List.append_cancel_right h1
   have hwv : w ++ v = v ++ w := append_comm_of_flatten_replicate_eq hM hN hUV
   have ha_eq : a = FreeGroup.mk c * FreeGroup.mk w * (FreeGroup.mk c)⁻¹ := by
@@ -255,7 +253,6 @@ lemma commute_of_pow_eq {a b : FreeGroup α} {M N : ℕ} (hM : M ≠ 0) (hN : N 
 
 theorem commute_of_zpow_eq {α : Type*} {a b : FreeGroup α} {m n : ℤ}
     (hm : m ≠ 0) (hn : n ≠ 0) (h : a ^ m = b ^ n) : a * b = b * a := by
-  classical
   obtain ⟨M, hM | hM⟩ := Int.eq_nat_or_neg m
   · obtain ⟨N, hN | hN⟩ := Int.eq_nat_or_neg n
     · subst hM; subst hN
@@ -269,9 +266,7 @@ theorem commute_of_zpow_eq {α : Type*} {a b : FreeGroup α} {m n : ℤ}
       have hN0 : N ≠ 0 := by rintro rfl; simp at hn
       have h' : (a⁻¹) ^ M = b ^ N := by rw [inv_pow, h, inv_inv]
       have hc : Commute a⁻¹ b := commute_of_pow_eq hM0 hN0 h'
-      have h2 := hc.inv_left
-      rw [inv_inv] at h2
-      exact h2
+      simpa only [inv_inv, Commute, SemiconjBy] using hc.inv_left
   · obtain ⟨N, hN | hN⟩ := Int.eq_nat_or_neg n
     · subst hM; subst hN
       rw [zpow_neg, zpow_natCast, zpow_natCast] at h
@@ -280,9 +275,7 @@ theorem commute_of_zpow_eq {α : Type*} {a b : FreeGroup α} {m n : ℤ}
       have h' : (b⁻¹) ^ N = a ^ M := by rw [inv_pow, ← h, inv_inv]
       have hc : Commute b⁻¹ a := commute_of_pow_eq hN0 hM0 h'
       have hc2 : Commute b a := by
-        have h := hc.inv_left
-        rw [inv_inv] at h
-        exact h
+        simpa only [inv_inv, Commute, SemiconjBy] using hc.inv_left
       exact hc2.symm
     · subst hM; subst hN
       rw [zpow_neg, zpow_neg, zpow_natCast, zpow_natCast] at h

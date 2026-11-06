@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.RauzyPath
 public import IETFree.RauzyVeech.LevyRecurrence
+public import IETFree.RauzyVeech.RauzyPath
 
 /-!
 # The cylinder recurrence: a definite fraction of every cylinder avoiding `Z` makes `Z` null
@@ -134,7 +134,6 @@ theorem measurableSet_lvl (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 �
 
 theorem measurable_lvl (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) (k : ℕ) :
     Measurable (lvl P k) := by
-  classical
   intro s _
   have h : lvl P k ⁻¹' s = ⋃ w ∈ s, {x : α → ℝ≥0 | lvl P k x = w} := by
     ext x
@@ -198,8 +197,8 @@ theorem mem_cyl_iff_pathWord (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2
     x ∈ IETDatum₂.simplexCyl P w ↔ IETDatum₂.pathWord P x w.length = w := by
   obtain ⟨hstop, hroot⟩ := not_or.mp ((mem_Nbad_iff P x).not.mp hx)
   have hx1 : x ∈ IETDatum₂.simplexCyl P [] := not_not.mp hroot
-  have hx2 : ∀ γ : List Bool, x ∉ IETDatum₂.cylStop P γ := by
-    intro γ hγ
+  have hx2 (γ : List Bool) : x ∉ IETDatum₂.cylStop P γ := by
+    intro hγ
     exact hstop ⟨γ, hγ⟩
   constructor
   · intro hxw

@@ -148,14 +148,13 @@ theorem abs_sum_sub_mul_le {θ θ' : α → ℝ} (hsum : ∑ c, θ c = ∑ c, θ
     {v : α → ℝ} {s : ℝ} (hs : ∀ c c', |v c - v c'| ≤ s) :
     |∑ c, θ c * v c - ∑ c, θ' c * v c|
       ≤ s * ∑ c ∈ Finset.univ.filter (fun c => θ' c < θ c), (θ c - θ' c) := by
-  classical
   obtain ⟨c₀, -, hc₀⟩ :=
     Finset.exists_max_image (Finset.univ : Finset α) v Finset.univ_nonempty
   have hsum0 : ∑ c, (θ c - θ' c) = 0 := by
     rw [Finset.sum_sub_distrib, hsum, sub_self]
-  have hw0 : ∀ c, v c - v c₀ ≤ 0 := fun c => by
+  have hw0 (c) : v c - v c₀ ≤ 0 := by
     have h := hc₀ c (Finset.mem_univ c); linarith
-  have hws : ∀ c, -s ≤ v c - v c₀ := fun c => by
+  have hws (c) : -s ≤ v c - v c₀ := by
     have h := hs c c₀; rw [abs_le] at h; linarith
   have hkey : ∑ c, θ c * v c - ∑ c, θ' c * v c
       = ∑ c, (θ c - θ' c) * (v c - v c₀) := by
@@ -173,12 +172,10 @@ theorem abs_sum_sub_mul_le {θ θ' : α → ℝ} (hsum : ∑ c, θ c = ∑ c, θ
     rw [hL, hR]
   set S := Finset.univ.filter (fun c => θ' c < θ c) with hS
   set T := Finset.univ.filter (fun c => ¬ (θ' c < θ c)) with hT
-  have hbS : ∀ c ∈ S, 0 < θ c - θ' c := by
-    intro c hc
+  have hbS (c) (hc : c ∈ S) : 0 < θ c - θ' c := by
     rw [hS, Finset.mem_filter] at hc
     linarith [hc.2]
-  have hbT : ∀ c ∈ T, θ c - θ' c ≤ 0 := by
-    intro c hc
+  have hbT (c) (hc : c ∈ T) : θ c - θ' c ≤ 0 := by
     rw [hT, Finset.mem_filter] at hc
     linarith [hc.2]
   have hsplit : (∑ c ∈ S, (θ c - θ' c)) + (∑ c ∈ T, (θ c - θ' c)) = 0 := by
@@ -219,7 +216,6 @@ theorem abs_sum_sub_mul_le {θ θ' : α → ℝ} (hsum : ∑ c, θ c = ∑ c, θ
   have hTle' : ∑ c ∈ T, (θ c - θ' c) * (v c - v c₀) ≤ s * β := by
     rw [hTsum, neg_mul_neg] at hTle
     exact hTle
-  have hSge' : -s * β ≤ ∑ c ∈ S, (θ c - θ' c) * (v c - v c₀) := hSge
   rw [hkey, ← hwsplit, abs_le]
   constructor <;> linarith
 
@@ -276,7 +272,6 @@ theorem abs_ncol_append_le (P : IETDatum₂ α n) (γ δ : List Bool) (a₀ : α
 /-- **Monotonicity of the spread.**  Appending letters never increases the spread. -/
 theorem spread_append_le (P : IETDatum₂ α n) (γ δ : List Bool) :
     spread P (γ ++ δ) ≤ spread P γ := by
-  classical
   refine Finset.sup'_le _ _ fun q _ => ?_
   have h := abs_ncol_append_le P γ δ (Classical.arbitrary α) (p := 0)
     (fun b => mixW_nonneg P γ δ b _) q.1 q.2.1 q.2.2
@@ -289,17 +284,14 @@ theorem spread_append_contract (P : IETDatum₂ α n) (γ δ : List Bool) {M : �
     (h1 : ∀ a b, 1 ≤ IETDatum₂.Path.Q (IETDatum₂.vertex P γ) δ a b)
     (h2 : ∀ a b, IETDatum₂.Path.Q (IETDatum₂.vertex P γ) δ a b ≤ (M : ℤ)) :
     spread P (γ ++ δ) ≤ (1 - 1 / ((Fintype.card α : ℝ) * (M : ℝ))) * spread P γ := by
-  classical
   obtain ⟨a₀, -, ha₀⟩ := Finset.exists_max_image (Finset.univ : Finset α)
     (fun c => ColShrink.cs P γ c) Finset.univ_nonempty
-  have ha₀le : ∀ c, ColShrink.cs P γ c ≤ ColShrink.cs P γ a₀ :=
-    fun c => ha₀ c (Finset.mem_univ c)
+  have ha₀le (c) : ColShrink.cs P γ c ≤ ColShrink.cs P γ a₀ := ha₀ c (Finset.mem_univ c)
   have hcardpos : (0 : ℝ) < (Fintype.card α : ℝ) := by exact_mod_cast Fintype.card_pos
   have hMpos : (0 : ℝ) < (M : ℝ) := by exact_mod_cast hM
   have hden : (0 : ℝ) < (Fintype.card α : ℝ) * (M : ℝ) := mul_pos hcardpos hMpos
   have hha : (0 : ℝ) < ColShrink.cs P γ a₀ := ColShrink.cs_pos P γ a₀
-  have hmass : ∀ b, 1 / ((Fintype.card α : ℝ) * (M : ℝ)) ≤ mixW P γ δ b a₀ := by
-    intro b
+  have hmass (b) : 1 / ((Fintype.card α : ℝ) * (M : ℝ)) ≤ mixW P γ δ b a₀ := by
     have hQ1 : (1 : ℝ) ≤ (IETDatum₂.Path.Q (IETDatum₂.vertex P γ) δ a₀ b : ℝ) := by
       exact_mod_cast h1 a₀ b
     have hcsle : ColShrink.cs P (γ ++ δ) b

@@ -34,8 +34,7 @@ theorem iInter_closure_eq_singleton {E : Type*} [MetricSpace E] {S : ℕ → Set
     (⋂ n, closure (S n)) = {x} := by
   refine Set.Subset.antisymm ?_ ?_
   · intro y hy
-    have hle : ∀ n, dist x y ≤ Metric.diam (S n) := by
-      intro n
+    have hle (n) : dist x y ≤ Metric.diam (S n) := by
       have hy' : y ∈ closure (S n) := Set.mem_iInter.mp hy n
       have hx' : x ∈ S n := hx n
       have hb : Bornology.IsBounded (closure (S n)) :=
@@ -61,14 +60,12 @@ theorem mem_simplexCyl_of_cone (P : IETDatum₂ α n) {w : List Bool} {Sig : α 
     (h : Sig ∈ IETDatum₂.cone (IETDatum₂.Path.Q P w)) :
     (fun a => (⟨Sig a, hSig0 a⟩ : ℝ≥0)) ∈ IETDatum₂.simplexCyl P w := by
   let x : α → ℝ≥0 := fun a => ⟨Sig a, hSig0 a⟩
-  change x ∈ IETDatum₂.simplexCyl P w
   have hcoe : (fun a => ((x a : ℝ))) = Sig := rfl
   have hsumNN : (∑ a, x a) = 1 := by
     refine NNReal.coe_injective ?_
     rw [NNReal.coe_sum, NNReal.coe_one, hcoe]
     exact hsum
   have hmem : x ∈ simplexOn α := by
-    change (∑ a, x a) = 1
     exact hsumNN
   rw [show IETDatum₂.simplexCyl P w
       = {y : α → ℝ≥0 | (fun a => (y a : ℝ)) ∈ IETDatum₂.cone (IETDatum₂.Path.Q P w) ∧

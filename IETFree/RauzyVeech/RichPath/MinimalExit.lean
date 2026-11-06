@@ -5,9 +5,9 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.RichPath.LevelMass
-public import IETFree.RauzyVeech.RauzyReach
 public import IETFree.RauzyVeech.PairReach
+public import IETFree.RauzyVeech.RauzyReach
+public import IETFree.RauzyVeech.RichPath.LevelMass
 
 /-!
 # The vocabulary of the extension step, and the minimal extension to a row end outside `A'`
@@ -26,14 +26,12 @@ its existence half (`NodeHeight.st = cs` is `B_w·1`, so `Mk 1` is the source's 
   fact that all its proper prefixes are blocked.
 -/
 
-@[expose] public section
-
-open Finset NodeHeight
+open Finset NodeHeight IETDatum₂
 open scoped BigOperators
 
-namespace MinimalExit
+@[expose] public section
 
-open IETDatum₂
+namespace MinimalExit
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 

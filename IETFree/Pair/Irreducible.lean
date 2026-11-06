@@ -5,17 +5,17 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.Pair.Centralizer
+public import IETFree.Pair.Diophantine
+public import IETFree.Pair.MeasureTools
+public import IETFree.Pair.SingularityBound
 public import IETFree.RauzyVeech.InvariantMeasure
-public import IETFree.TopBotFormalism
-public import IETFree.UniqueErgodicity.MainTheorem
 public import IETFree.Rigidity.DimOne
 public import IETFree.Rigidity.Sequences
 public import IETFree.Rigidity.Transport
+public import IETFree.TopBotFormalism
 public import IETFree.UniqueErgodicity.IET
-public import IETFree.Pair.Diophantine
-public import IETFree.Pair.MeasureTools
-public import IETFree.Pair.Centralizer
-public import IETFree.Pair.SingularityBound
+public import IETFree.UniqueErgodicity.MainTheorem
 
 /-!
 Section 2 of the paper: the irreducible case.
@@ -211,11 +211,9 @@ most `ε`. -/
 theorem exists_word_small_support (f g : IET 0 1) (hrig : IsRigidByTranslations f)
     (ε : ℝ) (hε : 0 < ε) :
     ∃ w : FreeGroup Gen, w ≠ 1 ∧ unitMeas.real (wordSupp w f g) ≤ ε := by
-  classical
   obtain ⟨q, t, B, hq, ht, hBsub, hBmeas, hBμ, hBmap⟩ := hrig
   obtain ⟨sg, hsg⟩ := g.isIET.exists_isCutSet zero_lt_one
-  have hfmap : ∀ y ∈ Set.Ico (0 : ℝ) 1, f y ∈ Set.Ico (0 : ℝ) 1 :=
-    fun y hy => f.isIET.mapsTo hy
+  have hfmap (y) (hy : y ∈ Set.Ico (0 : ℝ) 1) : f y ∈ Set.Ico (0 : ℝ) 1 := f.isIET.mapsTo hy
   -- the neighbourhood size
   set δ : ℝ := ε / (6 * ((sg.card : ℝ) + 1)) with hδdef
   have hδpos : 0 < δ := by
@@ -303,8 +301,7 @@ theorem exists_word_small_support (f g : IET 0 1) (hrig : IsRigidByTranslations 
       rw [hU] at hx
       obtain ⟨c, hc, hci⟩ := hx
       refine Set.mem_iUnion.mpr ⟨c, Set.mem_iUnion.mpr ⟨hc, ?_⟩⟩
-      have h1 : min x (x + tt) < c := hci.1
-      have h2 : c ≤ max x (x + tt) := hci.2
+      obtain ⟨h1, h2⟩ := hci
       rcases le_or_gt 0 tt with h | h
       · rw [min_eq_left (by linarith : x ≤ x + tt)] at h1
         rw [max_eq_right (by linarith : x ≤ x + tt)] at h2
@@ -373,7 +370,6 @@ theorem iterate_word (f g : IET 0 1) (ε : ℝ) (_hε : 0 < ε) (N : ℕ) (hN : 
     ∃ w' : FreeGroup Gen, w' ≠ 1 ∧
       wordLength w' ≤ 2 * wordLength w + 4 * N + 2 * wordLength w₀ ∧
         unitMeas.real (wordSupp w' f g) ≤ 18 * ε * unitMeas.real (wordSupp w f g) := by
-  classical
   set S : Set ℝ := wordSupp w f g with hS
   set S₀ : Set ℝ := wordSupp w₀ f g with hS₀
   have hSmeas : MeasurableSet S := measurableSet_wordSupp w f g
@@ -453,11 +449,8 @@ theorem irreducible_case {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin
     (hue : UniqueErgodic (mkIET1' lam π hlam)) (hrig : IsRigidByTranslations (mkIET1' lam π hlam))
     (hdio : IsDiophantine lam mu) :
     ∃ w : FreeGroup Gen, w ≠ 1 ∧ evalWord w (mkIET1' lam π hlam) (mkIET1' mu σ hmu) = 1 := by
-  classical
   obtain ⟨C, hCpos, cexp, hcexp, hdio'⟩ := hdio
   -- the two exchanges and their total lengths
-  have hl : (∑ i, lam i) = 1 := hlam
-  have hm : (∑ j, mu j) = 1 := hmu
   -- the small parameter
   set ε : ℝ := 1 / (4 * 18 * (2:ℝ) ^ cexp) with hεdef
   have h2c : (0:ℝ) < (2:ℝ) ^ cexp := Real.rpow_pos_of_pos (by norm_num) _
@@ -476,7 +469,7 @@ theorem irreducible_case {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin
   obtain ⟨N, hN, hbirk⟩ := IETFree.UniqueErgodicity.exists_uniform_birkhoff (mkIET1' lam π hlam)
     hue
     (wordSupp w₀ (mkIET1' lam π hlam) (mkIET1' mu σ hmu))
-    (isFiniteUnionIntervals_wordSupp lam π mu σ hl hm w₀) ε hε hsmall
+    (isFiniteUnionIntervals_wordSupp lam π mu σ hlam hmu w₀) ε hε hsmall
   -- the one-step map
   set K : ℕ := 4 * N + 2 * wordLength w₀ with hKdef
   let next : FreeGroup Gen → FreeGroup Gen := fun w =>
@@ -498,14 +491,12 @@ theorem irreducible_case {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin
   -- the sequence of words
   let W : ℕ → FreeGroup Gen := fun n => next^[n] w₀
   have hW0 : W 0 = w₀ := rfl
-  have hWsucc : ∀ n, W (n + 1) = next (W n) := fun n => Function.iterate_succ_apply' next n w₀
-  have hWne : ∀ n, W n ≠ 1 := by
-    intro n
+  have hWsucc (n) : W (n + 1) = next (W n) := Function.iterate_succ_apply' next n w₀
+  have hWne (n) : W n ≠ 1 := by
     induction n with
     | zero => rw [hW0]; exact hw₀
     | succ m ih => rw [hWsucc]; exact (next_spec (W m) ih).1
-  have hWlen : ∀ n, wordLength (W n) + K ≤ 2 ^ n * (wordLength w₀ + K) := by
-    intro n
+  have hWlen (n) : wordLength (W n) + K ≤ 2 ^ n * (wordLength w₀ + K) := by
     induction n with
     | zero => rw [hW0]; simp
     | succ m ih =>
@@ -516,9 +507,8 @@ theorem irreducible_case {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin
       calc wordLength (W (m+1)) + K ≤ 2 * (wordLength (W m) + K) := by omega
         _ ≤ 2 * (2 ^ m * (wordLength w₀ + K)) := by omega
         _ = 2 ^ (m+1) * (wordLength w₀ + K) := by ring
-  have hWsupp : ∀ n, unitMeas.real (wordSupp (W n) (mkIET1' lam π hlam) (mkIET1' mu σ hmu))
+  have hWsupp (n) : unitMeas.real (wordSupp (W n) (mkIET1' lam π hlam) (mkIET1' mu σ hmu))
       ≤ ε * (18 * ε) ^ n := by
-    intro n
     induction n with
     | zero => rw [hW0]; simpa using hsmall
     | succ m ih =>
@@ -533,8 +523,7 @@ theorem irreducible_case {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin
   -- the geometric decay of the lower bound
   set M₀ : ℝ := (wordLength w₀ : ℝ) + (K : ℝ) + 1 with hM₀def
   have hM₀pos : 0 < M₀ := by rw [hM₀def]; positivity
-  have hden : ∀ n, 2 * (wordLength (W n) : ℝ) + 2 ≤ 2 ^ (n+1) * M₀ := by
-    intro n
+  have hden (n) : 2 * (wordLength (W n) : ℝ) + 2 ≤ 2 ^ (n+1) * M₀ := by
     have h1 : (wordLength (W n) : ℝ) + (K : ℝ) ≤ (2:ℝ) ^ n * ((wordLength w₀ : ℝ) + (K : ℝ)) := by
       have h := hWlen n
       have h' : ((wordLength (W n) + K : ℕ) : ℝ)
@@ -582,7 +571,7 @@ theorem irreducible_case {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin
       _ < C := h4
   -- the lattice cell attached to `W n`
   obtain ⟨a, b, ha, hb, hpos, hle⟩ :=
-    exists_lattice_cell lam π mu σ hl hm (W n) (hcon (W n) (hWne n))
+    exists_lattice_cell lam π mu σ hlam hmu (W n) (hcon (W n) (hWne n))
   set T : ℕ := max (coeffMax a) (coeffMax b) with hTdef
   -- the coefficients are bounded by `2 |W n| + 2`
   have hTa : coeffMax a ≤ 2 * wordLength (W n) + 2 := by
@@ -620,13 +609,11 @@ theorem irreducible_case {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin
       have h1 : coeffMax b ≤ 0 := hmax ▸ le_max_right _ _
       rw [coeffMax] at h1
       exact le_antisymm h1 (Nat.zero_le _)
-    have haz : ∀ i, a i = 0 := by
-      intro i
+    have haz (i) : a i = 0 := by
       have hle' := Finset.le_sup (f := fun i => (a i).natAbs) (Finset.mem_univ i)
       rw [ha0] at hle'
       exact Int.natAbs_eq_zero.mp (Nat.le_zero.mp hle')
-    have hbz : ∀ j, b j = 0 := by
-      intro j
+    have hbz (j) : b j = 0 := by
       have hle' := Finset.le_sup (f := fun j => (b j).natAbs) (Finset.mem_univ j)
       rw [hb0] at hle'
       exact Int.natAbs_eq_zero.mp (Nat.le_zero.mp hle')

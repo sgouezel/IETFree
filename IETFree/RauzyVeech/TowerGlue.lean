@@ -39,8 +39,8 @@ theorem real_eq_qApply (P : IETDatum₂ α n) (μ : Measure ℝ) {lam : α → �
     (fun a => μ.real (InvariantMeasure.cellOf P lam a))
       = IETDatum₂.qApply (IETDatum₂.Path.Q P γ) (fun b => (μ (κ b)).toReal) := by
   funext a
-  have hne : ∀ b, (((IETDatum₂.Path.Q P γ a b).toNat : ℝ≥0∞)) * μ (κ b) ≠ ⊤ :=
-    fun b => ENNReal.mul_ne_top (by simp) (hfin b)
+  have hne (b) : (((IETDatum₂.Path.Q P γ a b).toNat : ℝ≥0∞)) * μ (κ b) ≠ ⊤ := ENNReal.mul_ne_top
+      (by simp) (hfin b)
   rw [Measure.real, htower a, ENNReal.toReal_sum (fun b _ => hne b)]
   rw [IETDatum₂.qApply_apply]
   refine Finset.sum_congr rfl fun b _ => ?_

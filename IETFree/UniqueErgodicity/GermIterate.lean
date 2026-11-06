@@ -214,8 +214,8 @@ theorem germMapOf_orbit_infinite (hT : IsCutSet (⇑T) 0 1 s) (hH2 : NoPeriodicL
     have h1 := congrArg SplitI.proj hij
     rwa [proj_iterate_germMapOf_leftGerm hT hIcc hcD i,
       proj_iterate_germMapOf_leftGerm hT hIcc hcD j] at h1
-  have key : ∀ p q : ℕ, p ≤ q → (leftLimit hT)^[p] c = (leftLimit hT)^[q] c → p = q := by
-    intro p q hpq hpqeq
+  have key (p q : ℕ) (hpq : p ≤ q) (hpqeq : (leftLimit hT)^[p] c = (leftLimit hT)^[q]
+      c) : p = q := by
     rcases eq_or_lt_of_le hpq with heq | hlt
     · exact heq
     · exfalso

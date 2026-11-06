@@ -5,9 +5,9 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.RauzyVeech.CylinderRecurrence
 public import IETFree.RauzyVeech.MainComponents
 public import IETFree.RauzyVeech.RichPath.BoundedLag
-public import IETFree.RauzyVeech.CylinderRecurrence
 public import IETFree.RauzyVeech.RichPath.NodeHeight
 
 /-!
@@ -134,7 +134,6 @@ theorem step_pinned (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
       ENNReal.ofReal δ * simplexVolumeOn α (IETDatum₂.simplexCyl P w) ≤ simplexVolumeOn α F ∧
       ∀ x ∈ F, ∃ m ≥ w.length, IETDatum₂.vertex P (IETDatum₂.pathWord P x m) = π₀ ∧
         x ∈ IETDatum₂.simplexCyl P (IETDatum₂.pathWord P x m ++ γ₀) := by
-  classical
   obtain ⟨C, hC, hS⟩ := h
   obtain ⟨u₀, hu₀⟩ := hπ
   have hC1 : 1 ≤ C := le_of_lt hC
@@ -159,7 +158,7 @@ theorem step_pinned (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
   set pd : List Bool → List Bool := fun δ => BoundedLag.padWord P (IETDatum₂.vertex P (w ++ δ))
     with hpd
   -- the balanced descendants are balanced in the sense of bounded distortion
-  have hbal : ∀ δ ∈ S, BoundedLag.Bal P (w ++ δ) C := fun δ hδ => bal_of_good P hC1 (hgood δ hδ)
+  have hbal (δ) (hδ : δ ∈ S) : BoundedLag.Bal P (w ++ δ) C := bal_of_good P hC1 (hgood δ hδ)
   -- the child cylinder of each member of the family
   set F : Set (α → ℝ≥0) :=
     ⋃ δ ∈ S, IETDatum₂.simplexCyl P (w ++ (δ ++ (pd δ ++ (u₀ ++ γ₀)))) with hF
@@ -171,10 +170,10 @@ theorem step_pinned (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     exact PosBlock.simplexCyl_append_left P hP hn w (δ ++ (pd δ ++ (u₀ ++ γ₀))) hxδ
   · -- the mass of `F`
     have hanti := hpf.antichain
-    have hdisj : ∀ a ∈ S, ∀ b ∈ S, a ≠ b →
+    have hdisj (a) (ha : a ∈ S) : ∀ b ∈ S, a ≠ b →
         Disjoint (IETDatum₂.simplexCyl P (w ++ (a ++ (pd a ++ (u₀ ++ γ₀)))))
           (IETDatum₂.simplexCyl P (w ++ (b ++ (pd b ++ (u₀ ++ γ₀))))) := by
-      intro a ha b hb hne
+      intro b hb hne
       have h1 : IETDatum₂.simplexCyl P (w ++ (a ++ (pd a ++ (u₀ ++ γ₀))))
           ⊆ IETDatum₂.simplexCyl P (w ++ a) := by
         simpa only [List.append_assoc] using
@@ -192,10 +191,9 @@ theorem step_pinned (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
         = ∑ δ ∈ S, simplexVolumeOn α (IETDatum₂.simplexCyl P (w ++ δ)) :=
       BalancedCylinders.volume_iUnion_antichain P hP hn w S hanti
     -- each child carries a definite fraction of its parent
-    have hterm : ∀ δ ∈ S, ENNReal.ofReal δ₂ *
+    have hterm (δ) (hδ : δ ∈ S) : ENNReal.ofReal δ₂ *
         simplexVolumeOn α (IETDatum₂.simplexCyl P (w ++ δ)) ≤
           simplexVolumeOn α (IETDatum₂.simplexCyl P (w ++ (δ ++ (pd δ ++ (u₀ ++ γ₀))))) := by
-      intro δ hδ
       have hpdδ : pd δ = BoundedLag.padWord P (IETDatum₂.vertex P (w ++ δ)) := by
         rw [hpd]
       have hcond : δ₂ ≤ CylinderMass.cond P (w ++ δ) (pd δ ++ (u₀ ++ γ₀)) := by
@@ -298,7 +296,6 @@ theorem levy_cylinder (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
         ENNReal.ofReal δ * simplexVolumeOn α (IETDatum₂.simplexCyl P w) ≤ simplexVolumeOn α Fw ∧
         Disjoint (Fw \ CylRec.Nbad P) Z) :
     simplexVolumeOn α Z = 0 := by
-  classical
   set c : ℝ≥0∞ := (simplexVolumeOn α (Set.univ : Set (α → ℝ≥0)))⁻¹ with hc
   have hμuniv : simplexVolumeOn α (Set.univ : Set (α → ℝ≥0)) = volume (region (n - 1)) :=
     CylRec.simplexVolumeOn_univ P
@@ -309,9 +306,8 @@ theorem levy_cylinder (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
   have hcne : c ≠ 0 := by
     rw [hc]
     simpa using hμtop
-  have hscale : ∀ s : Set (α → ℝ≥0),
-      (c • simplexVolumeOn α) s = c * simplexVolumeOn α s := by
-    intro s; rw [Measure.smul_apply, smul_eq_mul]
+  have hscale (s : Set (α → ℝ≥0)) : (c • simplexVolumeOn α) s = c * simplexVolumeOn α
+      s := by rw [Measure.smul_apply, smul_eq_mul]
   have hprob : (c • simplexVolumeOn α) Set.univ = 1 := by
     rw [hscale, hc]
     exact ENNReal.inv_mul_cancel hμ0 hμtop
@@ -323,11 +319,9 @@ theorem levy_cylinder (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     obtain ⟨Fw, hFwsub, hFwbd, hFwdisj⟩ := h k hk y.1 y.2
     refine ⟨Fw \ CylRec.Nbad P, ?_, ?_, ?_⟩
     · intro x hx
-      have hxN : x ∉ CylRec.Nbad P := hx.2
       have hp : IETDatum₂.pathWord P x k = y.1 := by
-        have h := (CylRec.mem_cyl_iff_pathWord P hP hn hxN (w := y.1)).mp (hFwsub hx.1)
+        have h := (CylRec.mem_cyl_iff_pathWord P hP hn hx.2 (w := y.1)).mp (hFwsub hx.1)
         rwa [y.2] at h
-      change CylRec.lvl P k x = y
       exact Subtype.ext hp
     · have hatom_eq : {x : α → ℝ≥0 | CylRec.lvl P k x = y} \ CylRec.Nbad P =
           IETDatum₂.simplexCyl P y.1 \ CylRec.Nbad P := by

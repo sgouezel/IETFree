@@ -128,10 +128,9 @@ theorem sum_cond_levelWords (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 
   | succ N ih =>
     have hdisj := pairwiseDisjoint_levelWords N
     rw [levelWords, Finset.sum_biUnion hdisj]
-    have hstep : ∀ γ ∈ levelWords N,
-        ∑ e ∈ ({γ ++ [true], γ ++ [false]} : Finset (List Bool)), CylinderMass.cond P w e
+    have hstep (γ) (_ : γ ∈ levelWords N) : ∑ e ∈ ({γ ++ [true], γ ++ [false]} : Finset
+        (List Bool)), CylinderMass.cond P w e
           = CylinderMass.cond P w γ := by
-      intro γ _
       rw [Finset.sum_pair (by simp)]
       rw [CylinderMass.cond_append, CylinderMass.cond_append,
         ← mul_add, NodeHeight.cond_arrow_sum P hP hn (w ++ γ)]
@@ -262,10 +261,9 @@ theorem sum_st_append_singleton (P : IETDatum₂ α n) (hP : P.Irreducible) (hn 
     (v : List Bool) (e : Bool) :
     ∑ b, NodeHeight.st P (v ++ [e]) b
       = ∑ b, NodeHeight.st P v b + NodeHeight.st P v ((IETDatum₂.vertex P v).last e) := by
-  have hterm : ∀ b, NodeHeight.st P (v ++ [e]) b
+  have hterm (b) : NodeHeight.st P (v ++ [e]) b
       = NodeHeight.st P v b + (if b = (IETDatum₂.vertex P v).last (!e)
           then NodeHeight.st P v ((IETDatum₂.vertex P v).last e) else 0) := by
-    intro b
     have h := CylinderMass.cs_append_singleton P hP hn v e b
     simpa [NodeHeight.st] using h
   calc ∑ b, NodeHeight.st P (v ++ [e]) b
@@ -301,8 +299,7 @@ theorem sum_st_ge [Nonempty α] (P : IETDatum₂ α n) (hP : P.Irreducible) (hn 
 /-- The sum of the heights is at most `#α` times the maximum. -/
 theorem sum_st_le (P : IETDatum₂ α n) (v : List Bool) {R : ℝ} (hR : Mx P v ≤ R) :
     ∑ b, NodeHeight.st P v b ≤ (Fintype.card α : ℝ) * R := by
-  have hb : ∀ b, NodeHeight.st P v b ≤ R := fun b =>
-    (st_le_Mx P v b).trans hR
+  have hb (b) : NodeHeight.st P v b ≤ R := (st_le_Mx P v b).trans hR
   calc ∑ b, NodeHeight.st P v b ≤ ∑ _b : α, R := Finset.sum_le_sum fun b _ => hb b
     _ = (Fintype.card α : ℝ) * R := by
         rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
@@ -520,12 +517,11 @@ theorem exists_stopfam_of_good (P : IETDatum₂ α n) (hP : P.Irreducible)
       ∃ i ∈ Finset.range (δ.length + 1), Huge P w (δ.take i))
     {δ : List Bool} (hlen : δ.length = N) (hgood : GoodFirst P A' w δ) :
     ∃ η ∈ StopFam P A' w N, η <+: δ := by
-  classical
   obtain ⟨j, hjmem, hjfirst, hcase⟩ := hgood
   have hjle : j ≤ δ.length := by rw [Finset.mem_range] at hjmem; omega
   have hlenj : (δ.take j).length = j := by rw [List.length_take, Nat.min_eq_left hjle]
-  have hbelow : ∀ g, g < j → ∀ b : α, NodeHeight.st P (w ++ δ.take g) b ≤ thr P w := by
-    intro g hg b
+  have hbelow (g) (hg : g < j) : ∀ b : α, NodeHeight.st P (w ++ δ.take g) b ≤ thr P w := by
+    intro b
     have hns := hjfirst g (by rw [Finset.mem_range]; exact hg)
     exact (st_le_Mx P (w ++ δ.take g) b).trans
       (not_lt.mp fun hc => hns (Or.inl hc))
@@ -533,8 +529,8 @@ theorem exists_stopfam_of_good (P : IETDatum₂ α n) (hP : P.Irreducible)
     rcases hcase with ⟨-, hc⟩ | ⟨-, -, hc⟩
     · exact hc
     · exact hc
-  have hminAt : ∀ g, g < j → ¬ StopW P A' w (δ.take g) := by
-    intro g hg hW
+  have hminAt (g) (hg : g < j) : ¬ StopW P A' w (δ.take g) := by
+    intro hW
     have hgl : g < δ.length := lt_of_lt_of_le hg hjle
     rcases stopEv_of_stopW_take hW hgl with hSE | hSE
     · exact hjfirst (g - 1) (by rw [Finset.mem_range]; omega) hSE
@@ -551,9 +547,9 @@ theorem exists_stopfam_of_good (P : IETDatum₂ α n) (hP : P.Irreducible)
       · exact hbelow i hlt b
       · subst heq
         exact hcleanJ b hb
-    have hmin : ∀ g ∈ Finset.range (δ.take j).length,
-        ¬ StopW P A' w ((δ.take j).take g) := by
-      intro g hg hW
+    have hmin (g) (hg : g ∈ Finset.range (δ.take j).length) : ¬ StopW P A' w ((δ.take
+        j).take g) := by
+      intro hW
       rw [Finset.mem_range, hlenj] at hg
       have htake : (δ.take j).take g = δ.take g := by
         rw [List.take_take, Nat.min_eq_left (le_of_lt hg)]
@@ -595,9 +591,9 @@ theorem exists_stopfam_of_good (P : IETDatum₂ α n) (hP : P.Irreducible)
         · exact hjfirst (j - 1) (by rw [Finset.mem_range]; omega)
             (Or.inr ⟨by omega, exitArrow_of_stopW_take hjlt hpos heq hEA'⟩)
       · exact hH hHj
-    have hmin : ∀ g ∈ Finset.range (δ.take (j + 1)).length,
-        ¬ StopW P A' w ((δ.take (j + 1)).take g) := by
-      intro g hg hW
+    have hmin (g) (hg : g ∈ Finset.range (δ.take (j + 1)).length) : ¬ StopW P A' w
+        ((δ.take (j + 1)).take g) := by
+      intro hW
       rw [Finset.mem_range, hlenS] at hg
       have htake : (δ.take (j + 1)).take g = δ.take g := by
         rw [List.take_take, Nat.min_eq_left (by omega)]

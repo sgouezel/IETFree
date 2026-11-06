@@ -94,9 +94,8 @@ theorem mem_markCuts {D : IETDatum n} {x : ℝ} :
 /-- The cut set is literally `mkIETCuts`, the cut set of `isIET_mkIETFun`. -/
 theorem mkIETCuts_eq_markCuts (D : IETDatum n) : mkIETCuts D.lam 0 1 = D.markCuts := by
   have hsum : (∑ i, (D.lam i : ℝ)) = 1 := D.sum_lam
-  have hmem : ∀ c ∈ Finset.univ.image (fun i : Fin n => leftEnd D.lam i),
+  have hmem (c) (hc : c ∈ Finset.univ.image (fun i : Fin n => leftEnd D.lam i)) :
       c ∈ Set.Ico (0 : ℝ) 1 := by
-    intro c hc
     obtain ⟨i, -, rfl⟩ := Finset.mem_image.mp hc
     exact ⟨leftEnd_nonneg D.lam i, by rw [← hsum]; exact D.leftEnd_lt_sum i⟩
   rw [mkIETCuts, hsum, if_neg (lt_irrefl (1 : ℝ)), Finset.union_empty]
@@ -249,7 +248,6 @@ theorem splitting_of_imageLeft_relation {d e : ℕ} [NeZero d] [NeZero e]
     (h : imageLeft π lam k + imageLeft σ mu l - leftEnd mu l = leftEnd lam n) :
     π k = n ∧ (∀ i : Fin d, (π i).val < n.val ↔ i.val < n.val) ∧ σ l = l ∧
       ∀ j : Fin e, (σ j).val < l.val ↔ j.val < l.val := by
-  classical
   set a : Fin d → ℤ := fun i =>
     (if (π i).val < (π k).val then 1 else 0) - (if i.val < n.val then 1 else 0) with ha_def
   set b : Fin e → ℤ := fun j =>
@@ -263,10 +261,10 @@ theorem splitting_of_imageLeft_relation {d e : ℕ} [NeZero d] [NeZero e]
   have hrel : (∑ i, (a i : ℝ) * (lam i : ℝ)) + (∑ j, (b j : ℝ) * (mu j : ℝ)) = 0 := by
     rw [hlam, hmu]
     linarith
-  have hA : ∀ i, |a i| ≤ 1 := fun i => by
+  have hA (i) : |a i| ≤ 1 := by
     rw [ha_def]
     exact abs_ite_sub_ite_le _ _
-  have hB : ∀ j, |b j| ≤ 1 := fun j => by
+  have hB (j) : |b j| ≤ 1 := by
     rw [hb_def]
     exact abs_ite_sub_ite_le _ _
   -- the coefficients here are even in `{-1,0,1}`, but `relation_of_good` is stated for `≤ 2`
@@ -348,7 +346,6 @@ theorem splitting_of_imageLeft_relation_add {d e : ℕ} [NeZero d] [NeZero e]
       = leftEnd mu n) :
     σ 0 = n ∧ (∀ j : Fin e, (σ j).val < n.val ↔ j.val < n.val) ∧
       π k = 0 ∧ π m = m ∧ ∀ i : Fin d, (π i).val < m.val ↔ i.val < m.val := by
-  classical
   set a : Fin d → ℤ := fun i => (if (π i).val < (π k).val then 1 else 0)
     + (if (π i).val < (π m).val then 1 else 0) - (if i.val < m.val then 1 else 0) with ha_def
   set b : Fin e → ℤ := fun j => (if (σ j).val < (σ l).val then 1 else 0)
@@ -364,10 +361,10 @@ theorem splitting_of_imageLeft_relation_add {d e : ℕ} [NeZero d] [NeZero e]
   have hrel : (∑ i, (a i : ℝ) * (lam i : ℝ)) + (∑ j, (b j : ℝ) * (mu j : ℝ)) = 0 := by
     rw [hlam, hmu]
     linarith
-  have hA : ∀ i, |a i| ≤ 2 := fun i => by
+  have hA (i) : |a i| ≤ 2 := by
     rw [ha_def]
     exact abs_ite_add_ite_sub_ite_le _ _ _
-  have hB : ∀ j, |b j| ≤ 2 := fun j => by
+  have hB (j) : |b j| ≤ 2 := by
     rw [hb_def]
     exact abs_ite_sub_ite_sub_ite_le _ _ _
   obtain ⟨haconst, hbconst, hsum0⟩ := relation_of_good (p := (lam, mu)) hgood hA hB hl hm hrel
@@ -394,9 +391,8 @@ theorem splitting_of_imageLeft_relation_add {d e : ℕ} [NeZero d] [NeZero e]
       rw [if_neg (lt_irrefl _)] at hk1
       split_ifs at hk1 <;> omega
   -- hence every coefficient vanishes
-  have ha : ∀ i, a i = 0 := fun i => by rw [haconst i, ha0]
-  have hb : ∀ j, b j = 0 := by
-    intro j
+  have ha (i) : a i = 0 := by rw [haconst i, ha0]
+  have hb (j) : b j = 0 := by
     rw [hbconst j]
     linarith [hsum0, ha0]
   -- the `b` relation: `σ l` is the `n`-th singularity of `σ`, and `l = 0`
@@ -449,24 +445,21 @@ theorem splitting_of_imageLeft_relation_add {d e : ℕ} [NeZero d] [NeZero e]
     have hlt : (π m).val < m.val := by rw [hm']; exact hpos
     have h2 := (perm_eq_of_preimage π k m hiff).2 m
     exact absurd (h2.mp hlt) (lt_irrefl m)
-  have hsplit_main : ∀ i : Fin d, (π i).val < m.val ↔ i.val < m.val := by
+  have hsplit_main (i : Fin d) : (π i).val < m.val ↔ i.val < m.val := by
     rcases hkm with hk | hm'
-    · have hiff : ∀ i : Fin d, (π i).val < (π m).val ↔ i.val < m.val := by
-        intro i
+    · have hiff (i : Fin d) : (π i).val < (π m).val ↔ i.val < m.val := by
         have h := ha1 i
         rw [hk] at h
         simpa using h
-      exact (perm_eq_of_preimage π m m hiff).2
-    · have hiff : ∀ i : Fin d, (π i).val < (π k).val ↔ i.val < m.val := by
-        intro i
+      exact (perm_eq_of_preimage π m m hiff).2 i
+    · have hiff (i : Fin d) : (π i).val < (π k).val ↔ i.val < m.val := by
         have h := ha1 i
         rw [hm'] at h
         simpa using h
-      exact (perm_eq_of_preimage π k m hiff).2
+      exact (perm_eq_of_preimage π k m hiff).2 i
   have hmfix : π m = m := by
     rcases hkm with hk | hm'
-    · have hiff : ∀ i : Fin d, (π i).val < (π m).val ↔ i.val < m.val := by
-        intro i
+    · have hiff (i : Fin d) : (π i).val < (π m).val ↔ i.val < m.val := by
         have h := ha1 i
         rw [hk] at h
         simpa using h
@@ -477,8 +470,7 @@ theorem splitting_of_imageLeft_relation_add {d e : ℕ} [NeZero d] [NeZero e]
   have hk0 : π k = 0 := by
     rcases hkm with hk | hm'
     · exact hk
-    · have hiff : ∀ i : Fin d, (π i).val < (π k).val ↔ i.val < m.val := by
-        intro i
+    · have hiff (i : Fin d) : (π i).val < (π k).val ↔ i.val < m.val := by
         have h := ha1 i
         rw [hm'] at h
         simpa using h
@@ -494,10 +486,8 @@ theorem IsCutSet.sum_cellLen_filter {F : ℝ → ℝ} {S : Finset ℝ} (hS : IsC
     ∑ j ∈ Finset.univ.filter
         (fun j : Fin S.card => u ≤ hS.cellStarts j ∧ hS.cellStarts j < c),
         hS.cellLen j = c - u := by
-  classical
   obtain ⟨k₀, hk₀⟩ := hS.cellStarts_surj hu
   obtain ⟨k₁, hk₁⟩ := hS.cellStarts_surj hc
-  have hmono := hS.cellStarts_strictMono
   have hklt : k₀ < k₁ := by
     rw [← hS.cellStarts_lt_iff, hk₀, hk₁]
     exact huc
@@ -507,7 +497,7 @@ theorem IsCutSet.sum_cellLen_filter {F : ℝ → ℝ} {S : Finset ℝ} (hS : IsC
       = Finset.univ.filter (fun j : Fin S.card => k₀ ≤ j ∧ j < k₁) := by
     ext j
     simp only [Finset.mem_filter, Finset.mem_univ, true_and]
-    rw [← hk₀, ← hk₁, hmono.le_iff_le, hS.cellStarts_lt_iff]
+    rw [← hk₀, ← hk₁, hS.cellStarts_strictMono.le_iff_le, hS.cellStarts_lt_iff]
   -- and the latter is `{j < k₁}` minus `{j < k₀}`
   have hsplit : Finset.univ.filter (fun j : Fin S.card => k₀ ≤ j ∧ j < k₁)
       = (Finset.univ.filter (fun j : Fin S.card => j < k₁)).filter (fun j => ¬ (j < k₀)) := by
@@ -540,7 +530,6 @@ theorem IsCutSet.exists_imageStart_of_mapsTo {e : Equiv ℝ ℝ} {S : Finset ℝ
     (hS : IsCutSet (⇑e) 0 1 S) {u c : ℝ} (hu : u ∈ S) (hc : c ∈ S) (huc : u < c)
     (hinv : ∀ x ∈ Set.Ico u c, ⇑e x ∈ Set.Ico u c) :
     ∃ x ∈ S, ⇑e x = c := by
-  classical
   obtain ⟨k₁, hk₁⟩ := hS.cellStarts_surj hc
   -- the cells starting in `[u, c)`
   set J : Finset (Fin S.card) :=
@@ -568,9 +557,9 @@ theorem IsCutSet.exists_imageStart_of_mapsTo {e : Equiv ℝ ℝ} {S : Finset ℝ
         exact hjc
       simp only [Fin.lt_def] at h5
       omega
-  have hcell_sub : ∀ j ∈ J,
-      Set.Ico (hS.cellStarts j) (hS.cellPos (j.val + 1)) ⊆ Set.Ico u c := fun j hj =>
-    Set.Ico_subset_Ico (hmemJ j |>.mp hj).1 (hnext j hj)
+  have hcell_sub (j) (hj : j ∈ J) :
+      Set.Ico (hS.cellStarts j) (hS.cellPos (j.val + 1)) ⊆ Set.Ico u c := Set.Ico_subset_Ico (hmemJ
+          j |>.mp hj).1 (hnext j hj)
   -- the union of their images
   set A : Set ℝ := ⋃ j ∈ J, ⇑e '' Set.Ico (hS.cellStarts j) (hS.cellPos (j.val + 1)) with hA
   have hA_sub : A ⊆ Set.Ico u c := by
@@ -591,18 +580,16 @@ theorem IsCutSet.exists_imageStart_of_mapsTo {e : Equiv ℝ ℝ} {S : Finset ℝ
     rw [hA, measure_biUnion_finset hdisj (fun j _ => by
       rw [hS.image_cell j]
       exact measurableSet_Ico)]
-    have hterm : ∀ j ∈ J, volume (⇑e '' Set.Ico (hS.cellStarts j) (hS.cellPos (j.val + 1)))
+    have hterm (j) (_ : j ∈ J) : volume (⇑e '' Set.Ico (hS.cellStarts j) (hS.cellPos (j.val + 1)))
         = ENNReal.ofReal (hS.cellLen j) := by
-      intro j _
       rw [hS.image_cell j, Real.volume_Ico]
       congr 1
       ring
     rw [Finset.sum_congr rfl hterm, ← ENNReal.ofReal_sum_of_nonneg (fun j _ => hlen_nonneg j)]
     rw [show (∑ j ∈ J, hS.cellLen j) = c - u from hS.sum_cellLen_filter hu hc huc]
   -- the contradiction: a cell outside `J` whose image starts below `c` and straddles it
-  have hcontra : ∀ j : Fin S.card, j ∉ J → ⇑e (hS.cellStarts j) < c →
-      c < ⇑e (hS.cellStarts j) + hS.cellLen j → False := by
-    intro j hjJ hltc hltc'
+  have hcontra (j : Fin S.card) (hjJ : j ∉ J) (hltc : ⇑e (hS.cellStarts j) < c) (hltc'
+      : c < ⇑e (hS.cellStarts j) + hS.cellLen j) : False := by
     set B : Set ℝ := Set.Ico (max (⇑e (hS.cellStarts j)) u) c with hB
     have hBsub : B ⊆ ⇑e '' Set.Ico (hS.cellStarts j) (hS.cellPos (j.val + 1)) := by
       rw [hS.image_cell j]
@@ -747,7 +734,6 @@ theorem IETDatum.pairSplitting_of_mark_image {d e : ℕ} [NeZero d] [NeZero e] (
     (E : IETDatum e) (hp : ¬ IsBadParam (D.v, E.v)) {k n : Fin d}
     (h : E.toFun (D.toFun (D.mark k.castSucc)) = D.mark n.castSucc) :
     IsPairSplitting D E (D.mark n.castSucc) := by
-  classical
   have hx01 : D.mark k.castSucc ∈ Set.Ico (0 : ℝ) 1 := by
     refine ⟨(D.mark_mem_Icc _).1, ?_⟩
     have h1 : D.mark k.castSucc < D.mark k.succ := by
@@ -823,7 +809,6 @@ theorem isBadParam_swap {d e : ℕ} {q : PReal d e} :
 /-- **The preimage of `0` under `D` is a marked point of `D`.** -/
 theorem IETDatum.exists_mark_of_toFun_eq_zero {n : ℕ} [NeZero n] (D : IETDatum n) {c : ℝ}
     (hc : c ∈ Set.Ico (0 : ℝ) 1) (h : D.toFun c = 0) : ∃ m : Fin n, D.mark m.castSucc = c := by
-  classical
   set m := idx D.lam c hc.1 with hm
   have hcmem : c ∈ Set.Ico (D.mark m.castSucc) (D.mark m.succ) :=
     ⟨idx_mem D.lam c hc.1, by
@@ -843,7 +828,6 @@ theorem leftEnd_eq_zero_of_imageLeft_eq {d e : ℕ} [NeZero d] [NeZero e]
     {lam : Fin d → ℝ≥0} {mu : Fin e → ℝ≥0} {σ : Equiv.Perm (Fin e)}
     (hgood : ¬ IsBadParam (toReal (lam, mu))) (hl : lam ∈ simplex d) (hm : mu ∈ simplex e)
     {n : Fin d} {l : Fin e} (h : imageLeft σ mu l = leftEnd lam n) : leftEnd lam n = 0 := by
-  classical
   set a : Fin d → ℤ := fun i => -(if i.val < n.val then 1 else 0) with ha_def
   set b : Fin e → ℤ := fun j => (if (σ j).val < (σ l).val then 1 else 0) with hb_def
   have hlam : (∑ i, (a i : ℝ) * (lam i : ℝ)) = -leftEnd lam n := by
@@ -861,12 +845,10 @@ theorem leftEnd_eq_zero_of_imageLeft_eq {d e : ℕ} [NeZero d] [NeZero e]
   have hrel : (∑ i, (a i : ℝ) * (lam i : ℝ)) + (∑ j, (b j : ℝ) * (mu j : ℝ)) = 0 := by
     rw [hlam, hmu, h]
     ring
-  have hA : ∀ i, |a i| ≤ 2 := by
-    intro i
+  have hA (i) : |a i| ≤ 2 := by
     simp only [ha_def]
     split_ifs <;> simp
-  have hB : ∀ j, |b j| ≤ 2 := by
-    intro j
+  have hB (j) : |b j| ≤ 2 := by
     simp only [hb_def]
     split_ifs <;> simp
   obtain ⟨haconst, -, -⟩ := relation_of_good (p := (lam, mu)) hgood hA hB hl hm hrel
@@ -875,12 +857,11 @@ theorem leftEnd_eq_zero_of_imageLeft_eq {d e : ℕ} [NeZero d] [NeZero e]
     simp only [ha_def]
     have h : ¬ ((lastIdx d).val < n.val) := by
       simp only [lastIdx]
-      have h1 := n.isLt
       have h2 := NeZero.pos d
       omega
     rw [if_neg h]
     simp
-  have hzero : ∀ i, a i = 0 := fun i => by rw [haconst i, hlast]
+  have hzero (i) : a i = 0 := by rw [haconst i, hlast]
   have hn0 : n = 0 := by
     have h := hzero ⟨0, NeZero.pos d⟩
     simp only [ha_def] at h
@@ -910,7 +891,6 @@ theorem IETDatum.pairSplitting_of_mark_preimage {d e : ℕ} [NeZero d] [NeZero e
     (hc01 : c ∈ Set.Ico (0 : ℝ) 1)
     (h : E.toFun (D.toFun (D.mark k.castSucc)) = c)
     (hc : D.toFun c = E.mark n.castSucc) : IsPairSplitting D E c := by
-  classical
   have hy01 : imageLeft D.π D.lam k ∈ Set.Ico (0 : ℝ) 1 := by
     rw [← IETDatum.toFun_mark_castSucc D k]
     exact D.mapsTo (D.mark_mem_Ico k)
@@ -966,7 +946,6 @@ theorem IETDatum.false_of_preimage_mark {d e : ℕ} [NeZero d] [NeZero e] (D : I
     (hcpos : 0 < c) (hc : c = D.mark n.castSucc)
     (hDx : D.toFun x = E.mark j.castSucc)
     (h : E.toFun (D.toFun x) = c) : False := by
-  classical
   have hrel : imageLeft E.π E.lam j = leftEnd D.lam n := by
     rw [hDx, IETDatum.toFun_mark_castSucc E j, hc, IETDatum.mark_castSucc] at h
     exact h
@@ -986,7 +965,6 @@ theorem IETDatum.pairSplitting_of_preimage_preimage {d e : ℕ} [NeZero d] [NeZe
     (hDx : D.toFun x = E.mark j.castSucc)
     (hc : D.toFun c = E.mark n.castSucc)
     (h : E.toFun (D.toFun x) = c) : IsPairSplitting D E c := by
-  classical
   have hc_coord : c = imageLeft E.π E.lam j := by
     rw [← h, hDx, IETDatum.toFun_mark_castSucc E j]
   set m := idx D.lam c hc01.1 with hm
@@ -1045,20 +1023,16 @@ theorem exists_pairSplitting_of_invariant {d e : ℕ} [NeZero d] [NeZero e] (D :
     (hinv : ∀ x ∈ Set.Ico (0 : ℝ) 1, u ≤ x → x < c →
       E.toFun (D.toFun x) ∈ Set.Ico u c) :
     IsPairSplitting D E c := by
-  classical
   set S := D.markCuts ∪ D.isCutSet_markCuts.preimage E.markCuts with hSdef
   have hS : IsCutSet (fun x => E.toFun (D.toFun x)) 0 1 S := isCutSet_comp_markCuts D E
   have hc01 : c ∈ Set.Ico (0 : ℝ) 1 := hS.cuts_mem c hcS
   have hcpos : 0 < c := lt_of_le_of_lt hu0 huc
   -- the position lemma: `c` is the image of a cut
-  have hinv' : ∀ y ∈ Set.Ico u c, E.toFun (D.toFun y) ∈ Set.Ico u c := by
-    intro y hy
+  have hinv' (y) (hy : y ∈ Set.Ico u c) : E.toFun (D.toFun y) ∈ Set.Ico u c := by
     exact hinv y ⟨le_trans hu0 hy.1, lt_of_lt_of_le hy.2 hc01.2.le⟩ hy.1 hy.2
-  have hSe : IsCutSet (⇑(E.toIET * D.toIET).toEquiv) 0 1 S := hS
   obtain ⟨x, hxS, hFx⟩ :=
-    IsCutSet.exists_imageStart_of_mapsTo hSe huS hcS huc hinv'
+    IsCutSet.exists_imageStart_of_mapsTo (e := (E.toIET * D.toIET).toEquiv) hS huS hcS huc hinv'
   have hx01 : x ∈ Set.Ico (0 : ℝ) 1 := hS.cuts_mem x hxS
-  have hFx' : E.toFun (D.toFun x) = c := hFx
   -- the four cases
   rcases mem_comp_markCuts D E hxS with ⟨kx, hkx⟩ | ⟨jx, hjx⟩
   · rcases mem_comp_markCuts D E hcS with ⟨kc, hkc⟩ | ⟨jc, hjc⟩
@@ -1067,7 +1041,7 @@ theorem exists_pairSplitting_of_invariant {d e : ℕ} [NeZero d] [NeZero e] (D :
       obtain ⟨n', hn'⟩ := D.exists_castSucc_mark_of_lt_one hc01.2 hkc
       have heq : E.toFun (D.toFun (D.mark k'.castSucc)) = D.mark n'.castSucc := by
         rw [hk', hn']
-        exact hFx'
+        exact hFx
       have hres := D.pairSplitting_of_mark_image E hp (k := k') (n := n') heq
       rwa [hn'] at hres
     · -- case 1b: `x` is a singularity of `D`, `c` a preimage of one of `E`
@@ -1075,19 +1049,19 @@ theorem exists_pairSplitting_of_invariant {d e : ℕ} [NeZero d] [NeZero e] (D :
       obtain ⟨n', hn'⟩ := E.exists_castSucc_mark_of_lt_one (y := D.toFun c) (D.mapsTo hc01).2 hjc
       refine D.pairSplitting_of_mark_preimage E hp (k := k') (n := n') hc01 ?_ ?_
       · rw [hk']
-        exact hFx'
+        exact hFx
       · rw [hn']
   · rcases mem_comp_markCuts D E hcS with ⟨kc, hkc⟩ | ⟨jc, hjc⟩
     · -- case 2a: impossible
       obtain ⟨n', hn'⟩ := D.exists_castSucc_mark_of_lt_one hc01.2 hkc
       obtain ⟨j', hj'⟩ := E.exists_castSucc_mark_of_lt_one (y := D.toFun x) (D.mapsTo hx01).2 hjx
       exact absurd (D.false_of_preimage_mark E hp (n := n') (j := j') hcpos (by rw [hn'])
-        hj'.symm hFx') id
+        hj'.symm hFx) id
     · -- case 2b: both are preimages of singularities of `E`
       obtain ⟨j', hj'⟩ := E.exists_castSucc_mark_of_lt_one (y := D.toFun x) (D.mapsTo hx01).2 hjx
       obtain ⟨n', hn'⟩ := E.exists_castSucc_mark_of_lt_one (y := D.toFun c) (D.mapsTo hc01).2 hjc
       exact D.pairSplitting_of_preimage_preimage E hp (j := j') (n := n') hc01 hj'.symm
-        (by rw [hn']) hFx'
+        (by rw [hn']) hFx
 
 /-- **Lemma 3.2** (irreducibility on a block), reduced to the geometric core.  The cuts of the
 composition being what they are, a proper initial union of cells `[u, c)` inside a block that is

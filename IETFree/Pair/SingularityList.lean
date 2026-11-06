@@ -40,12 +40,10 @@ theorem exists_strictMono_comp {ι : Type*} [Fintype ι]
     {d e : ℕ} (A : ι → ParamAffine d e) {q₀ : PReal d e}
     (hA : Function.Injective (fun i => A i q₀)) :
     ∃ σ : Fin (Fintype.card ι) ≃ ι, StrictMono fun k => A (σ k) q₀ := by
-  classical
   set v : ι → ℝ := fun i => A i q₀ with hv
-  have hvA : Function.Injective v := hA
   -- the finite set of values, and its increasing enumeration
   have ht : (Finset.univ.image v).card = Fintype.card ι := by
-    rw [Finset.card_image_of_injective _ hvA, Finset.card_univ]
+    rw [Finset.card_image_of_injective _ hA, Finset.card_univ]
   set g := Finset.orderEmbOfFin (Finset.univ.image v) ht with hg
   have hex (k : Fin (Fintype.card ι)) : ∃ i, v i = g k := by
     have hk : g k ∈ Finset.univ.image v := Finset.orderEmbOfFin_mem _ _ k
@@ -66,14 +64,14 @@ theorem exists_strictMono_comp {ι : Type*} [Fintype ι]
         obtain ⟨k, -, rfl⟩ := Finset.mem_map.mp hy
         exact Finset.orderEmbOfFin_mem _ _ k
       have hcard : (Finset.univ.image v).card ≤ (Finset.univ.map g.toEmbedding).card := by
-        rw [Finset.card_image_of_injective _ hvA, Finset.card_map, Finset.card_univ,
+        rw [Finset.card_image_of_injective _ hA, Finset.card_map, Finset.card_univ,
           Finset.card_univ, Fintype.card_fin]
       exact Finset.eq_of_subset_of_card_le hsub hcard
     have hi : v i ∈ Finset.univ.map g.toEmbedding := by
       rw [hmap]
       exact Finset.mem_image.mpr ⟨i, Finset.mem_univ i, rfl⟩
     obtain ⟨k, -, hk⟩ := Finset.mem_map.mp hi
-    refine ⟨k, hvA ?_⟩
+    refine ⟨k, hA ?_⟩
     rw [Classical.choose_spec (hex k)]
     exact hk
   · -- increasing
@@ -85,7 +83,7 @@ theorem exists_strictMono_comp {ι : Type*} [Fintype ι]
 /-- **The cuts are strictly increasing** when all the lengths are positive. -/
 theorem leftEnd_lt_leftEnd {m : ℕ} {lam : Fin m → ℝ≥0} (hpos : Positive lam) {i i' : Fin m}
     (h : i < i') : leftEnd lam i < leftEnd lam i' := by
-  have hsub : ∀ j : Fin m, j < i → j < i' := fun j hj => lt_trans hj h
+  have hsub (j : Fin m) (hj : j < i) : j < i' := lt_trans hj h
   have hcongr : Finset.univ.filter (fun j : Fin m => j < i)
       = (Finset.univ.filter (fun j : Fin m => j < i')).filter (fun j : Fin m => j < i) := by
     ext j
@@ -138,7 +136,6 @@ theorem exists_ball_forall_imageLeft_lt {d e : ℕ} [NeZero d] [NeZero e]
         (mkIET1' (simplexMap d q.1) π hl)⁻¹
             (leftEnd (simplexMap e q.2) ⟨j.val + 1, by have := j.isLt; omega⟩)
           = preimageCutAffine π ⟨j.val + 1, by have := j.isLt; omega⟩ (k j) q) := by
-  classical
   -- for each cut of `g`, a cell of `f` and a ball
   have hstep : ∀ j : Fin (e - 1), ∃ (k : Fin d) (ε : ℝ), 0 < ε ∧
       Metric.ball q₀ ε ⊆ goodParams d e ∧
@@ -274,7 +271,7 @@ theorem singAffine_injective {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm 
       (simplexMap_mem_simplex_fin hr.2.1 hr.2.2) ?_ π _)
     intro hc
     have h1 := congrArg Fin.val hc
-    change b.val + 1 = 0 at h1
+    simp only [Fin.val_zero] at h1
     omega
   · -- a preimage of a cut of `g` and a cut of `f`
     beta_reduce at h
@@ -288,7 +285,7 @@ theorem singAffine_injective {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm 
       (simplexMap_mem_simplex_fin hr.2.1 hr.2.2) ?_ π _)
     intro hc
     have h1 := congrArg Fin.val hc
-    change a.val + 1 = 0 at h1
+    simp only [Fin.val_zero] at h1
     omega
   · -- two preimages of cuts of `g`
     beta_reduce at h
@@ -354,9 +351,8 @@ theorem strictMono_withEnds {d e n : ℕ} (hn : 1 ≤ n) (A : Fin (n - 1) → Pa
     {q : PReal d e} (h0 : ∀ k, 0 < A k q) (h1 : ∀ k, A k q < 1)
     (hA : StrictMono fun k => A k q) : StrictMono fun j => withEnds hn A j q := by
   intro j j' hjj'
-  change (withEnds hn A j) q < (withEnds hn A j') q
+  simp only []
   rw [withEnds_apply_eq, withEnds_apply_eq]
-  have hlt : j.val < j'.val := hjj'
   rcases eq_or_ne j.val 0 with hj | hj
   · rw [dif_pos hj]
     rcases eq_or_ne j'.val 0 with hj' | hj'
@@ -395,7 +391,7 @@ theorem cutAffine_lt_one {d e : ℕ} [NeZero d] {q : PReal d e} (hq : q.1 ∈ si
   have hmem : lastIdx d ∈ Finset.univ.filter (fun j : Fin d => ¬ j < i) := by
     simp only [Finset.mem_filter, Finset.mem_univ, true_and, not_lt]
     rw [Fin.le_def]
-    change d - 1 ≥ i.val
+    rw [lastIdx_val]
     have := i.isLt
     omega
   have hpos : 0 < ∑ j ∈ Finset.univ.filter (fun j : Fin d => ¬ j < i),
@@ -492,16 +488,13 @@ theorem exists_markedList {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fi
             = (mkIET1' (simplexMap d q.1) π hl)⁻¹
                 (leftEnd (simplexMap e q.2) ⟨j.val + 1, by have := j.isLt; omega⟩)) ∧
         (∀ m, A m = singAffine π k (τ m)) := by
-  classical
   have hmem₀ : q₀ ∈ Metric.ball q₀ ε₁ := Metric.mem_ball_self hε₁
   have hreg₀ := hreg₁ q₀ hmem₀
   have hl₀ : simplexMap d q₀.1 ∈ simplex d := simplexMap_mem_simplex_fin hreg₀.1.1 hreg₀.1.2
   have hm₀ : simplexMap e q₀.2 ∈ simplex e := simplexMap_mem_simplex_fin hreg₀.2.1 hreg₀.2.2
-  have hinv₀ : ∀ j : Fin (e - 1),
-      (mkIET1' (simplexMap d q₀.1) π hl₀)⁻¹
+  have hinv₀ (j : Fin (e - 1)) : (mkIET1' (simplexMap d q₀.1) π hl₀)⁻¹
           (leftEnd (simplexMap e q₀.2) ⟨j.val + 1, by have := j.isLt; omega⟩)
-        = preimageCutAffine π ⟨j.val + 1, by have := j.isLt; omega⟩ (k j) q₀ :=
-    fun j => hinv₁ q₀ hmem₀ j hl₀
+        = preimageCutAffine π ⟨j.val + 1, by have := j.isLt; omega⟩ (k j) q₀ := hinv₁ q₀ hmem₀ j hl₀
   have hinj₀ := singAffine_injective π k (hgood₁ hmem₀) hreg₀ hinv₀
   -- sorting
   have hcard : Fintype.card (Fin (d - 1) ⊕ Fin (e - 1)) = (d + e - 1) - 1 := by
@@ -517,8 +510,7 @@ theorem exists_markedList {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fi
   let A : Fin ((d + e - 1) - 1) → ParamAffine d e := fun kk => singAffine π k (τ kk)
   let s : Fin (d + e - 1 + 1) → ParamAffine d e := withEnds hn A
   -- the values of `A` lie in `(0, 1)`
-  have hApos : ∀ kk, 0 < A kk q₀ := by
-    intro kk
+  have hApos (kk) : 0 < A kk q₀ := by
     rcases h : τ kk with i | j
     · have heq : A kk q₀ = cutAffine (e := e) ⟨i.val + 1, by have := i.isLt; omega⟩ q₀ := by
         simp only [A, h, singAffine_inl]
@@ -535,8 +527,7 @@ theorem exists_markedList {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fi
         (j := ⟨j.val + 1, by have := j.isLt; omega⟩)
         (by simp only [ne_eq, Fin.ext_iff, Fin.val_zero]; have := j.isLt; omega)
         (k j) (hinv₀ j).symm).1
-  have hAlt : ∀ kk, A kk q₀ < 1 := by
-    intro kk
+  have hAlt (kk) : A kk q₀ < 1 := by
     rcases h : τ kk with i | j
     · have heq : A kk q₀ = cutAffine (e := e) ⟨i.val + 1, by have := i.isLt; omega⟩ q₀ := by
         simp only [A, h, singAffine_inl]
@@ -665,7 +656,7 @@ theorem markedCell_transl {d e n : ℕ} [NeZero d] (π : Equiv.Perm (Fin d))
       mkIET1' (simplexMap d v) π hl x = x + δ := by
   have hlam : (∑ i, (simplexMap d v i : ℝ)) = 1 := by
     rw [← NNReal.coe_sum]; exact_mod_cast hl
-  have hpos : ∀ i, 0 < simplexMap d v i := pos_simplexMap hv
+  have hpos (i) : 0 < simplexMap d v i := pos_simplexMap hv i
   have hcs := isCutSet_mkIET1 (simplexMap d v) π hl
   refine ⟨mkIET1' (simplexMap d v) π hl (s k.castSucc) - s k.castSucc, ?_⟩
   intro x hx1 hx2
@@ -764,7 +755,7 @@ theorem no_gcut_inside_image {d e n : ℕ} [NeZero d] (π : Equiv.Perm (Fin d))
   have heq : (⟨(τ.symm (Sum.inr j)).val + 1, by
       have := (τ.symm (Sum.inr j)).isLt; omega⟩ : Fin (n + 1)) = k.castSucc :=
     Fin.ext (by
-      change (τ.symm (Sum.inr j)).val + 1 = k.val
+      simp only [Fin.val_castSucc]
       omega)
   rw [heq] at hfx
   linarith
@@ -785,7 +776,6 @@ noncomputable def imageLenAffineRight {d e : ℕ} [NeZero e] (j : Fin e) : Param
   if h : j.val + 1 = e then
     AffineMap.const ℝ (PReal d e) (1 : ℝ) - ∑ m : Fin (e - 1), rightCoordAffine m
   else rightCoordAffine (d := d) ⟨j.val, by
-    have h1 := j.isLt
     have h2 := NeZero.pos e
     omega⟩
 
@@ -811,7 +801,6 @@ theorem imageLenAffineRight_eq {d e : ℕ} [NeZero e] {q : PReal d e}
   · rw [imageLenAffineRight_apply_last h, simplexMap, dif_pos h,
       Real.coe_toNNReal _ (by linarith [hq.2])]
   · have hj' : j.val < e - 1 := by
-      have h1 := j.isLt
       have h2 := NeZero.pos e
       omega
     rw [imageLenAffineRight_apply_free h, simplexMap_of_lt hq hj']
@@ -977,7 +966,7 @@ theorem markedPos_spec {d e n : ℕ} [NeZero d] (π : Equiv.Perm (Fin d))
           by have := (τ.symm (Sum.inl i)).isLt; omega⟩ : Fin (n + 1))
         = (⟨m.val + 1, by have := m.isLt; omega⟩ : Fin (n + 1)) := by
         refine Fin.ext ?_
-        change (τ.symm (Sum.inl i)).val + 1 = m.val + 1
+        simp only
         rw [hsymm]
       have hcutm := hcut i
       simp only [hidx] at hcutm
@@ -992,7 +981,7 @@ theorem markedPos_spec {d e n : ℕ} [NeZero d] (π : Equiv.Perm (Fin d))
           by have := (τ.symm (Sum.inr j')).isLt; omega⟩ : Fin (n + 1))
         = (⟨m.val + 1, by have := m.isLt; omega⟩ : Fin (n + 1)) := by
         refine Fin.ext ?_
-        change (τ.symm (Sum.inr j')).val + 1 = m.val + 1
+        simp only
         rw [hsymm]
       have hprem := hpre j'
       simp only [hidx] at hprem

@@ -40,8 +40,9 @@ From there, the mathematical content is Lemma 3.4 for almost every length vector
 repackaged into the permutations `mkIETEquiv p_i π 0` by `evalWord_toEquiv_eq_one`, with
 `simplexMap d (toReal p).1 = p.1` almost everywhere (`ae_toReal_simplexMap`).
 
-This file is the only place in the library that mentions the challenge's vocabulary
-(`evalWordEquiv`), and it carries the single `#print axioms` of the tree.
+The root theorem `main` is `Challenge.main` in its words, and carries the proof above; it is the
+only place in the library that mentions the challenge's vocabulary (`evalWordEquiv`), and it
+carries the single `#print axioms` of the tree.
 -/
 
 @[expose] public section
@@ -106,6 +107,14 @@ noncomputable def prodSimplexMap (d e : ℕ) :
     PReal d e → (Fin d → ℝ≥0) × (Fin e → ℝ≥0) :=
   fun z => (simplexMap d z.1, simplexMap e z.2)
 
+/-- **`toReal` inverts the parametrisation of the product of the two simplices**, at a point of
+the product of the two regions: the counterpart of `toReal_simplexMap` for `prodSimplexMap`. -/
+theorem toReal_prodSimplexMap {d e : ℕ} [NeZero d] [NeZero e] {z : PReal d e}
+    (h1 : z.1 ∈ simplexRegion d) (h2 : z.2 ∈ simplexRegion e) :
+    toReal (prodSimplexMap d e z) = z := by
+  obtain ⟨v, w⟩ := z
+  exact toReal_simplexMap h1.1 h2.1
+
 theorem measurable_prodSimplexMap (d e : ℕ) : Measurable (prodSimplexMap d e) := by
   unfold prodSimplexMap
   exact ((measurable_simplexMap d).comp measurable_fst).prodMk
@@ -126,7 +135,6 @@ theorem prod_simplexVolume_eq_map (d e : ℕ) :
 /-- **On the support of the simplex measure, the free coordinates invert `simplexMap`.** -/
 theorem ae_toReal_simplexMap {d e : ℕ} [NeZero d] [NeZero e] :
     ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)), prodSimplexMap d e (toReal p) = p := by
-  classical
   have hregion : ((volume.restrict (simplexRegion d)).prod
       (volume.restrict (simplexRegion e)))
       ((simplexRegion d ×ˢ simplexRegion e)ᶜ) = 0 := by
@@ -139,12 +147,11 @@ theorem ae_toReal_simplexMap {d e : ℕ} [NeZero d] [NeZero e] :
     measurableSet_eq_fun ((measurable_prodSimplexMap d e).comp continuous_toReal.measurable)
       measurable_id
   -- in the region, `toReal` inverts `simplexMap`
-  have hfixpoint : ∀ z ∈ (simplexRegion d ×ˢ simplexRegion e),
+  have hfixpoint (z) (hz : z ∈ (simplexRegion d ×ˢ simplexRegion e)) :
       prodSimplexMap d e (toReal (prodSimplexMap d e z)) = prodSimplexMap d e z := by
-    rintro ⟨v, w⟩ ⟨hv, hw⟩
-    change (simplexMap d (toReal (simplexMap d v, simplexMap e w)).1,
-      simplexMap e (toReal (simplexMap d v, simplexMap e w)).2) = (simplexMap d v, simplexMap e w)
-    rw [toReal_simplexMap hv.1 hw.1]
+    obtain ⟨v, w⟩ := z
+    obtain ⟨hv, hw⟩ := hz
+    rw [toReal_prodSimplexMap hv hw]
   rw [prod_simplexVolume_eq_map, ae_iff, ← Set.compl_ofPred,
     Measure.map_apply (measurable_prodSimplexMap d e) hS.compl]
   refine measure_mono_null (fun z hz => ?_) hregion
@@ -158,7 +165,6 @@ theorem ae_prod_of_ae_free {d e : ℕ} [NeZero d] [NeZero e]
     (h : ∀ᵐ z ∂((volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e))),
       P (prodSimplexMap d e z)) :
     ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)), P p := by
-  classical
   -- `toReal` inverts `simplexMap` almost everywhere
   have hcongr : ((((volume : Measure (Fin (d - 1) → ℝ)).restrict (simplexRegion d)).prod
       (volume.restrict (simplexRegion e))).map (prodSimplexMap d e)).map (toReal (d := d) (e := e))
@@ -166,9 +172,7 @@ theorem ae_prod_of_ae_free {d e : ℕ} [NeZero d] [NeZero e]
     rw [Measure.map_map continuous_toReal.measurable (measurable_prodSimplexMap d e),
       Measure.map_congr ?_, Measure.map_id]
     filter_upwards [ae_mem_simplexRegion_prod (d := d) (e := e)] with z hz
-    obtain ⟨v, w⟩ := z
-    change toReal (simplexMap d v, simplexMap e w) = (v, w)
-    exact toReal_simplexMap hz.1.1 hz.2.1
+    exact toReal_prodSimplexMap hz.1 hz.2
   -- the statement for almost every length vector, read through `toReal`
   have hA : ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)),
       P (prodSimplexMap d e (toReal p)) := by
@@ -198,9 +202,8 @@ theorem exists_word_ae {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d
   filter_upwards [main_theorem_of_blocks π σ,
     ae_mem_simplexRegion_prod (d := d) (e := e)] with z hz hzmem
   obtain ⟨a, b⟩ := z
-  have htw : toReal (prodSimplexMap d e (a, b)) = (a, b) := by
-    change toReal (simplexMap d a, simplexMap e b) = (a, b)
-    exact toReal_simplexMap hzmem.1.1 hzmem.2.1
+  have htw : toReal (prodSimplexMap d e (a, b)) = (a, b) :=
+    toReal_prodSimplexMap hzmem.1 hzmem.2
   rw [htw]
   intro D E hDπ hEπ hDv hEv
   obtain ⟨n, u, v, hcover, hfu, hgu, hw⟩ := hz D E hDπ hEπ hDv hEv
@@ -209,18 +212,21 @@ theorem exists_word_ae {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d
 /-! ## The theorem of the challenge file -/
 
 
-/-- **The weak challenge, with the library's hypotheses.**  Granting Masur–Veech's theorem and
-Veech's rigidity, for almost every pair of length vectors of total mass `1` the two exchanges
-satisfy a nontrivial relation in the group of permutations of `ℝ`.
+end ChallengeSolved
 
-The root theorem `main` below is the same statement, spelled with the permutations of `ℝ`. -/
-theorem main_of_library {d e : ℕ} [NeZero d] [NeZero e]
-    (π : Equiv.Perm (Fin d)) (σ : Equiv.Perm (Fin e)) :
+/-! ## The theorem of the challenge file -/
+
+/-- **Theorem 1.1 of the paper**: for almost every pair of length vectors of total mass `1`, the two
+exchanges satisfy a nontrivial relation in the group of permutations of `ℝ`.  This is
+`Challenge.main`, in its words, with nothing left as a hypothesis: Masur–Veech's theorem and
+Veech's rigidity are applied inside the proof. -/
+theorem main {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
+    (σ : Equiv.Perm (Fin e)) :
     ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)),
       ∃ w : FreeGroup (Fin 2), w ≠ 1 ∧
         evalWordEquiv w (mkIETEquiv p.1 π 0) (mkIETEquiv p.2 σ 0) = 1 := by
   -- Lemma 3.4 in the library's language
-  have hQ := exists_word_ae π σ
+  have hQ := ChallengeSolved.exists_word_ae π σ
   -- the free coordinates of almost every length vector lie in the region
   have hregmeas : MeasurableSet {p : (Fin d → ℝ≥0) × (Fin e → ℝ≥0) |
       toReal p ∈ simplexRegion d ×ˢ simplexRegion e} :=
@@ -228,41 +234,26 @@ theorem main_of_library {d e : ℕ} [NeZero d] [NeZero e]
       continuous_toReal.measurable
   have hreg : ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)),
       toReal p ∈ simplexRegion d ×ˢ simplexRegion e := by
-    rw [prod_simplexVolume_eq_map,
-      MeasureTheory.ae_map_iff (measurable_prodSimplexMap d e).aemeasurable hregmeas]
+    rw [ChallengeSolved.prod_simplexVolume_eq_map,
+      MeasureTheory.ae_map_iff (ChallengeSolved.measurable_prodSimplexMap d e).aemeasurable
+        hregmeas]
     filter_upwards [ae_mem_simplexRegion_prod (d := d) (e := e)] with z hz
     obtain ⟨v, w⟩ := z
-    change toReal (simplexMap d v, simplexMap e w) ∈ simplexRegion d ×ˢ simplexRegion e
-    rw [toReal_simplexMap hz.1.1 hz.2.1]
+    rw [ChallengeSolved.toReal_prodSimplexMap hz.1 hz.2]
     exact hz
-  filter_upwards [hQ, hreg, ae_toReal_simplexMap (d := d) (e := e)] with p hp hpmem hfix
+  filter_upwards [hQ, hreg, ChallengeSolved.ae_toReal_simplexMap (d := d) (e := e)]
+    with p hp hpmem hfix
   -- the data with lengths `p`
-  have h1 : (toReal p).1 ∈ simplexRegion d := hpmem.1
-  have h2 : (toReal p).2 ∈ simplexRegion e := hpmem.2
-  obtain ⟨w, hw1, hw2⟩ := hp ⟨π, (toReal p).1, h1⟩ ⟨σ, (toReal p).2, h2⟩ rfl rfl rfl rfl
+  obtain ⟨w, hw1, hw2⟩ := hp ⟨π, (toReal p).1, hpmem.1⟩ ⟨σ, (toReal p).2, hpmem.2⟩ rfl rfl rfl rfl
   refine ⟨w, hw1, ?_⟩
   -- the same word, in the permutations of `ℝ`
   have hw3 : evalWordEquiv w (mkIETEquiv (simplexMap d (toReal p).1) π 0)
       (mkIETEquiv (simplexMap e (toReal p).2) σ 0) = 1 :=
-    evalWord_toEquiv_eq_one hw2
+    ChallengeSolved.evalWord_toEquiv_eq_one hw2
   -- and the length vectors are those of `p`
   have hp1 : p.1 = simplexMap d (toReal p).1 := (congrArg Prod.fst hfix).symm
   have hp2 : p.2 = simplexMap e (toReal p).2 := (congrArg Prod.snd hfix).symm
   rwa [hp1, hp2]
-
-end ChallengeSolved
-
-/-! ## The theorem of the challenge file -/
-
-/-- **Theorem 1.1 of the paper**: for almost every pair of length vectors of total mass `1`, the two
-exchanges satisfy a nontrivial relation in the group of permutations of `ℝ`.  This is
-`Challenge.main`, in its words, with nothing left as a hypothesis. -/
-theorem main {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
-    (σ : Equiv.Perm (Fin e)) :
-    ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)),
-      ∃ w : FreeGroup (Fin 2), w ≠ 1 ∧
-        evalWordEquiv w (mkIETEquiv p.1 π 0) (mkIETEquiv p.2 σ 0) = 1 :=
-  ChallengeSolved.main_of_library π σ
 
 -- The axiom check of the library: the single `#print axioms` of the tree, for the main theorem.
 #print axioms main

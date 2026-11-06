@@ -139,20 +139,18 @@ theorem IsCompPresentation.lam_eq_sum {d e n : ℕ} [NeZero d] [NeZero e]
     (T : IsCompType lam π hl mu s a B) (i : Fin d) :
     (lam i : ℝ) = ∑ k ∈ Finset.Ico (a i.castSucc).val (a i.succ).val,
       (markExt s (k + 1) - markExt s k) := by
-  have htop := T.top
-  have hval := T.cut
   -- the value of `s` at the top of the `i`-th cell
   have hsucc : s (a i.succ) = upperEnd lam i := by
     rcases lt_or_eq_of_le (Nat.succ_le_of_lt i.isLt) with hlt | heq
     · have hcast : i.succ = (⟨i.val + 1, hlt⟩ : Fin d).castSucc := Fin.ext rfl
-      rw [hcast, hval ⟨i.val + 1, hlt⟩, leftEnd_eq_upperEnd_of_succ lam hlt]
+      rw [hcast, T.cut ⟨i.val + 1, hlt⟩, leftEnd_eq_upperEnd_of_succ lam hlt]
     · have hlast : i.succ = Fin.last d := Fin.ext heq
       have h1 : (∑ j, (lam j : ℝ)) = 1 := by rw [← NNReal.coe_sum, hl]; norm_num
-      rw [hlast, htop, P.top, upperEnd_of_max lam (fun j => by
+      rw [hlast, T.top, P.top, upperEnd_of_max lam (fun j => by
         rw [Fin.le_def]
         have := j.isLt
         omega), h1]
-  have hleft : s (a i.castSucc) = leftEnd lam i := hval i
+  have hleft : s (a i.castSucc) = leftEnd lam i := T.cut i
   have hAB : (a i.castSucc).val ≤ (a i.succ).val := by
     have hle : s (a i.castSucc) ≤ s (a i.succ) := by
       rw [hleft, hsucc, upperEnd_eq]
@@ -185,8 +183,6 @@ theorem IsCompPresentation.mu_eq_sum {d e n : ℕ} [NeZero d] [NeZero e]
     (T : IsCompType lam π hl mu s a B) (j : Fin e) :
     (mu j : ℝ) = ∑ k ∈ Finset.univ.filter (fun k : Fin n => B k = j),
       (s k.succ - s k.castSucc) := by
-  classical
-  have hB := T.image
   have hm1 : (∑ i, (mu i : ℝ)) = 1 := by rw [← NNReal.coe_sum, hm]; norm_num
   set f : ℝ → ℝ := ⇑(mkIET1' lam π hl) with hf
   set A : Set ℝ := Set.Ico (leftEnd mu j) (leftEnd mu j + (mu j : ℝ)) with hA
@@ -197,7 +193,8 @@ theorem IsCompPresentation.mu_eq_sum {d e n : ℕ} [NeZero d] [NeZero e]
     have hlt : s k.castSucc < s k.succ := P.mono (Fin.castSucc_lt_succ (i := k))
     have hf0 : f (s k.castSucc) = s k.castSucc + δ := hδ _ le_rfl hlt
     have hfx : f x = x + δ := hδ x hx1 hx2
-    obtain ⟨h1, h2⟩ := hB k
+    obtain ⟨h1, h2⟩ := T.image k
+    rw [← hf] at h1 h2
     rw [hf0] at h1 h2
     exact ⟨by rw [hfx]; linarith, by rw [hfx]; linarith⟩
   -- the preimage of the `j`-th cell of `g` is the union of the marked cells with `B = j`
@@ -248,9 +245,9 @@ theorem IsCompPresentation.mu_eq_sum {d e n : ℕ} [NeZero d] [NeZero e]
         linarith [hx'.2, hx.1]
     · exact fun k _ => measurableSet_Ico
   rw [hvolA] at hvol
-  have hnn : ∀ k ∈ Finset.univ.filter (fun k : Fin n => B k = j),
-      0 ≤ s k.succ - s k.castSucc := fun k _ =>
-    sub_nonneg.mpr (le_of_lt (P.mono (Fin.castSucc_lt_succ (i := k))))
+  have hnn (k) (hk : k ∈ Finset.univ.filter (fun k : Fin n => B k = j)) :
+      0 ≤ s k.succ - s k.castSucc := sub_nonneg.mpr (le_of_lt (P.mono (Fin.castSucc_lt_succ (i :=
+          k))))
   rw [← ENNReal.ofReal_sum_of_nonneg hnn] at hvol
   exact (ENNReal.ofReal_eq_ofReal_iff (mu j).coe_nonneg (Finset.sum_nonneg hnn)).mp hvol
 
@@ -291,7 +288,7 @@ theorem compLen_injective {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fi
   have hs0 : (fun k => s k q) 0 = (fun k => s k q') 0 :=
     ((hpres q hq).zero).trans ((hpres q' hq').zero).symm
   have hs : (fun k => s k q) = fun k => s k q' := eq_of_increments_eq hs0 hν
-  have hs' : ∀ k, s k q = s k q' := fun k => congrFun hs k
+  have hs' (k) : s k q = s k q' := congrFun hs k
   have hmark : markExt (fun k => s k q) = markExt (fun k => s k q') := by
     funext m
     simp only [markExt]
@@ -395,8 +392,7 @@ theorem absolutelyContinuous_map_affine {E F : Type*} [NormedAddCommGroup E] [No
     (Measure.AbsolutelyContinuous.map (Measure.absolutelyContinuous_of_le Measure.restrict_le_self)
       A.linear.continuous_of_finiteDimensional.measurable).trans hlin
   -- `A` is its linear part followed by the translation by `A 0`
-  have hA : ∀ x, A x = A.linear x + A 0 := by
-    intro x
+  have hA (x) : A x = A.linear x + A 0 := by
     have h := AffineMap.map_vadd A (0 : E) x
     rw [vadd_eq_add, add_zero] at h
     simpa using h
@@ -443,7 +439,6 @@ theorem GoodRegion.sum_compLenAffine {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm 
     {q₀ : PReal d e} (G : GoodRegion d e π σ q₀) {q : PReal d e}
     (hq : q ∈ G.O) :
     (∑ j : Fin (G.n - 1), compLenAffine G.s q j) = G.s ⟨G.n - 1, by omega⟩ q := by
-  classical
   have P := G.pres q hq
   -- there is at least one cell
   have hn1 : 1 ≤ G.n := by

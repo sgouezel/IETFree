@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.ColDiam
 public import IETFree.RauzyVeech.BalancedSet
+public import IETFree.RauzyVeech.ColDiam
 
 /-!
 # The cylinder mass, and Kerckhoff's lemma in cylinder-mass form
@@ -31,15 +31,12 @@ for the mass of the child cylinder relative to its parent
   `P_q(Γ_α, (B_γ q)_α > T q_α) < T⁻¹`).
 -/
 
-@[expose] public section
-
-
-open Finset
+open Finset IETDatum₂
 open scoped BigOperators NNReal ENNReal
 
-namespace CylinderMass
+@[expose] public section
 
-open IETDatum₂
+namespace CylinderMass
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -255,9 +252,9 @@ theorem kerckhoff_aux (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
         have hc := hcross [] (hsingle.symm ▸ Finset.mem_singleton_self ([] : List Bool))
         rw [List.append_nil] at hc
         exact hc
-      · have hne : ∀ δ ∈ S, δ ≠ [] := fun δ hδ h => hnil (h ▸ hδ)
-        have hhead : ∀ δ ∈ S, δ.head? = some true ∨ δ.head? = some false := by
-          intro δ hδ
+      · have hne (δ) (hδ : δ ∈ S) : δ ≠ [] := fun h =>
+      hnil (h ▸ hδ)
+        have hhead (δ) (hδ : δ ∈ S) : δ.head? = some true ∨ δ.head? = some false := by
           cases h : δ.head? with
           | none => exact absurd (List.head?_eq_none_iff.mp h) (hne δ hδ)
           | some e => cases e <;> simp
@@ -310,16 +307,15 @@ theorem kerckhoff_aux (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
               < cond P w [e] * ColShrink.cs P (w ++ [e]) α / r := by
           set Te := (S.filter (fun δ : List Bool => δ.head? = some e)).image List.tail
             with hTe
-          have hlen' : ∀ δ' ∈ Te, δ'.length ≤ N := by
-            intro δ' hδ'
+          have hlen' (δ') (hδ' : δ' ∈ Te) : δ'.length ≤ N := by
             obtain ⟨δ, hδ, rfl⟩ := Finset.mem_image.mp hδ'
             have h1 : δ = e :: δ.tail := eq_cons_tail_of_head? (Finset.mem_filter.mp hδ).2
             have h2 : δ.length ≤ N + 1 := hlen δ (Finset.mem_filter.mp hδ).1
             have h3 : (e :: δ.tail).length ≤ N + 1 := h1 ▸ h2
             simp only [List.length_cons] at h3
             omega
-          have hpre' : ∀ δ' ∈ Te, ∀ δ'' ∈ Te, δ' <+: δ'' → δ'' <+: δ' := by
-            intro x hx y hy hxy
+          have hpre' (δ') (hx : δ' ∈ Te) : ∀ δ'' ∈ Te, δ' <+: δ'' → δ'' <+: δ' := by
+            intro y hy hxy
             obtain ⟨x', hx', rfl⟩ := Finset.mem_image.mp hx
             obtain ⟨y', hy', rfl⟩ := Finset.mem_image.mp hy
             have hx1 : x' = e :: x'.tail := eq_cons_tail_of_head? (Finset.mem_filter.mp hx').2
@@ -332,15 +328,13 @@ theorem kerckhoff_aux (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
             rw [hy1, hx1] at h2
             obtain ⟨c, hc⟩ := h2
             exact ⟨c, by simpa using hc⟩
-          have hwin' : ∀ δ' ∈ Te, NoWin P (w ++ [e]) α δ' := by
-            intro δ' hδ'
+          have hwin' (δ') (hδ' : δ' ∈ Te) : NoWin P (w ++ [e]) α δ' := by
             obtain ⟨δ, hδ, rfl⟩ := Finset.mem_image.mp hδ'
             have h1 : δ = e :: δ.tail := eq_cons_tail_of_head? (Finset.mem_filter.mp hδ).2
             have h2 : NoWin P w α δ := hwin δ (Finset.mem_filter.mp hδ).1
             rw [h1] at h2
             exact h2.2
-          have hcross' : ∀ δ' ∈ Te, r < ColShrink.cs P ((w ++ [e]) ++ δ') α := by
-            intro δ' hδ'
+          have hcross' (δ') (hδ' : δ' ∈ Te) : r < ColShrink.cs P ((w ++ [e]) ++ δ') α := by
             obtain ⟨δ, hδ, rfl⟩ := Finset.mem_image.mp hδ'
             have h1 : δ = e :: δ.tail := eq_cons_tail_of_head? (Finset.mem_filter.mp hδ).2
             have h2 : r < ColShrink.cs P (w ++ δ) α := hcross δ (Finset.mem_filter.mp hδ).1

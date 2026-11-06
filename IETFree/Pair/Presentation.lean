@@ -140,7 +140,6 @@ discrete counterpart of `IsCutSet.exists_mem_cell`: with the list `s` of an `IsC
 theorem exists_cell_of_strictMono {n : ℕ} {s : Fin (n + 1) → ℝ} (hmono : StrictMono s)
     (h0 : s 0 = 0) (h1 : s (Fin.last n) = 1) {x : ℝ} (hx : x ∈ Set.Ico (0 : ℝ) 1) :
     ∃ i : Fin n, s i.castSucc ≤ x ∧ x < s i.succ := by
-  classical
   have hn : 0 < n := by
     rcases Nat.eq_zero_or_pos n with h | h
     · subst h
@@ -223,7 +222,6 @@ empty sum and `i` the last index gives `1 - (last free coordinate)`, as it must.
 theorem leftEnd_simplexMap {d : ℕ} {v : Fin (d - 1) → ℝ} (hv : v ∈ simplexRegion d)
     (i : Fin d) :
     leftEnd (simplexMap d v) i = ∑ j : Fin (d - 1), if j.val < i.val then v j else 0 := by
-  classical
   rw [leftEnd]
   have hL : (∑ j ∈ Finset.univ.filter (fun j : Fin d => j < i), (simplexMap d v j : ℝ))
       = ∑ k ∈ Finset.univ.filter (fun k : Fin (d - 1) => k.val < i.val), v k := by
@@ -285,16 +283,14 @@ theorem leftEnd_ne_sum_lam_of_good {d e : ℕ} [NeZero d] [NeZero e]
   have hrel : (∑ i, (a i : ℝ) * (p.1 i : ℝ)) + (∑ i, (b i : ℝ) * (p.2 i : ℝ)) = 0 := by
     rw [hbval, haval]
     linarith
-  have ha2 : ∀ i, |a i| ≤ 2 := by
-    intro i; simp only [ha]; split <;> norm_num
-  have hb2 : ∀ i, |b i| ≤ 2 := by
-    intro i; simp only [hb]; split <;> norm_num
+  have ha2 (i) : |a i| ≤ 2 := by simp only [ha]; split <;> norm_num
+  have hb2 (i) : |b i| ≤ 2 := by simp only [hb]; split <;> norm_num
   obtain ⟨-, hbconst, -⟩ := relation_of_good hp ha2 hb2 hl hm hrel
   have h0 := hbconst 0
   have hj0 : (0 : Fin e) < j := Fin.pos_iff_ne_zero.mpr hj
   have hlast : ¬ ((lastIdx e) < j) := by
     rw [Fin.lt_def]
-    change ¬ ((e - 1 : ℕ) < j.val)
+    rw [lastIdx_val]
     have := j.isLt
     omega
   simp only [hb] at h0
@@ -382,7 +378,7 @@ theorem AffineMap.sum_apply {ι : Type*} {k V1 P1 V2 : Type*} [Ring k] [AddCommG
   | empty => simp
   | insert a s ha ih =>
       rw [Finset.sum_insert ha, Finset.sum_insert ha]
-      have h1 : ∀ f g : P1 →ᵃ[k] V2, (f + g) q = f q + g q := fun f g => rfl
+      have h1 (f) (g : P1 →ᵃ[k] V2) : (f + g) q = f q + g q := rfl
       rw [h1, ih]
 
 /-- **A tiling of `[0,1)` by intervals gives the partial sums**: if the intervals
@@ -396,11 +392,9 @@ theorem sum_len_eq_of_tiling {n : ℕ} {P ν : Fin n → ℝ} (hν : ∀ i, 0 < 
     (hcover : ∀ y ∈ Set.Ico (0 : ℝ) 1, ∃ i : Fin n, y ∈ Set.Ico (P i) (P i + ν i))
     (i : Fin n) :
     P i = ∑ j ∈ Finset.univ.filter (fun j : Fin n => P j < P i), ν j := by
-  classical
   set F := Finset.univ.filter (fun j : Fin n => P j < P i) with hF
   -- no interval of `F` crosses `P i`
-  have hle : ∀ j ∈ F, P j + ν j ≤ P i := by
-    intro j hj
+  have hle (j) (hj : j ∈ F) : P j + ν j ≤ P i := by
     have hjlt : P j < P i := by
       simp only [hF, Finset.mem_filter, Finset.mem_univ, true_and] at hj
       exact hj
@@ -426,7 +420,7 @@ theorem sum_len_eq_of_tiling {n : ℕ} {P ν : Fin n → ℝ} (hν : ∀ i, 0 < 
       simp only [hF, Finset.mem_filter, Finset.mem_univ, true_and]
       exact lt_of_le_of_lt hj.1 hy1
   -- compare volumes
-  have hnn : ∀ j ∈ F, 0 ≤ ν j := fun j _ => le_of_lt (hν j)
+  have hnn (j) (hj : j ∈ F) : 0 ≤ ν j := le_of_lt (hν j)
   have hmain : ENNReal.ofReal (P i) = ∑ j ∈ F, ENNReal.ofReal (ν j) := by
     have h2 : volume (Set.Ico (0 : ℝ) (P i))
         = ∑ j ∈ F, volume (Set.Ico (P j) (P j + ν j)) := by
@@ -579,7 +573,6 @@ theorem exists_rank_perm {d e m : ℕ} (F : Fin m → ParamAffine d e) {q₀ : P
     (hε : 0 < ε) (hne : ∀ (i j : Fin m), i ≠ j → ∀ q ∈ Metric.ball q₀ ε, F i q ≠ F j q) :
     ∃ ρ : Equiv.Perm (Fin m), ∀ q ∈ Metric.ball q₀ ε, ∀ i j : Fin m,
       (ρ i < ρ j ↔ F i q < F j q) := by
-  classical
   -- the finite set of values at `q₀`, and its increasing enumeration
   set T := Finset.univ.image (fun i : Fin m => F i q₀) with hT
   have hinj : Function.Injective (fun i : Fin m => F i q₀) := by
@@ -589,7 +582,7 @@ theorem exists_rank_perm {d e m : ℕ} (F : Fin m → ParamAffine d e) {q₀ : P
   have hcard : T.card = m := by
     rw [hT, Finset.card_image_of_injective _ hinj, Finset.card_univ, Fintype.card_fin]
   set iso := Finset.orderIsoOfFin T hcard with hiso
-  have hmem : ∀ i : Fin m, F i q₀ ∈ T := fun i => by
+  have hmem (i : Fin m) : F i q₀ ∈ T := by
     rw [hT]; exact Finset.mem_image_of_mem _ (Finset.mem_univ i)
   -- the permutation
   have hbij : Function.Bijective
@@ -647,7 +640,6 @@ noncomputable def imageLenAffine {d e : ℕ} [NeZero d] (j : Fin d) : ParamAffin
   if h : j.val + 1 = d then
     AffineMap.const ℝ (PReal d e) 1 - ∑ m : Fin (d - 1), leftCoordAffine (e := e) m
   else leftCoordAffine (e := e) ⟨j.val, by
-    have h1 := j.isLt
     have h2 := NeZero.pos d
     omega⟩
 
@@ -695,7 +687,6 @@ theorem imageLeftAffine_eq {d e : ℕ} [NeZero d] (π : Equiv.Perm (Fin d)) {q :
     · rw [imageLenAffine_apply_last hj, simplexMap, dif_pos hj,
         Real.coe_toNNReal _ (by linarith [hq.2])]
     · have hj' : j.val < d - 1 := by
-        have h1 := j.isLt
         have h2 := NeZero.pos d
         omega
       rw [imageLenAffine_apply_free hj, simplexMap_of_lt hq hj']
@@ -708,7 +699,6 @@ theorem imageLenAffine_eq {d e : ℕ} [NeZero d] {q : PReal d e} (hq : q.1 ∈ s
   · rw [imageLenAffine_apply_last h, simplexMap, dif_pos h,
       Real.coe_toNNReal _ (by linarith [hq.2])]
   · have hj' : j.val < d - 1 := by
-      have h1 := j.isLt
       have h2 := NeZero.pos d
       omega
     rw [imageLenAffine_apply_free h, simplexMap_of_lt hq hj']
@@ -784,7 +774,7 @@ theorem exists_lt_imageLeft_simplexMap {d e : ℕ} [NeZero d] [NeZero e]
   have hp : ¬ IsBadParam (toReal (simplexMap d q.1, simplexMap e q.2)) := by
     rw [toReal_simplexMap hr.1.1 hr.2.1]
     exact hq
-  have hpos : ∀ i, 0 < (simplexMap e q.2) i := fun i => pos_simplexMap hr.2 i
+  have hpos (i) : 0 < (simplexMap e q.2) i := pos_simplexMap hr.2 i
   obtain ⟨k, h1, h2⟩ := exists_lt_imageLeft_of_good
     (p := (simplexMap d q.1, simplexMap e q.2)) hp hl hm hpos π hj
   exact ⟨k, h1, h2, mkIET1_inv_of_lt_imageLeft
@@ -896,7 +886,6 @@ a small ball.**  The set of parameters on which the finitely many strict inequal
 theorem exists_ball_lt_of_lt {d e m : ℕ} (F : Fin m → ParamAffine d e) {q₀ : PReal d e}
     (h : ∀ i j : Fin m, i < j → F i q₀ < F j q₀) :
     ∃ ε : ℝ, 0 < ε ∧ ∀ q ∈ Metric.ball q₀ ε, ∀ i j : Fin m, i < j → F i q < F j q := by
-  classical
   set W : Set (PReal d e) := {q | ∀ i j : Fin m, i < j → F i q < F j q} with hW
   have hWopen : IsOpen W := by
     have : W = ⋂ (p : {p : Fin m × Fin m // p.1 < p.2}),

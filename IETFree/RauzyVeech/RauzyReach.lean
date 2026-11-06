@@ -70,8 +70,6 @@ omit [DecidableEq α] in
 theorem pivot_fixed_true (P : IETDatum₂ α n) :
     (P.rvStep true).piBottom (P.last true) = P.piBottom (P.last true) := by
   rw [IETDatum₂.rvStep_piBottom_true]
-  change IETDatum₂.insertEquiv (P.piBottom (P.last true)) (P.piBottom (P.last true)) =
-    P.piBottom (P.last true)
   exact IETDatum₂.insertEquiv_apply_le (le_refl _)
 
 omit [DecidableEq α] in
@@ -79,8 +77,6 @@ omit [DecidableEq α] in
 theorem pivot_fixed_false (P : IETDatum₂ α n) :
     (P.rvStep false).piTop (P.last false) = P.piTop (P.last false) := by
   rw [IETDatum₂.rvStep_piTop_false]
-  change IETDatum₂.insertEquiv (P.piTop (P.last false)) (P.piTop (P.last false)) =
-    P.piTop (P.last false)
   exact IETDatum₂.insertEquiv_apply_le (le_refl _)
 
 omit [Fintype α] [DecidableEq α] in
@@ -104,22 +100,22 @@ omit [DecidableEq α] in
 /-- **The inverse Rauzy move, type `true`**: the arrow `Q ↦ Q.rvStep true` is injective. -/
 theorem rvStep_true_injective : Function.Injective (fun Q : IETDatum₂ α n => Q.rvStep true) := by
   intro P Q hPQ
-  have hab : P.rvStep true = Q.rvStep true := hPQ
+  simp only [] at hPQ
   have htop : P.piTop = Q.piTop := by
     change (P.rvStep true).piTop = (Q.rvStep true).piTop
-    rw [hab]
+    rw [hPQ]
   have hlast : P.last true = Q.last true := by
-    change P.piTop.symm (IETDatum₂.lastPos n) = Q.piTop.symm (IETDatum₂.lastPos n)
+    rw [IETDatum₂.last_true, IETDatum₂.last_true]
     rw [htop]
   have hbot : P.piBottom (P.last true) = Q.piBottom (Q.last true) := by
     have h1 := pivot_fixed_true P
     have h2 := pivot_fixed_true Q
-    rw [hab] at h1
+    rw [hPQ] at h1
     rw [← h1, hlast]
     exact h2
   have hmaineq : P.piBottom.trans (IETDatum₂.insertEquiv (P.piBottom (P.last true))) =
       Q.piBottom.trans (IETDatum₂.insertEquiv (Q.piBottom (Q.last true))) := by
-    rw [← IETDatum₂.rvStep_piBottom_true, ← IETDatum₂.rvStep_piBottom_true, hab]
+    rw [← IETDatum₂.rvStep_piBottom_true, ← IETDatum₂.rvStep_piBottom_true, hPQ]
   rw [hbot] at hmaineq
   exact eq_of_orders htop (cancel_of_trans_insertEquiv hmaineq)
 
@@ -127,22 +123,22 @@ omit [DecidableEq α] in
 /-- **The inverse Rauzy move, type `false`**: the arrow `Q ↦ Q.rvStep false` is injective. -/
 theorem rvStep_false_injective : Function.Injective (fun Q : IETDatum₂ α n => Q.rvStep false) := by
   intro P Q hPQ
-  have hab : P.rvStep false = Q.rvStep false := hPQ
+  simp only [] at hPQ
   have hbot : P.piBottom = Q.piBottom := by
     change (P.rvStep false).piBottom = (Q.rvStep false).piBottom
-    rw [hab]
+    rw [hPQ]
   have hlast : P.last false = Q.last false := by
-    change P.piBottom.symm (IETDatum₂.lastPos n) = Q.piBottom.symm (IETDatum₂.lastPos n)
+    rw [IETDatum₂.last_false, IETDatum₂.last_false]
     rw [hbot]
   have htop : P.piTop (P.last false) = Q.piTop (Q.last false) := by
     have h1 := pivot_fixed_false P
     have h2 := pivot_fixed_false Q
-    rw [hab] at h1
+    rw [hPQ] at h1
     rw [← h1, hlast]
     exact h2
   have hmaineq : P.piTop.trans (IETDatum₂.insertEquiv (P.piTop (P.last false))) =
       Q.piTop.trans (IETDatum₂.insertEquiv (Q.piTop (Q.last false))) := by
-    rw [← IETDatum₂.rvStep_piTop_false, ← IETDatum₂.rvStep_piTop_false, hab]
+    rw [← IETDatum₂.rvStep_piTop_false, ← IETDatum₂.rvStep_piTop_false, hPQ]
   rw [htop] at hmaineq
   exact eq_of_orders (cancel_of_trans_insertEquiv hmaineq) hbot
 
@@ -208,8 +204,7 @@ theorem mem_of_closed_reachable (C : Finset (IETDatum₂ α n)) (hCne : C.Nonemp
     (hreach : ∀ Q ∈ C, Reach P Q) : P ∈ C := by
   obtain ⟨Q₀, hQ₀⟩ := hCne
   obtain ⟨u, hu⟩ := hreach Q₀ hQ₀
-  have key : ∀ u : List Bool, IETDatum₂.vertex P u ∈ C → P ∈ C := by
-    intro u
+  have key (u : List Bool) : IETDatum₂.vertex P u ∈ C → P ∈ C := by
     induction u using List.reverseRecOn with
     | nil =>
         intro h
@@ -232,12 +227,11 @@ theorem reach_back {P Q : IETDatum₂ α n} (h : Reach P Q) : Reach Q P := by
     simp only [C, Finset.mem_filter, Finset.mem_univ, true_and]
     exact reach_refl Q
   have hCne : C.Nonempty := ⟨Q, hQ⟩
-  have hC : ∀ R ∈ C, ∀ e : Bool, R.rvStep e ∈ C := by
-    intro R hR e
+  have hC (R) (hR : R ∈ C) : ∀ e : Bool, R.rvStep e ∈ C := by
+    intro e
     simp only [C, Finset.mem_filter, Finset.mem_univ, true_and] at hR ⊢
     exact reach_step hR e
-  have hreach : ∀ R ∈ C, Reach P R := by
-    intro R hR
+  have hreach (R) (hR : R ∈ C) : Reach P R := by
     have hQR : Reach Q R := by simpa [C] using hR
     exact reach_trans h hQR
   have hP : P ∈ C := mem_of_closed_reachable C hCne hC hreach

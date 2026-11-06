@@ -234,15 +234,14 @@ theorem clamp_imageLengths_eq (hl : (∑ j, mu j) = 1) {u v : ℝ} (h0u : 0 ≤ 
     clamp u v (upperEnd (imageLengths σ mu) (σ i))
         - clamp u v (leftEnd (imageLengths σ mu) (σ i))
       = clamp u v (upperEnd mu i) - clamp u v (leftEnd mu i) := by
-  classical
   have htot : (∑ j, (mu j : ℝ)) = 1 := by
     rw [← NNReal.coe_sum, hl, NNReal.coe_one]
   have hnu : (∑ k, (imageLengths σ mu k : ℝ)) = 1 := by
     rw [sum_imageLengths, htot]
-  have hLI : ∀ j : Fin e, leftEnd mu j ≤ upperEnd mu j := fun j => by
+  have hLI (j : Fin e) : leftEnd mu j ≤ upperEnd mu j := by
     rw [upperEnd_eq]; linarith [(mu j).coe_nonneg]
-  have hLI' : ∀ m : Fin e, leftEnd (imageLengths σ mu) m ≤ upperEnd (imageLengths σ mu) m :=
-    fun m => by rw [upperEnd_eq]; linarith [((imageLengths σ mu) m).coe_nonneg]
+  have hLI' (m : Fin e) : leftEnd (imageLengths σ mu) m ≤ upperEnd (imageLengths σ mu) m :=
+    by rw [upperEnd_eq]; linarith [((imageLengths σ mu) m).coe_nonneg]
   -- the termwise inequality
   have hle (i : Fin e) :
     clamp u v (upperEnd mu i) - clamp u v (leftEnd mu i)
@@ -293,24 +292,22 @@ theorem mkIET1_restrict_invariant (hl : (∑ j, mu j) = 1) {u v : ℝ}
       (∀ j, (mu' j : ℝ)
         = max 0 (min v (upperEnd mu j) - max u (leftEnd mu j)) / (v - u)) ∧
       ∀ y ∈ Set.Ico (0 : ℝ) 1, rescaleFun u v (mkIET1' mu σ hl) y = mkIET1' mu' σ hl' y := by
-  classical
   have htot : (∑ j, (mu j : ℝ)) = 1 := by rw [← NNReal.coe_sum, hl, NNReal.coe_one]
   have hvu : (0 : ℝ) < v - u := by linarith
   have hvune : v - u ≠ 0 := ne_of_gt hvu
-  have hLI : ∀ j : Fin e, leftEnd mu j ≤ upperEnd mu j := fun j => by
+  have hLI (j : Fin e) : leftEnd mu j ≤ upperEnd mu j := by
     rw [upperEnd_eq]; linarith [(mu j).coe_nonneg]
   -- the truncated lengths
   set mu' : Fin e → ℝ≥0 := fun j =>
     ⟨max 0 (min v (upperEnd mu j) - max u (leftEnd mu j)) / (v - u),
       div_nonneg (le_max_left _ _) hvu.le⟩ with hmu'def
-  have hmu'max : ∀ j, (mu' j : ℝ)
-      = max 0 (min v (upperEnd mu j) - max u (leftEnd mu j)) / (v - u) := fun j => rfl
-  have hmu'coe : ∀ j, (mu' j : ℝ)
+  have hmu'max (j) : (mu' j : ℝ)
+      = max 0 (min v (upperEnd mu j) - max u (leftEnd mu j)) / (v - u) := rfl
+  have hmu'coe (j) : (mu' j : ℝ)
       = (clamp u v (upperEnd mu j) - clamp u v (leftEnd mu j)) / (v - u) := by
-    intro j
     rw [hmu'max j, clamp_sub_clamp huv (hLI j)]
-  have hleftEnd' : ∀ j, leftEnd mu' j = (clamp u v (leftEnd mu j) - u) / (v - u) :=
-    leftEnd_of_clamp_sub hmu'coe huv h0u
+  have hleftEnd' (j) : leftEnd mu' j = (clamp u v (leftEnd mu j) - u) / (v - u) :=
+    leftEnd_of_clamp_sub hmu'coe huv h0u j
   have hl' : (∑ j, mu' j) = 1 := by
     refine NNReal.coe_injective ?_
     have h1 : ((∑ j, mu' j : ℝ≥0) : ℝ) = ∑ j, (mu' j : ℝ) := by push_cast; ring
@@ -324,16 +321,15 @@ theorem mkIET1_restrict_invariant (hl : (∑ j, mu j) = 1) {u v : ℝ}
       _ = ((1 : ℝ≥0) : ℝ) := by rw [div_self hvune]; simp
   -- the same for the image lengths
   have hnu : (∑ k, (imageLengths σ mu k : ℝ)) = 1 := by rw [sum_imageLengths, htot]
-  have hnu'coe : ∀ m, ((imageLengths σ mu') m : ℝ)
+  have hnu'coe (m) : ((imageLengths σ mu') m : ℝ)
       = (clamp u v (upperEnd (imageLengths σ mu) m)
           - clamp u v (leftEnd (imageLengths σ mu) m)) / (v - u) := by
-    intro m
     obtain ⟨i, rfl⟩ : ∃ i, σ i = m := ⟨σ.symm m, σ.apply_symm_apply m⟩
     have h1 : (imageLengths σ mu') (σ i) = mu' i := by simp [imageLengths]
     rw [h1, hmu'coe i, clamp_imageLengths_eq hl h0u huv hv1 hinv i]
-  have hleftEnd_nu' : ∀ m, leftEnd (imageLengths σ mu') m
+  have hleftEnd_nu' (m) : leftEnd (imageLengths σ mu') m
       = (clamp u v (leftEnd (imageLengths σ mu) m) - u) / (v - u) :=
-    leftEnd_of_clamp_sub hnu'coe huv h0u
+    leftEnd_of_clamp_sub hnu'coe huv h0u m
   refine ⟨mu', hl', fun j => hmu'max j, ?_⟩
   intro y hy
   set x := rescaleMapInv u v y with hxdef

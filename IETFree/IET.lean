@@ -128,7 +128,10 @@ noncomputable def simplexVolume (d : ℕ) : Measure (Fin d → ℝ≥0) :=
 
 /-- **A length vector is positive** when all its coordinates are.  This is the hypothesis under
 which the endpoints of the arrangement and the block mass behave (`leftEnd_lt_total`,
-`leftEnd_pos_of_ne_zero`, `blockMass_pos`). -/
+`leftEnd_pos_of_ne_zero`, `blockMass_pos`).
+
+An `abbrev`, not a `def`: it is a hypothesis, destructured with `h i` and unfolded by `rw`, in
+files across the block development, so its body has to be visible to clients. -/
 abbrev Positive {n : ℕ} (lam : Fin n → ℝ≥0) : Prop :=
   ∀ i, 0 < lam i
 
@@ -526,7 +529,6 @@ noncomputable def mkIETCuts {n : ℕ} (lam : Fin n → ℝ≥0) (a t : ℝ) : Fi
 theorem isCutSet_mkIETCuts {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
     (a : ℝ) {t : ℝ} (ht : (∑ i, (lam i : ℝ)) ≤ t) (htpos : 0 < t) :
     IsCutSet (mkIETFun lam π a) a (a + t) (mkIETCuts lam a t) := by
-  classical
   set T := ∑ i, (lam i : ℝ) with hT
   set cuts := Finset.univ.image (fun i => a + leftEnd lam i) ∪ (if T < t then {a + T} else ∅) with
     hcuts
@@ -534,7 +536,7 @@ theorem isCutSet_mkIETCuts {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : 
     rw [mkIETCuts, hcuts, hT]
   rw [hEq]
   have h0 : (fun i => a + leftEnd lam i) 0 = a := by
-    change a + leftEnd lam 0 = a
+    simp only []
     rw [leftEnd_zero, add_zero]
   have hamem : a ∈ cuts.filter (fun c => c ∈ Set.Ico a (a + t)) := by
     refine Finset.mem_filter.mpr ⟨?_, le_rfl, by linarith⟩
@@ -666,7 +668,6 @@ cut set is `mkIETCuts lam a t` (`isCutSet_mkIETCuts`), or it is the identity whe
 vanish. -/
 theorem isIET_mkIETFun {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
     (a : ℝ) {t : ℝ} (ht : (∑ i, (lam i : ℝ)) ≤ t) : IsIET a (a + t) (mkIETFun lam π a) := by
-  classical
   rcases le_or_gt (∑ i, (lam i : ℝ)) 0 with hT0 | hTpos
   · -- all the lengths vanish: the map is the identity
     left
@@ -731,7 +732,6 @@ translation vector of the corresponding cell, and outside `[a, b)` both are the 
 theorem IsCutSet.eq_mkIETFun {a b : ℝ} {e : Equiv ℝ ℝ} {s : Finset ℝ} [NeZero s.card]
     (hs : IsCutSet (⇑e) a b s) :
     ∀ x : ℝ, ⇑e x = mkIETFun hs.lengths (hs.perm e.injective) a x := by
-  classical
   intro x
   have hsum := hs.sum_lengths
   by_cases hx : x ∈ Set.Ico a b
@@ -767,10 +767,9 @@ permutation, placed at `a`. -/
 theorem exists_mkIETEquiv_eq {a b : ℝ} {e : Equiv ℝ ℝ} (hab : a ≤ b) (h : IsIET a b e) :
     ∃ (n : ℕ) (_ : NeZero n) (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n)),
       (∑ i, (lam i : ℝ)) = b - a ∧ e = mkIETEquiv lam π a := by
-  classical
   rcases eq_or_lt_of_le hab with hEq | hlt
   · -- the interval is empty: both sides are the identity
-    have hid : ∀ x, ⇑e x = x := h.eq_id_of_le (le_of_eq hEq.symm)
+    have hid (x) : ⇑e x = x := h.eq_id_of_le (le_of_eq hEq.symm) x
     refine ⟨1, inferInstance, fun _ => 0, 1, ?_, ?_⟩
     · rw [← hEq]; simp
     ext x
@@ -795,13 +794,11 @@ theorem IsIET.symm {a b : ℝ} {e : Equiv ℝ ℝ} (h : IsIET a b e) : IsIET a b
       rw [sum_imageLengths]; exact hsum
     have h1 := isIET_mkIETEquiv (imageLengths π lam) π.symm a (t := b - a) (le_of_eq hsum')
     rw [show a + (b - a) = b from by ring] at h1
-    change IsIET a b (mkIETEquiv (imageLengths π lam) π.symm a)
     exact h1
   · -- the interval is empty, so `e` is the identity and so is its inverse
-    have hid : ∀ x, e x = x := h.eq_id_of_le (le_of_lt hba)
+    have hid (x) : e x = x := h.eq_id_of_le (le_of_lt hba) x
     have hthis : e.symm = 1 := by
       ext x
-      change e.symm x = x
       calc e.symm x = e.symm (e x) := by rw [hid x]
         _ = x := Equiv.symm_apply_apply e x
     rw [hthis]

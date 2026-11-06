@@ -39,15 +39,13 @@ This file delivers the **skeleton** of that induction, in the cylinder-mass lang
   `IETFree/RauzyVeech/RichPath/RichGreedyPath.lean`.
 -/
 
-@[expose] public section
-
-open Finset
+open Finset IETDatum₂
 open scoped BigOperators
+
+@[expose] public section
 
 /-! ## The statement of the induction. -/
 namespace Induction
-
-open IETDatum₂
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 

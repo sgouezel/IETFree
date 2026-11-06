@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.Rigidity.Defs
 public import IETFree.RauzyVeech.PairReach
+public import IETFree.Rigidity.Defs
 
 /-!
 # An extreme vertex, runs of `true` steps, and the big cell
@@ -43,7 +43,6 @@ theorem exists_vertex_last_true_eq_piBottom_zero {α : Type*} [Fintype α]
     {n : ℕ} [NeZero n] (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) :
     ∃ (Q : IETDatum₂ α n) (w : List Bool),
       IETDatum₂.vertex P w = Q ∧ Q.last true = Q.piBottom.symm 0 := by
-  classical
   obtain ⟨w, hw⟩ := IETDatum₂.exists_last_true_first P hP hn
   exact ⟨IETDatum₂.vertex P w, w, rfl,
     by rw [IETDatum₂.piBottom_zero_letter P w]; exact hw⟩
@@ -141,8 +140,8 @@ the bottom order. -/
 private lemma lfCount_last_true {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
     (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) (K : ℕ) :
     lfCount P K (P.last true) = 0 := by
-  have hb : ∀ i, (IETDatum₂.vertex P (List.replicate i true)).last false ≠ P.last true := by
-    intro i hh
+  have hb (i) : (IETDatum₂.vertex P (List.replicate i true)).last false ≠ P.last true := by
+    intro hh
     have h1 : (IETDatum₂.vertex P (List.replicate i true)).last true = P.last true :=
       IETDatum₂.true_block_last_true P i
     exact IETDatum₂.vertex_last_ne P hP hn (List.replicate i true) (by rw [h1, hh])
@@ -193,7 +192,6 @@ private lemma insertEquiv_zero_pow_val {n : ℕ} [NeZero n] (hn : 2 ≤ n) (i : 
   | succ j ih =>
     set s : ℕ := (i.val - 1 + j) % (n - 1) with hs
     set p : Fin n := ((IETDatum₂.insertEquiv (0 : Fin n)) ^ j) i with hp
-    have hpv : p.val = 1 + s := ih
     have hn2 : ((0 : Fin n)).val + 1 < n := by simp only [Fin.val_zero]; omega
     rw [pow_succ', Equiv.Perm.mul_apply, ← hp]
     have hmod : (i.val - 1 + (j + 1)) % (n - 1) = (s + 1) % (n - 1) := by
@@ -210,10 +208,10 @@ private lemma insertEquiv_zero_pow_val {n : ℕ} [NeZero n] (hn : 2 ≤ n) (i : 
       rw [hpl, IETDatum₂.insertEquiv_lastPos hn2, hcase, Nat.mod_self]
       simp
     · have hlt : s + 1 < n - 1 := by omega
-      have hgt : ((0 : Fin n)).val < p.val := by rw [hpv]; simp
+      have hgt : ((0 : Fin n)).val < p.val := by rw [ih]; simp
       have hne : p ≠ IETDatum₂.lastPos n := by
         intro h
-        rw [h, IETDatum₂.lastPos_val] at hpv
+        rw [h, IETDatum₂.lastPos_val] at ih
         omega
       rw [IETDatum₂.insertEquiv_apply_gt (p := (0 : Fin n)) (k := p) hn2 hgt hne,
         Nat.mod_eq_of_lt hlt]
@@ -224,7 +222,6 @@ private lemma piBottom_replicate_true_apply {α : Type*} [Fintype α] {n : ℕ}
     [NeZero n] (P : IETDatum₂ α n) (hx : P.piBottom (P.last true) = 0) (j : ℕ) (a : α) :
     (IETDatum₂.vertex P (List.replicate j true)).piBottom a
       = ((IETDatum₂.insertEquiv (0 : Fin n)) ^ j) (P.piBottom a) := by
-  classical
   induction j with
   | zero => simp
   | succ j ih =>
@@ -240,7 +237,6 @@ private lemma last_false_replicate_of_mod {α : Type*} [Fintype α] {n : ℕ}
     {c : α} (hc : c ≠ P.last true) {j : ℕ}
     (hj : j % (n - 1) = n - 1 - (P.piBottom c).val) :
     (IETDatum₂.vertex P (List.replicate j true)).last false = c := by
-  classical
   have hne : P.piBottom c ≠ 0 := by
     intro h
     exact hc (P.piBottom.injective (by rw [h, hx]))
@@ -331,36 +327,30 @@ theorem bigCell_of_mem_cone {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
     {σ σ' : α → ℝ} (hpos : ∀ c, 0 < σ' c)
     (hσ : σ = IETDatum₂.qApply (IETDatum₂.Path.Q Q (List.replicate K true)) σ') :
     (1 - δ) * ∑ c, σ c ≤ σ (Q.last true) := by
-  classical
   set b : α := Q.last true with hb
   obtain ⟨v, hv0, hmat, hbound⟩ := IETDatum₂.Path.Q_replicate_true Q hQ hn hx K
   rw [hσ, hmat]
   set M : Matrix α α ℤ := 1 + Matrix.of (fun a c => if a = b then (v c : ℤ) else 0) with hM
   -- the entries of `M`
-  have hentry : ∀ a c : α, M a c
+  have hentry (a) (c : α) : M a c
       = (if a = c then (1 : ℤ) else 0) + (if a = b then (v c : ℤ) else 0) := by
-    intro a c
     rw [hM, Matrix.add_apply, Matrix.one_apply, Matrix.of_apply]
-  have hentry' : ∀ a c : α, (M a c : ℝ)
+  have hentry' (a) (c : α) : (M a c : ℝ)
       = (if a = c then (1 : ℝ) else 0) + (if a = b then (v c : ℝ) else 0) := by
-    intro a c
     rw [hentry a c]
     by_cases h1 : a = c <;> by_cases h2 : a = b <;> simp [h1, h2]
   -- the action of `M` on a vector
-  have happly : ∀ a, IETDatum₂.qApply M σ' a
+  have happly (a) : IETDatum₂.qApply M σ' a
       = σ' a + (if a = b then ∑ c, (v c : ℝ) * σ' c else 0) := by
-    intro a
     rw [IETDatum₂.qApply_apply]
-    have hterm : ∀ c, (M a c : ℝ) * σ' c = (if a = c then (1 : ℝ) else 0) * σ' c
+    have hterm (c) : (M a c : ℝ) * σ' c = (if a = c then (1 : ℝ) else 0) * σ' c
         + (if a = b then (v c : ℝ) * σ' c else 0) := by
-      intro c
       rw [hentry' a c, add_mul]
       by_cases h : a = b <;> simp [h]
     rw [Finset.sum_congr rfl (fun c _ => hterm c), Finset.sum_add_distrib]
     have h1 : ∑ c, (if a = c then (1 : ℝ) else 0) * σ' c = σ' a := by
-      have hstep : ∀ c, (if a = c then (1 : ℝ) else 0) * σ' c
+      have hstep (c) : (if a = c then (1 : ℝ) else 0) * σ' c
           = (if a = c then σ' c else 0) := by
-        intro c
         by_cases h : a = c <;> simp [h]
       rw [Finset.sum_congr rfl (fun c _ => hstep c),
         Finset.sum_ite_eq Finset.univ a (fun c => σ' c)]
@@ -369,8 +359,7 @@ theorem bigCell_of_mem_cone {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
     by_cases h : a = b <;> simp [h]
   have hσb : IETDatum₂.qApply M σ' b = σ' b + ∑ c, (v c : ℝ) * σ' c := by
     rw [happly b, if_pos rfl]
-  have hσc : ∀ c, c ≠ b → IETDatum₂.qApply M σ' c = σ' c := by
-    intro c hc
+  have hσc (c) (hc : c ≠ b) : IETDatum₂.qApply M σ' c = σ' c := by
     rw [happly c, if_neg hc, add_zero]
   -- split the total mass at the letter `b`
   set S : ℝ := ∑ c ∈ Finset.univ.erase b, σ' c with hS
@@ -382,8 +371,7 @@ theorem bigCell_of_mem_cone {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
   have hS0 : 0 ≤ S := Finset.sum_nonneg (fun c _ => le_of_lt (hpos c))
   have hδ0 : 0 ≤ 1 - δ := by linarith
   have hVd : 1 - δ ≤ δ * ((K / (Fintype.card α - 1) : ℕ) : ℝ) := by
-    have h1 := hK
-    rw [div_le_iff₀ hδ] at h1
+    rw [div_le_iff₀ hδ] at hK
     linarith
   -- the `b`-coordinate dominates `S` with the factor `K / (card α - 1)`
   have hlow : ((K / (Fintype.card α - 1) : ℕ) : ℝ) * S ≤ IETDatum₂.qApply M σ' b := by

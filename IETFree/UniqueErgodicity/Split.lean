@@ -5,9 +5,9 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import Mathlib
 public import IETFree.CutSet
 public import IETFree.IET
+public import Mathlib
 
 /-!
 # The split interval

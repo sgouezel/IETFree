@@ -6,8 +6,8 @@ Authors: Sébastien Gouëzel
 module
 
 public import IETFree.Pair.BlockAssembly
-public import IETFree.Pair.BlockDatum
 public import IETFree.Pair.BlockData
+public import IETFree.Pair.BlockDatum
 public import IETFree.Pair.BlockDiophantine
 public import IETFree.Pair.GeneratorChange
 
@@ -55,13 +55,11 @@ theorem exists_word_trivial_of_region (G : GoodRegion d e π σ q₀) [NeZero G.
     {D : IETDatum d} {E : IETDatum e} (h : G.Fits q D E)
     {u v : ℝ} (hb : IsBlock D E u v) :
     ∃ w : FreeGroup Gen, w ≠ 1 ∧ ∀ x : ℝ, u ≤ x → x < v → (evalWord w D.toIET E.toIET) x = x := by
-  classical
   obtain ⟨hp, hw⟩ := G.subset_region q hq
   obtain ⟨i₀, i₁, hu, hv, hi⟩ := G.block_endpoints hq h.hDv h.hDπ h.hEv h.hEπ hb
   have hm : simplexMap e q.2 ∈ simplex e := G.simplexMap_mem_simplex_snd hq
   obtain rfl : u = G.s i₀ q := hu.symm
   obtain rfl : v = G.s i₁ q := hv.symm
-  have hkl : i₀.val < i₁.val := hi
   have hln : i₁.val ≤ G.n := by have := i₁.isLt; omega
   have hne : NeZero (i₁.val - i₀.val) := ⟨by omega⟩
   have := hne
@@ -74,16 +72,14 @@ theorem exists_word_trivial_of_region (G : GoodRegion d e π σ q₀) [NeZero G.
       (monoAt G hq hi)) σ (RestrictIET.sum_truncatedLengths (simplexMap e q.2) hm
         (by exact (hb.left.mem_Icc).1) (monoAt G hq hi) (by exact (hb.right.mem_Icc).2)) with hG'def
   -- the two halves of the pointwise conjugacy
-  have hconjF : ∀ y ∈ Set.Ico (0 : ℝ) 1,
+  have hconjF (y) (hy : y ∈ Set.Ico (0 : ℝ) 1) :
       (E.toIET * D.toIET) (rescaleMapInv (G.s i₀ q) (G.s i₁ q) y)
         = rescaleMapInv (G.s i₀ q) (G.s i₁ q) (F' y) := by
-    intro y hy
     rw [hF'def]
     exact G.comp_conj_rescale hq h hi hb.left hb.right hy
-  have hconjG : ∀ y ∈ Set.Ico (0 : ℝ) 1,
+  have hconjG (y) (hy : y ∈ Set.Ico (0 : ℝ) 1) :
       E.toIET (rescaleMapInv (G.s i₀ q) (G.s i₁ q) y)
         = rescaleMapInv (G.s i₀ q) (G.s i₁ q) (G' y) := by
-    intro y hy
     rw [hG'def]
     exact G.restrict_rescale hq h hi hb.left hb.right hy
   have hex : ∃ w : FreeGroup Gen, w ≠ 1 ∧ evalWord w F' G' = 1 := by
@@ -91,7 +87,7 @@ theorem exists_word_trivial_of_region (G : GoodRegion d e π σ q₀) [NeZero G.
     · -- a single composition cell: the rescaled composition is the identity
       have hall (j : Fin (i₁.val - i₀.val)) :
           G.blockLam hq i₀.val (l := i₁.val) hi (by omega) j = 1 := by
-        rw [blockLam_def, blockLam_of_one hkl hln (G.cellLen_pos hq) h1]
+        rw [blockLam_def, blockLam_of_one hi hln (G.cellLen_pos hq) h1]
       have hF'1 : F' = 1 := by
         rw [hF'def]
         exact mkIET1_of_all_one _ _ hall
@@ -127,8 +123,6 @@ theorem isDiophantine_blockPair (G : GoodRegion d e π σ q₀)
     (hdio : IsDiophantine (simplexMap d q.1) (simplexMap e q.2)) :
     IsDiophantine (G.blockLam hq i₀.val (l := i₁.val) hi (by omega))
       (RestrictIET.truncatedLengths (simplexMap e q.2) (G.s i₀ q) (G.s i₁ q) (monoAt G hq hi)) := by
-  classical
-  have hkl : i₀.val < i₁.val := hi
   have hln : i₁.val ≤ G.n := by have := i₁.isLt; omega
   obtain ⟨hp, hw⟩ := G.subset_region q hq
   have hsl : simplexMap d q.1 ∈ simplex d := simplexMap_mem_simplex_fin hp.1 hp.2
@@ -148,16 +142,14 @@ theorem isDiophantine_blockPair (G : GoodRegion d e π σ q₀)
     have h0' : (0 : ℝ) ≤ G.s i₀ q := by rw [hzero] at h0; exact h0
     linarith [hLdef, h1', h0']
   obtain ⟨Hs, hHs, hHsval⟩ := G.exists_isIntAffine_truncatedLengths hq
-  have hHnn : ∀ j, 0 ≤ Hs j q := by
-    intro j
+  have hHnn (j) : 0 ≤ Hs j q := by
     rw [hHsval j]
     exact le_max_left _ _
   -- the composition lengths of the block
   set Fs : Fin (i₁.val - i₀.val) → ParamAffine d e :=
     fun j => G.sAffine ⟨i₀.val + j.val + 1, by have := j.isLt; omega⟩
       - G.sAffine ⟨i₀.val + j.val, by omega⟩ with hFsdef
-  have hFs : ∀ j, IsIntAffine (Fs j) := fun j =>
-    (G.isIntAffine_sAffine _).sub (G.isIntAffine_sAffine _)
+  have hFs (j) : IsIntAffine (Fs j) := (G.isIntAffine_sAffine _).sub (G.isIntAffine_sAffine _)
   have hFval (j : Fin (i₁.val - i₀.val)) :
     (Fs j) q
       = ((G.cellLen hq ⟨i₀.val + j.val, by omega⟩ : ℝ≥0) : ℝ) := by
@@ -169,7 +161,7 @@ theorem isDiophantine_blockPair (G : GoodRegion d e π σ q₀)
     rw [hFsdef]
     simp only [AffineMap.coe_sub, Pi.sub_apply]
     rw [← hsucc, ← hcast, ← hcoe]
-  have hFnn : ∀ j, 0 ≤ (Fs j) q := fun j => by rw [hFval j]; exact NNReal.coe_nonneg _
+  have hFnn (j) : 0 ≤ (Fs j) q := by rw [hFval j]; exact NNReal.coe_nonneg _
   -- the block mass in terms of `L`
   have hmass : blockMass (G.cellLen hq) i₀.val hln = L := by
     have hadd : G.s i₀ q + blockMass (G.cellLen hq) i₀.val hln = G.s i₁ q := by
@@ -258,15 +250,13 @@ theorem main_theorem_of_blocks {d e : ℕ} [NeZero d] [NeZero e]
     (fun x => IsPairSplitting D E x))) with hTdef
   have hT0 : (0 : ℝ) ∈ T := Finset.mem_insert_self _ _
   have hT1 : (1 : ℝ) ∈ T := Finset.mem_insert_of_mem (Finset.mem_insert_self _ _)
-  have hTps : ∀ x ∈ T, IsPairSplitting D E x := by
-    intro x hx
+  have hTps (x) (hx : x ∈ T) : IsPairSplitting D E x := by
     rcases Finset.mem_insert.mp hx with rfl | hx
     · exact Or.inl rfl
     rcases Finset.mem_insert.mp hx with rfl | hx
     · exact Or.inr (Or.inl rfl)
     · exact (Finset.mem_filter.mp hx).2
-  have hTin : ∀ x, IsPairSplitting D E x → x ∈ T := by
-    intro x hx
+  have hTin (x) (hx : IsPairSplitting D E x) : x ∈ T := by
     rcases hx with rfl | rfl | ⟨k, hk, rfl, hfix⟩ | ⟨j, hj, rfl, hfix⟩
     · exact hT0
     · exact hT1
@@ -284,7 +274,7 @@ theorem main_theorem_of_blocks {d e : ℕ} [NeZero d] [NeZero e]
       · rw [h1]; exact hT1
       · refine Finset.mem_insert_of_mem (Finset.mem_insert_of_mem (Finset.mem_filter.mpr
           ⟨Finset.mem_union_right _ hc, Or.inr (Or.inr (Or.inr ⟨j, hj, rfl, hfix⟩))⟩))
-  have hTbounds : ∀ x ∈ T, 0 ≤ x ∧ x ≤ 1 := fun x hx => (hTps x hx).mem_Icc
+  have hTbounds (x) (hx : x ∈ T) : 0 ≤ x ∧ x ≤ 1 := (hTps x hx).mem_Icc
   have hcard : 0 < T.card := Finset.card_pos.mpr ⟨0, hT0⟩
   -- the increasing enumeration of `T`
   set iso := Finset.orderIsoOfFin T rfl with hiso

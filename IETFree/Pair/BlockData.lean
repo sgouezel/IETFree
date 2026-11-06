@@ -5,9 +5,9 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.Pair.BlockEndpoints
 public import IETFree.Pair.BlockAETransfer
 public import IETFree.Pair.BlockDiophantine
+public import IETFree.Pair.BlockEndpoints
 
 /-!
 The almost-sure block data of Lemma 3.4 over a countable family of good regions (A3).
@@ -70,11 +70,9 @@ instance neZeroN {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)} {q₀ : PRe
 theorem compLenVec_eq_simplexMap {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)}
     {q₀ : PReal d e} (G : GoodRegion d e π σ q₀) {q : PReal d e} (hq : q ∈ G.O) :
     compLenVec G.s q (monoAt G hq) = simplexMap G.n (compLenAffine G.s q) := by
-  classical
   have hmono : StrictMono fun k => G.s k q := monoAt G hq
   have P := G.pres q hq
   have hn1 : 1 ≤ G.n := Nat.one_le_iff_ne_zero.mpr (NeZero.ne G.n)
-  have hPtop : G.s (Fin.last G.n) q = 1 := P.top
   have htel' := G.sum_compLenAffine hq
   funext k
   apply NNReal.eq
@@ -84,14 +82,14 @@ theorem compLenVec_eq_simplexMap {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin
     have hcastk : k.castSucc = (⟨G.n - 1, by omega⟩ : Fin (G.n + 1)) := Fin.ext (by
       simp only [Fin.val_castSucc]; omega)
     have hL : ((compLenVec G.s q hmono k : ℝ)) = 1 - G.s ⟨G.n - 1, by omega⟩ q := by
-      simp only [compLenVec, compLen, hlastk, hcastk, hPtop]
+      simp only [compLenVec, compLen, hlastk, hcastk, P.top]
       rfl
     have hpos : 0 ≤ 1 - ∑ j : Fin (G.n - 1), compLenAffine G.s q j := by
       rw [htel']
       have hlt := hmono (Fin.castSucc_lt_succ (i := k))
       rw [hlastk, hcastk] at hlt
       beta_reduce at hlt
-      rw [hPtop] at hlt
+      rw [P.top] at hlt
       linarith
     have hR : ((simplexMap G.n (compLenAffine G.s q) k : ℝ))
         = 1 - ∑ j : Fin (G.n - 1), compLenAffine G.s q j := by
@@ -124,7 +122,6 @@ variable {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)} {q₀ : PReal d e}
 with the monotonicity only assumed pointwise on the open set (so no hypothesis at all). -/
 theorem compLenAffine_absolutelyContinuousAt (G : GoodRegion d e π σ q₀) :
     (volume.restrict G.O).map (compLenAffine G.s) ≪ volume.restrict (simplexRegion G.n) := by
-  classical
   have : Measure.IsAddHaarMeasure (volume : Measure (PReal d e)) := by
     have : Measure.IsAddHaarMeasure
         ((volume : Measure (Fin (d - 1) → ℝ)).prod (volume : Measure (Fin (e - 1) → ℝ))) :=
@@ -171,8 +168,8 @@ theorem compLenAffine_absolutelyContinuousAt (G : GoodRegion d e π σ q₀) :
   have hac : (volume.restrict G.O).map (compLenAffine G.s) ≪ volume :=
     absolutelyContinuous_map_affine hinjlin hdim
   -- the image is contained in the simplex region, so the measure lives there
-  have hsupp : ∀ q ∈ G.O, compLenAffine G.s q ∈ simplexRegion G.n :=
-    fun q hq => compLenAffine_mem_regionAt G hq
+  have hsupp (q) (hq : q ∈ G.O) : compLenAffine G.s q ∈ simplexRegion G.n :=
+      compLenAffine_mem_regionAt G hq
   have hcompl : (volume.restrict G.O).map (compLenAffine G.s) ((simplexRegion G.n)ᶜ) = 0 := by
     rw [Measure.map_apply (compLenAffine G.s).continuous_of_finiteDimensional.measurable
       (measurableSet_simplexRegion G.n).compl]
@@ -277,7 +274,7 @@ theorem blockLamAt_eq (G : GoodRegion d e π σ q₀) {q : PReal d e} (hq : q �
   have hx : compLenAffine G.s q ∈ simplexRegion G.n := compLenAffine_mem_regionAt G hq
   have hcv : G.cellLen hq = simplexMap G.n (compLenAffine G.s q) :=
     compLenVec_eq_simplexMap G hq
-  have hposx : ∀ i, 0 < simplexMap G.n (compLenAffine G.s q) i := fun i => pos_simplexMap hx i
+  have hposx (i) : 0 < simplexMap G.n (compLenAffine G.s q) i := pos_simplexMap hx i
   have hcongr : G.blockLam hq k hkl hln
       = blockLam (simplexMap G.n (compLenAffine G.s q)) k hkl hln hposx :=
     blockLam_congr hcv hkl hln _ hposx
@@ -360,7 +357,6 @@ theorem ae_block_good (π : Equiv.Perm (Fin d)) (σ : Equiv.Perm (Fin e))
       ¬ IsBadParam z ∧ z.1 ∈ simplexRegion d ∧ z.2 ∈ simplexRegion e ∧
         IsDiophantine (simplexMap d z.1) (simplexMap e z.2) ∧
         ∀ (i : ι) (hz : z ∈ (Gfam i).2.O), BlockGoodAt (Gfam i).2 hz := by
-  classical
   have h1 : ∀ᵐ z ∂((volume.restrict (simplexRegion d)).prod
       (volume.restrict (simplexRegion e))),
       ¬ IsBadParam z := ae_goodParams_real

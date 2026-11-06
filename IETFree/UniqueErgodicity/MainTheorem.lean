@@ -54,7 +54,6 @@ positive word `v`, whose entries are bounded by one constant for every irreducib
 of `RichPath.richGreedyPath` is used, and where the bound comes from. -/
 theorem hasPositiveBlocks_ae (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) :
     ∀ᵐ lam ∂(simplexVolumeOn α), ∃ M : ℕ, HasPositiveBlocks P lam M := by
-  classical
   obtain ⟨C₁, -, hword⟩ := IETDatum₂.exists_uniform_bound' (α := α) (n := n) hn
   obtain ⟨M, hM⟩ := exists_nat_ge C₁
   obtain ⟨v, hv⟩ := hword P hP
@@ -90,7 +89,6 @@ criterion; `positiveBlocksRay` then gives the ray condition a.e.;
 theorem main_of_components (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) :
     ∀ᵐ lam ∂(simplexVolumeOn α), ∃! μ : ProbabilityMeasure ℝ,
       Invariant μ (P.toIET lam) ∧ (μ : Measure ℝ) (Set.Ico (0 : ℝ) 1) = 1 := by
-  classical
   have hcard : Fintype.card α = n := by
     rw [Fintype.card_congr P.piTop, Fintype.card_fin]
   have : Nonempty α := Fintype.card_pos_iff.mp (by omega)
@@ -106,7 +104,6 @@ theorem masurVeech_ae_unique_invariant {α : Type*} [Fintype α]
     (n : ℕ) (hn : 2 ≤ n) [NeZero n] (P : IETDatum₂ α n) (hP : P.Irreducible) :
     ∀ᵐ lam ∂(simplexVolumeOn α), ∃! μ : ProbabilityMeasure ℝ,
       Invariant μ (P.toIET lam) ∧ (μ : Measure ℝ) (Set.Ico (0 : ℝ) 1) = 1 := by
-  classical
   exact main_of_components P hP hn
 
 /-! ### Axiom report

@@ -5,10 +5,10 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import Mathlib
-public import IETFree.UniqueErgodicity.Split
 public import IETFree.UniqueErgodicity.Limits
+public import IETFree.UniqueErgodicity.Split
 public import IETFree.UniqueErgodicity.Transfer
+public import Mathlib
 
 /-!
 # Measurability preparation for the split interval

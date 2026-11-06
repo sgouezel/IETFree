@@ -5,9 +5,9 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.RauzyVeech.RichPath.BadFirstStop
 public import IETFree.RauzyVeech.RichPath.LargeLetter
 public import IETFree.RauzyVeech.RichPath.LevelMass
-public import IETFree.RauzyVeech.RichPath.BadFirstStop
 
 /-!
 # The mass form of the `Γ₃` step, and the `k → k+1` dichotomy
@@ -36,15 +36,12 @@ proves the source's `k → k+1` dichotomy in its `γ_s`-relative form with the c
   `singleton_mass` and `card_one_mass`.
 -/
 
-@[expose] public section
-
-
-open Finset NodeHeight
+open Finset NodeHeight IETDatum₂
 open scoped BigOperators
 
-namespace HeightDichotomy
+@[expose] public section
 
-open IETDatum₂
+namespace HeightDichotomy
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -77,8 +74,6 @@ end HeightDichotomy
 /-! ## 3. The dichotomy of the source, `γ_s`-relative and with `4·d·C₀·C₂` -/
 
 namespace HeightDichotomy
-
-open IETDatum₂
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -165,8 +160,6 @@ constant `1 - 1/(2·#α)` — for `#α = 2` this is `3/4`, which cannot be impro
 
 namespace HeightDichotomy
 
-open IETDatum₂
-
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
 /-- The threshold `2·#α·M(q_w)` is positive. -/
@@ -222,7 +215,6 @@ theorem exists_noWin_crossing_singleton (P : IETDatum₂ α n) (hP : P.Irreducib
     {w δ : List Bool} {b : α} (hb : Stopping.Bad P {b} w δ) :
     ∃ j ≤ δ.length, CylinderMass.NoWin P w b (δ.take j) ∧
       Stopping.thr P w < ColShrink.cs P (w ++ δ.take j) b := by
-  classical
   obtain ⟨j, hj, -, hfirst, hclean⟩ := Stopping.bad_first_stop hb
   refine ⟨j, hj, ?_, ?_⟩
   · refine noWin_of_last_ne P w (δ.take j) b fun g hg => ?_
@@ -256,8 +248,7 @@ theorem sum_cond_kerckhoff_singleton (P : IETDatum₂ α n) (hP : P.Irreducible)
   set U' : Finset (List Bool) :=
     U.filter (fun γ => CylinderMass.NoWin P w b γ ∧
       Stopping.thr P w < ColShrink.cs P (w ++ γ) b) with hU'
-  have hcov : ∀ δ ∈ S, ∃ t ∈ U', t <+: δ := by
-    intro δ hδ
+  have hcov (δ) (hδ : δ ∈ S) : ∃ t ∈ U', t <+: δ := by
     obtain ⟨j, hj, hnoWin, hcross⟩ := exists_noWin_crossing_singleton P hP hn (h δ hδ)
     have hmem : δ.take j ∈ U := by
       rw [hU]
@@ -266,9 +257,8 @@ theorem sum_cond_kerckhoff_singleton (P : IETDatum₂ α n) (hP : P.Irreducible)
     exact ⟨δ.take j, Finset.mem_filter.mpr ⟨hmem, hnoWin, hcross⟩, List.take_prefix j δ⟩
   obtain ⟨T, hTU', hTpf, hmass⟩ :=
     LargeLetter.exists_prefixFree_mass P hP hn w S U' hS hcov
-  have hspec : ∀ t ∈ T, CylinderMass.NoWin P w b t ∧
-      Stopping.thr P w < ColShrink.cs P (w ++ t) b :=
-    fun t ht => (Finset.mem_filter.mp (hTU' ht)).2
+  have hspec (t) (ht : t ∈ T) : CylinderMass.NoWin P w b t ∧
+      Stopping.thr P w < ColShrink.cs P (w ++ t) b := (Finset.mem_filter.mp (hTU' ht)).2
   exact lt_of_le_of_lt hmass
     (kerckhoff_letter P hP hn w b (thr_pos P w) T hTpf hspec)
 
@@ -278,7 +268,6 @@ theorem sum_bad_singleton_le (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2
     (w : List Bool) (b : α) (N : ℕ) :
     ∑ δ ∈ (Stopping.levelWords N).filter (fun δ => Stopping.Bad P {b} w δ),
         CylinderMass.cond P w δ ≤ 1 / (2 * (Fintype.card α : ℝ)) := by
-  classical
   set S : Finset (List Bool) :=
     (Stopping.levelWords N).filter (fun δ => Stopping.Bad P {b} w δ) with hS
   have hSpf : NodeHeight.PrefixFree S := by
@@ -291,8 +280,7 @@ theorem sum_bad_singleton_le (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2
       exact Stopping.length_of_mem_levelWords (Finset.mem_filter.mp hδ').1
     have h3 : δ = δ' := hp.eq_of_length (by rw [h1, h2])
     rw [h3]
-  have hbad : ∀ δ ∈ S, Stopping.Bad P {b} w δ := by
-    intro δ hδ
+  have hbad (δ) (hδ : δ ∈ S) : Stopping.Bad P {b} w δ := by
     rw [hS] at hδ
     exact (Finset.mem_filter.mp hδ).2
   refine le_trans (le_of_lt (sum_cond_kerckhoff_singleton P hP hn w b S hSpf hbad)) ?_
@@ -317,7 +305,6 @@ theorem singleton_mass (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n
     1 - 1 / (2 * (Fintype.card α : ℝ)) ≤
       ∑ δ ∈ (Stopping.levelWords N).filter (fun δ => ¬ Stopping.Bad P {b} w δ),
         CylinderMass.cond P w δ := by
-  classical
   have hspl := Stopping.sum_cond_levelWords P hP hn w N
   have hsplit : ∑ δ ∈ Stopping.levelWords N, CylinderMass.cond P w δ
       = ∑ δ ∈ (Stopping.levelWords N).filter (fun δ => Stopping.Bad P {b} w δ),

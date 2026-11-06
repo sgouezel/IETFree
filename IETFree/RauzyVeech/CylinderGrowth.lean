@@ -170,11 +170,9 @@ for all `b`, for a fixed row `a`.  This is the source's induction on the size of
 whose `Q`-entry in row `a` is already positive. -/
 theorem exists_pos_row (P : IETDatum₂ α n) (h : PairReach P) (hP : P.Irreducible) (a : α) :
     ∃ w : List Bool, ∀ b, 1 ≤ Path.Q P w a b := by
-  classical
-  have key : ∀ m, 1 ≤ m → m ≤ Fintype.card α →
+  have key (m) : 1 ≤ m → m ≤ Fintype.card α →
       ∃ (w : List Bool) (S : Finset α), S.card = m ∧ a ∈ S ∧
         ∀ b ∈ S, 1 ≤ Path.Q P w a b := by
-    intro m
     induction m with
     | zero => intro h1; omega
     | succ k ih =>
@@ -221,7 +219,6 @@ theorem exists_pos_row (P : IETDatum₂ α n) (h : PairReach P) (hP : P.Irreduci
 /-- **`Q` can be made strictly positive from every vertex**, given `PairReach`. -/
 theorem exists_pos_word (P : IETDatum₂ α n) (h : PairReach P) (hP : P.Irreducible) :
     ∃ w : List Bool, ∀ a b, 1 ≤ Path.Q P w a b := by
-  classical
   have key (T : Finset α) : ∃ w : List Bool, ∀ a ∈ T, ∀ b, 1 ≤ Path.Q P w a b := by
     refine Finset.induction_on T ?_ ?_
     · exact ⟨[], by simp⟩
@@ -352,12 +349,11 @@ theorem first_ne (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) :
     P.piBottom.symm (0 : Fin n) ≠ P.piTop.symm 0 := by
   intro h
   have hperm : P.perm (0 : Fin n) = 0 := by
-    change P.piTop (P.piBottom.symm 0) = 0
+    rw [IETDatum₂.perm_apply]
     rw [h, Equiv.apply_symm_apply]
   have hall : ∀ i : Fin n, i ≤ (0 : Fin n) := by
     refine hP 0 (fun i hi => ?_)
-    have hiv : i.val ≤ (0 : Fin n).val := hi
-    have hi0 : i = 0 := Fin.ext (by simp at hiv; omega)
+    have hi0 : i = 0 := Fin.ext (by simp at hi; omega)
     rw [hi0, hperm]
   have h1 : (⟨1, by omega⟩ : Fin n).val ≤ (0 : Fin n).val := hall _
   simp at h1
@@ -420,10 +416,7 @@ theorem true_block_suffix_val (P : IETDatum₂ α n) (j : ℕ) (i : Fin n)
         ≤ (vertex P (List.replicate j true)).piBottom
           ((vertex P (List.replicate j true)).last true)) := by
       intro hle
-      have h2 : ((vertex P (List.replicate j true)).piBottom (P.piBottom.symm i)).val
-          ≤ ((vertex P (List.replicate j true)).piBottom
-            ((vertex P (List.replicate j true)).last true)).val := hle
-      rw [hpiv, hih] at h2
+      rw [Fin.le_iff_val_le_val, hpiv, hih] at hle
       omega
     rw [if_neg h1]
     have h2 : ¬ (P.piBottom.symm i = (vertex P (List.replicate j true)).last false) := by

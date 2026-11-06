@@ -26,7 +26,7 @@ theorem main {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d)) (σ : E
 
 It is assembled in three layers, each a theorem of the library:
 
-* `ChallengeSolved.main_of_library` — Sections 2 and 3 of the paper: the a.e. block data plus the
+* `ChallengeSolved.main` — Sections 2 and 3 of the paper: the a.e. block data plus the
   assembly of the per-block words, which *applies* the two a.e. theorems below (`masurVeech`,
   `veechRigidity`, both in `Pair/Irreducible.lean`).
   `masurVeech` is `UniqueErgodicity.MainTheorem.masurVeech_ae_unique_invariant` under the name of the
@@ -57,18 +57,22 @@ group power — the `…Fun` predicates of the conditional challenge are gone (s
   `coe_mkIETEquiv` and `main`); the library has none.  `lakefile.toml` sets `warn.sorry = false`, so
   `lake build` says nothing about them — the axiom report is the guard.
 - **Comparator**: `Comparator/Check.lean` accepts the pair `Challenge` / `IETFree.ChallengeSolved`
-  (30 899 declarations compared, only the permitted axioms); the genuine tool was run on it too
+  (30 825 declarations compared, only the permitted axioms); the genuine tool was run on it too
   (`Comparator/run.sh`, comparator `3927ad3`).  Two mutations of the challenge are caught
   (`w ≠ 1` → `w = 1`: *the statement differs*; `0 < v i` → `0 ≤ v i`: *differs: simplexRegion*).
 - **Declaration linters** (Batteries' `runLinter`, which `lake build` does not run): 0 findings for
   `IETFree` and 0 for `Challenge`, 14 linters (`runLinter` does not print its declaration count, so
   none is quoted here — re-run it with `-v` to see the linter list).
-- **Size**: 114 modules, 46 196 lines; 4 542 project declarations, of which 2 571 are written by
+- **Size**: 114 modules, 45 739 lines (counted over `IETFree/**/*.lean` together with the umbrella
+  `IETFree.lean`); 4 542 project declarations, of which 2 571 are written by
   hand (the rest are generated), and 3 974 reachable from `main` (re-measured after Addendum 172;
   the last paragraph of Addendum 160 states the walk — per-module `constNames.size`, generated
   declarations included, and the `getUsedConstants` closure of `main`).  Under the module system the
   generated declarations are named `_private.<Module>.0.…`, so the total moves with them; the
   hand-written count is the stable one.
+- **The surviving `change`s are documented**: `CHANGE-AUDIT.md` records, for each of the 35,
+  the error that deleting it produces — the reason it is there.  Do not delete one without
+  reading its row (Addendum 185).
 - **Docstrings and links are checked, not eyeballed**: a module docstring describes its module, not
   a stage of a campaign, and every declaration it names in backticks exists (Addendum 169 dumps
   `constNames` and joins it with Mathlib's names to check); the README's 218 repository links and
@@ -148,6 +152,23 @@ breaks the build.
   *notions* the statements are about (`UniqueErgodic`, `IsRigidByTranslations`, `HasPositiveBlocks`,
   `RayCondition`, `GoodAt`) and the states of the inductions that really run (`Induction.Graded`,
   `InductionStep`, `NodeHeight.GradedStep`, `GradedStepMin`, `BalanceStep`).
+- **Binders are left of the colon** in 630 `have`s; the six that still read `have h : ∀ …` cannot be
+  converted, each for a recorded reason (three need a `by omega` term inside a `Fin` cast that the
+  kernel rejects once the binder moves, one inducts before introducing its hypotheses, one binds its
+  own `F` inside the statement, one refines a theorem that *is* the `∀`).  Addendum 191 lists them.
+  A `have h : P → Q` with no `∀` was checked for and **there is none** — the fifteen candidates all
+  put the arrow inside a `fun`, `∫⁻` or `∃` binder type — and no theorem or lemma states its
+  hypotheses as an arrow either; the 75 declarations that do have a top-level arrow are 73 `def`s
+  and 2 `abbrev`s *of functions*, which are left alone (Addendum 191).
+- **`have h := <short term>` is gone where it only renamed** (Addendum 190): the 19 that remain in
+  `IETFree/` all need the *name* — `omega` and `linarith` read the context, `rw … at h` needs a
+  hypothesis rather than a projection, or the statement is a definitional restatement no tactic
+  reproduces.  Do not delete one without re-reading its reason in Addendum 190.
+- **`have _hstop := hstop` is deliberate**, in `RauzyVeech/Peel.lean` and
+  `Rigidity/RigidStep.lean`: the statement carries a hypothesis (`hstop`) that the proof does not
+  use, and the `have` is the only thing that keeps the unused-variable linter quiet.  Deleting it
+  reintroduces a warning; the alternative — dropping the hypothesis from the statement — changes a
+  public theorem (Addendum 190).
 - **Every file is a module** (Addendum 172): `module` after the copyright block, `public import`
   everywhere, and the file's API in a `@[expose] public section` closed by a final `end`.  The
   exposure is blanket on purpose — it keeps every definition as transparent to its clients as

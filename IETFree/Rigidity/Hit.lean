@@ -5,10 +5,10 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.Rigidity.Defs
 public import IETFree.RauzyVeech.IterGlue2
 public import IETFree.RauzyVeech.MeshShrink
 public import IETFree.RauzyVeech.RichPath.RichPathAssembly
+public import IETFree.Rigidity.Defs
 
 /-!
 # Hitting a fixed word at arbitrarily late times
@@ -97,9 +97,8 @@ theorem tendsto_baseLen_pathWord {α : Type*} [Fintype α] [DecidableEq α] {n :
     IETDatum₂.ae_notMem_cylStop_all P hP hn] with lam h0 hstop
   have hiter := IterGlue2.iterOK_pathWord P hP hn h0 hstop
   set p : ℕ → Bool := IETDatum₂.pathStep P lam with hp
-  have hw : ∀ k, IETDatum₂.IsRenorm P (PrefixWord.pfx p k) lam
+  have hw (k) : IETDatum₂.IsRenorm P (PrefixWord.pfx p k) lam
       (fun a => (Tower.lamAfter P (PrefixWord.pfx p k) lam a : ℝ)) := by
-    intro k
     rw [hp, IETDatum₂.pfx_pathStep P lam k]
     exact (IETDatum₂.isRenorm_iff P _ lam _).mpr
       ⟨(hiter k).2, (IterGlue.qApply_lamAfter P hP hn _ lam (hiter k).1).symm⟩

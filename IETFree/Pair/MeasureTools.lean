@@ -153,6 +153,9 @@ def wordSupp (w : FreeGroup Gen) (f g : IET 0 1) : Set ℝ := {x : ℝ | (evalWo
 /-- The length of a word. -/
 def wordLength (w : FreeGroup Gen) : ℕ := (FreeGroup.toWord w).length
 
+/-- **`wordLength` is `FreeGroup.norm`**: the computation form proofs rewriting with it need. -/
+theorem wordLength_eq_norm (w : FreeGroup Gen) : wordLength w = FreeGroup.norm w := rfl
+
 /-! ## Nontriviality of `[y, x^q]`
 
 The word `[y, x^q]` is nontrivial for `q ≠ 0`.  This is not the centralizer theorem behind Lemma
@@ -208,7 +211,6 @@ of `f`, `[g, f^q] = g⁻¹(f^q)⁻¹gf^q = ⁅g⁻¹, (f^q)⁻¹⁆`.  It is che
 `x ↦ x + 1` and `y ↦ 2x`, where it is the translation by `q/2`. -/
 theorem commutator_inv_genY_genX_pow_ne_one {q : ℕ} (hq : q ≠ 0) :
     ⁅genY⁻¹, (genX ^ q)⁻¹⁆ ≠ 1 := by
-  classical
   intro hcon
   set φ : FreeGroup Gen →* Equiv.Perm ℝ :=
     FreeGroup.lift (fun i : Gen => if i = 0 then shiftPerm else scalePerm) with hφ
@@ -219,7 +221,7 @@ theorem commutator_inv_genY_genX_pow_ne_one {q : ℕ} (hq : q ≠ 0) :
     rw [hφ, genY]
     simp
   -- the conjugate of the iterate fixes each point up to `q / 2`
-  have hfun : ∀ x : ℝ,
+  have hfun (x : ℝ) :
       ((scalePerm⁻¹ * (shiftPerm ^ q)⁻¹ * scalePerm * (shiftPerm ^ q) : Equiv.Perm ℝ)) x
         = x + (q : ℝ) / 2 := by
     have hi (k : ℕ) (y : ℝ) : ((shiftPerm ^ k : Equiv.Perm ℝ))⁻¹ y = y - k := by
@@ -230,7 +232,6 @@ theorem commutator_inv_genY_genX_pow_ne_one {q : ℕ} (hq : q ≠ 0) :
           = ((shiftPerm ^ k : Equiv.Perm ℝ))⁻¹ (((shiftPerm ^ k : Equiv.Perm ℝ)) (y - k)) := by
             rw [h1]
         _ = y - k := Equiv.symm_apply_apply _ _
-    intro x
     simp only [Equiv.Perm.mul_apply, shiftPerm_pow, hi, scalePerm_apply, scalePerm_symm_apply]
     ring
   have hval : ((φ ⁅genY⁻¹, (genX ^ q)⁻¹⁆) : Equiv.Perm ℝ) 0 = (q : ℝ) / 2 := by
@@ -253,7 +254,6 @@ theorem isFiniteUnionIntervals_ne_id {h : IET 0 1} {C : Finset ℝ}
     (hC : ∀ y y', ¬ Separated C y y' → h y - y = h y' - y')
     (h0C : (0 : ℝ) ∈ C) (h1C : (1 : ℝ) ∈ C) :
     IsFiniteUnionIntervals {x : ℝ | h x ≠ x} := by
-  classical
   refine ⟨(C ×ˢ C).filter (fun p : ℝ × ℝ => p.1 < p.2 ∧
     (∀ c ∈ C, ¬ (p.1 < c ∧ c < p.2)) ∧ h p.1 - p.1 ≠ 0), fun x => ?_⟩
   constructor
@@ -350,7 +350,7 @@ theorem wordLength_genX_pow (q : ℕ) : wordLength (genX ^ q) = q :=
 theorem wordLength_commutatorElement_le (a b : FreeGroup Gen) :
     wordLength ⁅a, b⁆ ≤ 2 * wordLength a + 2 * wordLength b := by
   rw [commutatorElement_def]
-  change FreeGroup.norm (a * b * a⁻¹ * b⁻¹) ≤ 2 * FreeGroup.norm a + 2 * FreeGroup.norm b
+  simp only [wordLength_eq_norm]
   have h1 : FreeGroup.norm (a * b * a⁻¹ * b⁻¹)
       ≤ FreeGroup.norm (a * b * a⁻¹) + FreeGroup.norm b⁻¹ :=
     FreeGroup.norm_mul_le _ _
@@ -364,7 +364,6 @@ theorem wordLength_commutatorElement_le (a b : FreeGroup Gen) :
 
 /-- Inverting a word does not change its length. -/
 theorem wordLength_inv (w : FreeGroup Gen) : wordLength w⁻¹ = wordLength w := by
-  change FreeGroup.norm w⁻¹ = FreeGroup.norm w
   exact FreeGroup.norm_inv_eq
 
 /-- `genY` has length one. -/
@@ -374,14 +373,14 @@ theorem wordLength_genY : wordLength genY = 1 :=
 /-- The length of a conjugate `a⁻¹ u a` by a letter `a` is at most `wordLength u + 2`. -/
 theorem wordLength_conj_le_of (a : FreeGroup Gen) (ha : wordLength a = 1) (u : FreeGroup Gen) :
     wordLength (a⁻¹ * u * a) ≤ wordLength u + 2 := by
-  change FreeGroup.norm (a⁻¹ * u * a) ≤ FreeGroup.norm u + 2
+  simp only [wordLength_eq_norm]
+  simp only [wordLength_eq_norm] at ha
   have h1 : FreeGroup.norm (a⁻¹ * u * a) ≤ FreeGroup.norm (a⁻¹ * u) + FreeGroup.norm a :=
     FreeGroup.norm_mul_le _ _
   have h2 : FreeGroup.norm (a⁻¹ * u) ≤ FreeGroup.norm a⁻¹ + FreeGroup.norm u :=
     FreeGroup.norm_mul_le _ _
   have h3 : FreeGroup.norm a⁻¹ = 1 := by
     rw [FreeGroup.norm_inv_eq]; exact ha
-  have h4 : FreeGroup.norm a = 1 := ha
   omega
 
 /-- The length of a conjugate `x⁻¹ u x` is at most `wordLength u + 2`. -/
@@ -392,7 +391,7 @@ theorem wordLength_conj_le (u : FreeGroup Gen) :
 /-- The length of a conjugate of `u` by a power of `x`. -/
 theorem wordLength_conj_pow_le (u : FreeGroup Gen) (i : ℕ) :
     wordLength ((genX ^ i)⁻¹ * u * (genX ^ i)) ≤ wordLength u + 2 * i := by
-  change FreeGroup.norm ((genX ^ i)⁻¹ * u * (genX ^ i)) ≤ FreeGroup.norm u + 2 * i
+  simp only [wordLength_eq_norm]
   have h1 : FreeGroup.norm ((genX ^ i)⁻¹ * u * (genX ^ i))
       ≤ FreeGroup.norm ((genX ^ i)⁻¹ * u) + FreeGroup.norm (genX ^ i) :=
     FreeGroup.norm_mul_le _ _
@@ -531,7 +530,6 @@ theorem sum_inter_le (f : IET 0 1) {A S₀ : Set ℝ} (hA : MeasurableSet A) (hS
     (hbirk : ∀ x ∈ Set.Ico (0 : ℝ) 1, (N : ℝ)⁻¹ * ∑ i ∈ Finset.range N,
       S₀.indicator (fun _ => (1 : ℝ)) ((f ^ i) x) ≤ 2 * ε) :
     ∑ i ∈ Finset.range N, unitMeas.real (A ∩ ⇑(f ^ i) ⁻¹' S₀) ≤ 2 * ε * N * unitMeas.real A := by
-  classical
   set ν : Measure ℝ := unitMeas.restrict A with hν
   have hνreal (B : Set ℝ) (hB : MeasurableSet B) : ν.real B = unitMeas.real (B ∩ A) := by
     rw [hν, Measure.real, Measure.real, Measure.restrict_apply hB]
@@ -546,17 +544,16 @@ theorem sum_inter_le (f : IET 0 1) {A S₀ : Set ℝ} (hA : MeasurableSet A) (hS
   have hAe : ∀ᵐ x ∂ν, x ∈ Set.Ico (0 : ℝ) 1 := by
     rw [MeasureTheory.ae_iff]
     rwa [show {x : ℝ | x ∉ Set.Ico (0 : ℝ) 1} = (Set.Ico (0 : ℝ) 1)ᶜ from rfl]
-  have hterm : ∀ i ∈ Finset.range N,
+  have hterm (i) (_ : i ∈ Finset.range N) :
       unitMeas.real (A ∩ ⇑(f ^ i) ⁻¹' S₀)
         = ∫ x, (⇑(f ^ i) ⁻¹' S₀).indicator (fun _ => (1 : ℝ)) x ∂ν := by
-    intro i _
     have hm : MeasurableSet (⇑(f ^ i) ⁻¹' S₀) := hS₀.preimage (IET.measurable_pow f i)
     have hone : (⇑(f ^ i) ⁻¹' S₀).indicator (fun _ => (1 : ℝ)) = (⇑(f ^ i) ⁻¹' S₀).indicator 1 :=
       rfl
     rw [hone, integral_indicator_one hm, hνreal _ hm, Set.inter_comm]
-  have hInt : ∀ i ∈ Finset.range N,
+  have hInt (i) (hi : i ∈ Finset.range N) :
       Integrable (fun x => (⇑(f ^ i) ⁻¹' S₀).indicator (fun _ => (1 : ℝ)) x) ν :=
-    fun i _ => Integrable.indicator (integrable_const 1) (hS₀.preimage (IET.measurable_pow f i))
+          Integrable.indicator (integrable_const 1) (hS₀.preimage (IET.measurable_pow f i))
   calc ∑ i ∈ Finset.range N, unitMeas.real (A ∩ ⇑(f ^ i) ⁻¹' S₀)
       = ∑ i ∈ Finset.range N, ∫ x, (⇑(f ^ i) ⁻¹' S₀).indicator (fun _ => (1 : ℝ)) x ∂ν :=
         Finset.sum_congr rfl hterm
@@ -594,7 +591,6 @@ theorem exists_small_intersection (f g : IET 0 1) {S S₀ : Set ℝ} (hS : Measu
     ∃ i, i < N ∧ unitMeas.real (S ∩ ⇑(f ^ i) ⁻¹' S₀)
         + unitMeas.real (⇑f ⁻¹' S ∩ ⇑(f ^ i) ⁻¹' S₀)
         + unitMeas.real (⇑g ⁻¹' S ∩ ⇑(f ^ i) ⁻¹' S₀) ≤ 6 * ε * unitMeas.real S := by
-  classical
   by_contra hcon
   push Not at hcon
   have b1 := sum_inter_le f hS hS₀ hN hbirk

@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.Step
 public import IETFree.RauzyVeech.Nesting
+public import IETFree.RauzyVeech.Step
 
 /-!
 # The first return map of an interval exchange into a Rauzy subinterval
@@ -215,9 +215,8 @@ theorem sum_filter_lamHat {π : Equiv.Perm (Fin n)} {lam : Fin n → ℝ≥0}
     (hlt : lam (topCell π) < lam botCell) (S : Finset (Fin n)) :
     ∑ j ∈ S, (lamHat π lam j : ℝ)
       = ∑ j ∈ S, (lam j : ℝ) - (if botCell ∈ S then (lam (topCell π) : ℝ) else 0) := by
-  have hterm : ∀ j ∈ S, (lamHat π lam j : ℝ)
-      = (lam j : ℝ) - (if j = botCell then (lam (topCell π) : ℝ) else 0) :=
-    fun j _ => lamHat_coe hlt j
+  have hterm (j) (hj : j ∈ S) : (lamHat π lam j : ℝ)
+      = (lam j : ℝ) - (if j = botCell then (lam (topCell π) : ℝ) else 0) := lamHat_coe hlt j
   rw [Finset.sum_congr rfl hterm, Finset.sum_sub_distrib,
     Finset.sum_ite_eq' S botCell (fun _ => (lam (topCell π) : ℝ))]
 
@@ -914,7 +913,8 @@ theorem measure_image_iterate (π : Equiv.Perm (Fin n)) (lam : Fin n → ℝ≥0
     ext x
     constructor
     · rintro ⟨a, ha, rfl⟩
-      change (⇑(exchEquiv π lam).symm)^[j] ((⇑(exchEquiv π lam))^[j] a) ∈ A
+      rw [Set.mem_preimage]
+      simp only [← coe_exchEquiv]
       rw [exch_symm_apply_iterate π lam j a]
       exact ha
     · intro hx

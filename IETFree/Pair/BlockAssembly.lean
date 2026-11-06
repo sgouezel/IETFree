@@ -32,7 +32,6 @@ theorem mark_mem_insert {n : ℕ} [NeZero n] (F : IETDatum n) (k : Fin (n + 1)) 
     · rw [hk', IETDatum.mark_last]
       exact Finset.mem_insert_of_mem (Finset.mem_insert_self _ _)
     · have hklt : k.val < n := by
-        have h1 := k.isLt
         have h2 : k.val ≠ n := fun h => hk' (Fin.ext (by simpa using h))
         omega
       refine Finset.mem_insert_of_mem (Finset.mem_insert_of_mem
@@ -116,7 +115,6 @@ theorem exists_word_trivial_on_all_of_blocks {d e : ℕ} [NeZero d] [NeZero e] (
     (hw : ∀ i : Fin n, ∃ w : FreeGroup Gen, w ≠ 1 ∧
       ∀ x : ℝ, u i ≤ x → x < v i → (evalWord w D.toIET E.toIET) x = x) :
     ∃ w : FreeGroup Gen, w ≠ 1 ∧ evalWord w D.toIET E.toIET = 1 := by
-  classical
   -- the `i`-th block and the union of the blocks of `J` are invariant under both generators
   have hDB (J : Finset (Fin n)) (x : ℝ) : x ∈ BlocksIn u v J → D.toFun x ∈ BlocksIn u v J := by
     rintro ⟨hx, j, hj, h1, h2⟩
@@ -160,9 +158,8 @@ theorem exists_word_trivial_on_all_of_blocks {d e : ℕ} [NeZero d] [NeZero e] (
     intro h1 h2 h3 h4
     simpa only [evalWord_inv] using hpres u⁻¹ S h1 h2 h3 h4
   -- the induction over the blocks
-  have key : ∀ J : Finset (Fin n), ∃ w : FreeGroup Gen, w ≠ 1 ∧
+  have key (J : Finset (Fin n)) : ∃ w : FreeGroup Gen, w ≠ 1 ∧
       ∀ x : ℝ, x ∈ BlocksIn u v J → (evalWord w D.toIET E.toIET) x = x := by
-    intro J
     induction J using Finset.induction with
     | empty =>
         refine ⟨genX, FreeGroup.of_ne_one 0, ?_⟩
@@ -172,35 +169,35 @@ theorem exists_word_trivial_on_all_of_blocks {d e : ℕ} [NeZero d] [NeZero e] (
         obtain ⟨w, hwne, hwt⟩ := ih
         obtain ⟨wi, hwine, hwit⟩ := hw i
         -- `wi` is trivial on the `i`-th block, `w` on the union of the blocks of `J`
-        have hwit' : ∀ x ∈ BlocksIn u v {i}, (evalWord wi D.toIET E.toIET) x = x := by
-          rintro x ⟨-, j, hj, h1, h2⟩
+        have hwit' (x) (hx0 : x ∈ BlocksIn u v {i}) : (evalWord wi D.toIET E.toIET) x = x := by
+          obtain ⟨-, j, hj, h1, h2⟩ := hx0
           rw [Finset.mem_singleton] at hj
           subst hj
           exact hwit x h1 h2
-        have hwT : ∀ x ∈ BlocksIn u v {i}, (evalWord w D.toIET E.toIET)⁻¹ x ∈ BlocksIn u v {i} :=
-          hpres' w _ (hDB {i}) (hDBi {i}) (hEB {i}) (hEBi {i})
-        have hwS : ∀ x ∈ BlocksIn u v J, (evalWord wi D.toIET E.toIET)⁻¹ x ∈ BlocksIn u v J :=
-          hpres' wi _ (hDB J) (hDBi J) (hEB J) (hEBi J)
-        have hwTcD : ∀ x ∈ BlocksIn u v {i},
+        have hwT (x) (hx0 : x ∈ BlocksIn u v {i}) :
+            (evalWord w D.toIET E.toIET)⁻¹ x ∈ BlocksIn u v {i} :=
+          hpres' w _ (hDB {i}) (hDBi {i}) (hEB {i}) (hEBi {i}) x hx0
+        have hwS (x) (hx0 : x ∈ BlocksIn u v J) :
+            (evalWord wi D.toIET E.toIET)⁻¹ x ∈ BlocksIn u v J :=
+          hpres' wi _ (hDB J) (hDBi J) (hEB J) (hEBi J) x hx0
+        have hwTcD (x) (hx : x ∈ BlocksIn u v {i}) :
             (D.toIET⁻¹ * evalWord w D.toIET E.toIET * D.toIET)⁻¹ x ∈ BlocksIn u v {i} := by
           have hcoe : (D.toIET⁻¹ * evalWord w D.toIET E.toIET * D.toIET)⁻¹
               = D.toIET⁻¹ * (evalWord w D.toIET E.toIET)⁻¹ * D.toIET := by group
-          intro x hx
           rw [hcoe, IET.mul_apply, IET.mul_apply]
           exact hDBi {i} _ (hpres' w (BlocksIn u v {i}) (hDB {i}) (hDBi {i}) (hEB {i}) (hEBi {i}) _
             (hDB {i} _ hx))
-        have hwTcE : ∀ x ∈ BlocksIn u v {i},
+        have hwTcE (x) (hx : x ∈ BlocksIn u v {i}) :
             (E.toIET⁻¹ * evalWord w D.toIET E.toIET * E.toIET)⁻¹ x ∈ BlocksIn u v {i} := by
           have hcoe : (E.toIET⁻¹ * evalWord w D.toIET E.toIET * E.toIET)⁻¹
               = E.toIET⁻¹ * (evalWord w D.toIET E.toIET)⁻¹ * E.toIET := by group
-          intro x hx
           rw [hcoe, IET.mul_apply, IET.mul_apply]
           exact hEBi {i} _ (hpres' w (BlocksIn u v {i}) (hDB {i}) (hDBi {i}) (hEB {i}) (hEBi {i}) _
             (hEB {i} _ hx))
         -- a point of the enlarged union is in the old union or in the `i`-th block
-        have hsplit : ∀ x ∈ BlocksIn u v (insert i J),
+        have hsplit (x) (hx0 : x ∈ BlocksIn u v (insert i J)) :
             x ∈ BlocksIn u v J ∨ x ∈ BlocksIn u v {i} := by
-          rintro x ⟨hx, j, hj, h1, h2⟩
+          obtain ⟨hx, j, hj, h1, h2⟩ := hx0
           rcases Finset.mem_insert.mp hj with rfl | hjJ
           · exact Or.inr ⟨hx, j, Finset.mem_singleton_self j, h1, h2⟩
           · exact Or.inl ⟨hx, j, hjJ, h1, h2⟩

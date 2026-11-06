@@ -41,7 +41,6 @@ variable {f : ℝ → ℝ} {a b : ℝ} {s : Finset ℝ}
 theorem IsCutSet.exists_mem_cell (hs : IsCutSet f a b s) {x : ℝ} (hx : x ∈ Set.Ico a b) :
     ∃ i : Fin s.card,
       x ∈ Set.Ico (hs.cellStarts i) (hs.cellPos (i.val + 1)) := by
-  classical
   obtain ⟨i, hi⟩ := hs.cellStarts_surj (hs.cellLeft_mem x hx)
   refine ⟨i, ?_, ?_⟩
   · rw [hi]
@@ -198,7 +197,6 @@ theorem IsCutSet.volume_preimage_cell {a b : ℝ} {e : Equiv ℝ ℝ} {s : Finse
 theorem Equiv.IsIET.measure_preimage {a b : ℝ} {e : Equiv ℝ ℝ} {s : Finset ℝ}
     (hs : IsCutSet (⇑e) a b s) {A : Set ℝ} (hA : MeasurableSet A) :
     volume (⇑e ⁻¹' A ∩ Set.Ico a b) = volume (A ∩ Set.Ico a b) := by
-  classical
   calc volume (⇑e ⁻¹' A ∩ Set.Ico a b)
       = ∑ i, volume (⇑e ⁻¹' A ∩ Set.Ico (hs.cellStarts i) (hs.cellPos (i.val + 1))) := by
         refine volume_inter_eq_sum (hs.cells_union) (fun i j hij => hs.cells_disjoint hij)
@@ -224,11 +222,9 @@ theorem IsCutSet.eq_add_sum_indicator (hs : IsCutSet f a b s) (x : ℝ) :
     f x = x + ∑ i : Fin s.card,
       (Set.Ico (hs.cellStarts i) (hs.cellPos (i.val + 1))).indicator
         (fun _ : ℝ => (f (hs.cellStarts i) - hs.cellStarts i)) x := by
-  classical
   set F : Fin s.card → ℝ := fun j =>
     (Set.Ico (hs.cellStarts j) (hs.cellPos (j.val + 1))).indicator
       (fun _ : ℝ => (f (hs.cellStarts j) - hs.cellStarts j)) x with hF
-  change f x = x + ∑ i, F i
   by_cases hx : x ∈ Set.Ico a b
   · obtain ⟨i, hi⟩ := hs.exists_mem_cell hx
     have hsum : ∑ j, F j = f (hs.cellStarts i) - hs.cellStarts i := by
@@ -243,9 +239,8 @@ theorem IsCutSet.eq_add_sum_indicator (hs : IsCutSet f a b s) (x : ℝ) :
       · intro hnot
         exact absurd (Finset.mem_univ i) hnot
     rw [hsum, hs.map_of_mem_cell hi]
-  · have hx2 : ∀ i : Fin s.card,
-        x ∉ Set.Ico (hs.cellStarts i) (hs.cellPos (i.val + 1)) := by
-      intro i hxi
+  · have hx2 (i : Fin s.card) : x ∉ Set.Ico (hs.cellStarts i) (hs.cellPos (i.val + 1)) := by
+      intro hxi
       exact hx ((hs.cells_union).symm ▸ Set.mem_iUnion.mpr ⟨i, hxi⟩)
     have hself : f x = x := by
       rcases not_and_or.mp hx with h | h
@@ -274,7 +269,6 @@ theorem IsCutSet.measurable (hs : IsCutSet f a b s) :
 cells `f` is a translation, so each cut of `t` has at most one preimage per cell. -/
 theorem IsCutSet.finite_preimage (hs : IsCutSet f a b s)
     (t : Finset ℝ) : (f ⁻¹' (t : Set ℝ)).Finite := by
-  classical
   refine Set.Finite.subset (t.finite_toSet.union
     ((t ×ˢ s).image (fun p : ℝ × ℝ => p.1 - (f p.2 - p.2))).finite_toSet) ?_
   intro x hx
@@ -290,7 +284,6 @@ theorem IsCutSet.finite_preimage (hs : IsCutSet f a b s)
         (hs.not_separated_cellLeft hxab)
     refine Finset.mem_image.mpr
       ⟨(f x, hs.cellLeft x hxab), Finset.mem_product.mpr ⟨hx, hβmem⟩, ?_⟩
-    change f x - (f (hs.cellLeft x hxab) - hs.cellLeft x hxab) = x
     linarith
   · exact Or.inl (by rw [hs.apply_eq_self_of_le x hxb] at hx; exact hx)
 
@@ -327,8 +320,7 @@ under `f` of the cuts of `g` — finite because `f` is finite-to-one. -/
 theorem IsCutSet.comp {s t : Finset ℝ} {f g : ℝ → ℝ} {a b : ℝ}
     (hf : IsCutSet f a b s) (hg : IsCutSet g a b t) :
     IsCutSet (g ∘ f) a b (s ∪ hf.preimage t) := by
-  classical
-  have ht_sub : ∀ c ∈ t, c ∈ Set.Ico a b := hg.cuts_mem
+  have ht_sub (c) (hc : c ∈ t) : c ∈ Set.Ico a b := hg.cuts_mem c hc
   refine ⟨?_, ?_, ?_, Finset.mem_union_left _ hf.a_mem, ?_, ?_⟩
   · intro x hx
     simp only [Function.comp_apply, hf.apply_eq_self_of_lt x hx, hg.apply_eq_self_of_lt x hx]
@@ -390,13 +382,11 @@ private lemma transl_of_locally_le (hs : IsCutSet f a b s) {x y : ℝ} (hxy : x 
     (hx : x ∈ Set.Ico a b) (hy : y ∈ Set.Ico a b)
     (h : ∀ c ∈ s, x < c → c ≤ y → IsLocallyTranslationAt f a b c) :
     f y - y = f x - x := by
-  classical
   let P : ℕ → Prop := fun n => ∀ x y : ℝ, x ≤ y →
     x ∈ Set.Ico a b → y ∈ Set.Ico a b →
     (∀ c ∈ s, x < c → c ≤ y → IsLocallyTranslationAt f a b c) →
     (s.filter (fun c => x < c ∧ c ≤ y)).card = n → f y - y = f x - x
-  have main : ∀ n, P n := by
-    intro n
+  have main (n) : P n := by
     induction n using Nat.strong_induction_on with
     | h n ih =>
       intro x y hxy hx hy h hcard
@@ -459,9 +449,8 @@ private lemma transl_of_locally_le (hs : IsCutSet f a b s) {x y : ℝ} (hxy : x 
         have hlt1 : P1.card < n := by
           have := Finset.card_lt_card hproper1
           simpa [hP0card] using this
-        have hrestricted1 : ∀ d ∈ s, x < d → d ≤ p →
+        have hrestricted1 (d) (hds : d ∈ s) (hxd : x < d) (hdp : d ≤ p) :
             IsLocallyTranslationAt f a b d := by
-          intro d hds hxd hdp
           exact h d hds hxd (le_trans hdp (le_trans hpc hcy))
         have hrec1 : f p - p = f x - x :=
           ih P1.card hlt1 x p hxp hx hpdom hrestricted1 (by simp [P1])
@@ -479,9 +468,8 @@ private lemma transl_of_locally_le (hs : IsCutSet f a b s) {x y : ℝ} (hxy : x 
         have hlt2 : P2.card < n := by
           have := Finset.card_lt_card hproper2
           simpa [hP0card] using this
-        have hrestricted2 : ∀ d ∈ s, q < d → d ≤ y →
+        have hrestricted2 (d) (hds : d ∈ s) (hqd : q < d) (hdy : d ≤ y) :
             IsLocallyTranslationAt f a b d := by
-          intro d hds hqd hdy
           exact h d hds (lt_trans hxc (lt_of_le_of_lt hcq hqd)) hdy
         have hrec2 : f y - y = f q - q :=
           ih P2.card hlt2 q y hqy hqdom hy hrestricted2 (by simp [P2])

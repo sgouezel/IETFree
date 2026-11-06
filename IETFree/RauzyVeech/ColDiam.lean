@@ -5,9 +5,9 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.MeshShrink
-public import IETFree.RauzyVeech.CylinderVolume
 public import IETFree.RauzyVeech.BoundedSimplex
+public import IETFree.RauzyVeech.CylinderVolume
+public import IETFree.RauzyVeech.MeshShrink
 
 /-!
 # The shrinking of the path cylinders, and the coalescence of the normalised columns
@@ -120,16 +120,15 @@ theorem abs_sub_le_of_cols_close (P : IETDatum₂ α n) (γ : List Bool) {r : �
   have hzero : ∑ b, (t b - t' b) = 0 := by rw [Finset.sum_sub_distrib, ht1, ht'1, sub_self]
   have hdiff : (x a : ℝ) - (x' a : ℝ)
       = ∑ b, (t b - t' b) * (ncol P γ b a - ncol P γ b₀ a) := by
-    have h1 : ∀ b, (t b - t' b) * (ncol P γ b a - ncol P γ b₀ a)
-        = (t b - t' b) * ncol P γ b a - (t b - t' b) * ncol P γ b₀ a := fun b => by ring
-    have h2 : ∀ b, (t b - t' b) * ncol P γ b a
-        = t b * ncol P γ b a - t' b * ncol P γ b a := fun b => by ring
+    have h1 (b) : (t b - t' b) * (ncol P γ b a - ncol P γ b₀ a)
+        = (t b - t' b) * ncol P γ b a - (t b - t' b) * ncol P γ b₀ a := by ring
+    have h2 (b) : (t b - t' b) * ncol P γ b a
+        = t b * ncol P γ b a - t' b * ncol P γ b a := by ring
     rw [Finset.sum_congr rfl fun b (_ : b ∈ (Finset.univ : Finset α)) => h1 b,
       Finset.sum_sub_distrib, ← Finset.sum_mul, hzero, zero_mul, sub_zero,
       Finset.sum_congr rfl fun b (_ : b ∈ (Finset.univ : Finset α)) => h2 b,
       Finset.sum_sub_distrib, ← htx a, ← htx' a]
-  have hbound : ∀ b, |(t b - t' b) * (ncol P γ b a - ncol P γ b₀ a)| ≤ |t b - t' b| * r := by
-    intro b
+  have hbound (b) : |(t b - t' b) * (ncol P γ b a - ncol P γ b₀ a)| ≤ |t b - t' b| * r := by
     rw [abs_mul]
     exact mul_le_mul_of_nonneg_left (hr b b₀ a) (abs_nonneg _)
   have hsumabs : ∑ b, |t b - t' b| ≤ 2 := by

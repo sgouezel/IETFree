@@ -20,16 +20,12 @@ This file keeps the other half of the step — the balance constant `KeeGen` del
 the fact that `A'`-balance is preserved by the growth bound (`bal_of_growth`) — which
 `MassFunction.balanceStep_of_extMassGen` consumes. -/
 
-@[expose] public section
-
-
-
-open Finset
+open Finset IETDatum₂
 open scoped BigOperators
 
-namespace Induction
+@[expose] public section
 
-open IETDatum₂
+namespace Induction
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -58,8 +54,6 @@ theorem bal_of_growth (P : IETDatum₂ α n) {Cb C2 : ℝ} (hC2 : 1 ≤ C2) (hCb
 end Induction
 
 namespace Induction
-
-open IETDatum₂
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 

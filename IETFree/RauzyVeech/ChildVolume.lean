@@ -31,10 +31,10 @@ The volume of the child cylinder (Lemma 3 of the source) is the ratio `vol Δ(γ
 ∏_b colsum_b(γ) / colsum_b(γ ++ δ)`, proved in `IETFree/RauzyVeech/BalancedSet.lean` as
 `BalancedCylinders.volume_append_mul`. -/
 
-@[expose] public section
-
-open MeasureTheory Matrix
+open MeasureTheory Matrix IETDatum₂
 open scoped BigOperators ENNReal NNReal
+
+@[expose] public section
 
 namespace RegionVolume
 
@@ -119,13 +119,11 @@ section RegionSimplex
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {m : ℕ}
 
-open IETDatum₂
-
 omit [DecidableEq α] in
 theorem gchart_mem_simplexOn (P : IETDatum₂ α (m + 1)) {v : Fin m → ℝ} (hv : v ∈ region m) :
     v ∈ gchart P ⁻¹' simplexOn α := by
   simp only [Set.mem_preimage, gchart, simplexOn, Set.mem_ofPred_eq]
-  have hpos : ∀ i, 0 < chart m v i := fun i => chart_pos hv i
+  have hpos (i) : 0 < chart m v i := chart_pos hv i
   refine NNReal.coe_injective ?_
   rw [NNReal.coe_sum, NNReal.coe_one]
   calc ∑ a, ((chart m v (P.piBottom a)).toNNReal : ℝ)
@@ -148,8 +146,6 @@ end RegionSimplex
 section Positivity
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
-
-open IETDatum₂
 
 omit [DecidableEq α] in
 theorem volume_simplexOn_pos (P : IETDatum₂ α n) : 0 < simplexVolumeOn α (simplexOn α) := by

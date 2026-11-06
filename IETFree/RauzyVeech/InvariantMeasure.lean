@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.TopBotFormalism
 public import IETFree.RauzyVeech.SimplexAe
+public import IETFree.TopBotFormalism
 
 /-!
 # Invariant probability measures of an exchange
@@ -98,6 +98,10 @@ noncomputable def lambdaOf {α : Type*} [Fintype α] {n : ℕ} (μ : Probability
 
 /-- Lebesgue as a probability measure on `[0,1)`. -/
 noncomputable def lebesgue : ProbabilityMeasure ℝ := ⟨unitMeas, inferInstance⟩
+
+/-- **Lebesgue measure, as a measure**: the coercion of `lebesgue` is `unitMeas`, the restriction of
+`volume` to `[0, 1)`.  The computation form proofs unfolding it need. -/
+theorem coe_lebesgue : (lebesgue : Measure ℝ) = unitMeas := rfl
 
 /-- **The length vector of Lebesgue measure is the length vector.**  Each cell `[leftEnd, upperEnd)`
 of the bottom order lies in `[0,1)` (because the lengths sum to `1`) and has Lebesgue measure equal
@@ -225,8 +229,8 @@ theorem sum_lambdaOf (P : IETDatum₂ α n) (μ : ProbabilityMeasure ℝ) {lam :
     ∑ a, lambdaOf μ P lam a = 1 := by
   have hdisj : (↑(Finset.univ : Finset α) : Set α).PairwiseDisjoint (cellOf P lam) :=
     fun a _ b _ hne => disjoint_cellOf P lam hne
-  have hmeas : ∀ a, MeasurableSet (cellOf P lam a) := fun _ => measurableSet_Ico
-  have hne_top : ∀ a, (μ : Measure ℝ) (cellOf P lam a) ≠ ⊤ := fun a => measure_ne_top _ _
+  have hmeas (a) : MeasurableSet (cellOf P lam a) := measurableSet_Ico
+  have hne_top (a) : (μ : Measure ℝ) (cellOf P lam a) ≠ ⊤ := measure_ne_top _ _
   have hunion : (⋃ a ∈ (Finset.univ : Finset α), cellOf P lam a) = Set.Ico (0 : ℝ) 1 := by
     rw [← iUnion_cellOf P h]
     simp
@@ -241,7 +245,7 @@ theorem sum_lambdaOf (P : IETDatum₂ α n) (μ : ProbabilityMeasure ℝ) {lam :
 
 /-- Lebesgue on `[0,1)` has mass `1` there. -/
 theorem lebesgue_Ico : (lebesgue : Measure ℝ) (Set.Ico (0 : ℝ) 1) = 1 := by
-  change volume.restrict (Set.Ico (0 : ℝ) 1) (Set.Ico (0 : ℝ) 1) = 1
+  rw [coe_lebesgue, unitMeas]
   rw [Measure.restrict_apply measurableSet_Ico, Set.inter_self, Real.volume_Ico, sub_zero]
   norm_num
 

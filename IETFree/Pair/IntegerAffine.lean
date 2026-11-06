@@ -235,7 +235,6 @@ noncomputable def intAffineData {ι : Type*} [Fintype ι] (F : ι → ParamAffin
       (∀ i k, (A i k).natAbs ≤ K) ∧ (∀ i l, (B i l).natAbs ≤ K) ∧
         ∀ (i : ι) (q : PReal d e), F i q = (c i : ℝ) + ∑ k, (A i k : ℝ) * q.1 k
           + ∑ l, (B i l : ℝ) * q.2 l } := by
-  classical
   refine ⟨(Finset.univ.sup (fun i => max (Finset.univ.sup (fun k => ((h i).coeffA k).natAbs))
     (Finset.univ.sup (fun l => ((h i).coeffB l).natAbs)))) + 1, ?_, ?_⟩
   · omega

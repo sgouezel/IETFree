@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.RichPath.MassFunction
 public import IETFree.RauzyVeech.RichPath.GradedInduction
+public import IETFree.RauzyVeech.RichPath.MassFunction
 
 /-!
 # The mass bound of `Γ₂` along a blocked run
@@ -27,14 +27,12 @@ maximum `𝔐`, `CylinderMass.cond` the conditional mass of a continuation):
 
 These are the inputs of `MassGrowth.exists_extMassGen_sharp`. -/
 
-@[expose] public section
-
-open Finset
+open Finset IETDatum₂
 open scoped BigOperators
 
-namespace MinimalExitMass
+@[expose] public section
 
-open IETDatum₂
+namespace MinimalExitMass
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -172,8 +170,8 @@ theorem cond_blocked_ge_aux (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 
       have h4 : 1 / (1 + 2 ^ L * Cb) ≤ 1 / (1 + 2 ^ j * Cb) :=
         one_div_le_one_div_of_le (by positivity) h3
       linarith
-    have hbal' : ∀ b ∈ A', (1 / Cb) * M ≤ NodeHeight.st P (v ++ [e]) b :=
-      fun b hb => le_trans (hbal b hb) (CylinderMass.state_mono P v [e] b)
+    have hbal' (b) (hb : b ∈ A') : (1 / Cb) * M ≤ NodeHeight.st P (v ++ [e]) b := le_trans (hbal b
+        hb) (CylinderMass.state_mono P v [e] b)
     have hMk' : NodeHeight.Mk 1 (NodeHeight.st P (v ++ [e])) ≤ 2 ^ (j + 1) * M := by
       have h1 : NodeHeight.Mk 1 (NodeHeight.st P (v ++ [e]))
           ≤ 2 * NodeHeight.Mk 1 (NodeHeight.st P v) :=
@@ -183,9 +181,7 @@ theorem cond_blocked_ge_aux (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 
         ring
       rw [h2]
       linarith
-    have hbl' : ∀ i, i < δ'.length →
-        MinimalExit.Blocked P ((v ++ [e]) ++ δ'.take i) A' := by
-      intro i hi
+    have hbl' (i) (hi : i < δ'.length) : MinimalExit.Blocked P ((v ++ [e]) ++ δ'.take i) A' := by
       have h1 := hbl (i + 1) (by simp only [List.length_cons]; omega)
       rw [List.take_succ_cons] at h1
       have hconv : v ++ (e :: δ'.take i) = (v ++ [e]) ++ δ'.take i := by
@@ -235,7 +231,6 @@ theorem exists_uniform_minimal_exit (P : IETDatum₂ α n) (hP : P.Irreducible) 
       ∃ u : List Bool, MinimalExit.Exit P (w ++ u) A' ∧
         (∀ i, i < u.length → MinimalExit.Blocked P (w ++ u.take i) A') ∧
         u.length ≤ L := by
-  classical
   obtain ⟨L, hL⟩ := RauzyReach.exists_path_between P
   refine ⟨L, fun A' w hne hprop => ?_⟩
   obtain ⟨u, hu, hmin, hblk⟩ := MinimalExit.exists_minimal_exit P hP w hne hprop

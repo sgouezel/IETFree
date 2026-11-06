@@ -32,6 +32,15 @@ def last (P : IETDatum₂ α n) (ε : Bool) : α :=
   if ε then P.piTop.symm (lastPos n) else P.piBottom.symm (lastPos n)
 
 omit [DecidableEq α] in
+/-- **The last letter of the top order** is the letter whose top position is `lastPos`: the
+computation form of `last`, which is what proofs unfolding it need. -/
+theorem last_true (P : IETDatum₂ α n) : P.last true = P.piTop.symm (lastPos n) := rfl
+
+omit [DecidableEq α] in
+/-- **The last letter of the bottom order**, in the same computation form. -/
+theorem last_false (P : IETDatum₂ α n) : P.last false = P.piBottom.symm (lastPos n) := rfl
+
+omit [DecidableEq α] in
 @[simp] theorem last_top (P : IETDatum₂ α n) : P.piTop (P.last true) = lastPos n := by
   simp [last]
 
@@ -91,7 +100,6 @@ lemma insertFun_of_gt {p : Fin n} (h : p.val + 1 < n) {k : Fin n} (hk : p.val < 
     (hk' : k ≠ IETDatum₂.lastPos n) :
     (insertFun p h k).val = k.val + 1 := by
   have hk2 : k.val + 1 ≤ n - 1 := by
-    have hlt := k.isLt
     have hne : k.val ≠ n - 1 := fun hh => hk' (Fin.ext (by rw [lastPos_val, hh]))
     omega
   rw [insertFun, if_neg (by omega), if_neg hk', Fin.val_mk, Nat.min_eq_left hk2]
@@ -131,11 +139,11 @@ lemma insertFun_removeFun {p : Fin n} (h : p.val + 1 < n) (k : Fin n) :
           simpa [lastPos_val] using this
         omega
       have hk2 : p.val < (⟨k.val - 1, by have := k.isLt; omega⟩ : Fin n).val := by
-        change p.val < k.val - 1
+        simp only []
         omega
       apply Fin.ext
       rw [insertFun_of_gt h hk2 hk']
-      change k.val - 1 + 1 = k.val
+      rw [Fin.val_mk]
       omega
 
 /-- The insertion as a permutation of the positions.  It is the identity (junk value) when `p` is
@@ -319,7 +327,6 @@ theorem rvStep_piBottom_true_apply (P : IETDatum₂ α n) (a : α) :
       rvStep_piBottom_true_apply_val,
       if_pos (show (P.piBottom a).val ≤ (P.piBottom (P.last true)).val from h1)]
   · have hpv : (P.piBottom (P.last true)).val < (P.piBottom a).val := by
-      have h' : ¬ (P.piBottom a).val ≤ (P.piBottom (P.last true)).val := h1
       omega
     have hp : (P.piBottom (P.last true)).val + 1 < n := by
       have := (P.piBottom a).isLt
@@ -361,8 +368,6 @@ theorem rvStep_irreducible_true (P : IETDatum₂ α n) (hP : P.Irreducible) :
   · refine hP k ?_ i
     intro j hj
     have hj' : j.val ≤ p.val := by
-      have h1 : j.val ≤ k.val := hj
-      have h2 : k.val ≤ p.val := hle
       omega
     have hQ : (rvStep P true).piBottom (P.piBottom.symm j) = j := by
       rw [rvStep_apply_true, Equiv.apply_symm_apply]
@@ -371,12 +376,11 @@ theorem rvStep_irreducible_true (P : IETDatum₂ α n) (hP : P.Irreducible) :
       have := congrArg (rvStep P true).piBottom.symm hQ.symm
       simpa using this
     have hperm : (rvStep P true).perm j = P.perm j := by
-      change (rvStep P true).piTop ((rvStep P true).piBottom.symm j) = P.piTop (P.piBottom.symm j)
+      rw [IETDatum₂.perm_apply]
       rw [hsymm]
       rfl
     simpa only [hperm] using hk j hj
   · have hp_lt : p.val < k.val := by
-      have h' : ¬ k.val ≤ p.val := hle
       omega
     have hQb : (rvStep P true).piBottom (P.last true) = p := by
       rw [rvStep_apply_true, ← hp]
@@ -385,23 +389,18 @@ theorem rvStep_irreducible_true (P : IETDatum₂ α n) (hP : P.Irreducible) :
       hk _ (by rw [hQb]; exact hp_lt.le)
     have h2 : (rvStep P true).perm ((rvStep P true).piBottom (P.last true)) =
         IETDatum₂.lastPos n := by
-      change (rvStep P true).piTop
-          ((rvStep P true).piBottom.symm ((rvStep P true).piBottom (P.last true)))
-        = IETDatum₂.lastPos n
+      rw [IETDatum₂.perm_apply]
       rw [Equiv.symm_apply_apply]
       exact IETDatum₂.last_top P
     rw [h2] at h1
     have hk_last : k = IETDatum₂.lastPos n := by
       apply Fin.ext
-      have h1' : (IETDatum₂.lastPos n).val ≤ k.val := h1
-      rw [lastPos_val] at h1'
-      change k.val = (IETDatum₂.lastPos n).val
+      rw [Fin.le_iff_val_le_val, lastPos_val] at h1
       rw [lastPos_val]
       have := k.isLt
       omega
     rw [hk_last]
-    change i.val ≤ (IETDatum₂.lastPos n).val
-    rw [lastPos_val]
+    rw [Fin.le_iff_val_le_val, lastPos_val]
     have := i.isLt
     omega
 
@@ -411,12 +410,12 @@ omit [DecidableEq α] in
 theorem rvStep_irreducible_false (P : IETDatum₂ α n) (hP : P.Irreducible) :
     (rvStep P false).Irreducible := by
   have h1 : P.inv.Irreducible := by
-    change IsIrreduciblePerm P.inv.perm
+    rw [IETDatum₂.Irreducible_def]
     rw [IETDatum₂.perm_inv]
     exact IsIrreduciblePerm.symm hP
   have h2 : (rvStep P.inv true).Irreducible := rvStep_irreducible_true P.inv h1
   have heq : rvStep P false = (rvStep P.inv true).inv := rfl
-  change IsIrreduciblePerm (rvStep P false).perm
+  rw [IETDatum₂.Irreducible_def]
   rw [heq, IETDatum₂.perm_inv]
   exact IsIrreduciblePerm.symm h2
 
@@ -434,8 +433,8 @@ order: otherwise the permutation would fix its last point, contradicting irreduc
 theorem pivot_true_ne_lastPos (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) :
     P.piBottom (P.last true) ≠ IETDatum₂.lastPos n := by
   intro h
-  have hk : ∀ i : Fin n, i ≤ (⟨n - 2, by omega⟩ : Fin n) := by
-    refine hP _ ?_
+  have hk (i : Fin n) : i ≤ (⟨n - 2, by omega⟩ : Fin n) := by
+    refine hP _ ?_ i
     intro j hj
     have hjv : j.val ≤ n - 2 := hj
     have hjne : j ≠ IETDatum₂.lastPos n := by
@@ -453,7 +452,7 @@ theorem pivot_true_ne_lastPos (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 
         have := congrArg P.piBottom h2
         simpa using this
       exact hjne (by rw [h3, h])
-    change (P.perm j).val ≤ n - 2
+    simp only [Fin.le_iff_val_le_val]
     have hjlt := (P.perm j).isLt
     have hnv : (IETDatum₂.lastPos n).val = n - 1 := lastPos_val
     have hne : (P.perm j).val ≠ n - 1 := by
@@ -501,10 +500,9 @@ theorem rvMat_cast (P : IETDatum₂ α n) (ε : Bool) (a b : α)
 theorem sum_rvMat_mul (c c' : α) (y : α → ℝ) (a : α) :
     ∑ b, ((if b = a then (1 : ℝ) else 0) + (if a = c ∧ b = c' then (1 : ℝ) else 0)) * y b
       = y a + (if a = c then y c' else 0) := by
-  have hexp : ∀ b, ((if b = a then (1 : ℝ) else 0) +
+  have hexp (b) : ((if b = a then (1 : ℝ) else 0) +
         (if a = c ∧ b = c' then (1 : ℝ) else 0)) * y b
       = (if b = a then y b else 0) + (if a = c ∧ b = c' then y b else 0) := by
-    intro b
     rw [add_mul, ite_mul, ite_mul, one_mul, zero_mul]
   have hsplit : ∑ b, ((if b = a then (1 : ℝ) else 0) +
         (if a = c ∧ b = c' then (1 : ℝ) else 0)) * y b
@@ -514,14 +512,12 @@ theorem sum_rvMat_mul (c c' : α) (y : α → ℝ) (a : α) :
   rw [hsplit, Finset.sum_ite_eq' Finset.univ a (fun b => y b)]
   simp only [Finset.mem_univ, if_true]
   by_cases ha : a = c
-  · have h2 : ∀ b, (if a = c ∧ b = c' then y b else 0) = (if b = c' then y b else 0) := by
-      intro b
+  · have h2 (b) : (if a = c ∧ b = c' then y b else 0) = (if b = c' then y b else 0) := by
       rw [ha]
       simp
     rw [Finset.sum_congr rfl (fun b _ => h2 b), Finset.sum_ite_eq' Finset.univ c' (fun b => y b)]
     simp [ha]
-  · have h2 : ∀ b, (if a = c ∧ b = c' then y b else 0) = (0 : ℝ) := by
-      intro b
+  · have h2 (b) : (if a = c ∧ b = c' then y b else 0) = (0 : ℝ) := by
       rw [if_neg (fun h => ha h.1)]
     rw [Finset.sum_congr rfl (fun b _ => h2 b), Finset.sum_const_zero, add_zero]
     simp [ha]

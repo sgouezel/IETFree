@@ -46,8 +46,8 @@ theorem renorm_apply (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     (∑ b, ((IETDatum₂.Path.Q P γ a b).toNat : ℝ) * (Tower.lamAfter P γ lam b : ℝ))
       = (lam a : ℝ) := by
   have h1 := IterGlue.qApply_lamAfter P hP hn γ lam hOK
-  have h2 : ∀ b, ((IETDatum₂.Path.Q P γ a b).toNat : ℝ) = (IETDatum₂.Path.Q P γ a b : ℝ) :=
-    fun b => int_toNat_coe_real (IETDatum₂.Path.Q_nonneg P γ a b)
+  have h2 (b) : ((IETDatum₂.Path.Q P γ a b).toNat : ℝ) = (IETDatum₂.Path.Q P γ a b : ℝ) :=
+      int_toNat_coe_real (IETDatum₂.Path.Q_nonneg P γ a b)
   have h3 := congrFun h1 a
   simp only [IETDatum₂.qApply_apply] at h3
   rw [← h3]
@@ -258,14 +258,12 @@ theorem HH_succ (hP : P.Irreducible) (hn : 2 ≤ n)
     TowerStep.HH P γ (k + 1) b = TowerStep.HH P γ k b
       + if b = (TowerStep.VV P γ k).last (!(p k)) then
           TowerStep.HH P γ k ((TowerStep.VV P γ k).last (p k)) else 0 := by
-  classical
   set e := p k with he
   set V := TowerStep.VV P γ k with hV
   have hne : V.last e ≠ V.last (!e) := VV_last_ne hP hn k e
-  have hQ : ∀ a, IETDatum₂.Path.Q P (γ (k + 1)) a b
+  have hQ (a) : IETDatum₂.Path.Q P (γ (k + 1)) a b
       = IETDatum₂.Path.Q P (γ k) a b
         + if b = V.last (!e) then IETDatum₂.Path.Q P (γ k) a (V.last e) else 0 := by
-    intro a
     rw [hstep k, IETDatum₂.Path.Q_append, IETDatum₂.Path.Q_singleton, Matrix.mul_apply, hV]
     exact mulVec_rvMat (IETDatum₂.Path.Q P (γ k)) (TowerStep.VV P γ k) e hne a b
   have key (a : α) :
@@ -371,8 +369,8 @@ theorem FR_all (hzero : γ 0 = []) (hstep : ∀ k, γ (k + 1) = γ k ++ [p k])
   | succ k ih =>
     intro b y hy
     have hS := StepOK_at (P := P) (γ := γ) (p := p) hstep hOK k
-    have hne : ∀ e : Bool, (TowerStep.VV P γ k).last e ≠ (TowerStep.VV P γ k).last (!e) :=
-      fun e => VV_last_ne (P := P) (γ := γ) hP hn k e
+    have hne (e : Bool) : (TowerStep.VV P γ k).last e ≠ (TowerStep.VV P γ k).last (!e) :=
+        VV_last_ne (P := P) (γ := γ) hP hn k e
     have hcell : y ∈ Tower.cellAt (TowerStep.VV P γ k) [p k] (TowerStep.LL P γ lam k) b := by
       rw [← CC_succ hstep]; exact hy
     have hfr : (TowerStep.KK P γ lam k)^[hgt1 (TowerStep.VV P γ k) (p k) b] y
@@ -492,8 +490,8 @@ theorem SH_all (hzero : γ 0 = []) (hstep : ∀ k, γ (k + 1) = γ k ++ [p k])
       rw [Tower.exch_of_mem P.perm (P.lengthsInBottom lam) hy', hidx]
   | succ k ih =>
     intro b j hj
-    have hne : ∀ e : Bool, (TowerStep.VV P γ k).last e ≠ (TowerStep.VV P γ k).last (!e) :=
-      fun e => VV_last_ne (P := P) (γ := γ) hP hn k e
+    have hne (e : Bool) : (TowerStep.VV P γ k).last e ≠ (TowerStep.VV P γ k).last (!e) :=
+        VV_last_ne (P := P) (γ := γ) hP hn k e
     by_cases hb : b = (TowerStep.VV P γ k).last (!(p k))
     · have hHs : TowerStep.HH P γ (k + 1) b
           = TowerStep.HH P γ k b + TowerStep.HH P γ k ((TowerStep.VV P γ k).last (p k)) := by
@@ -649,8 +647,8 @@ theorem HH_coe_eq (k : ℕ) (b : α) :
 theorem TL (hP : P.Irreducible) (hn : 2 ≤ n) (hlam : lam ∈ simplexOn α)
     (hOK : ∀ k, TowerTrue.IterOK P lam (γ k)) (k : ℕ) :
     (∑ b, (TowerStep.HH P γ k b : ℝ) * (TowerStep.LL P γ lam k b : ℝ)) = 1 := by
-  have hQ : ∀ a b : α, (0 : ℤ) ≤ IETDatum₂.Path.Q P (γ k) a b :=
-    fun a b => IETDatum₂.Path.Q_nonneg P (γ k) a b
+  have hQ (a) (b : α) : (0 : ℤ) ≤ IETDatum₂.Path.Q P (γ k) a b := IETDatum₂.Path.Q_nonneg P (γ k) a
+      b
   calc (∑ b, (TowerStep.HH P γ k b : ℝ) * (TowerStep.LL P γ lam k b : ℝ))
       = ∑ b, (∑ a, ((IETDatum₂.Path.Q P (γ k) a b).toNat : ℝ))
           * (TowerStep.LL P γ lam k b : ℝ) :=
@@ -683,15 +681,13 @@ theorem LVL1 (hstep : ∀ k, γ (k + 1) = γ k ++ [p k])
     Set.Ico 0 (∑ b, (TowerStep.LL P γ lam k b : ℝ))
       = ⋃ b, ⋃ i : Fin (hgt1 (TowerStep.VV P γ k) e b),
           (TowerStep.KK P γ lam k)^[(i : ℕ)] '' TowerStep.CC P γ lam (k + 1) b := by
-  have hne : ∀ e : Bool, (TowerStep.VV P γ k).last e ≠ (TowerStep.VV P γ k).last (!e) :=
-    fun e => VV_last_ne (P := P) (γ := γ) hP hn k e
+  have hne (e : Bool) : (TowerStep.VV P γ k).last e ≠ (TowerStep.VV P γ k).last (!e) := VV_last_ne
+      (P := P) (γ := γ) hP hn k e
   have hS := StepOK_at (P := P) (γ := γ) (p := p) hstep hOK k
-  have key : ∀ e : Bool, p k = e →
-      TowerTrue.StepOK (TowerStep.VV P γ k) (TowerStep.LL P γ lam k) e →
-      Set.Ico 0 (∑ b, (TowerStep.LL P γ lam k b : ℝ))
+  have key (e : Bool) (he : p k = e) (hs : TowerTrue.StepOK (TowerStep.VV P γ k)
+      (TowerStep.LL P γ lam k) e) : Set.Ico 0 (∑ b, (TowerStep.LL P γ lam k b : ℝ))
         = ⋃ b, ⋃ i : Fin (hgt1 (TowerStep.VV P γ k) e b),
             (TowerStep.KK P γ lam k)^[(i : ℕ)] '' TowerStep.CC P γ lam (k + 1) b := by
-    intro e he hs
     cases e with
     | false =>
       have h := level_tower_false (TowerStep.VV P γ k) hne (TowerStep.LL P γ lam k) hs
@@ -717,15 +713,15 @@ theorem LVL1 (hstep : ∀ k, γ (k + 1) = γ k ++ [p k])
 
 theorem hgt1_le_two (hP : P.Irreducible) (hn : 2 ≤ n) (k : ℕ) (e : Bool) (c : α) :
     hgt1 (TowerStep.VV P γ k) e c ≤ 2 := by
-  have hne : ∀ e : Bool, (TowerStep.VV P γ k).last e ≠ (TowerStep.VV P γ k).last (!e) :=
-    fun e => VV_last_ne (P := P) (γ := γ) hP hn k e
+  have hne (e : Bool) : (TowerStep.VV P γ k).last e ≠ (TowerStep.VV P γ k).last (!e) := VV_last_ne
+      (P := P) (γ := γ) hP hn k e
   rw [hgt1_eq _ hne]; split <;> omega
 
 theorem hgt1_eq_one_of_ne (hP : P.Irreducible) (hn : 2 ≤ n) (k : ℕ) (e : Bool) {c : α}
     (hc : c ≠ (TowerStep.VV P γ k).last (!e)) :
     hgt1 (TowerStep.VV P γ k) e c = 1 := by
-  have hne : ∀ e : Bool, (TowerStep.VV P γ k).last e ≠ (TowerStep.VV P γ k).last (!e) :=
-    fun e => VV_last_ne (P := P) (γ := γ) hP hn k e
+  have hne (e : Bool) : (TowerStep.VV P γ k).last e ≠ (TowerStep.VV P γ k).last (!e) := VV_last_ne
+      (P := P) (γ := γ) hP hn k e
   rw [hgt1_eq _ hne]; simp only [if_neg hc, add_zero]
 
 theorem HH_succ_ge (hP : P.Irreducible) (hn : 2 ≤ n)
@@ -778,7 +774,6 @@ theorem cover_step_false (hzero : γ 0 = []) (hstep : ∀ k, γ (k + 1) = γ k +
   obtain ⟨b', hb'⟩ := Set.mem_iUnion.mp hy'
   obtain ⟨i, hi⟩ := Set.mem_iUnion.mp hb'
   obtain ⟨z, hz1, hzy⟩ := hi
-  have hilt : (i : ℕ) < hgt1 (TowerStep.VV P γ k) false b' := i.isLt
   rcases Nat.eq_zero_or_pos (i : ℕ) with hi0 | hipos
   · rw [hi0, Function.iterate_zero_apply] at hzy
     rw [← hzy] at hy
@@ -842,7 +837,6 @@ theorem cover_step_true (hzero : γ 0 = []) (hstep : ∀ k, γ (k + 1) = γ k ++
   obtain ⟨b', hb'⟩ := Set.mem_iUnion.mp hy'
   obtain ⟨i, hi⟩ := Set.mem_iUnion.mp hb'
   obtain ⟨z, hz1, hzy⟩ := hi
-  have hilt : (i : ℕ) < hgt1 (TowerStep.VV P γ k) true b' := i.isLt
   rcases Nat.eq_zero_or_pos (i : ℕ) with hi0 | hipos
   · rw [hi0, Function.iterate_zero_apply] at hzy
     rw [← hzy] at hy
@@ -1052,7 +1046,6 @@ theorem href_all (hzero : γ 0 = []) (hstep : ∀ k, γ (k + 1) = γ k ++ [p k])
   intro k A hA
   rw [mem_floors_iff] at hA
   obtain ⟨b, J, hJ, rfl⟩ := hA
-  have hstep' : ∀ k, γ (k + 1) = γ k ++ [p k] := hstep
   cases hp : p k with
   | false =>
     obtain ⟨c, j, hj, hsub⟩ := refine_step_false hzero hstep hP hn hlam hOK k hp b J hJ
@@ -1083,26 +1076,23 @@ theorem sigma_disjoint (hzero : γ 0 = []) (hstep : ∀ k, γ (k + 1) = γ k ++ 
     (hOK : ∀ k, TowerTrue.IterOK P lam (γ k)) (k : ℕ) :
     ∀ p q : (Σ b : α, Fin (TowerStep.HH P γ k b)), p ≠ q →
       Disjoint (FL P γ lam k p) (FL P γ lam k q) := by
-  classical
   set fr : (Σ b : α, Fin (TowerStep.HH P γ k b)) → Set ℝ := FL P γ lam k with hfr
   have hIco (r : (Σ b : α, Fin (TowerStep.HH P γ k b))) :
     ∃ u v : ℝ, fr r = Set.Ico u v ∧ v - u = (TowerStep.LL P γ lam k r.1 : ℝ) := by
     rw [hfr]
     exact floor_Ico hzero hstep hP hn hlam hOK k r.1 (r.2 : ℕ) (le_of_lt r.2.isLt)
-  have hvol : ∀ r, volume (fr r) = ENNReal.ofReal (TowerStep.LL P γ lam k r.1 : ℝ) := by
-    intro r
+  have hvol (r) : volume (fr r) = ENNReal.ofReal (TowerStep.LL P γ lam k r.1 : ℝ) := by
     obtain ⟨u, v, h1, h2⟩ := hIco r
     rw [h1, Real.volume_Ico, h2]
-  have hfin : ∀ r, volume (fr r) ≠ ⊤ := by
-    intro r; rw [hvol r]; exact ENNReal.ofReal_ne_top
+  have hfin (r) : volume (fr r) ≠ ⊤ := by rw [hvol r]; exact ENNReal.ofReal_ne_top
   have hbdd (S : Set ℝ) (hS : S ⊆ Set.Ico (0 : ℝ) 1) : volume S ≠ ⊤ := by
     refine ne_top_of_le_ne_top ?_ (measure_mono hS)
     rw [Real.volume_Ico, sub_zero, ENNReal.ofReal_one]
     exact ENNReal.one_ne_top
-  have hmeas : ∀ r, MeasurableSet (fr r) := by
-    intro r; rw [hfr]; exact measurableSet_floor hlam k r.1 (r.2 : ℕ)
-  have hsub : ∀ r, fr r ⊆ Set.Ico (0 : ℝ) 1 := by
-    intro r; rw [hfr]; exact floor_subset_one hzero hstep hlam k r.1 (r.2 : ℕ)
+  have hmeas (r) : MeasurableSet (fr r) := by
+    rw [hfr]; exact measurableSet_floor hlam k r.1 (r.2 : ℕ)
+  have hsub (r) : fr r ⊆ Set.Ico (0 : ℝ) 1 := by
+    rw [hfr]; exact floor_subset_one hzero hstep hlam k r.1 (r.2 : ℕ)
   have hsumR : (∑ r : (Σ b : α, Fin (TowerStep.HH P γ k b)),
       (TowerStep.LL P γ lam k r.1 : ℝ)) = 1 := by
     have h2 (b : α) :
@@ -1116,8 +1106,7 @@ theorem sigma_disjoint (hzero : γ 0 = []) (hstep : ∀ k, γ (k + 1) = γ k ++ 
     rw [Finset.sum_congr rfl (fun a _ => h2 a)]
     exact TL hP hn hlam hOK k
   have hsum : (∑ r : (Σ b : α, Fin (TowerStep.HH P γ k b)), (volume (fr r)).toReal) = 1 := by
-    have h1 : ∀ r, (volume (fr r)).toReal = (TowerStep.LL P γ lam k r.1 : ℝ) := by
-      intro r
+    have h1 (r) : (volume (fr r)).toReal = (TowerStep.LL P γ lam k r.1 : ℝ) := by
       rw [hvol r, ENNReal.toReal_ofReal (TowerStep.LL P γ lam k r.1).coe_nonneg]
     simp only [h1]
     exact hsumR
@@ -1192,7 +1181,6 @@ theorem sigma_disjoint (hzero : γ 0 = []) (hstep : ∀ k, γ (k + 1) = γ k ++ 
       exact ENNReal.ofReal_ne_zero_iff.mpr (by linarith)
     rw [← hgoal] at hpos
     exact hpos hmem
-  change Disjoint (fr p) (fr q)
   rw [Set.disjoint_iff_inter_eq_empty, hgoal, Set.Ico_eq_empty_of_le hle]
 
 theorem floors_disjoint (hzero : γ 0 = []) (hstep : ∀ k, γ (k + 1) = γ k ++ [p k])
@@ -1244,8 +1232,8 @@ theorem towerTiling_pathWord (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2
     (hstop : ∀ w : List Bool, lam ∉ IETDatum₂.cylStop P w) :
     TowerTiling P lam (IETDatum₂.pathWord P lam) := by
   have hlam : lam ∈ simplexOn α := ((IETDatum₂.mem_simplexCyl_iff P [] lam).mp h0).1
-  have hOK : ∀ k, TowerTrue.IterOK P lam (IETDatum₂.pathWord P lam k) :=
-    fun k => (IterGlue2.iterOK_pathWord P hP hn h0 hstop k).1
+  have hOK (k) : TowerTrue.IterOK P lam (IETDatum₂.pathWord P lam k) := (IterGlue2.iterOK_pathWord
+      P hP hn h0 hstop k).1
   exact towerTiling (γ := IETDatum₂.pathWord P lam) (p := IETDatum₂.pathStep P lam)
     (IETDatum₂.pathWord_zero P lam) (IETDatum₂.pathWord_succ P lam) hP hn hlam hOK
 
