@@ -6,12 +6,12 @@ Authors: Sébastien Gouëzel
 module
 
 public import IETFree.RauzyVeech.InvariantMeasure
-public import IETFree.RauzyVeech.TrueStep
-public import IETFree.RauzyVeech.MeshShrink
-public import IETFree.RauzyVeech.LengthInjective
-public import IETFree.RauzyVeech.TowerGlue
-public import IETFree.RauzyVeech.RauzyPath
 public import IETFree.RauzyVeech.IterGlue2
+public import IETFree.RauzyVeech.LengthInjective
+public import IETFree.RauzyVeech.MeshShrink
+public import IETFree.RauzyVeech.RauzyPath
+public import IETFree.RauzyVeech.TowerGlue
+public import IETFree.RauzyVeech.TrueStep
 
 /-!
 # Injectivity of the length map, from the tower decomposition
@@ -50,7 +50,7 @@ theorem cellAt_mass_eq (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n
     (hlen : InvariantMeasure.lambdaOf μ P lam = InvariantMeasure.lambdaOf ν P lam) (b : α) :
     (μ : Measure ℝ) (Tower.cellAt P γ lam b)
       = (ν : Measure ℝ) (Tower.cellAt P γ lam b) := by
-  have hQ : ∀ a b, 0 ≤ IETDatum₂.Path.Q P γ a b := fun a b => IETDatum₂.Path.Q_nonneg P γ a b
+  have hQ (a) (b) : 0 ≤ IETDatum₂.Path.Q P γ a b := IETDatum₂.Path.Q_nonneg P γ a b
   have h1 : (fun a => InvariantMeasure.lambdaOf μ P lam a)
       = IETDatum₂.qApply (IETDatum₂.Path.Q P γ)
           (fun b => ((μ : Measure ℝ) (Tower.cellAt P γ lam b)).toReal) :=
@@ -130,16 +130,15 @@ theorem length_injective_of_floors (P : IETDatum₂ α n) (hP : P.Irreducible) (
     μ = ν := by
   have haeμ : ∀ᵐ x ∂(μ : Measure ℝ), x ∈ Set.Ico (0:ℝ) 1 := by
     refine MeasureTheory.ae_iff.mpr ?_
-    change (μ : Measure ℝ) (Set.Ico (0:ℝ) 1)ᶜ = 0
+    simp only [← Set.compl_ofPred, Set.ofPred_mem_eq]
     rw [measure_compl measurableSet_Ico (by rw [hμm]; exact ENNReal.one_ne_top), hμm]
     simp
   have haeν : ∀ᵐ x ∂(ν : Measure ℝ), x ∈ Set.Ico (0:ℝ) 1 := by
     refine MeasureTheory.ae_iff.mpr ?_
-    change (ν : Measure ℝ) (Set.Ico (0:ℝ) 1)ᶜ = 0
+    simp only [← Set.compl_ofPred, Set.ofPred_mem_eq]
     rw [measure_compl measurableSet_Ico (by rw [hνm]; exact ENNReal.one_ne_top), hνm]
     simp
-  have heq : ∀ k A, A ∈ Pf k → (μ : Measure ℝ) A = (ν : Measure ℝ) A := by
-    intro k A hA
+  have heq (k A) (hA : A ∈ Pf k) : (μ : Measure ℝ) A = (ν : Measure ℝ) A := by
     obtain ⟨b, j, rfl⟩ := hfloor k A hA
     exact floor_mass_eq P hP hn hsim (γ k) (hOK k) hμ hν hlen
   have hmain : (μ : Measure ℝ) = (ν : Measure ℝ) :=
@@ -161,7 +160,6 @@ theorem mesh_of_Ico_lengths (Pf : ℕ → Finset (Set ℝ)) (ℓ : ℕ → ℝ)
   intro ε hε
   filter_upwards [hℓ.eventually (isOpen_Iio.mem_nhds hε)] with k hk A hA x hx y hy
   obtain ⟨u, v, rfl, huv⟩ := hIco k A hA
-  have hk' : ℓ k < ε := hk
   rw [Real.dist_eq, abs_lt]
   constructor <;> simp only [Set.mem_Ico] at hx hy <;> linarith [hx.1, hx.2, hy.1, hy.2]
 
@@ -207,7 +205,6 @@ the level-`k` cells. -/
 noncomputable def floors (P : IETDatum₂ α n) (lam : α → ℝ≥0) (γ : ℕ → List Bool)
     (k : ℕ) :
     Finset (Set ℝ) := by
-  classical
   exact ((Finset.univ : Finset (Σ b : α, Fin (hgt P γ k b)))).image
     (fun p => (P.toIET lam)^[(p.2 : ℕ)] '' Tower.cellAt P (γ k) lam p.1)
 
@@ -264,9 +261,9 @@ theorem length_injective_of_tower_of_tiling (P : IETDatum₂ α n) (hP : P.Irred
   refine length_injective_of_tower_of_floors P hP hn ?_
   filter_upwards [h] with lam hlam
   obtain ⟨p, hOK, hpos, hT⟩ := hlam
-  have hw : ∀ k, IETDatum₂.IsRenorm P (PrefixWord.pfx p k) lam
-      (fun a => (Tower.lamAfter P (PrefixWord.pfx p k) lam a : ℝ)) :=
-    fun k => (IETDatum₂.isRenorm_iff P _ lam _).mpr
+  have hw (k) : IETDatum₂.IsRenorm P (PrefixWord.pfx p k) lam
+      (fun a => (Tower.lamAfter P (PrefixWord.pfx p k) lam a : ℝ)) := (IETDatum₂.isRenorm_iff P _
+          lam _).mpr
       ⟨hpos k, (IterGlue.qApply_lamAfter P hP hn _ lam (hOK k)).symm⟩
   have hlim : Tendsto (fun k => ∑ b, (Tower.lamAfter P (PrefixWord.pfx p k) lam b : ℝ))
       atTop (𝓝 0) := MeshShrink.tendsto_total P p lam _ hP hn hw

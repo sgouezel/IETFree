@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.UniqueErgodicity.MainTheorem
 public import IETFree.UniqueErgodicity.Basic
+public import IETFree.UniqueErgodicity.MainTheorem
 
 /-!
 # The a.e. Birkhoff form of Masur–Veech

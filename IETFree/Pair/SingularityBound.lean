@@ -75,7 +75,6 @@ lemma cutSep_mono_ioc {S : Finset ℝ} {x y z : ℝ}
   obtain ⟨c, hcS, hcI⟩ := h
   exact ⟨c, hcS, ioc_subset_of_mem hz hcI⟩
 
-
 section Lattice
 variable {d e : ℕ} (lam : Fin d → ℝ) (mu : Fin e → ℝ)
 
@@ -116,13 +115,13 @@ lemma isLat_sub {k l : ℤ} {x y : ℝ} (hx : IsLat lam mu k x) (hy : IsLat lam 
   obtain ⟨a2, b2, ha2, hb2, rfl⟩ := hy
   refine ⟨fun i => a1 i - a2 i, fun j => b1 j - b2 j, ?_, ?_, ?_⟩
   · intro i
-    change |a1 i - a2 i| ≤ k + l
+    simp only []
     have h := int_abs_sub_le (a1 i) (a2 i)
     have := ha1 i
     have := ha2 i
     omega
   · intro j
-    change |b1 j - b2 j| ≤ k + l
+    simp only []
     have h := int_abs_sub_le (b1 j) (b2 j)
     have := hb1 j
     have := hb2 j
@@ -138,13 +137,13 @@ lemma isLat_add {k l : ℤ} {x y : ℝ} (hx : IsLat lam mu k x) (hy : IsLat lam 
   obtain ⟨a2, b2, ha2, hb2, rfl⟩ := hy
   refine ⟨fun i => a1 i + a2 i, fun j => b1 j + b2 j, ?_, ?_, ?_⟩
   · intro i
-    change |a1 i + a2 i| ≤ k + l
+    simp only []
     have h := abs_add_le (a1 i) (a2 i)
     have := ha1 i
     have := ha2 i
     omega
   · intro j
-    change |b1 j + b2 j| ≤ k + l
+    simp only []
     have h := abs_add_le (b1 j) (b2 j)
     have := hb1 j
     have := hb2 j
@@ -180,8 +179,7 @@ end Lattice
 lemma inv_translate_aux {S : Finset ℝ} {f : Equiv.Perm ℝ}
     (hS : ∀ y y', ¬ CutSep S y y' → f y - y = f y' - y') :
     ∀ y y', ¬ CutSep (S.image f) y y' → f.symm y - y = f.symm y' - y' := by
-  have key : ∀ a b : ℝ, a < b → f a - a ≠ f b - b → CutSep (S.image f) (f a) (f b) := by
-    intro a b hab hne
+  have key (a b : ℝ) (hab : a < b) (hne : f a - a ≠ f b - b) : CutSep (S.image f) (f a) (f b) := by
     have hcut : ∃ c ∈ S, a < c ∧ c ≤ b := by
       by_contra hcon
       push Not at hcon
@@ -196,20 +194,16 @@ lemma inv_translate_aux {S : Finset ℝ} {f : Equiv.Perm ℝ}
     set c := T.max' hTne with hc
     have hcT : c ∈ T := Finset.max'_mem T hTne
     have hcT' : c ∈ S ∧ a < c ∧ c ≤ b := by simpa [hT] using hcT
-    have hcS : c ∈ S := hcT'.1
-    have hcprop : a < c ∧ c ≤ b := hcT'.2
-    have hcmax : ∀ s ∈ S, a < s → s ≤ b → s ≤ c := by
-      intro s hsS has hsb
+    have hcmax (s) (hsS : s ∈ S) (has : a < s) (hsb : s ≤ b) : s ≤ c := by
       exact Finset.le_max' T s (by simp [hT, hsS, has, hsb])
-    have hnocut : ∀ s ∈ S, c < s → b < s := by
-      intro s hsS hcs
+    have hnocut (s) (hsS : s ∈ S) (hcs : c < s) : b < s := by
       by_contra hsb
       push Not at hsb
-      exact absurd (hcmax s hsS (lt_trans hcprop.1 hcs) hsb) (not_le.mpr hcs)
+      exact absurd (hcmax s hsS (lt_trans hcT'.2.1 hcs) hsb) (not_le.mpr hcs)
     have hDcb : f c - c = f b - b := by
       apply hS c b
       rintro ⟨s, hsS, hsI⟩
-      have hcs : c < s ∧ s ≤ b := (mem_Ioc_min_max c b hcprop.2).mp hsI
+      have hcs : c < s ∧ s ≤ b := (mem_Ioc_min_max c b hcT'.2.2).mp hsI
       exact absurd hcs.2 (not_le.mpr (hnocut s hsS hcs.1))
     rcases lt_trichotomy (f a) (f b) with hfab | hfab | hfab
     · have hfc_le : f c ≤ f b := by linarith
@@ -228,7 +222,7 @@ lemma inv_translate_aux {S : Finset ℝ} {f : Equiv.Perm ℝ}
         have hfz : f z = f a := by linarith
         have hza : z = a := f.injective hfz
         linarith
-      refine ⟨f c, Finset.mem_image.mpr ⟨c, hcS, rfl⟩, ?_⟩
+      refine ⟨f c, Finset.mem_image.mpr ⟨c, hcT'.1, rfl⟩, ?_⟩
       rw [mem_Ioc_min_max (f a) (f b) hfab.le]
       exact ⟨hfc_gt, hfc_le⟩
     · exact absurd (f.injective hfab) (ne_of_lt hab)
@@ -238,14 +232,11 @@ lemma inv_translate_aux {S : Finset ℝ} {f : Equiv.Perm ℝ}
         set dd := U.max' hUne' with hd
         have hdU : dd ∈ U := Finset.max'_mem U hUne'
         have hdU' : dd ∈ S ∧ dd ≤ a := by simpa [hU] using hdU
-        have hdS : dd ∈ S := hdU'.1
-        have hda : dd ≤ a := hdU'.2
-        have hdmax : ∀ s ∈ S, s ≤ a → s ≤ dd := by
-          intro s hsS hsa
+        have hdmax (s) (hsS : s ∈ S) (hsa : s ≤ a) : s ≤ dd := by
           exact Finset.le_max' U s (by simp [hU, hsS, hsa])
         have hno_da : ¬ CutSep S dd a := by
           rintro ⟨s, hsS, hsI⟩
-          have hds : dd < s ∧ s ≤ a := (mem_Ioc_min_max dd a hda).mp hsI
+          have hds : dd < s ∧ s ≤ a := (mem_Ioc_min_max dd a hdU'.2).mp hsI
           exact absurd (hdmax s hsS hds.2) (not_le.mpr hds.1)
         have hDda : f dd - dd = f a - a := hS dd a hno_da
         have hfd_le' : f dd ≤ f a := by linarith
@@ -264,11 +255,10 @@ lemma inv_translate_aux {S : Finset ℝ} {f : Equiv.Perm ℝ}
           have hfz : f z = f b := by linarith
           have hzb : z = b := f.injective hfz
           linarith
-        refine ⟨f dd, Finset.mem_image.mpr ⟨dd, hdS, rfl⟩, ?_⟩
+        refine ⟨f dd, Finset.mem_image.mpr ⟨dd, hdU'.1, rfl⟩, ?_⟩
         rw [mem_Ioc_min_max_of_le hfab.le]
         exact ⟨hfd_gt, hfd_le'⟩
-      · have hno : ∀ s ∈ S, a < s := by
-          intro s hsS
+      · have hno (s) (hsS : s ∈ S) : a < s := by
           by_contra h
           push Not at h
           exact hUne ⟨s, by simp [hsS, h]⟩
@@ -359,7 +349,7 @@ lemma step {d e : ℕ} {lam : Fin d → ℝ} {mu : Fin e → ℝ}
         exact ⟨dd, hdC, by rw [Equiv.symm_apply_eq]; exact hez.symm⟩
       exact hy ⟨z, Finset.mem_union_right _ hzmem, hzI⟩
     have hA := hC_trans (e' y) (e' y') hC
-    change A (e' y) - y = A (e' y') - y'
+    simp only [Equiv.Perm.mul_apply]
     linarith
 end Step
 
@@ -729,14 +719,12 @@ theorem evalWord_cuts {d e : ℕ} [NeZero d] [NeZero e] (lam : Fin d → ℝ≥0
       (∀ y y', ¬ CutSep C y y' →
         (evalWord w (mkIET1' lam π hl) (mkIET1' mu σ hm)) y - y
           = (evalWord w (mkIET1' lam π hl) (mkIET1' mu σ hm)) y' - y') := by
-  have hf : ∀ y, (mkIET1' lam π hl).toEquiv y
+  have hf (y) : (mkIET1' lam π hl).toEquiv y
       = y + ∑ i, (dispCoeff lam π 0 y i : ℝ) * (lam i : ℝ) := by
-    intro y
     have h := mkIET1_sub_eq_dispCoeff lam π hl y
     linarith
-  have hg : ∀ y, (mkIET1' mu σ hm).toEquiv y
+  have hg (y) : (mkIET1' mu σ hm).toEquiv y
       = y + ∑ j, (dispCoeff mu σ 0 y j : ℝ) * (mu j : ℝ) := by
-    intro y
     have h := mkIET1_sub_eq_dispCoeff mu σ hm y
     linarith
   obtain ⟨C, hC, hC'⟩ := CutBound.exists_lattice_cuts (d := d) (e := e)
@@ -794,7 +782,6 @@ theorem exists_lattice_cell {d e : ℕ} [NeZero d] [NeZero e] (lam : Fin d → �
         0 < (∑ i, (a i : ℝ) * (lam i : ℝ)) + (∑ j, (b j : ℝ) * (mu j : ℝ)) ∧
         (∑ i, (a i : ℝ) * (lam i : ℝ)) + (∑ j, (b j : ℝ) * (mu j : ℝ))
           ≤ unitMeas.real (wordSupp w (mkIET1' lam π hl) (mkIET1' mu σ hm)) := by
-  classical
   set f := mkIET1' lam π hl with hfdef
   set g := mkIET1' mu σ hm with hgdef
   set h := evalWord w f g with hhdef
@@ -804,11 +791,10 @@ theorem exists_lattice_cell {d e : ℕ} [NeZero d] [NeZero e] (lam : Fin d → �
   set C : Finset ℝ := insert 0 (insert 1 C₀) with hCdef
   have h0C : (0 : ℝ) ∈ C := Finset.mem_insert_self _ _
   have h1C : (1:ℝ) ∈ C := Finset.mem_insert_of_mem (Finset.mem_insert_self _ _)
-  have hC_lat : ∀ c ∈ C, ∃ a : Fin d → ℤ, ∃ b : Fin e → ℤ,
+  have hC_lat (c) (hc : c ∈ C) : ∃ a : Fin d → ℤ, ∃ b : Fin e → ℤ,
       (∀ i, |a i| ≤ ((FreeGroup.toWord w).length : ℤ) + 1) ∧
         (∀ j, |b j| ≤ ((FreeGroup.toWord w).length : ℤ) + 1) ∧
         c = (∑ i, (a i : ℝ) * (lam i : ℝ)) + (∑ j, (b j : ℝ) * (mu j : ℝ)) := by
-    intro c hc
     rcases Finset.mem_insert.mp hc with rfl | hc
     · exact ⟨0, 0, fun i => by simp only [Pi.zero_apply, abs_zero]; omega,
         fun j => by simp only [Pi.zero_apply, abs_zero]; omega, by simp⟩
@@ -820,8 +806,7 @@ theorem exists_lattice_cell {d e : ℕ} [NeZero d] [NeZero e] (lam : Fin d → �
           Finset.sum_const_zero, add_zero]
         exact h1.symm
       · exact hC₀_lat c hc
-  have hC_trans : ∀ y y' : ℝ, ¬ CutSep C y y' → h y - y = h y' - y' := by
-    intro y y' hy'
+  have hC_trans (y y' : ℝ) (hy' : ¬ CutSep C y y') : h y - y = h y' - y' := by
     refine hC₀_trans y y' (fun hh => hy' ?_)
     obtain ⟨c, hc, hci⟩ := hh
     exact ⟨c, Finset.mem_insert_of_mem (Finset.mem_insert_of_mem hc), hci⟩
@@ -844,8 +829,8 @@ theorem exists_lattice_cell {d e : ℕ} [NeZero d] [NeZero e] (lam : Fin d → �
     have := Finset.min'_le _ _ hmem
     rwa [← hc₂] at this
   -- no cut lies strictly between the two
-  have hno_cut : ∀ c ∈ C, ¬ (c₁ < c ∧ c < c₂) := by
-    intro c hcC hlt
+  have hno_cut (c) (hcC : c ∈ C) : ¬ (c₁ < c ∧ c < c₂) := by
+    intro hlt
     rcases lt_or_ge x c with hxc | hxc
     · have hmem : c ∈ C.filter (fun c => x < c) := Finset.mem_filter.mpr ⟨hcC, hxc⟩
       have hle := Finset.min'_le _ _ hmem
@@ -857,20 +842,17 @@ theorem exists_lattice_cell {d e : ℕ} [NeZero d] [NeZero e] (lam : Fin d → �
       linarith [hlt.1]
   -- every point of `(c₁, c₂)` shares the displacement of `x`, which is nonzero
   have hδ : h x - x ≠ 0 := sub_ne_zero.mpr hxne
-  have htrans : ∀ y ∈ Set.Ioo c₁ c₂, h y - y = h x - x := by
-    intro y hy
+  have htrans (y) (hy : y ∈ Set.Ioo c₁ c₂) : h y - y = h x - x := by
     refine hC_trans y x (fun hsep => ?_)
     obtain ⟨c, hcC, hci⟩ := hsep
     rw [Set.mem_Ioc] at hci
     obtain ⟨h1, h2⟩ := hci
-    have hy1 : c₁ < y := hy.1
-    have hy2 : y < c₂ := hy.2
     -- `c` would lie strictly between `c₁` and `c₂`
     have hcl : c₁ < c := by
-      have h1' : c₁ ≤ min y x := le_min (le_of_lt hy1) hc₁_le
+      have h1' : c₁ ≤ min y x := le_min (le_of_lt hy.1) hc₁_le
       linarith
     have hcr : c < c₂ := by
-      have h2' : max y x < c₂ := max_lt hy2 hx_lt
+      have h2' : max y x < c₂ := max_lt hy.2 hx_lt
       linarith
     exact hno_cut c hcC ⟨hcl, hcr⟩
   have hsub : Set.Ioo c₁ c₂ ⊆ wordSupp w f g := by
@@ -933,7 +915,6 @@ theorem isFiniteUnionIntervals_wordSupp {d e : ℕ} [NeZero d] [NeZero e] (lam :
     (π : Equiv.Perm (Fin d)) (mu : Fin e → ℝ≥0) (σ : Equiv.Perm (Fin e))
     (hl : (∑ i, lam i) = 1) (hm : (∑ j, mu j) = 1) (w : FreeGroup Gen) :
     IsFiniteUnionIntervals (wordSupp w (mkIET1' lam π hl) (mkIET1' mu σ hm)) := by
-  classical
   obtain ⟨C₀, -, hC₀⟩ := evalWord_cuts lam π mu σ hl hm w
   refine isFiniteUnionIntervals_ne_id (h := evalWord w (mkIET1' lam π hl) (mkIET1' mu σ hm))
     (C := insert 0 (insert 1 C₀)) ?_ (by simp) (by simp)

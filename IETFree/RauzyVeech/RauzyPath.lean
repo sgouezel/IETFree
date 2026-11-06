@@ -5,10 +5,10 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.Nesting
-public import IETFree.RauzyVeech.PrefixWord
 public import IETFree.RauzyVeech.BalancedSet
 public import IETFree.RauzyVeech.ChildVolume
+public import IETFree.RauzyVeech.Nesting
+public import IETFree.RauzyVeech.PrefixWord
 public import IETFree.RauzyVeech.SimplexAe
 
 /-!
@@ -28,11 +28,10 @@ ingredients, none assumed:
 * `simplexCyl_pfx_succ_subset`: the cylinders along the path are nested.
 -/
 
-@[expose] public section
-
-
-open MeasureTheory
+open MeasureTheory IETDatum₂
 open scoped BigOperators ENNReal NNReal
+
+@[expose] public section
 
 /-!
 # Almost every point of the simplex is strictly positive
@@ -48,7 +47,6 @@ one is `1 - ∑` with `∑ < 1`.  So strict positivity holds not only a.e. but *
 support; no hyperplane-nullity argument is needed. Main results: * `ae_pos_simplexVolume_fin` — a.e.
 `l : Fin d → ℝ≥0` has `0 < l i`, for each `i`; * `ae_pos_simplexVolumeOn` — a.e. `x` w.r.t.
 `simplexVolumeOn α` has `0 < x a` for **all** `a`. -/
-
 
 /-- **Strict positivity in free coordinates.**  For every `d` and every `i : Fin d`, almost every
 `l` for `simplexVolume d` satisfies `0 < l i`.  `simplexVolume d` is carried by the image of the
@@ -95,10 +93,6 @@ theorem ae_pos_simplexVolumeOn (α : Type*) [Fintype α] :
   intro a
   exact ae_pos_simplexVolume_fin (Fintype.equivFin α a)
 
-
-
-
-
 namespace IETDatum₂
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
@@ -113,7 +107,6 @@ noncomputable def pathBranch (P : IETDatum₂ α n) (x : α → ℝ≥0) (γ : L
 
 theorem pathBranch_eq_true_iff (P : IETDatum₂ α n) (x : α → ℝ≥0) (γ : List Bool) :
     pathBranch P x γ = true ↔ x ∈ simplexCyl P (γ ++ [true]) := by
-  classical
   unfold pathBranch
   by_cases h : x ∈ simplexCyl P (γ ++ [true])
   · rw [if_pos h]
@@ -123,7 +116,6 @@ theorem pathBranch_eq_true_iff (P : IETDatum₂ α n) (x : α → ℝ≥0) (γ :
 
 theorem pathBranch_eq_false_iff (P : IETDatum₂ α n) (x : α → ℝ≥0) (γ : List Bool) :
     pathBranch P x γ = false ↔ x ∉ simplexCyl P (γ ++ [true]) := by
-  classical
   unfold pathBranch
   by_cases h : x ∈ simplexCyl P (γ ++ [true])
   · rw [if_pos h]
@@ -243,8 +235,6 @@ theorem ae_notMem_cylStop_all (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 
   exact measure_eq_zero_iff_ae_notMem.mp (simplexVolumeOn_cylStop P hP hn γ)
 
 end IETDatum₂
-
-open IETDatum₂
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 

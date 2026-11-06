@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.UniqueErgodicity.Split
 public import IETFree.UniqueErgodicity.Limits
+public import IETFree.UniqueErgodicity.Split
 
 /-!
 # The germ map of an interval exchange
@@ -185,7 +185,6 @@ theorem cellPos_of_next (h : IsCutSet f 0 1 s) {c x : ℝ} (hc : c ∈ s)
     have hsucc : i.val + 1 = k.val := by
       by_contra hcon
       have hlt : i.val + 1 < k.val := by
-        have hik' : i.val < k.val := hik
         omega
       have hmem : h.cellStarts ⟨i.val + 1, by omega⟩ ∈ s := h.cellStarts_mem _
       have hgt : c < h.cellStarts ⟨i.val + 1, by omega⟩ := by
@@ -527,9 +526,9 @@ theorem apply_eq_and_leftLimit_eq_left (hT : IsCutSet (⇑e) 0 1 s) {x y : ℝ}
     intro hsep
     obtain ⟨d, hd, hdmem⟩ := hsep
     rw [Set.mem_Ioc, min_eq_left hc.le] at hdmem
-    have h2 : d ≤ max (cutBelow hT x hx.1) y := hdmem.2
-    rw [max_eq_right hc.le] at h2
-    exact absurd (lt_cutBelow hT hx.1 hd (lt_of_le_of_lt h2 hy.2)) (not_le.mpr hdmem.1)
+    obtain ⟨hd1, hd2⟩ := hdmem
+    rw [max_eq_right hc.le] at hd2
+    exact absurd (lt_cutBelow hT hx.1 hd (lt_of_le_of_lt hd2 hy.2)) (not_le.mpr hd1)
   have happly : ⇑e y = leftLimit hT x + (y - x) := by
     have htrans := hT.transl_of_not_separated (cutBelow hT x hx.1) y hcy hyIco hns
     have hL := leftLimit_eq_add hT hx
@@ -705,7 +704,6 @@ theorem germProjOf_eventually_affine (hT : IsCutSet (⇑T) 0 1 s) (z : SplitI (s
       exact (isOpen_lt continuous_const SplitI.continuous_proj).inter
         (isOpen_lt SplitI.continuous_proj continuous_const)
     · have hz'1 : cutBelow hT x hx0 < SplitI.proj z' := hz'.1
-      have hz'2 : SplitI.proj z' < m := hz'.2
       rw [hxval]
       rcases lt_trichotomy (SplitI.proj z') x with hlt | heq | hgt
       · have hy : SplitI.proj z' ∈ Set.Ioo (0 : ℝ) x :=
@@ -723,11 +721,11 @@ theorem germProjOf_eventually_affine (hT : IsCutSet (⇑T) 0 1 s) (z : SplitI (s
         rw [hval, heq]
         ring
       · have hyIco : SplitI.proj z' ∈ Set.Ico (0 : ℝ) 1 :=
-          ⟨hxIcc.1.trans hgt.le, lt_of_lt_of_le hz'2 hm1⟩
+          ⟨hxIcc.1.trans hgt.le, lt_of_lt_of_le hz'.2 hm1⟩
         have hns : ¬ Separated s x (SplitI.proj z') := by
           intro hsep
           obtain ⟨d, hd, hd1, hd2⟩ := hsep.exists_of_le hgt.le
-          exact absurd (le_trans (hmnc d hd hd1) hd2) (not_le.mpr hz'2)
+          exact absurd (le_trans (hmnc d hd hd1) hd2) (not_le.mpr hz'.2)
         obtain ⟨hA1, hA2⟩ := apply_eq_and_leftLimit_eq hT hxIco hyIco hgt hns
         rcases germProjOf_eq_apply_or hT z' with h | h
         · rw [h]; exact hA1

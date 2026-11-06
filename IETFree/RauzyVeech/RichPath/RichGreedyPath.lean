@@ -5,11 +5,11 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.RichPath.Potential
-public import IETFree.RauzyVeech.RichPath.InductionAssembly
-public import IETFree.RauzyVeech.RichPath.GradedInduction
-public import IETFree.RauzyVeech.RichPath.RichPathAssembly
 public import IETFree.RauzyVeech.MainComponents
+public import IETFree.RauzyVeech.RichPath.GradedInduction
+public import IETFree.RauzyVeech.RichPath.InductionAssembly
+public import IETFree.RauzyVeech.RichPath.Potential
+public import IETFree.RauzyVeech.RichPath.RichPathAssembly
 
 /-!
 # Richness of the greedy path, unconditionally
@@ -62,10 +62,9 @@ theorem richGreedyPath (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n
     Induction.exists_gradedStep_card_of_inductionStep P
       (Assemble.inductionStep_of_straddleMass P hP hn)
   obtain ⟨δ, hδ, hstep⟩ := step_pinned P hP hn ⟨u, hu⟩ h
-  have key : ∀ N : ℕ, ∀ᵐ x ∂(simplexVolumeOn α), x ∈ IETDatum₂.simplexCyl P [] →
+  have key (N : ℕ) : ∀ᵐ x ∂(simplexVolumeOn α), x ∈ IETDatum₂.simplexCyl P [] →
       ∃ m ≥ N, ∃ w : List Bool, w.length = m ∧ IETDatum₂.vertex P w = π₀ ∧
         x ∈ IETDatum₂.simplexCyl P (w ++ γ₀) := by
-    intro N
     -- the per-atom hypothesis of the Lévy recurrence, for the pinned target
     have hZ : simplexVolumeOn α (ZpinLev P π₀ γ₀ N) = 0 := by
       refine levy_cylinder P hP hn (ZpinLev P π₀ γ₀ N)

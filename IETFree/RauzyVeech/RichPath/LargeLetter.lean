@@ -24,15 +24,12 @@ appears).  This file proves **`Γ₄`**, in the form the `k → k+1` step consum
   `exists_head_drop`.
 -/
 
+open MeasureTheory Finset NodeHeight IETDatum₂
+open scoped BigOperators MeasureTheory
+
 @[expose] public section
 
-
-open MeasureTheory Finset NodeHeight
-open scoped BigOperators
-
 namespace LargeLetter
-
-open IETDatum₂
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -132,7 +129,6 @@ theorem newLetter_bound
     ∃ i, i ≤ N ∧ ∃ θ, θ ∉ A' ∧
       Mk 1 (h i) ≤ 4 * (Fintype.card α : ℝ) * κ *
         min (mmin (insert θ A') (h i)) R := by
-  classical
   set d : ℝ := (Fintype.card α : ℝ) with hd
   have hd1 : (1 : ℝ) ≤ d := by rw [hd]; exact_mod_cast hcard
   have hR0 : Mk 1 (h 0) ≤ R := (Mk_one_le_iff hcard).mpr hR
@@ -175,20 +171,18 @@ theorem newLetter_bound
     have hex : ∃ j : ℕ, 2 * d * R < Mk 1 (h j) := ⟨N, hcase⟩
     set j := Nat.find hex with hjdef
     have hjgt : 2 * d * R < Mk 1 (h j) := Nat.find_spec hex
-    have hjmin : ∀ m, m < j → ¬ (2 * d * R < Mk 1 (h m)) := fun m hm => Nat.find_min hex hm
+    have hjmin (m) (hm : m < j) : ¬ (2 * d * R < Mk 1 (h m)) := Nat.find_min hex hm
     have hjle : j ≤ N := Nat.find_min' hex hcase
     have hj1 : 1 ≤ j := by
       rcases Nat.eq_zero_or_pos j with h0 | h0
       · exfalso
-        have hgt := hjgt
-        rw [h0] at hgt
+        rw [h0] at hjgt
         have := hR0
         nlinarith
       · exact h0
     have hprev : Mk 1 (h (j - 1)) ≤ 2 * d * R := not_lt.mp (hjmin (j - 1) (by omega))
     have hjN : j - 1 < N := by omega
-    have hbound : ∀ b, h j b ≤ 2 * (2 * d * R) := by
-      intro b
+    have hbound (b) : h j b ≤ 2 * (2 * d * R) := by
       have hstepj := hstep (j - 1) hjN b
       have hjm : j - 1 + 1 = j := Nat.sub_add_cancel hj1
       rw [hjm] at hstepj
@@ -281,24 +275,22 @@ theorem newLetter_words
       Mk 1 (st P (w ++ (ν ++ [e]).take i)) ≤
         4 * (Fintype.card α : ℝ) * Cb *
           min (mmin (insert θ A') (st P (w ++ (ν ++ [e]).take i))) (Mk 1 (st P w)) := by
-  classical
   set δ : List Bool := ν ++ [e] with hδdef
-  have hex : ∀ i, i < δ.length → ∃ e' : Bool, (δ.drop i).head? = some e' :=
-    fun i h => exists_head_drop δ i h
+  have hex (i) (h : i < δ.length) : ∃ e' : Bool, (δ.drop i).head? = some
+      e' := exists_head_drop δ i h
   set ee : ℕ → Bool := fun i => if h : i < δ.length then Classical.choose (hex i h) else true
     with hee_def
-  have hee : ∀ i (h : i < δ.length), (δ.drop i).head? = some (ee i) := by
-    intro i h
+  have hee (i) (h : i < δ.length) : (δ.drop i).head? = some (ee i) := by
     rw [hee_def]
     simp only [dif_pos h]
     exact Classical.choose_spec (hex i h)
-  have htake : ∀ i (h : i < δ.length), δ.take (i + 1) = δ.take i ++ [ee i] :=
-    fun i h => take_succ_eq_of_head δ i (ee i) (hee i h)
-  have hstep : ∀ i < δ.length, ∀ b, st P (w ++ δ.take (i + 1)) b
+  have htake (i) (h : i < δ.length) : δ.take (i + 1) = δ.take i ++ [ee i] := take_succ_eq_of_head δ
+      i (ee i) (hee i h)
+  have hstep (i) (h : i < δ.length) : ∀ b, st P (w ++ δ.take (i + 1)) b
       = st P (w ++ δ.take i) b
         + (if b = (P.vertex (w ++ δ.take i)).last (!(ee i))
            then st P (w ++ δ.take i) ((P.vertex (w ++ δ.take i)).last (ee i)) else 0) := by
-    intro i h b
+    intro b
     change ColShrink.cs P (w ++ δ.take (i + 1)) b
       = ColShrink.cs P (w ++ δ.take i) b
         + (if b = (P.vertex (w ++ δ.take i)).last (!(ee i))
@@ -373,9 +365,8 @@ theorem sum_cond_le_one (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ 
   have hle : simplexVolumeOn α (⋃ δ ∈ S, IETDatum₂.simplexCyl P (w ++ δ)) ≤ V :=
     measure_mono hsub
   rw [BalancedCylinders.volume_iUnion_antichain P hP hn w S hS.antichain] at hle
-  have hterm : ∀ δ ∈ S, simplexVolumeOn α (IETDatum₂.simplexCyl P (w ++ δ))
-      = ENNReal.ofReal (CylinderMass.cond P w δ) * V :=
-    fun δ _ => CylinderMass.volume_append_eq_cond P w δ
+  have hterm (δ) (hδ : δ ∈ S) : simplexVolumeOn α (IETDatum₂.simplexCyl P (w ++ δ))
+      = ENNReal.ofReal (CylinderMass.cond P w δ) * V := CylinderMass.volume_append_eq_cond P w δ
   rw [Finset.sum_congr rfl hterm, ← Finset.sum_mul] at hle
   have h1 : (∑ δ ∈ S, ENNReal.ofReal (CylinderMass.cond P w δ)) ≤ 1 := by
     have h2 : V * (∑ δ ∈ S, ENNReal.ofReal (CylinderMass.cond P w δ)) ≤ V * 1 := by
@@ -394,18 +385,14 @@ theorem sum_cond_fibre_le (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 �
     (w t : List Bool) (S : Finset (List Bool)) (hS : PrefixFree S)
     (hext : ∀ δ ∈ S, t <+: δ) :
     ∑ δ ∈ S, CylinderMass.cond P w δ ≤ CylinderMass.cond P w t := by
-  classical
-  have hex : ∀ δ, δ ∈ S → ∃ u, δ = t ++ u := by
-    intro δ hδ
+  have hex (δ) (hδ : δ ∈ S) : ∃ u, δ = t ++ u := by
     obtain ⟨u, hu⟩ := hext δ hδ
     exact ⟨u, hu.symm⟩
   set uu : List Bool → List Bool :=
     fun δ => if h : δ ∈ S then Classical.choose (hex δ h) else [] with huu
-  have huu_eq : ∀ δ (h : δ ∈ S), uu δ = Classical.choose (hex δ h) := by
-    intro δ h
+  have huu_eq (δ) (h : δ ∈ S) : uu δ = Classical.choose (hex δ h) := by
     simp only [huu, dif_pos h]
-  have hgoal : ∀ δ (h : δ ∈ S), δ = t ++ uu δ := by
-    intro δ h
+  have hgoal (δ) (h : δ ∈ S) : δ = t ++ uu δ := by
     rw [huu_eq δ h]
     exact Classical.choose_spec (hex δ h)
   have hsum : ∑ δ ∈ S, CylinderMass.cond P w δ
@@ -416,8 +403,8 @@ theorem sum_cond_fibre_le (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 �
     rw [CylinderMass.cond_append]
   rw [hsum]
   refine mul_le_of_le_one_right (le_of_lt (CylinderMass.cond_pos P w t)) ?_
-  have hinj : ∀ x ∈ S, ∀ y ∈ S, uu x = uu y → x = y := by
-    intro x hx y hy hxy
+  have hinj (x) (hx : x ∈ S) : ∀ y ∈ S, uu x = uu y → x = y := by
+    intro y hy hxy
     rw [hgoal x hx, hgoal y hy, hxy]
   have himg : ∑ η ∈ S.image uu, CylinderMass.cond P (w ++ t) η
       = ∑ δ ∈ S, CylinderMass.cond P (w ++ t) (uu δ) := by
@@ -448,11 +435,9 @@ theorem exists_prefixFree_mass (P : IETDatum₂ α n) (hP : P.Irreducible) (hn :
     (hcov : ∀ δ ∈ S, ∃ t ∈ U, t <+: δ) :
     ∃ T ⊆ U, PrefixFree T ∧
       ∑ δ ∈ S, CylinderMass.cond P w δ ≤ ∑ t ∈ T, CylinderMass.cond P w t := by
-  classical
   set T : Finset (List Bool) := U.filter (fun t => ∀ u ∈ U, u <+: t → u = t) with hT
   have hTU : T ⊆ U := Finset.filter_subset _ _
-  have hmin : ∀ t ∈ U, ∃ a ∈ T, a <+: t := by
-    intro t ht
+  have hmin (t) (ht : t ∈ U) : ∃ a ∈ T, a <+: t := by
     have hne : (U.filter (fun u => u <+: t)).Nonempty := by
       rw [Finset.filter_nonempty_iff]
       exact ⟨t, ht, List.prefix_rfl⟩
@@ -471,22 +456,18 @@ theorem exists_prefixFree_mass (P : IETDatum₂ α n) (hP : P.Irreducible) (hn :
     intro a ha b hb hab habs
     rw [hT, Finset.mem_filter] at hb
     exact hab (hb.2 a (hTU ha) habs)
-  have hcov2 : ∀ δ, δ ∈ S → ∃ a, a ∈ T ∧ a <+: δ := by
-    intro δ hδ
+  have hcov2 (δ) (hδ : δ ∈ S) : ∃ a, a ∈ T ∧ a <+: δ := by
     obtain ⟨t, ht, hpre⟩ := hcov δ hδ
     obtain ⟨a, ha, hapre⟩ := hmin t ht
     exact ⟨a, ha, hapre.trans hpre⟩
   set g : List Bool → List Bool :=
     fun δ => if h : δ ∈ S then Classical.choose (hcov2 δ h) else [] with hg
-  have hg_eq : ∀ δ (h : δ ∈ S), g δ = Classical.choose (hcov2 δ h) := by
-    intro δ h
+  have hg_eq (δ) (h : δ ∈ S) : g δ = Classical.choose (hcov2 δ h) := by
     simp only [hg, dif_pos h]
-  have hgT : ∀ δ (h : δ ∈ S), g δ ∈ T := by
-    intro δ h
+  have hgT (δ) (h : δ ∈ S) : g δ ∈ T := by
     rw [hg_eq δ h]
     exact (Classical.choose_spec (hcov2 δ h)).1
-  have hgpre : ∀ δ (h : δ ∈ S), g δ <+: δ := by
-    intro δ h
+  have hgpre (δ) (h : δ ∈ S) : g δ <+: δ := by
     rw [hg_eq δ h]
     exact (Classical.choose_spec (hcov2 δ h)).2
   have hdisj : (↑T : Set (List Bool)).PairwiseDisjoint
@@ -511,8 +492,6 @@ theorem exists_prefixFree_mass (P : IETDatum₂ α n) (hP : P.Irreducible) (hn :
   exact sum_cond_fibre_le P hP hn w a _ (hS.subset (Finset.filter_subset _ _)) fun δ hδ => by
     rw [← (Finset.mem_filter.mp hδ).2]
     exact hgpre δ (Finset.mem_filter.mp hδ).1
-
-open scoped MeasureTheory
 
 end LargeLetter
 

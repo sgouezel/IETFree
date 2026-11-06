@@ -180,6 +180,11 @@ theorem Equiv.IsIET.symm_mapsTo {a b : ℝ} {e : Equiv ℝ ℝ} {s : Finset ℝ}
 noncomputable def IsCutSet.cellStarts (_hs : IsCutSet f a b s) : Fin s.card → ℝ :=
   fun i => ((Finset.orderIsoOfFin (s) rfl) i : ℝ)
 
+/-- **The enumeration, as a coercion**: `cellStarts i` is the `i`-th element of `{a} ∪ s`, read as a
+real number.  This is the form in which proofs meet it when they work with `orderIsoOfFin`. -/
+theorem IsCutSet.cellStarts_eq_coe (hs : IsCutSet f a b s) (i : Fin s.card) :
+    hs.cellStarts i = ((Finset.orderIsoOfFin s rfl i : {x // x ∈ s}) : ℝ) := rfl
+
 /-- The enumeration takes values among the cell starts. -/
 theorem IsCutSet.cellStarts_mem (hs : IsCutSet f a b s) (i : Fin s.card) : hs.cellStarts i ∈ s :=
   (Finset.orderIsoOfFin (s) rfl i).2
@@ -195,23 +200,21 @@ theorem IsCutSet.cellStarts_mem_Ico
 
 /-- The first cell starts at `a`. -/
 theorem IsCutSet.cellStarts_zero (hs : IsCutSet f a b s) : hs.cellStarts ⟨0, hs.card_pos⟩ = a := by
-  classical
   have : NeZero s.card := ⟨hs.card_pos.ne'⟩
   have hne : 0 < s.card := hs.card_pos
-  have hall : ∀ x ∈ s, a ≤ x := fun x hx => (hs.cuts_mem x hx).1
+  have hall (x) (hx : x ∈ s) : a ≤ x := (hs.cuts_mem x hx).1
   -- the index at which `a` is enumerated
   set iso := Finset.orderIsoOfFin s rfl with hiso
   set j : Fin s.card := iso.symm ⟨a, hs.a_mem⟩ with hj
   have hjval : hs.cellStarts j = a := by
     have h1 : iso j = ⟨a, hs.a_mem⟩ := iso.apply_symm_apply _
-    change ((iso j : {x // x ∈ s}) : ℝ) = a
-    rw [h1]
+    rw [IsCutSet.cellStarts_eq_coe]
+    exact congrArg Subtype.val h1
   have hj0 : j = ⟨0, hne⟩ := by
     refine le_antisymm ?_ (Fin.zero_le _)
     by_contra hcon
     rw [not_le] at hcon
-    have hlt : (⟨0, hne⟩ : Fin s.card) < j := hcon
-    have h1 : hs.cellStarts ⟨0, hne⟩ < hs.cellStarts j := hs.cellStarts_strictMono hlt
+    have h1 : hs.cellStarts ⟨0, hne⟩ < hs.cellStarts j := hs.cellStarts_strictMono hcon
     have h2 : a ≤ hs.cellStarts ⟨0, hne⟩ := hall _ (hs.cellStarts_mem _)
     rw [hjval] at h1
     linarith
@@ -244,9 +247,8 @@ theorem IsCutSet.sum_cellLen (hs : IsCutSet f a b s) :
   have hne : 0 < s.card := by
     have : a ∈ s := hs.a_mem
     exact Finset.card_pos.mpr ⟨a, this⟩
-  have hfun : ∀ i : Fin s.card,
-      hs.cellLen i = (fun k => hs.cellPos k) (i.val + 1) - (fun k => hs.cellPos k) i.val :=
-    fun i => rfl
+  have hfun (i : Fin s.card) :
+      hs.cellLen i = (fun k => hs.cellPos k) (i.val + 1) - (fun k => hs.cellPos k) i.val := rfl
   simp only [hfun]
   rw [Fin.sum_univ_eq_sum_range (fun k => hs.cellPos (k + 1) - hs.cellPos k) s.card]
   rw [Finset.sum_range_sub]
@@ -293,10 +295,9 @@ theorem IsCutSet.cellPos_le (hs : IsCutSet f a b s) (k : ℕ) : hs.cellPos k ≤
 /-- The right end of a cell is at most the left end of any later cell. -/
 theorem IsCutSet.cellPos_le_cellStarts (hs : IsCutSet f a b s) {i j : Fin s.card} (hij : i < j) :
     hs.cellPos (i.val + 1) ≤ hs.cellStarts j := by
-  have hlt : i.val < j.val := hij
   rcases hs.cellPos_succ i with ⟨h, hh⟩ | ⟨h, hh⟩
   · rw [hh]
-    exact hs.cellStarts_strictMono.monotone (Fin.le_def.mpr (by simpa using Nat.succ_le_of_lt hlt))
+    exact hs.cellStarts_strictMono.monotone (Fin.le_def.mpr (by simpa using Nat.succ_le_of_lt hij))
   · rw [hh]
     exfalso
     omega
@@ -390,7 +391,6 @@ theorem IsCutSet.image_cell_le (hs : IsCutSet f a b s) (hinj : Function.Injectiv
 /-- The lengths of the cells before the `i`-th sum to `β i - a`. -/
 theorem IsCutSet.sum_cellLen_lt (hs : IsCutSet f a b s) (i : Fin s.card) :
     ∑ j ∈ Finset.univ.filter (fun j => j < i), hs.cellLen j = hs.cellStarts i - a := by
-  classical
   have hne : 0 < s.card := hs.card_pos
   have hpos (j : Fin s.card) : hs.cellLen j = hs.cellPos (j.val + 1) - hs.cellPos j.val := by
     have h1 := hs.cellPos_of_lt j.isLt
@@ -445,7 +445,7 @@ noncomputable def IsCutSet.cellPerm (hs : IsCutSet f a b s) (hinj : Function.Inj
       have hy : (iso₂ j : ℝ) ∈ hs.imageStarts := (iso₂ j).2
       obtain ⟨β, hβ, hfβ⟩ := hs.mem_imageStarts.mp hy
       refine ⟨iso₁.symm ⟨β, hβ⟩, ?_⟩
-      change iso₂.symm ⟨f (iso₁ (iso₁.symm ⟨β, hβ⟩)), _⟩ = j
+      simp only []
       rw [iso₁.apply_symm_apply]
       have himg : (⟨f β, hs.mem_imageStarts.mpr ⟨β, hβ, rfl⟩⟩ : ↥hs.imageStarts) = iso₂ j :=
         Subtype.ext hfβ
@@ -464,11 +464,11 @@ theorem IsCutSet.cellPerm_val
 theorem IsCutSet.cellPerm_lt_iff
     (hs : IsCutSet f a b s) (hinj : Function.Injective f) {i j : Fin s.card} :
     hs.cellPerm hinj j < hs.cellPerm hinj i ↔ f (hs.cellStarts j) < f (hs.cellStarts i) := by
-  have key : ∀ k : Fin s.card,
+  have key (k : Fin s.card) :
       (Finset.orderIsoOfFin hs.imageStarts (hs.imageStarts_card hinj)) (hs.cellPerm hinj k)
         = ⟨f (hs.cellStarts k),
-            hs.mem_imageStarts.mpr ⟨hs.cellStarts k, hs.cellStarts_mem k, rfl⟩⟩ :=
-    fun k => hs.cellPerm_val hinj k
+            hs.mem_imageStarts.mpr ⟨hs.cellStarts k, hs.cellStarts_mem k, rfl⟩⟩ := hs.cellPerm_val
+                hinj k
   constructor
   · intro h
     have h2 := (Finset.orderIsoOfFin hs.imageStarts (hs.imageStarts_card hinj)).strictMono h
@@ -545,11 +545,9 @@ theorem IsCutSet.sum_cellLen_image {e : Equiv ℝ ℝ} {a b : ℝ} {s : Finset �
     (hs : IsCutSet (⇑e) a b s) (i : Fin s.card) :
     ∑ j ∈ Finset.univ.filter (fun j => hs.cellPerm e.injective j < hs.cellPerm e.injective i),
         hs.cellLen j = ⇑e (hs.cellStarts i) - a := by
-  classical
   set F := Finset.univ.filter (fun j => hs.cellPerm e.injective j < hs.cellPerm e.injective i) with
     hF
-  have hnn : ∀ j ∈ F, 0 ≤ hs.cellLen j := by
-    intro j _
+  have hnn (j) (_ : j ∈ F) : 0 ≤ hs.cellLen j := by
     have h1 := hs.cellPos_of_lt j.isLt
     have h2 := hs.cellStarts_lt_cellPos j
     unfold IsCutSet.cellLen

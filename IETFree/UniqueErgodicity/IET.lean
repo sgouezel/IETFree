@@ -5,13 +5,13 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.UniqueErgodicity.Main
-public import IETFree.UniqueErgodicity.Germ
-public import IETFree.UniqueErgodicity.MeasPrep
 public import IETFree.UniqueErgodicity.CompactTool
-public import IETFree.UniqueErgodicity.TransferConv
-public import IETFree.UniqueErgodicity.SubtypeConv
+public import IETFree.UniqueErgodicity.Germ
 public import IETFree.UniqueErgodicity.GermIterate
+public import IETFree.UniqueErgodicity.Main
+public import IETFree.UniqueErgodicity.MeasPrep
+public import IETFree.UniqueErgodicity.SubtypeConv
+public import IETFree.UniqueErgodicity.TransferConv
 
 /-!
 # Theorem 2: uniform Birkhoff convergence from a unique invariant measure
@@ -197,7 +197,6 @@ theorem map_proj_eq_unitMeas_of_invariant {n : ℕ} [NeZero n] (lam : Fin n → 
     (ν : Measure ↥(ietRightPart lam π)).map (fun z => SplitI.proj z.1) = unitMeas :=
   haveI : Countable (ietSplitSet lam π) := splitSet_countable _ _
   by
-  classical
   have hT : IsCutSet (⇑(mkIETEquiv lam π 0)) 0 1 (mkIETCuts lam 0 1) := isCutSet_mkIET lam π h.le
   have hH2 : NoPeriodicLeftLimit hT := noPeriodicLeftLimit_of_unique hT hH1
   -- the pushforward of `ν` to the whole split interval
@@ -228,8 +227,7 @@ theorem map_proj_eq_unitMeas_of_invariant {n : ℕ} [NeZero n] (lam : Fin n → 
       c ∈ J ↔ c ∈ Set.Icc (0 : ℝ) 1 ∧ leftLimit hT c ≠ ⇑(mkIETEquiv lam π 0) c := by
     have hfin := finite_jumpSet hT
     exact ⟨hfin.toFinset, fun c => hfin.mem_toFinset⟩
-  have hJD : ∀ c ∈ J, c ∈ ietSplitSet lam π := by
-    intro c hc
+  have hJD (c) (hc : c ∈ J) : c ∈ ietSplitSet lam π := by
     obtain ⟨hcIcc, hcne⟩ := (hJmem c).mp hc
     rcases eq_or_lt_of_le hcIcc.2 with hc1 | hc1
     · rw [hc1]
@@ -238,24 +236,18 @@ theorem map_proj_eq_unitMeas_of_invariant {n : ℕ} [NeZero n] (lam : Fin n → 
         (by_contra fun hcs => hcne (leftLimit_eq_apply hT ⟨hcIcc.1, hc1⟩ hcs))
   -- the total left-germ map at the jumps
   set e : ℝ → SplitI (ietSplitSet lam π) := leftGermSection (D := ietSplitSet lam π) with he
-  have hpe : ∀ c ∈ J, SplitI.proj (e c) = c := by
-    intro c hc
+  have hpe (c) (hc : c ∈ J) : SplitI.proj (e c) = c := by
     have hcIcc := ((hJmem c).mp hc).1
     rw [he]
-    change SplitI.proj (leftGermSection (D := ietSplitSet lam π) c) = c
     rw [leftGermSection_eq hcIcc, SplitI.proj_leftGerm]
-  have hdef : ∀ c ∈ J, SplitI.proj (germMap lam π h.le (e c)) = leftLimit hT c := by
-    intro c hc
+  have hdef (c) (hc : c ∈ J) : SplitI.proj (germMap lam π h.le (e c)) = leftLimit hT c := by
     have hcIcc := ((hJmem c).mp hc).1
     have hcD := hJD c hc
     rw [he]
-    change SplitI.proj (germMap lam π h.le (leftGermSection (D := ietSplitSet lam π) c))
-      = leftLimit hT c
     rw [leftGermSection_eq hcIcc, germMap_eq_germMapOf, proj_germMapOf,
       germProjOf_of_side_false hT (SplitI.side_leftGerm hcIcc hcD), SplitI.proj_leftGerm]
-  have hTeq : ∀ z : SplitI (ietSplitSet lam π), (∀ c ∈ J, z ≠ e c) →
-      SplitI.proj (germMap lam π h.le z) = ⇑(mkIETEquiv lam π 0) (SplitI.proj z) := by
-    intro z hz
+  have hTeq (z : SplitI (ietSplitSet lam π)) (hz : (∀ c ∈ J, z ≠ e c)) : SplitI.proj
+      (germMap lam π h.le z) = ⇑(mkIETEquiv lam π 0) (SplitI.proj z) := by
     have hzIcc : SplitI.proj z ∈ Set.Icc (0 : ℝ) 1 := SplitI.proj_mem_Icc z
     by_cases hside : SplitI.side z = true
     · rw [germMap_eq_germMapOf, proj_germMapOf, germProjOf_of_side_true hT hside]
@@ -271,8 +263,7 @@ theorem map_proj_eq_unitMeas_of_invariant {n : ℕ} [NeZero n] (lam : Fin n → 
         rw [leftGermSection_eq hzIcc]
         exact eq_leftGerm_of_side_false hside'
       exact hz _ hxJ hze
-  have hvan : ∀ c ∈ J, (ν₀ : Measure _) {e c} = 0 := by
-    intro c hc
+  have hvan (c) (hc : c ∈ J) : (ν₀ : Measure _) {e c} = 0 := by
     have hcIcc := ((hJmem c).mp hc).1
     have hcD := hJD c hc
     have hec : e c = SplitI.leftGerm (D := ietSplitSet lam π) c hcIcc := by
@@ -319,12 +310,11 @@ theorem map_proj_eq_unitMeas_of_invariant {n : ℕ} [NeZero n] (lam : Fin n → 
         {SplitI.leftGerm (D := ietSplitSet lam π) 1 ⟨zero_le_one, le_rfl⟩,
           SplitI.rightGerm (D := ietSplitSet lam π) 1 ⟨zero_le_one, le_rfl⟩} := by
       intro z hz
-      have hz1 : SplitI.proj z = 1 := hz
       rcases SplitI.eq_rightGerm_or_leftGerm z with hz' | hz'
       · rw [hz']
-        exact Or.inr (rightGerm_congr _ ⟨zero_le_one, le_rfl⟩ hz1)
+        exact Or.inr (rightGerm_congr _ ⟨zero_le_one, le_rfl⟩ hz)
       · rw [hz']
-        exact Or.inl (leftGerm_congr _ ⟨zero_le_one, le_rfl⟩ hz1)
+        exact Or.inl (leftGerm_congr _ ⟨zero_le_one, le_rfl⟩ hz)
     refine measure_mono_null hsub (measure_union_null ?_ ?_)
     · exact measure_singleton_eq_zero_of_injOn_orbit (germMap lam π h.le)
         (germMap_inj lam π h.le) (continuous_germMap lam π h.le).measurable hν₀inv _
@@ -410,13 +400,11 @@ theorem map_germSectionIco_invariant {n : ℕ} [NeZero n] (lam : Fin n → ℝ�
     (unitMeas.map (germSectionIco (D := ietSplitSet lam π))).map
         (ietGermRight lam π h.le) =
       unitMeas.map (germSectionIco (D := ietSplitSet lam π)) := by
-  classical
   have _ : Countable (ietSplitSet lam π) := splitSet_countable _ _
   have hT := isCutSet_mkIET lam π h.le
-  have hkey : ∀ x ∈ Set.Ico (0 : ℝ) 1,
+  have hkey (x) (hx : x ∈ Set.Ico (0 : ℝ) 1) :
       ietGermRight lam π h.le (germSectionIco (D := ietSplitSet lam π) x)
         = germSectionIco (D := ietSplitSet lam π) (mkIETFun lam π 0 x) := by
-    intro x hx
     have hTx : mkIETFun lam π 0 x ∈ Set.Ico (0 : ℝ) 1 := hT.mapsTo x hx
     apply Subtype.ext
     have h1 : (germSectionIco (D := ietSplitSet lam π) x).1
@@ -426,8 +414,6 @@ theorem map_germSectionIco_invariant {n : ℕ} [NeZero n] (lam : Fin n → ℝ�
         = SplitI.rightGerm (D := ietSplitSet lam π) (mkIETFun lam π 0 x)
             ⟨hTx.1, le_of_lt hTx.2⟩ :=
       rightGerm_congr (clampIco_mem_Icc _) ⟨hTx.1, le_of_lt hTx.2⟩ (clampIco_eq_self hTx)
-    change ((ietGermRight lam π h.le (germSectionIco (D := ietSplitSet lam π) x) :
-        ↥(ietRightPart lam π)) : SplitI (ietSplitSet lam π)) = _
     rw [show ((ietGermRight lam π h.le (germSectionIco (D := ietSplitSet lam π) x) :
           ↥(ietRightPart lam π)) : SplitI (ietSplitSet lam π))
         = germMap lam π h.le (germSectionIco (D := ietSplitSet lam π) x).1 from rfl]
@@ -486,9 +472,9 @@ theorem uniformBirkhoff_mkIET1 {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0)
     UniformBirkhoff (mkIET1 lam π) := by
   rw [mkIET1_of_mem h]
   -- the weak form: every invariant probability with mass `1` on `[0, 1)` is Lebesgue measure
-  have hH1 : ∀ μ : ProbabilityMeasure ℝ, (μ : Measure ℝ).map (mkIETFun lam π 0) = (μ : Measure ℝ) →
-      (μ : Measure ℝ) (Set.Ico (0 : ℝ) 1) = 1 → (μ : Measure ℝ) = unitMeas := by
-    intro μ hμinv hμm
+  have hH1 (μ : ProbabilityMeasure ℝ) (hμinv : (μ : Measure ℝ).map (mkIETFun lam π 0) =
+      (μ : Measure ℝ)) (hμm : (μ : Measure ℝ) (Set.Ico (0 : ℝ) 1) = 1) : (μ : Measure
+          ℝ) = unitMeas := by
     have hcoe : ⇑(mkIET1 lam π) = mkIETFun lam π 0 := coe_mkIET1 lam π h
     have hμInv : Invariant μ (mkIET1 lam π) := by
       unfold Invariant
@@ -497,25 +483,21 @@ theorem uniformBirkhoff_mkIET1 {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0)
     have hlebInv : Invariant InvariantMeasure.lebesgue (mkIET1 lam π) :=
       InvariantMeasure.invariant_unitMeas (mkIET1 lam π)
     have hlebMass : (InvariantMeasure.lebesgue : Measure ℝ) (Set.Ico (0 : ℝ) 1) = 1 := unitMeas_Ico
-    have hue' : ∃! μ : ProbabilityMeasure ℝ,
-        Invariant μ (mkIET1 lam π) ∧ (μ : Measure ℝ) (Set.Ico (0 : ℝ) 1) = 1 := hue
-    obtain ⟨m, ⟨hmInv, hmMass⟩, huniq⟩ := hue'
+    obtain ⟨m, ⟨hmInv, hmMass⟩, huniq⟩ := hue
     have hμeq : μ = InvariantMeasure.lebesgue :=
       (huniq μ ⟨hμInv, hμm⟩).trans (huniq InvariantMeasure.lebesgue ⟨hlebInv, hlebMass⟩).symm
     rw [hμeq]
     rfl
   have : Countable (ietSplitSet lam π) := splitSet_countable _ _
   have hsum : (∑ i, (lam i : ℝ)) = 1 := by exact_mod_cast h
-  classical
   -- the lift of Lebesgue measure to `[0⁺, 1⁻]`
   set μ₀ : ProbabilityMeasure ↥(ietRightPart lam π) :=
     ⟨unitMeas.map (germSectionIco (D := ietSplitSet lam π)),
       Measure.isProbabilityMeasure_map measurable_germSectionIco.aemeasurable⟩ with hμ₀
   -- uniqueness of the invariant probability on `[0⁺, 1⁻]`
-  have huniq : ∀ ν : ProbabilityMeasure ↥(ietRightPart lam π),
-      (ν : Measure ↥(ietRightPart lam π)).map (ietGermRight lam π hsum.le)
-        = (ν : Measure ↥(ietRightPart lam π)) → ν = μ₀ := by
-    intro ν hν
+  have huniq (ν : ProbabilityMeasure ↥(ietRightPart lam π)) (hν : (ν : Measure
+      ↥(ietRightPart lam π)).map (ietGermRight lam π hsum.le)
+        = (ν : Measure ↥(ietRightPart lam π))) : ν = μ₀ := by
     have h1 := uniqueErgodicOn_rightPart lam π hsum hH1 ν hν
     refine Subtype.ext ?_
     have h2 : (μ₀ : Measure ↥(ietRightPart lam π))
@@ -524,17 +506,17 @@ theorem uniformBirkhoff_mkIET1 {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0)
       exact ProbabilityMeasure.coe_mk _ _
     exact h1.trans h2.symm
   -- the two limits agree
-  have hint : ∀ ψ : SplitI (ietSplitSet lam π) → ℝ, Continuous ψ →
+  have hint (ψ : SplitI (ietSplitSet lam π) → ℝ) (hψ : Continuous ψ) :
       ∫ w, ψ w.1 ∂(μ₀ : Measure ↥(ietRightPart lam π))
         = ∫ z, ψ z ∂((μ₀ : Measure ↥(ietRightPart lam π)).map Subtype.val) := by
-    intro ψ hψ
     exact (integral_map measurable_subtype_coe.aemeasurable hψ.aestronglyMeasurable).symm
   -- Tool 1 on `[0⁺, 1⁻]`, transported to the whole split interval
-  have hconv : ∀ ψ : SplitI (ietSplitSet lam π) → ℝ, Continuous ψ → ∀ ε : ℝ, 0 < ε →
+  have hconv (ψ : SplitI (ietSplitSet lam π) → ℝ) (hψ : Continuous ψ) :
+      ∀ ε : ℝ, 0 < ε →
       ∃ N : ℕ, 0 < N ∧ ∀ n ≥ N, ∀ z ∈ SplitI.rightPart (ietSplitSet lam π),
         |birkhoffAverage ℝ (germMap lam π hsum.le) ψ n z
           - ∫ z, ψ z ∂((μ₀ : Measure ↥(ietRightPart lam π)).map Subtype.val)| ≤ ε := by
-    intro ψ hψ ε hε
+    intro ε hε
     have h := forall_mem_rightPart_of_subtype (germMap lam π hsum.le)
       (mapsTo_rightPart lam π hsum.le) ψ
       (c := ∫ w, ψ w.1 ∂(μ₀ : Measure ↥(ietRightPart lam π)))
@@ -544,12 +526,12 @@ theorem uniformBirkhoff_mkIET1 {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0)
     rw [hint ψ hψ] at h
     exact h ε hε
   -- the exchange and its equivariance with the germ map
-  have hTIco : ∀ x ∈ Set.Ico (0 : ℝ) 1, mkIETFun lam π 0 x ∈ Set.Ico (0 : ℝ) 1 := fun x hx =>
-    (isCutSet_mkIET lam π hsum.le).mapsTo x hx
-  have hG : ∀ x (hx : x ∈ Set.Ico (0 : ℝ) 1),
+  have hTIco (x) (hx : x ∈ Set.Ico (0 : ℝ) 1) : mkIETFun lam π 0 x ∈ Set.Ico (0 : ℝ) 1 :=
+      (isCutSet_mkIET lam π hsum.le).mapsTo x hx
+  have hG (x) (hx : x ∈ Set.Ico (0 : ℝ) 1) :
       germMap lam π hsum.le (SplitI.rightGerm x ⟨hx.1, le_of_lt hx.2⟩)
         = SplitI.rightGerm (mkIETFun lam π 0 x) ⟨(hTIco x hx).1, (hTIco x hx).2.le⟩ :=
-    fun x hx => germMap_rightGerm lam π hsum.le hx
+            germMap_rightGerm lam π hsum.le hx
   refine uniformBirkhoff_of_proj (D := ietSplitSet lam π) (germMap lam π hsum.le) (mkIET1' lam π h)
     ((μ₀ : Measure ↥(ietRightPart lam π)).map Subtype.val) hTIco hG hconv ?_
   -- the lift of Lebesgue measure projects back to Lebesgue measure
@@ -601,7 +583,6 @@ theorem exists_uniform_birkhoff (f : IET 0 1) (hue : UniqueErgodic f) (S : Set �
     (hS : IsFiniteUnionIntervals S) (ε : ℝ) (hε : 0 < ε) (hvol : unitMeas.real S ≤ ε) :
     ∃ N : ℕ, 0 < N ∧ ∀ x ∈ Set.Ico (0 : ℝ) 1,
       (N : ℝ)⁻¹ * ∑ i ∈ Finset.range N, S.indicator (fun _ => (1 : ℝ)) ((f ^ i) x) ≤ 2 * ε := by
-  classical
   -- `S` is given as a finite union of half-open intervals
   obtain ⟨P, hP⟩ := hS
   have hS_eq : S = ⋃ p ∈ P, Set.Ico p.1 p.2 := by
@@ -647,14 +628,12 @@ theorem exists_uniform_birkhoff (f : IET 0 1) (hue : UniqueErgodic f) (S : Set �
   have hdiff : closure T \ T ⊆ ⋃ p ∈ P, ({min p.2 1} : Set ℝ) := by
     rintro x ⟨hxcl, hxT⟩
     obtain ⟨p, hp, hxp⟩ := Set.mem_iUnion₂.mp (hcl_sub hxcl)
-    have hxa : max p.1 0 ≤ x := hxp.1
-    have hxb : x ≤ min p.2 1 := hxp.2
     have hne : x = min p.2 1 := by
       by_contra hne'
-      have hlt : x < min p.2 1 := lt_of_le_of_ne hxb hne'
+      have hlt : x < min p.2 1 := lt_of_le_of_ne hxp.2 hne'
       refine hxT ?_
       rw [hT_eq]
-      exact Set.mem_iUnion₂.mpr ⟨p, hp, ⟨hxa, hlt⟩⟩
+      exact Set.mem_iUnion₂.mpr ⟨p, hp, ⟨hxp.1, hlt⟩⟩
     exact Set.mem_iUnion₂.mpr ⟨p, hp, by simp [hne]⟩
   have hcl_le : volume (closure T) ≤ volume T := by
     have h1 : closure T ⊆ T ∪ ⋃ p ∈ P, ({min p.2 1} : Set ℝ) := by
@@ -685,15 +664,13 @@ theorem exists_uniform_birkhoff (f : IET 0 1) (hue : UniqueErgodic f) (S : Set �
     exists_continuous_zero_one_of_isClosed hUopen.isClosed_compl isClosed_closure
       (Set.disjoint_left.mpr (fun x hx hx' => hx (hTU hx')))
   have hψcont : Continuous (⇑ψ) := ψ.continuous
-  have hψ_ge : ∀ x ∈ T, (1 : ℝ) ≤ ψ x := by
-    intro x hx
+  have hψ_ge (x) (hx : x ∈ T) : (1 : ℝ) ≤ ψ x := by
     have h := hψ1 (subset_closure hx)
     simp only [Pi.one_apply] at h
     rw [h]
-  have hψ_nonneg : ∀ x, 0 ≤ ψ x := fun x => (hψrange x).1
-  have hψ_01 : ∀ x, ψ x ≤ 1 := fun x => (hψrange x).2
-  have hψ_le_ind : ∀ x, ψ x ≤ U.indicator (fun _ => (1 : ℝ)) x := by
-    intro x
+  have hψ_nonneg (x) : 0 ≤ ψ x := (hψrange x).1
+  have hψ_01 (x) : ψ x ≤ 1 := (hψrange x).2
+  have hψ_le_ind (x) : ψ x ≤ U.indicator (fun _ => (1 : ℝ)) x := by
     by_cases hx : x ∈ U
     · rw [Set.indicator_of_mem hx]; exact hψ_01 x
     · have h0 := hψ0 (by simpa using hx)
@@ -756,8 +733,7 @@ theorem exists_uniform_birkhoff (f : IET 0 1) (hue : UniqueErgodic f) (S : Set �
       simpa only [IET.pow_apply_iterate] using (abs_le.mp hbirk).2
     linarith
   -- pointwise comparison of the two Birkhoff sums
-  have hfmap : ∀ y ∈ Set.Ico (0 : ℝ) 1, f y ∈ Set.Ico (0 : ℝ) 1 :=
-    fun y hy => f.isIET.mapsTo hy
+  have hfmap (y) (hy : y ∈ Set.Ico (0 : ℝ) 1) : f y ∈ Set.Ico (0 : ℝ) 1 := f.isIET.mapsTo hy
   have hpow (i : ℕ) : (f ^ i) x ∈ Set.Ico (0 : ℝ) 1 := by
     induction i with
     | zero => simpa using hx

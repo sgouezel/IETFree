@@ -42,7 +42,6 @@ polynomial map `(z, s) ↦ s • (z, 1 - ∑ z)`. -/
 theorem volume_normalize_preimage_null {r : ℕ} {Z : Set (Fin r → ℝ)} (hZ : volume Z = 0) :
     volume {t : Fin (r + 1) → ℝ |
       (∀ i, 0 < t i) ∧ (fun i : Fin r => t i.castSucc / ∑ j, t j) ∈ Z} = 0 := by
-  classical
   obtain ⟨Z', hZsub, hZ'meas, hZ'⟩ := exists_measurable_superset_of_null hZ
   -- the parameters of the cone: the `r` free coordinates lie in `Z'`
   set A : Set (Fin (r + 1) → ℝ) := {t | (fun i : Fin r => t i.castSucc) ∈ Z'} with hAdef
@@ -170,7 +169,6 @@ theorem eIdx_injective (hk : k + r ≤ m) : Function.Injective (eIdx hk) := by
       exfalso
       have hv := congrArg (Fin.val : Fin m → ℕ) h
       simp only at hv
-      have hi := i.isLt
       omega
   · by_cases hj : j.val < k
     · simp only [eIdx, dif_pos hj] at h
@@ -182,7 +180,6 @@ theorem eIdx_injective (hk : k + r ≤ m) : Function.Injective (eIdx hk) := by
       exfalso
       have hv := congrArg Fin.val h
       simp only at hv
-      have hi := i'.isLt
       omega
   · by_cases hj : j.val < k <;> by_cases hj' : j'.val < k
     · simp only [eIdx, dif_pos hj, dif_pos hj'] at h
@@ -223,8 +220,8 @@ theorem injective_split {n k r : ℕ} (hk : k + r ≤ n - 1) :
         (fun j : Fin (n - 1 - r) =>
           if h : j.val < k then v ⟨j.val, by omega⟩ else v ⟨j.val + r, by omega⟩))) := by
   intro v w h
-  have h1 : ∀ i : Fin r, v ⟨k + i.val, by omega⟩ = w ⟨k + i.val, by omega⟩ :=
-    fun i => congrArg (fun p => p.1 i) h
+  have h1 (i : Fin r) : v ⟨k + i.val, by omega⟩ = w ⟨k + i.val, by omega⟩ :=
+    congrArg (fun p => p.1 i) h
   have h2 : ∀ j : Fin (n - 1 - r),
       (if h : j.val < k then v ⟨j.val, by omega⟩ else v ⟨j.val + r, by omega⟩)
         = (if h : j.val < k then w ⟨j.val, by omega⟩ else w ⟨j.val + r, by omega⟩) :=
@@ -302,10 +299,9 @@ theorem splitMap_apply {n k r : ℕ} (hk : k + r ≤ n - 1) (x : Fin (n - 1) →
 
 theorem splitMap_injective {n k r : ℕ} (hk : k + r ≤ n - 1) :
     Function.Injective (splitMap (k := k) (r := r) hk).linear := by
-  have hA : ∀ x : Fin (n - 1) → ℝ,
+  have hA (x : Fin (n - 1) → ℝ) :
       splitMap (k := k) (r := r) hk x = (splitMap (k := k) (r := r) hk).linear x
         + splitMap (k := k) (r := r) hk 0 := by
-    intro x
     have h := AffineMap.map_vadd (splitMap (k := k) (r := r) hk) (0 : Fin (n - 1) → ℝ) x
     rw [vadd_eq_add, add_zero] at h
     simpa using h
@@ -368,8 +364,7 @@ theorem splitMapLast_injective {n k r : ℕ} (hn : 0 < n) (hr : 1 ≤ r) (hk : k
     Function.Injective (fun x : Fin (n - 1) → ℝ =>
       (blockLen k r x, fun j : Fin (n - 1 - r) => x ⟨j.val, by omega⟩)) := by
   intro v w h
-  have h1 : ∀ i : Fin r, blockLen k r v i = blockLen k r w i :=
-    fun i => congrArg (fun p => p.1 i) h
+  have h1 (i : Fin r) : blockLen k r v i = blockLen k r w i := congrArg (fun p => p.1 i) h
   have h2 : ∀ j : Fin (n - 1 - r), v ⟨j.val, by omega⟩ = w ⟨j.val, by omega⟩ :=
     fun j => congrArg (fun p => p.2 j) h
   -- a coordinate of the block, read through the block lengths
@@ -380,7 +375,7 @@ theorem splitMapLast_injective {n k r : ℕ} (hn : 0 < n) (hr : 1 ≤ r) (hk : k
     rw [blockLen_of_lt v i hlt, blockLen_of_lt w i hlt] at hb
     have hidx : (⟨t, ht⟩ : Fin (n - 1)) = ⟨k + i.val, hlt⟩ := by
       refine Fin.ext ?_
-      change t = k + i.val
+      simp only []
       omega
     simpa only [hidx] using hb
   -- a coordinate below the block, read off the second component
@@ -439,11 +434,10 @@ theorem finrank_split {n r : ℕ} (hrn : r ≤ n - 1) :
 
 theorem splitMapLast_linear_injective {n k r : ℕ} (hn : 0 < n) (hr : 1 ≤ r) (hk : k + r = n) :
     Function.Injective (splitMapLast (n := n) (k := k) (r := r)).linear := by
-  have hA : ∀ x : Fin (n - 1) → ℝ,
+  have hA (x : Fin (n - 1) → ℝ) :
       splitMapLast (n := n) (k := k) (r := r) x
         = (splitMapLast (n := n) (k := k) (r := r)).linear x
           + splitMapLast (n := n) (k := k) (r := r) 0 := by
-    intro x
     have h := AffineMap.map_vadd (splitMapLast (n := n) (k := k) (r := r))
       (0 : Fin (n - 1) → ℝ) x
     rw [vadd_eq_add, add_zero] at h
@@ -480,8 +474,7 @@ theorem rescaleSub_mem_simplexRegion {n k m : ℕ} {x : Fin (n - 1) → ℝ}
     (hx : x ∈ simplexRegion n) : rescaleSub k (m + 1) x ∈ simplexRegion (m + 1) := by
   have hS : 0 < ∑ j : Fin (m + 1), blockLen k (m + 1) x j :=
     Finset.sum_pos (fun j _ => blockLen_pos hx j) Finset.univ_nonempty
-  have hcast : ∀ i : Fin m, (⟨i.val, by omega⟩ : Fin (m + 1)) = i.castSucc :=
-    fun i => Fin.ext rfl
+  have hcast (i : Fin m) : (⟨i.val, by omega⟩ : Fin (m + 1)) = i.castSucc := Fin.ext rfl
   refine ⟨fun i => ?_, ?_⟩
   · change 0 < blockLen k (m + 1) x ⟨i.val, by omega⟩ / ∑ j, blockLen k (m + 1) x j
     exact div_pos (blockLen_pos hx _) hS
@@ -512,7 +505,6 @@ the sum; when it does not, they are the free coordinates outside the block. -/
 theorem absolutelyContinuous_map_rescaleSub {n : ℕ} (hn : 0 < n) {k r : ℕ} (hk : k + r ≤ n) :
     (volume.restrict (simplexRegion n)).map (rescaleSub k r) ≪
       volume.restrict (simplexRegion r) := by
-  classical
   rcases Nat.eq_zero_or_pos r with hr0 | hr
   · -- `r = 0`: the target is a single point
     subst hr0
@@ -536,15 +528,14 @@ theorem absolutelyContinuous_map_rescaleSub {n : ℕ} (hn : 0 < n) {k r : ℕ} (
   obtain ⟨m, rfl⟩ : ∃ m, r = m + 1 := ⟨r - 1, (Nat.sub_one_add_one (by omega)).symm⟩
   clear hr
   -- the two non-degenerate cases share everything after the construction of `Φ`
-  have key : ∀ (Φ : (Fin (n - 1) → ℝ) →ᵃ[ℝ]
+  have key (Φ : (Fin (n - 1) → ℝ) →ᵃ[ℝ]
         ((Fin (m + 1) → ℝ) × (Fin (n - 1 - (m + 1)) → ℝ)))
-      (_hΦinj : Function.Injective Φ.linear)
-      (_hΦdim : Module.finrank ℝ (Fin (n - 1) → ℝ)
+      (hΦinj : Function.Injective Φ.linear)
+      (hΦdim : Module.finrank ℝ (Fin (n - 1) → ℝ)
         = Module.finrank ℝ ((Fin (m + 1) → ℝ) × (Fin (n - 1 - (m + 1)) → ℝ)))
-      (_hΦapp : ∀ x : Fin (n - 1) → ℝ, (Φ x).1 = blockLen k (m + 1) x),
+      (hΦapp : ∀ x : Fin (n - 1) → ℝ, (Φ x).1 = blockLen k (m + 1) x) :
       (volume.restrict (simplexRegion n)).map (rescaleSub k (m + 1)) ≪
         volume.restrict (simplexRegion (m + 1)) := by
-    intro Φ hΦinj hΦdim hΦapp
     have : Measure.IsAddHaarMeasure (volume : Measure ((Fin (m + 1) → ℝ)
         × (Fin (n - 1 - (m + 1)) → ℝ))) := by
       have : Measure.IsAddHaarMeasure ((volume : Measure (Fin (m + 1) → ℝ)).prod

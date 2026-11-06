@@ -84,7 +84,6 @@ theorem exists_pos_cycle {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [N
     (Q : IETDatum₂ α n) (hQ : Q.Irreducible) (hn : 2 ≤ n) :
     ∃ (Bw : List Bool) (M : ℤ), 1 < M ∧ IETDatum₂.vertex Q Bw = Q ∧
       ∀ a c, 1 ≤ IETDatum₂.Path.Q Q Bw a c ∧ IETDatum₂.Path.Q Q Bw a c ≤ M := by
-  classical
   -- a word from `Q` with all entries `≥ 1`
   obtain ⟨_, _, hposw⟩ := IETDatum₂.exists_uniform_bound' (α := α) (n := n) hn
   obtain ⟨v, hv⟩ := hposw Q hQ
@@ -107,9 +106,9 @@ theorem exists_pos_cycle {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [N
           = IETDatum₂.Path.Q Q v * IETDatum₂.Path.Q (IETDatum₂.vertex Q v) ρ :=
         IETDatum₂.Path.Q_append Q v ρ
       rw [hmul, Matrix.mul_apply]
-      have hterm : ∀ i ∈ (Finset.univ : Finset α), 0 ≤ IETDatum₂.Path.Q Q v a i *
-          IETDatum₂.Path.Q (IETDatum₂.vertex Q v) ρ i c :=
-        fun i _ => mul_nonneg (IETDatum₂.Path.Q_nonneg Q v a i)
+      have hterm (i) (hi : i ∈ (Finset.univ : Finset α)) : 0 ≤ IETDatum₂.Path.Q Q v a i *
+          IETDatum₂.Path.Q (IETDatum₂.vertex Q v) ρ i c := mul_nonneg (IETDatum₂.Path.Q_nonneg Q v
+              a i)
           (IETDatum₂.Path.Q_nonneg (IETDatum₂.vertex Q v) ρ i c)
       have h1 := Finset.single_le_sum hterm (Finset.mem_univ c)
       have h2 : (1 : ℤ) ≤ IETDatum₂.Path.Q Q v a c *

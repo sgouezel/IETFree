@@ -39,12 +39,10 @@ theorem measurableSet_simplexOn (α : Type*) [Fintype α] : MeasurableSet (simpl
 theorem sum_simplexMap {m : ℕ} {v : Fin m → ℝ} (hv : v ∈ simplexRegion (m + 1)) :
     ∑ i : Fin (m + 1), simplexMap (m + 1) v i = 1 := by
   -- `hv` lives in the `Fin ((m + 1) - 1)` shape; restate it in the `Fin m` shape.
-  have hv1 : ∀ j : Fin m, 0 < v j := hv.1
   have hv2 : ∑ j : Fin m, v j < 1 := hv.2
   have hlast : ((1 - ∑ j, v j).toNNReal : ℝ) = 1 - ∑ j, v j :=
     Real.coe_toNNReal _ (by linarith)
-  have hcast : ∀ j : Fin m, ((v j).toNNReal : ℝ) = v j := fun j =>
-    Real.coe_toNNReal _ (le_of_lt (hv1 j))
+  have hcast (j : Fin m) : ((v j).toNNReal : ℝ) = v j := Real.coe_toNNReal _ (le_of_lt (hv.1 j))
   apply NNReal.coe_injective
   simp only [NNReal.coe_sum, NNReal.coe_one]
   rw [Fin.sum_univ_castSucc]

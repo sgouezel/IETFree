@@ -281,49 +281,41 @@ theorem exists_invariant_ne_of_periodic_leftLimit (h : IsCutSet f a b s)
     ∃ ν : ProbabilityMeasure ℝ, (ν : Measure ℝ).map f = ν ∧
       (ν : Measure ℝ) (Set.Ico a b) = 1 ∧
       (ν : Measure ℝ) ≠ volume.restrict (Set.Ico a b) := by
-  classical
   obtain ⟨x₀, hx₀, k, hk, hperk⟩ := hper
   set c : ℕ → ℝ := fun i => (leftLimit h)^[i] x₀ with hc
   have hc_zero : c 0 = x₀ := rfl
-  have hc_succ : ∀ i, c (i + 1) = leftLimit h (c i) := by
-    intro i
+  have hc_succ (i) : c (i + 1) = leftLimit h (c i) := by
     rw [hc]
     exact Function.iterate_succ_apply' _ _ _
   have hc_k : c k = x₀ := hperk
-  have hc_mem : ∀ i, c i ∈ Set.Icc a b := by
-    intro i
+  have hc_mem (i) : c i ∈ Set.Icc a b := by
     induction i with
     | zero => rw [hc_zero]; exact ⟨hx₀.1.le, hx₀.2⟩
     | succ i ih => rw [hc_succ i]; exact leftLimit_mem h ih
-  have hc_ne : ∀ i ≤ k, c i ≠ a := by
-    intro i hi hia
-    have hstep : ∀ j, c (i + j) = a := by
-      intro j
+  have hc_ne (i) (hi : i ≤ k) : c i ≠ a := by
+    intro hia
+    have hstep (j) : c (i + j) = a := by
       induction j with
       | zero => simpa using hia
       | succ j ih =>
-        change c (i + j + 1) = a
+        rw [← Nat.add_assoc]
         rw [hc_succ (i + j), ih, leftLimit_of_le h le_rfl]
     have hka : c k = a := by
       rw [← Nat.add_sub_cancel' hi]
       exact hstep (k - i)
     rw [hc_k] at hka
     linarith [hx₀.1]
-  have hca : ∀ i ≤ k, c i ∈ Set.Ioc a b := fun i hi =>
-    ⟨lt_of_le_of_ne (hc_mem i).1 (Ne.symm (hc_ne i hi)), (hc_mem i).2⟩
-  have hc_period : ∀ i, c (i + k) = c i := by
-    intro i
-    change (leftLimit h)^[i + k] x₀ = (leftLimit h)^[i] x₀
+  have hca (i) (hi : i ≤ k) : c i ∈ Set.Ioc a
+      b := ⟨lt_of_le_of_ne (hc_mem i).1 (Ne.symm (hc_ne i hi)), (hc_mem i).2⟩
+  have hc_period (i) : c (i + k) = c i := by
+    simp only [hc]
     rw [Function.iterate_add_apply, hperk]
-  have hc_mod : ∀ q i, c (i + q * k) = c i := by
-    intro q
+  have hc_mod (q i) : c (i + q * k) = c i := by
     induction q with
-    | zero => intro i; rw [Nat.zero_mul, Nat.add_zero]
+    | zero => rw [Nat.zero_mul, Nat.add_zero]
     | succ q ih =>
-      intro i
       rw [Nat.succ_mul, ← Nat.add_assoc, hc_period, ih]
-  have hc_all : ∀ i, c i ∈ Set.Ioc a b := by
-    intro i
+  have hc_all (i) : c i ∈ Set.Ioc a b := by
     have hi : i % k + (i / k) * k = i := by
       rw [Nat.mul_comm]
       exact Nat.mod_add_div i k
@@ -355,8 +347,7 @@ theorem exists_invariant_ne_of_periodic_leftLimit (h : IsCutSet f a b s)
     rw [hL] at hadd
     linarith
   -- the point `x₀ - ε/2` is periodic for `f`, with period `k`
-  have hkey : ∀ j ≤ k, (f^[j]) (c 0 - ε / 2) = c j - ε / 2 := by
-    intro j hj
+  have hkey (j) (hj : j ≤ k) : (f^[j]) (c 0 - ε / 2) = c j - ε / 2 := by
     induction j with
     | zero => simp
     | succ j ih =>
@@ -365,8 +356,7 @@ theorem exists_invariant_ne_of_periodic_leftLimit (h : IsCutSet f a b s)
   set y : ℝ := c 0 - ε / 2 with hy_def
   have hy_per : (f^[k]) y = y := by
     rw [hy_def, hkey k le_rfl, hc_k, hc_zero]
-  have hy_mem : ∀ j < k, (f^[j]) y ∈ Set.Ico a b := by
-    intro j hj
+  have hy_mem (j) (hj : j < k) : (f^[j]) y ∈ Set.Ico a b := by
     have h1 : (f^[j]) y = c j - ε / 2 := by rw [hy_def]; exact hkey j hj.le
     have hcj : c j ∈ Set.Ioc a b := hc_all j
     have hlt : ε / 2 < c j - cutBelow h (c j) hcj.1 := by
@@ -377,9 +367,9 @@ theorem exists_invariant_ne_of_periodic_leftLimit (h : IsCutSet f a b s)
     exact ⟨by linarith, by linarith [hcj.2]⟩
   -- the empirical measure of the periodic orbit
   set ν₀ : Measure ℝ := ∑ i ∈ Finset.range k, Measure.dirac ((f^[i]) y) with hν₀
-  have hν₀_apply : ∀ A : Set ℝ,
+  have hν₀_apply (A : Set ℝ) :
       ν₀ A = ∑ i ∈ Finset.range k, Measure.dirac ((f^[i]) y) A :=
-    fun A => Measure.finsetSum_apply _ _ A
+    Measure.finsetSum_apply _ _ A
   have hν₀_univ : ν₀ Set.univ = (k : ℝ≥0∞) := by
     rw [hν₀_apply]
     simp [Finset.card_range]
@@ -404,12 +394,11 @@ theorem exists_invariant_ne_of_periodic_leftLimit (h : IsCutSet f a b s)
   refine ⟨⟨((k : ℝ≥0∞))⁻¹ • ν₀, ?_⟩, ?_, ?_, ?_⟩
   · rw [isProbabilityMeasure_iff, Measure.smul_apply, hν₀_univ]
     exact ENNReal.inv_mul_cancel hk0 hktop
-  · change Measure.map f (((k : ℝ≥0∞))⁻¹ • ν₀) = ((k : ℝ≥0∞))⁻¹ • ν₀
+  · simp only [ProbabilityMeasure.coe_mk]
     rw [Measure.map_smul, hmap]
-  · change (((k : ℝ≥0∞))⁻¹ • ν₀) (Set.Ico a b) = 1
+  · simp only [ProbabilityMeasure.coe_mk]
     rw [Measure.smul_apply, hν₀_apply]
-    have h1 : ∀ i ∈ Finset.range k, Measure.dirac ((f^[i]) y) (Set.Ico a b) = 1 := by
-      intro i hi
+    have h1 (i) (hi : i ∈ Finset.range k) : Measure.dirac ((f^[i]) y) (Set.Ico a b) = 1 := by
       rw [Measure.dirac_apply, Set.indicator_of_mem (hy_mem i (Finset.mem_range.mp hi))]
       simp
     rw [Finset.sum_congr rfl h1, Finset.sum_const, Finset.card_range, nsmul_eq_mul, mul_one]

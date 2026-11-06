@@ -16,10 +16,10 @@ is the prefix `Ico 0 (Λ - λ botCell)`, the return time is `1` except on the up
 cell where it is `2`, and the return map is the exchange of the step `IETDatum₂.rvStep (toComb π)
 true`. -/
 
-@[expose] public section
-
-open MeasureTheory Finset
+open MeasureTheory Finset IETDatum₂
 open scoped BigOperators ENNReal NNReal
+
+@[expose] public section
 
 namespace TowerTrue
 
@@ -217,7 +217,6 @@ theorem filter_eT_lt_of_le (_hlt : lam Tower.botCell < lam (Tower.topCell π)) {
     (hj : j.val ≤ (Tower.topCell π).val) :
     Finset.univ.filter (fun a : Fin n => eT π a < j) = Finset.univ.filter (fun a => a < j) := by
   have hlv : (IETDatum₂.lastPos n).val = n - 1 := IETDatum₂.lastPos_val
-  have hjt := j.isLt
   ext a
   simp only [Finset.mem_filter, Finset.mem_univ, true_and, Fin.lt_def]
   rw [eT_apply_val]
@@ -261,7 +260,6 @@ theorem filter_eT_lt_of_gt (_hlt : lam Tower.botCell < lam (Tower.topCell π)) {
     Finset.univ.filter (fun a : Fin n => eT π a < j)
       = insert Tower.botCell (Finset.univ.filter (fun a : Fin n => a.val < j.val - 1)) := by
   have hlv : (IETDatum₂.lastPos n).val = n - 1 := IETDatum₂.lastPos_val
-  have hjt := j.isLt
   ext a
   simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_insert, Fin.lt_def]
   rw [eT_apply_val]
@@ -636,7 +634,7 @@ theorem translationVector_piHatT_succ_of_gt (hlt : lam Tower.botCell < lam (Towe
     eT_symm_of_gt hlt h2
   have h4 : (⟨(succFin i h).val - 1, by have := (succFin i h).isLt; omega⟩ : Fin n) = i := by
     refine Fin.ext ?_
-    change (succFin i h).val - 1 = i.val
+    simp only []
     rw [succFin_val]
     omega
   rw [translationVector, translationVector, imageLeft_lamT, h3, h4,
@@ -857,7 +855,7 @@ theorem restrict_cut_invariant_true (hlt : lam Tower.botCell < lam (Tower.topCel
   have hmeasTH : Measurable (Tower.exch (piHatT π) (lamT π lam)) := Tower.measurable_exch _ _
   have hIm : Tower.exch (piHatT π) (lamT π lam) '' Set.Ico 0 (cutT lam)
       = Set.Ico 0 (cutT lam) := image_cutT_self hlt
-  have hcell : ∀ β : Fin n, MeasurableSet (cellHatT π lam β) := measurableSet_cellHatT π lam
+  have hcell (β : Fin n) : MeasurableSet (cellHatT π lam β) := measurableSet_cellHatT π lam β
   have hmain (A : Set ℝ) (hAI : A ⊆ Set.Ico 0 (cutT lam)) (hA : MeasurableSet A) :
     μ (Tower.exch (piHatT π) (lamT π lam) '' A) = μ A := by
     have hcover : A = ⋃ β, A ∩ cellHatT π lam β := by
@@ -880,16 +878,14 @@ theorem restrict_cut_invariant_true (hlt : lam Tower.botCell < lam (Tower.topCel
       intro β _ β' _ hne
       exact (pairwiseDisjoint_cellHatT π lam (Finset.mem_univ β) (Finset.mem_univ β')
         hne).mono Set.inter_subset_right Set.inter_subset_right
-    have hmeasInt : ∀ β ∈ (Finset.univ : Finset (Fin n)),
-        MeasurableSet (A ∩ cellHatT π lam β) := fun β _ => hA.inter (hcell β)
-    have hstep : ∀ β : Fin n,
-        μ (Tower.exch (piHatT π) (lamT π lam) '' (A ∩ cellHatT π lam β))
+    have hmeasInt (β) (hβ : β ∈ (Finset.univ : Finset (Fin n))) :
+        MeasurableSet (A ∩ cellHatT π lam β) := hA.inter (hcell β)
+    have hstep (β : Fin n) : μ (Tower.exch (piHatT π) (lamT π lam) '' (A ∩ cellHatT π lam β))
         = μ (A ∩ cellHatT π lam β) := by
-      intro β
-      have hfun : ∀ y ∈ A ∩ cellHatT π lam β,
+      have hfun (y) (hy0 : y ∈ A ∩ cellHatT π lam β) :
           Tower.exch (piHatT π) (lamT π lam) y
             = (Tower.exch π lam)^[returnBT π β] y := by
-        rintro y ⟨-, hy⟩
+        obtain ⟨-, hy⟩ := hy0
         have hyI : y ∈ Set.Ico 0 (cutT lam) := cellHatT_subset_cutT hlt β hy
         have h1 := firstReturnT_eq hlt hyI
         have h2 := retT_eq_returnBT hlt hy
@@ -907,9 +903,9 @@ theorem restrict_cut_invariant_true (hlt : lam Tower.botCell < lam (Tower.topCel
       rw [Set.image_iUnion]
     have hdisj' := Tower.pairwiseDisjoint_image
       (Tower.injective_exch (piHatT π) (lamT π lam)) hdisj
-    have hmeas' : ∀ β ∈ (Finset.univ : Finset (Fin n)),
+    have hmeas' (β) (hβ : β ∈ (Finset.univ : Finset (Fin n))) :
         MeasurableSet (Tower.exch (piHatT π) (lamT π lam) '' (A ∩ cellHatT π lam β)) :=
-      fun β _ => Tower.measurableSet_image_exch _ _ (hmeasInt β (Finset.mem_univ β))
+            Tower.measurableSet_image_exch _ _ (hmeasInt β (Finset.mem_univ β))
     have hsum' : μ (Tower.exch (piHatT π) (lamT π lam) '' A)
         = ∑ β, μ (A ∩ cellHatT π lam β) := by
       rw [hcov]
@@ -989,20 +985,18 @@ theorem exch_image_cellHatT_succ (hlt : lam Tower.botCell < lam (Tower.topCell �
   have huv : upperEnd lam Tower.botCell = Tower.tot lam := Tower.upperEnd_botCell lam
   have hsp : splitT π lam = leftEnd lam (Tower.topCell π)
       + ((lam (Tower.topCell π) : ℝ) - (lam Tower.botCell : ℝ)) := rfl
-  have hpt : ∀ y, y ∈ cellHatT π lam
-        (⟨(Tower.topCell π).val + 1, topCell_succ_lt hlt⟩ : Fin n)
-      → Tower.exch π lam y = y + translationVector π lam (Tower.topCell π) := by
-    intro y hy
+  have hpt (y) (hy : y ∈ cellHatT π lam
+        (⟨(Tower.topCell π).val + 1, topCell_succ_lt hlt⟩ : Fin n)) : Tower.exch π lam
+            y = y + translationVector π lam (Tower.topCell π) := by
     have hyI : y ∈ Set.Ico 0 (cutT lam) := by
       rw [← iUnion_cellHatT hlt]
       exact Set.mem_iUnion.mpr ⟨_, hy⟩
-    have hy2 := hy
-    rw [cellHatT_succ hlt] at hy2
+    rw [cellHatT_succ hlt] at hy
     rw [exch_apply_cutT hyI]
     have hidx : idx lam y hyI.1 = Tower.topCell π := by
       refine idx_eq lam (mem_Ico_tot_of_mem_cutT hyI) ?_ ?_
-      · linarith [hy2.1]
-      · exact hy2.2
+      · linarith [hy.1]
+      · exact hy.2
     rw [hidx]
   rw [Set.image_congr hpt]
   have hgoal (z : ℝ) :
@@ -1021,11 +1015,10 @@ theorem exch_image_cellHatT_succ (hlt : lam Tower.botCell < lam (Tower.topCell �
           = leftEnd lam (Tower.topCell π) + (lam (Tower.topCell π) : ℝ) := upperEnd_eq lam _
       constructor <;> linarith [hy.1, hy.2]
     · intro hz
-      have hz' := hz
-      rw [hlv, huv] at hz'
+      rw [hlv, huv] at hz
       refine ⟨z - translationVector π lam (Tower.topCell π), ?_, ?_⟩
       · rw [cellHatT_succ hlt, hsp, htv, upperEnd_eq]
-        constructor <;> linarith [hz'.1, hz'.2]
+        constructor <;> linarith [hz.1, hz.2]
       · show z - translationVector π lam (Tower.topCell π)
             + translationVector π lam (Tower.topCell π) = z
         ring
@@ -1128,8 +1121,6 @@ theorem tower_formula_one_step_mult_true (hlt : lam Tower.botCell < lam (Tower.t
 ε`: at the vertex `P` with lengths `lam`, the step of type `ε` is the Rauzy step, i.e. the strict
 inequality of the two last lengths holds in the direction `ε`.  Its iteration along a word
 is `IterOK`. -/
-
-open IETDatum₂
 
 variable {α : Type*} [Fintype α] [DecidableEq α]
 
@@ -1416,9 +1407,9 @@ theorem tower_formula_level_pathQ_exch :
           rw [e1, e2]; exact he
         rw [cellAt_singleton_true, sumA_hatLam_true P lam hlt]
         exact cellHatT_subset_cutT hlt _
-    have hcell2 : ∀ b : α, Tower.cellAt (P.rvStep e) es (Tower.hatLam P e lam) b
-        ⊆ Set.Ico 0 (sumA (Tower.hatLam P e lam)) :=
-      fun b => cellAt_subset_sumA_le (P.rvStep e) es (Tower.hatLam P e lam) b
+    have hcell2 (b : α) : Tower.cellAt (P.rvStep e) es (Tower.hatLam P e lam) b
+        ⊆ Set.Ico 0 (sumA (Tower.hatLam P e lam)) := cellAt_subset_sumA_le (P.rvStep e) es
+            (Tower.hatLam P e lam) b
         (sumA_lamAfter_le (P.rvStep e) (Tower.hatLam P e lam) es)
     -- the matrix identity
     have hQ (b : α) :

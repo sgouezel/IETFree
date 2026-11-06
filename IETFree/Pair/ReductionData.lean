@@ -62,7 +62,7 @@ namespace IETDatum
 variable {n : ℕ} [NeZero n]
 
 /-- **The free lengths of a datum are positive.** -/
-theorem pos (D : IETDatum n) : ∀ i, 0 < D.v i := D.mem_region.1
+theorem pos (D : IETDatum n) (i : Fin (n - 1)) : 0 < D.v i := D.mem_region.1 i
 
 /-- **The free lengths of a datum have total mass less than `1`.** -/
 theorem sum_lt_one (D : IETDatum n) : ∑ i, D.v i < 1 := D.mem_region.2
@@ -82,6 +82,10 @@ theorem mem_simplex (D : IETDatum n) : D.lam ∈ simplex n := by
 
 /-- **The exchange itself**, as a function. -/
 noncomputable def toFun (D : IETDatum n) : ℝ → ℝ := mkIETFun D.lam D.π 0
+
+/-- **The exchange of a datum, as a function**: `toFun` is `mkIETFun` at the datum's lengths and
+permutation.  The computation form proofs unfolding `toFun` need. -/
+theorem toFun_apply (D : IETDatum n) (x : ℝ) : D.toFun x = mkIETFun D.lam D.π 0 x := rfl
 
 /-- The exchange as an element of `IET 0 1`.  (This is derived data, not an input: everything below
 takes the datum `D`, never an `IET 0 1`.) -/
@@ -695,7 +699,6 @@ theorem simplexMap_castLE {d : ℕ} [NeZero d] {v : Fin (d - 1) → ℝ} (i : Fi
     simplexMap d v (Fin.castLE (Nat.sub_le d 1) i) = (v i).toNNReal := by
   have hlt : (Fin.castLE (Nat.sub_le d 1) i).val + 1 ≠ d := by
     rw [Fin.val_castLE]
-    have h1 := i.isLt
     have h2 := NeZero.pos d
     omega
   simp only [simplexMap, dif_neg hlt]
@@ -717,8 +720,8 @@ theorem isBadParam_mem_badSet {d e N : ℕ} [NeZero d] [NeZero e]
     (hz : z ∈ ubox (d - 1) ×ˢ ubox (e - 1)) (hN : 4 ≤ N)
     (hbad : IsBadParam (toReal (simplexMap d z.1, simplexMap e z.2))) :
     z ∈ badSet (d - 1) (e - 1) N := by
-  have hposv : ∀ i, 0 < z.1 i := fun i => (Set.mem_pi.mp hz.1 i (Set.mem_univ i)).1
-  have hposw : ∀ j, 0 < z.2 j := fun j => (Set.mem_pi.mp hz.2 j (Set.mem_univ j)).1
+  have hposv (i) : 0 < z.1 i := (Set.mem_pi.mp hz.1 i (Set.mem_univ i)).1
+  have hposw (j) : 0 < z.2 j := (Set.mem_pi.mp hz.2 j (Set.mem_univ j)).1
   rw [toReal_simplexMap hposv hposw] at hbad
   obtain ⟨k, a, b, ha, hb, hk, hnt, hrel⟩ := hbad
   -- after `toReal_simplexMap` the relation is already in the free coordinates
@@ -741,10 +744,9 @@ theorem isBadParam_mem_badSet {d e N : ℕ} [NeZero d] [NeZero e]
     obtain ⟨ha0, hb0⟩ := hcon
     rcases hnt with h | ⟨i, hi⟩ | ⟨j, hj⟩
     · apply h
-      have h1 := hrel'
-      rw [ha0, hb0] at h1
-      simp only [Pi.zero_apply, Int.cast_zero, zero_mul, Finset.sum_const_zero, zero_add] at h1
-      exact_mod_cast h1
+      rw [ha0, hb0] at hrel'
+      simp only [Pi.zero_apply, Int.cast_zero, zero_mul, Finset.sum_const_zero, zero_add] at hrel'
+      exact_mod_cast hrel'
     · exact hi (by rw [ha0]; rfl)
     · exact hj (by rw [hb0]; rfl)
   refine Set.mem_biUnion (Finset.mem_filter.mpr ⟨hbox, hnt'⟩) ?_
@@ -798,6 +800,9 @@ theorem ae_goodParams_real {d e : ℕ} [NeZero d] [NeZero e] :
 
 /-- The last index of `Fin n`: the length determined by `∑ λ = 1`. -/
 def lastIdx (n : ℕ) [NeZero n] : Fin n := ⟨n - 1, by have := NeZero.pos n; omega⟩
+
+/-- **`lastIdx`, as a number**: the computation form proofs unfolding it need. -/
+theorem lastIdx_val (n : ℕ) [NeZero n] : (lastIdx n).val = n - 1 := rfl
 
 theorem lastIdx_eq_last {m : ℕ} : lastIdx (m + 1) = Fin.last m := Fin.ext rfl
 
@@ -937,7 +942,6 @@ theorem ae_diophantine_real {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (
     (σ : Equiv.Perm (Fin e)) :
     ∀ᵐ z ∂((volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e))),
       IsDiophantine (simplexMap d z.1) (simplexMap e z.2) := by
-  classical
   set ν : Measure ((Fin (d - 1) → ℝ) × (Fin (e - 1) → ℝ)) :=
     ((volume : Measure (Fin (d - 1) → ℝ)).restrict (simplexRegion d)).prod
       (volume.restrict (simplexRegion e)) with hν

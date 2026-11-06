@@ -56,15 +56,13 @@ omit [DecidableEq α] in
 /-- The simplex is bounded: every coordinate is at most `1`. -/
 theorem isBounded_simplexOn : Bornology.IsBounded (simplexOn α) := by
   refine Metric.isBounded_iff.mpr ⟨1, fun x hx y hy => ?_⟩
-  have hx1 : ∀ a, (x a : ℝ) ≤ 1 := by
-    intro a
+  have hx1 (a) : (x a : ℝ) ≤ 1 := by
     rw [mem_simplexOn] at hx
     have h := Finset.single_le_sum (f := fun a => x a) (fun a _ => (x a).2)
       (Finset.mem_univ a)
     rw [hx] at h
     exact_mod_cast h
-  have hy1 : ∀ a, (y a : ℝ) ≤ 1 := by
-    intro a
+  have hy1 (a) : (y a : ℝ) ≤ 1 := by
     rw [mem_simplexOn] at hy
     have h := Finset.single_le_sum (f := fun a => y a) (fun a _ => (y a).2)
       (Finset.mem_univ a)

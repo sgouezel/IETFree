@@ -96,7 +96,6 @@ theorem length_flatten_replicate (W : List (α × Bool)) (n : ℕ) :
 (`q = 1` has to be excluded: then `g = 1` and `norm g = 0`.) -/
 theorem le_norm_of_pow_eq [DecidableEq α] {g q : FreeGroup α} {k : ℕ} (hk : 0 < k) (hq : q ≠ 1)
     (h : q ^ k = g) : k ≤ FreeGroup.norm g := by
-  classical
   have hL : IsReduced q.toWord := isReduced_toWord
   -- the cyclic reduction of a nontrivial element is nonempty
   have hcyc : reduceCyclically q.toWord ≠ [] := by
@@ -169,26 +168,21 @@ theorem eq_of_mk_eq_of_isReduced {L M : List (α × Bool)} (hL : IsReduced L)
 /-- Distinct generators of a free group do not commute. -/
 theorem of_mul_of_ne {x y : α} (h : x ≠ y) :
     of x * of y ≠ of y * of x := by
-  classical
   intro heq
-  have heq' : mk [(x, true), (y, true)] = mk [(y, true), (x, true)] := heq
   have h2 : [(x, true), (y, true)] = [(y, true), (x, true)] :=
     eq_of_mk_eq_of_isReduced (by simp [IsReduced, List.isChain_cons_cons, h])
-      (by simp [IsReduced, List.isChain_cons_cons, Ne.symm h]) heq'
+      (by simp [IsReduced, List.isChain_cons_cons, Ne.symm h]) heq
   have h3 : (x, true) = (y, true) := ((List.cons.injEq _ _ _ _).mp h2).1
   exact h ((Prod.mk.injEq _ _ _ _).mp h3).1
 
 /-- Squares of distinct generators do not commute. -/
 theorem pow_two_mul_pow_two_of_ne {x y : α} (h : x ≠ y) :
     of x ^ 2 * of y ^ 2 ≠ of y ^ 2 * of x ^ 2 := by
-  classical
   intro heq
-  have heq' : mk [(x, true), (x, true), (y, true), (y, true)]
-      = mk [(y, true), (y, true), (x, true), (x, true)] := heq
   have h2 : [(x, true), (x, true), (y, true), (y, true)]
       = [(y, true), (y, true), (x, true), (x, true)] :=
     eq_of_mk_eq_of_isReduced (by simp [IsReduced, List.isChain_cons_cons, h])
-      (by simp [IsReduced, List.isChain_cons_cons, Ne.symm h]) heq'
+      (by simp [IsReduced, List.isChain_cons_cons, Ne.symm h]) heq
   have h3 : (x, true) = (y, true) := ((List.cons.injEq _ _ _ _).mp h2).1
   exact h ((Prod.mk.injEq _ _ _ _).mp h3).1
 
@@ -197,7 +191,6 @@ theorem pow_two_mul_pow_two_of_ne {x y : α} (h : x ≠ y) :
 /-- `q ^ j = 1` only when `j = 0` or `q = 1` (free groups are torsion-free). -/
 theorem zpow_eq_one_iff {q : FreeGroup α} {j : ℤ} :
     q ^ j = 1 ↔ j = 0 ∨ q = 1 := by
-  classical
   refine ⟨fun h => ?_, by rintro (rfl | rfl) <;> simp⟩
   rcases lt_trichotomy j 0 with hlt | heq | hgt
   · right
@@ -234,9 +227,9 @@ theorem norm_pow_eq [DecidableEq α] {q : FreeGroup α} {k : ℕ} (hk : 0 < k) :
 theorem norm_zpow_eq [DecidableEq α] {q : FreeGroup α} {m : ℤ} (hm : m ≠ 0) :
     FreeGroup.norm (q ^ m) = 2 * (reduceCyclically.conjugator q.toWord).length
       + m.natAbs * (reduceCyclically q.toWord).length := by
-  have hnat : ∀ k : ℕ, 0 < k → FreeGroup.norm (q ^ k) = 2 * (reduceCyclically.conjugator
+  have hnat (k : ℕ) (hk : 0 < k) : FreeGroup.norm (q ^ k) = 2 * (reduceCyclically.conjugator
     q.toWord).length
-      + k * (reduceCyclically q.toWord).length := fun k hk => norm_pow_eq hk
+      + k * (reduceCyclically q.toWord).length := norm_pow_eq hk
   rcases lt_trichotomy m 0 with hlt | heq | hgt
   · have hm' : m = -((m.natAbs : ℤ)) := by
       have h1 : ((m.natAbs : ℤ)) = -m := by
@@ -315,8 +308,7 @@ theorem natAbs_eq_of_conj_zpow {q : FreeGroup α} (hq : q ≠ 1) {g : FreeGroup 
     conv_rhs => rw [← hpow k]
     exact norm_le_norm_conj g _
   -- evaluate the norms
-  have hMnat : ∀ j : ℤ, j ≠ 0 → FreeGroup.norm (q ^ j) = 2 * c + j.natAbs * W :=
-    fun j hj => norm_zpow_eq hj
+  have hMnat (j : ℤ) (hj : j ≠ 0) : FreeGroup.norm (q ^ j) = 2 * c + j.natAbs * W := norm_zpow_eq hj
   have hnatK (j : ℤ) : (j * (K : ℤ)).natAbs = j.natAbs * K := by
     rw [Int.natAbs_mul, Int.natAbs_natCast]
   have hmK : m * (K : ℤ) ≠ 0 := by
@@ -380,10 +372,8 @@ theorem exists_zpow_eq_of_subsingleton {ι : Type*} [Subsingleton ι] (a : ι) (
 /-- **A free group that is abelian is cyclic.** -/
 theorem exists_zpow_eq_of_forall_commute {G : Type*} [Group G] [IsFreeGroup G]
     (hcomm : ∀ x y : G, x * y = y * x) : ∃ r : G, ∀ z : G, ∃ n : ℤ, z = r ^ n := by
-  classical
   obtain ⟨ι, ⟨b⟩⟩ := IsFreeGroup.nonempty_basis (G := G)
-  have hgen : ∀ x y : ι, FreeGroup.of x * FreeGroup.of y = FreeGroup.of y * FreeGroup.of x := by
-    intro x y
+  have hgen (x) (y : ι) : FreeGroup.of x * FreeGroup.of y = FreeGroup.of y * FreeGroup.of x := by
     have h1 : b.repr (b x * b y) = FreeGroup.of x * FreeGroup.of y := by
       rw [MulEquiv.map_mul b.repr, FreeGroupBasis.repr_apply_coe, FreeGroupBasis.repr_apply_coe]
     have h2 : b.repr (b y * b x) = FreeGroup.of y * FreeGroup.of x := by
@@ -397,8 +387,8 @@ theorem exists_zpow_eq_of_forall_commute {G : Type*} [Group G] [IsFreeGroup G]
   · refine ⟨1, fun z => ⟨0, ?_⟩⟩
     have hS : Subsingleton (FreeGroup ι) := by
       refine ⟨fun x y => ?_⟩
-      have hnil : ∀ g : FreeGroup ι, g.toWord = [] := fun g =>
-        List.eq_nil_iff_forall_not_mem.mpr (fun a _ => hem.false a.1)
+      have hnil (g : FreeGroup ι) : g.toWord = [] := List.eq_nil_iff_forall_not_mem.mpr (fun a _ =>
+          hem.false a.1)
       calc x = mk x.toWord := (mk_toWord).symm
         _ = mk [] := by rw [hnil x]
         _ = mk y.toWord := by rw [hnil y]
@@ -420,7 +410,6 @@ theorem exists_zpow_eq_of_forall_commute {G : Type*} [Group G] [IsFreeGroup G]
 theorem exists_common_zpow {G : Type*} [Group G] [IsFreeGroup G] {u w : G} (hu : u ≠ 1)
     (hw : w ≠ 1) (h : u * w = w * u) :
     ∃ z : G, ∃ a b : ℤ, a ≠ 0 ∧ b ≠ 0 ∧ u = z ^ a ∧ w = z ^ b := by
-  classical
   set K : Subgroup G := Subgroup.closure ({u, w} : Set G) with hK
   have hfree : IsFreeGroup K := subgroupIsFreeOfIsFree K
   have hmem : ({u, w} : Set G) ⊆ (Subgroup.centralizer ({u, w} : Set G) : Set G) := by
@@ -437,8 +426,7 @@ theorem exists_common_zpow {G : Type*} [Group G] [IsFreeGroup G] {u w : G} (hu :
       (Subgroup.closure_le _).mpr hmem
     rw [hK, Subgroup.centralizer_closure]
     exact h1
-  have hcommK : ∀ x y : K, x * y = y * x := by
-    intro x y
+  have hcommK (x) (y : K) : x * y = y * x := by
     have hx : (x : G) ∈ Subgroup.centralizer (K : Set G) := hle x.2
     exact Subtype.ext ((Subgroup.mem_centralizer_iff.mp hx) (y : G) y.2).symm
   obtain ⟨r, hr⟩ := @exists_zpow_eq_of_forall_commute K _ hfree hcommK
@@ -479,9 +467,8 @@ theorem exists_nat_pow_or_inv_of_zpow {q s : FreeGroup α} {ν : ℤ} (h : q = s
   · left
     refine ⟨ν.toNat, by omega, ?_⟩
     have h1 : ((ν.toNat : ℤ)) = ν := Int.toNat_of_nonneg (by omega)
-    have h2 : ν = ((ν.toNat : ℤ)) := h1.symm
     calc q = s ^ ν := h
-      _ = s ^ ((ν.toNat : ℤ)) := congrArg (fun k : ℤ => s ^ k) h2
+      _ = s ^ ((ν.toNat : ℤ)) := congrArg (fun k : ℤ => s ^ k) h1.symm
       _ = s ^ ν.toNat := zpow_natCast s ν.toNat
 
 /-! ### Commensurable elements have a common root -/
@@ -490,7 +477,6 @@ theorem exists_nat_pow_or_inv_of_zpow {q s : FreeGroup α} {ν : ℤ} (h : q = s
 theorem exists_common_zpow_of_zpow_eq {z s : FreeGroup α} {m n : ℤ}
     (hm : m ≠ 0) (hn : n ≠ 0) (h : z ^ m = s ^ n) :
     ∃ r : FreeGroup α, ∃ a b : ℤ, a ≠ 0 ∧ b ≠ 0 ∧ z = r ^ a ∧ s = r ^ b := by
-  classical
   have hcomm : z * s = s * z := commute_of_zpow_eq hm hn h
   rcases eq_or_ne z 1 with hz | hz
   · subst hz

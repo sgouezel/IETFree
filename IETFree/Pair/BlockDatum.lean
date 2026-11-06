@@ -5,13 +5,13 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.Pair.BlockData
 public import IETFree.Pair.BlockEndpoints
 public import IETFree.Pair.BlockIrreducibility
 public import IETFree.Pair.BlockRescaling
-public import IETFree.Pair.BlockData
 public import IETFree.Pair.GoodRegion
-public import IETFree.Pair.LengthMap
 public import IETFree.Pair.InvariantInterval
+public import IETFree.Pair.LengthMap
 
 /-!
 The presentation of `g ∘ f` on a block: the datum, the invariance of the block, and the rescaled
@@ -56,9 +56,8 @@ theorem irreduciblePerm_blockPerm (D : IETDatum n) (hkl : k < l) (hln : l ≤ n)
     (hirr : IsIrreducibleOn D (leftEnd D.lam ⟨k, by omega⟩)
       (leftEnd D.lam ⟨k, by omega⟩ + blockMass D.lam k hln)) :
     IsIrreduciblePerm (blockPerm D.π k hkl hln hstab) := by
-  classical
   have : NeZero (l - k) := ⟨by omega⟩
-  have hpos : ∀ i, 0 < (D.lam i : ℝ) := D.lam_pos
+  have hpos (i) : 0 < (D.lam i : ℝ) := D.lam_pos i
   have hMpos : 0 < blockMass D.lam k hln := blockMass_pos hpos k hkl hln
   have hlNN : (∑ i, D.lam i) = 1 := by
     rw [← NNReal.coe_inj, NNReal.coe_sum, D.sum_lam, NNReal.coe_one]
@@ -135,21 +134,16 @@ theorem irreduciblePerm_blockPerm (D : IETDatum n) (hkl : k < l) (hln : l ≤ n)
     rw [rescaleMapInv, add_sub_cancel_left, mul_comm]
   have hDt : D.toFun x = mkIET1' D.lam D.π D.mem_simplex x := by
     rw [IETDatum.toFun_def, ← mkIET1_eq_mkIETFun D.lam D.π D.mem_simplex]
-  change D.toFun x ∈ Set.Ico (leftEnd D.lam ⟨k, by omega⟩) (leftEnd D.lam ⟨k + j.val, by omega⟩)
   rw [hDt, hfx, hval]
   set y : ℝ := (mkIET1' (blockLam D.lam k hkl hln hpos) (blockPerm D.π k hkl hln hstab)
       (blockLam_sum D.lam k hkl hln hpos)
       (rescaleMap (leftEnd D.lam ⟨k, by omega⟩)
         (leftEnd D.lam ⟨k, by omega⟩ + blockMass D.lam k hln) x)) with hy
   have hy0 : 0 ≤ y := hmapmem.1
-  have hylt : y < leftEnd (blockLam D.lam k hkl hln hpos) j := hinv'
   refine ⟨?_, ?_⟩
-  · change leftEnd D.lam ⟨k, by omega⟩ ≤ leftEnd D.lam ⟨k, by omega⟩ + blockMass D.lam k hln * y
-    exact le_add_of_nonneg_right (mul_nonneg hMpos.le hy0)
-  · change leftEnd D.lam ⟨k, by omega⟩ + blockMass D.lam k hln * y
-      < leftEnd D.lam ⟨k + j.val, by omega⟩
-    rw [hkey]
-    have := mul_lt_mul_of_pos_left hylt hMpos
+  · exact le_add_of_nonneg_right (mul_nonneg hMpos.le hy0)
+  · rw [hkey]
+    have := mul_lt_mul_of_pos_left hinv' hMpos
     linarith
 
 end BlockIrreducibleTransport
@@ -177,7 +171,6 @@ noncomputable def GoodRegion.datum (G : GoodRegion d e π σ q₀) [NeZero G.n]
 theorem GoodRegion.datum_lam (G : GoodRegion d e π σ q₀) [NeZero G.n]
     {q : PReal d e} (hq : q ∈ G.O) :
     (G.datum hq).lam = G.cellLen hq := by
-  change simplexMap G.n (compLenAffine G.s q) = G.cellLen hq
   exact (BlockData.compLenVec_eq_simplexMap G hq).symm
 
 /-- **The marked points of the datum are the entries of the list.** -/
@@ -186,8 +179,7 @@ theorem GoodRegion.datum_markCuts (G : GoodRegion d e π σ q₀) [NeZero G.n]
     (G.datum hq).markCuts
       = Finset.univ.image (fun i : Fin G.n => G.s i.castSucc q) := by
   have P := G.pres q hq
-  change Finset.univ.image (fun i : Fin G.n => (G.datum hq).mark i.castSucc)
-      = Finset.univ.image (fun i : Fin G.n => G.s i.castSucc q)
+  simp only [IETDatum.markCuts]
   congr 1
   funext i
   rw [IETDatum.mark_castSucc, G.datum_lam hq]
@@ -213,7 +205,7 @@ theorem GoodRegion.datum_hcuts (G : GoodRegion d e π σ q₀) [NeZero G.n]
     rw [IETDatum.mark_castSucc, hElam]
   have hDfun : D.toFun = fun x => mkIET1' (simplexMap d q.1) π hl x := by
     funext x
-    change mkIETFun D.lam D.π 0 x = _
+    rw [IETDatum.toFun_apply]
     rw [hDlam, h.hDπ]
     rfl
   intro c hc
@@ -264,15 +256,13 @@ theorem GoodRegion.datum_toFun (G : GoodRegion d e π σ q₀) [NeZero G.n]
   intro x
   have hF : (G.datum hq).toFun x
       = mkIET1' (G.cellLen hq) G.ρ (compLen_sum P.mono P.zero P.top) x := by
-    change mkIETFun (G.datum hq).lam G.ρ 0 x = _
+    rw [IETDatum.toFun_apply]
     rw [G.datum_lam hq]
     rfl
   have hDE : E.toFun (D.toFun x)
       = (mkIET1' (simplexMap e q.2) σ hm * mkIET1' (simplexMap d q.1) π hl) x := by
     rw [IET.mul_apply]
-    change mkIETFun E.lam E.π 0 (mkIETFun D.lam D.π 0 x)
-      = (mkIET1' (simplexMap e q.2) σ hm)
-        ((mkIET1' (simplexMap d q.1) π hl) x)
+    rw [IETDatum.toFun_apply, IETDatum.toFun_apply]
     rw [hDlam, hElam, h.hDπ, h.hEπ]
     rfl
   rw [hF, hDE, P.eq_mkIET1]
@@ -432,7 +422,7 @@ theorem rho_lt_iff {D : IETDatum d} {E : IETDatum e}
     (hF : ∀ y, (mkIET1' mu σ hm * mkIET1' lam π hl) y = E.toFun (D.toFun y))
     {k : Fin (n + 1)} (hu : IsPairSplitting D E (S k)) (i : Fin n) :
     (i.val < k.val ↔ (ρ i).val < k.val) := by
-  have hpos : ∀ j : Fin n, 0 < S j.succ - S j.castSucc := listLen_pos P.mono
+  have hpos (j : Fin n) : 0 < S j.succ - S j.castSucc := listLen_pos P.mono j
   have himg (j : Fin n) : listImageLeft ρ S j < listImageLeft ρ S i ↔ ρ j < ρ i := by
     constructor
     · intro h
@@ -533,8 +523,7 @@ theorem GoodRegion.comp_eq_toFun (G : GoodRegion d e π σ q₀) [NeZero G.n]
   have P := G.pres q hq
   intro y
   rw [P.eq_mkIET1, ← G.datum_toFun hq h y]
-  change (mkIET1' (compLen P.mono) G.ρ _) y
-      = mkIETFun (G.datum hq).lam G.ρ 0 y
+  rw [IETDatum.toFun_apply]
   rw [G.datum_lam hq]
   rfl
 
@@ -648,7 +637,6 @@ theorem comp_conj_rescale (G : GoodRegion d e π σ q₀) [NeZero G.n]
     (E.toIET * D.toIET) (rescaleMapInv (G.s i₀ q) (G.s i₁ q) y)
       = rescaleMapInv (G.s i₀ q) (G.s i₁ q)
           (G.blockRescaled hq h hi hk hk' y) := by
-  classical
   have hln : i₁.val ≤ G.n := by have := i₁.isLt; omega
   have hne : NeZero (i₁.val - i₀.val) := ⟨by omega⟩
   have P := G.pres q hq
@@ -664,9 +652,8 @@ theorem comp_conj_rescale (G : GoodRegion d e π σ q₀) [NeZero G.n]
     rw [hLdef, hMdef]
     exact leftEnd_add_blockMass_compLen (monoAt G hq) P.zero hi hln
   -- the composition, as the exchange of the presentation
-  have hcomp : ∀ z, (mkIET1' (G.cellLen hq) G.ρ hsum) z
+  have hcomp (z) : (mkIET1' (G.cellLen hq) G.ρ hsum) z
       = (E.toIET * D.toIET) z := by
-    intro z
     have hlen : G.cellLen hq = compLen P.mono := cellLen_eq G hq P.mono
     have h1 : mkIET1' (G.cellLen hq) G.ρ hsum
         = mkIET1' (compLen P.mono) G.ρ (compLen_sum P.mono P.zero P.top) := by
@@ -698,8 +685,7 @@ theorem comp_conj_rescale (G : GoodRegion d e π σ q₀) [NeZero G.n]
     (lam := G.cellLen hq) (π := G.ρ) ⟨i₀.val, i₁.val, hi, hln⟩ hsum hpos hstab x hx
   rw [hxy] at hres
   -- identify the two rescalings
-  have hφ : ∀ z, rescaleMapInv (G.s i₀ q) (G.s i₁ q) z = rescaleMapInv L (L + M) z := by
-    intro z
+  have hφ (z) : rescaleMapInv (G.s i₀ q) (G.s i₁ q) z = rescaleMapInv L (L + M) z := by
     rw [rescaleMapInv, rescaleMapInv, ← hLval, ← hLM]
   simp only [hφ]
   rw [← hxdef]
@@ -730,16 +716,14 @@ theorem restrict_rescale (G : GoodRegion d e π σ q₀)
                 have hlt : G.s i₀ q < G.s i₁ q := monoAt G hq hi
                 linarith)
             (by exact (hk'.mem_Icc).2)) y) := by
-  classical
   have hm : simplexMap e q.2 ∈ simplex e := G.simplexMap_mem_simplex_snd hq
   have hr := G.subset_region q hq
-  have hpos : ∀ j, 0 < simplexMap e q.2 j := pos_simplexMap hr.2
+  have hpos (j) : 0 < simplexMap e q.2 j := pos_simplexMap hr.2 j
   have h0u : 0 ≤ G.s i₀ q := (hk.mem_Icc).1
   have h0v : (0 : ℝ) ≤ G.s i₁ q := (hk'.mem_Icc).1
   have h1v : G.s i₁ q ≤ 1 := (hk'.mem_Icc).2
   have huv : G.s i₀ q < G.s i₁ q := by
-    have hlt : i₀ < i₁ := hi
-    exact monoAt G hq (by simpa using hlt)
+    exact monoAt G hq (by simpa using hi)
   have htot : (∑ j, (simplexMap e q.2 j : ℝ)) = 1 := by
     rw [← NNReal.coe_sum]; exact_mod_cast hm
   -- the exchange `E` is `mkIET1'` of its own length vector
@@ -752,10 +736,9 @@ theorem restrict_rescale (G : GoodRegion d e π σ q₀)
       mkIET1_eq_mkIETFun (simplexMap e q.2) σ hm x
     rw [hfun, hfun', show E.lam = simplexMap e q.2 from by rw [IETDatum.lam, h.hEv], h.hEπ]
   -- the invariance of the block under `g`
-  have hinv : ∀ x ∈ Set.Ico (G.s i₀ q) (G.s i₁ q),
+  have hinv (x) (hx : x ∈ Set.Ico (G.s i₀ q) (G.s i₁ q)) :
       (mkIET1' (simplexMap e q.2) σ hm x ∈ Set.Ico (G.s i₀ q) (G.s i₁ q) ↔
         x ∈ Set.Ico (G.s i₀ q) (G.s i₁ q)) := by
-    intro x hx
     have hx01 : x ∈ Set.Ico (0 : ℝ) 1 := ⟨le_trans h0u hx.1, lt_of_lt_of_le hx.2 h1v⟩
     rw [← hE]
     exact (IsPairSplitting.iff_mem hk hk' hx01).2.symm
@@ -803,7 +786,6 @@ theorem blockLam_of_one {n : ℕ} {lam : Fin n → ℝ≥0} {k l : ℕ} (hkl : k
   have hne : ((lam ⟨k, by omega⟩ : ℝ≥0) : ℝ) ≠ 0 := by
     simp only [ne_eq, NNReal.coe_eq_zero]
     exact ne_of_gt (hpos _)
-  change (lam ⟨k, by omega⟩ : ℝ) / (lam ⟨k, by omega⟩ : ℝ) = ((1 : ℝ≥0) : ℝ)
   rw [div_self hne]
   simp
 
@@ -841,11 +823,10 @@ theorem mkIET1_of_all_one {r : ℕ} [NeZero r] {lam : Fin r → ℝ≥0} (π : E
     have h2 : ((r : ℝ≥0)) = 1 := by simpa using hl
     exact_mod_cast h2
   have : Subsingleton (Fin r) := by rw [hcard]; infer_instance
-  have hzero : ∀ i : Fin r, i = 0 := fun i => Subsingleton.elim i 0
+  have hzero (i : Fin r) : i = 0 := Subsingleton.elim i 0
   refine IET.ext fun x => ?_
   rw [IET.one_apply]
-  change mkIETFun lam π 0 x = x
-  rw [mkIETFun]
+  rw [mkIET1_eq_mkIETFun, mkIETFun]
   by_cases hx : x ∈ Set.Ico (0 : ℝ) (0 + ∑ i, (lam i : ℝ))
   · rw [dif_pos hx]
     have htv : translationVector π lam (idx lam (x - 0) (by linarith [hx.1])) = 0 := by

@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.RichPath.MassGrowth
 public import IETFree.RauzyVeech.RichPath.LevelMass
+public import IETFree.RauzyVeech.RichPath.MassGrowth
 public import IETFree.RauzyVeech.RichPath.Potential
 
 /-!
@@ -23,14 +23,12 @@ The unconditional proof of the `Γ₃` estimate itself is in
  (`Potential.straddleMassCard_of_unclean`).
 -/
 
-@[expose] public section
-
-open Finset
+open Finset IETDatum₂
 open scoped BigOperators
 
-namespace Assemble
+@[expose] public section
 
-open IETDatum₂
+namespace Assemble
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 

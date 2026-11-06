@@ -45,9 +45,7 @@ noncomputable def invSubstGen : FreeGroup Gen →* FreeGroup Gen :=
 theorem invSubstGen_substGen_apply (i : Gen) :
     invSubstGen (substGen (FreeGroup.of i)) = FreeGroup.of i := by
   fin_cases i
-  · change (FreeGroup.lift (fun i : Gen => if i = 0 then genY⁻¹ * genX else genY))
-      ((FreeGroup.lift (fun i : Gen => if i = 0 then genY * genX else genY)) (FreeGroup.of 0))
-      = FreeGroup.of 0
+  · simp only [invSubstGen, substGen]
     rw [FreeGroup.lift_apply_of]
     simp only [genX, genY]
     norm_num

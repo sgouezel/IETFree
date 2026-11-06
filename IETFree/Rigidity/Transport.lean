@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.TopBotFormalism
 public import IETFree.RauzyVeech.Affine
+public import IETFree.TopBotFormalism
 
 /-!
 # Transport of the a.e. rigidity statement along `ofPerm`

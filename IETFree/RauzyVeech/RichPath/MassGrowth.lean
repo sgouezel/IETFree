@@ -5,9 +5,9 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.RichPath.MinimalExitMass
 public import IETFree.RauzyVeech.RichPath.GradedInduction
 public import IETFree.RauzyVeech.RichPath.MassFunction
+public import IETFree.RauzyVeech.RichPath.MinimalExitMass
 
 /-!
 # Closing `Γ₂`: an existential mass growth from the uniform minimal exit
@@ -20,14 +20,12 @@ node, with the height constant `2^L` supplied by `MinimalExitMass.exists_uniform
 The family slot only has to be met on the single prefix-free family `S = {[]}`, which is why no
 hypothesis on `P` beyond irreducibility is needed. -/
 
-@[expose] public section
-
-open Finset
+open Finset IETDatum₂
 open scoped BigOperators
 
-namespace MassGrowth
+@[expose] public section
 
-open IETDatum₂
+namespace MassGrowth
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -55,17 +53,16 @@ theorem exists_extMassGen_sharp (P : IETDatum₂ α n) (hP : P.Irreducible) (hn 
     have hx : (0 : ℝ) < 1 + 2 ^ L * Cb := by positivity
     have hxL : (0 : ℝ) < (1 + 2 ^ L * Cb) ^ L := pow_pos hx L
     have hge' : 1 ≤ CylinderMass.cond P w u * (1 + 2 ^ L * Cb) ^ L := by
-      have h := hge
-      rw [div_pow, one_pow] at h
-      rwa [div_le_iff₀ hxL] at h
+      rw [div_pow, one_pow] at hge
+      rwa [div_le_iff₀ hxL] at hge
     rw [div_lt_iff₀ (by positivity : (0 : ℝ) < (1 + ε) * (1 + 2 ^ L * Cb) ^ L)]
     nlinarith [hge', hxL]
   · intro η hη
     obtain rfl : η = u := Finset.mem_singleton.mp hη
     refine ⟨?_, ?_⟩
-    · rcases hExit with h | h
-      · exact ⟨true, h⟩
-      · exact ⟨false, h⟩
+    · rcases hExit with hge | hge
+      · exact ⟨true, hge⟩
+      · exact ⟨false, hge⟩
     · refine (LargeLetter.Mk_one_le_iff (NodeHeight.card_pos P)).mpr fun b => ?_
       have h1 : NodeHeight.st P (w ++ η) b ≤ 2 ^ η.length * NodeHeight.Mk 1 (NodeHeight.st P w) :=
         MinimalExitMass.st_le_two_pow_mul_Mk P hP hn w η b

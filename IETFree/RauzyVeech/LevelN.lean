@@ -6,8 +6,8 @@ Authors: Sébastien Gouëzel
 module
 
 public import IETFree.RauzyVeech.FirstReturn
-public import IETFree.RauzyVeech.TowerLevel
 public import IETFree.RauzyVeech.InvariantMeasure
+public import IETFree.RauzyVeech.TowerLevel
 
 /-!
 # Iterated permutations, path matrices over `ℕ`, and renormalised length vectors
@@ -30,10 +30,10 @@ Only the type-`false` case is treated here (`IETFree/RauzyVeech/FirstReturn.lean
 first-return theorem only in that case); the level-`n` formula itself, for an arbitrary word, is
 `TowerTrue.tower_formula_level_pathQ_any` of `IETFree/RauzyVeech/TrueStep.lean`. -/
 
-@[expose] public section
-
-open MeasureTheory Finset
+open MeasureTheory Finset Tower IETDatum₂
 open scoped BigOperators ENNReal NNReal
+
+@[expose] public section
 
 namespace Tower
 
@@ -84,8 +84,7 @@ theorem measurableSet_image_exch (π : Equiv.Perm (Fin n)) (lam : Fin n → ℝ�
     ext x
     constructor
     · rintro ⟨a, ha, rfl⟩
-      change ⇑(exchEquiv π lam).symm (⇑(exchEquiv π lam) a) ∈ A
-      rw [Equiv.symm_apply_apply]
+      rw [Set.mem_preimage, ← coe_exchEquiv, Equiv.symm_apply_apply]
       exact ha
     · intro hx
       exact ⟨⇑(exchEquiv π lam).symm x, hx, Equiv.apply_symm_apply (exchEquiv π lam) x⟩
@@ -99,11 +98,6 @@ theorem image_cut_self (hlt : lam (topCell π) < lam botCell) :
   have h := image_Ico_tot (piHat π) (lamHat π lam)
   rw [show tot (lamHat π lam) = cut π lam from cut_eq_sum_lamHat hlt] at h
   exact h
-
-/-- **All floors have the same mass for the original exchange**, in the shape used below. -/
-theorem measure_image_iterate' (π : Equiv.Perm (Fin n)) (lam : Fin n → ℝ≥0) (μ : Measure ℝ)
-    (hμ : μ.map (exch π lam) = μ) (A : Set ℝ) (hA : MeasurableSet A) (j : ℕ) :
-    μ ((exch π lam)^[j] '' A) = μ A := measure_image_iterate π lam μ hμ A hA j
 
 /-- **Induced invariance.**  If `μ` is invariant under the exchange `T = exch π lam` and `lam
 (topCell π) < lam botCell`, then the restriction of `μ` to the Rauzy subinterval `[0, cut)` is
@@ -119,7 +113,7 @@ theorem restrict_cut_invariant (hlt : lam (topCell π) < lam botCell) (μ : Meas
   have hmeasTH : Measurable (exch (piHat π) (lamHat π lam)) := measurable_exch _ _
   have hIm : exch (piHat π) (lamHat π lam) '' Set.Ico 0 (cut π lam)
       = Set.Ico 0 (cut π lam) := image_cut_self hlt
-  have hcell : ∀ β : Fin n, MeasurableSet (cellHat π lam β) := measurableSet_cellHat π lam
+  have hcell (β : Fin n) : MeasurableSet (cellHat π lam β) := measurableSet_cellHat π lam β
   -- the key counting identity
   have hmain (A : Set ℝ) (hAI : A ⊆ Set.Ico 0 (cut π lam)) (hA : MeasurableSet A) :
     μ (exch (piHat π) (lamHat π lam) '' A) = μ A := by
@@ -140,21 +134,20 @@ theorem restrict_cut_invariant (hlt : lam (topCell π) < lam botCell) (μ : Meas
       intro β _ β' _ hne
       exact (pairwiseDisjoint_cellHat π lam (Finset.mem_univ β) (Finset.mem_univ β')
         hne).mono Set.inter_subset_right Set.inter_subset_right
-    have hmeasInt : ∀ β ∈ (Finset.univ : Finset (Fin n)),
-        MeasurableSet (A ∩ cellHat π lam β) := fun β _ => hA.inter (hcell β)
-    have hstep : ∀ β : Fin n, μ (exch (piHat π) (lamHat π lam) '' (A ∩ cellHat π lam β))
+    have hmeasInt (β) (hβ : β ∈ (Finset.univ : Finset (Fin n))) :
+        MeasurableSet (A ∩ cellHat π lam β) := hA.inter (hcell β)
+    have hstep (β : Fin n) : μ (exch (piHat π) (lamHat π lam) '' (A ∩ cellHat π lam β))
         = μ (A ∩ cellHat π lam β) := by
-      intro β
-      have hfun : ∀ y ∈ A ∩ cellHat π lam β,
+      have hfun (y) (hy0 : y ∈ A ∩ cellHat π lam β) :
           exch (piHat π) (lamHat π lam) y = (exch π lam)^[returnB π β] y := by
-        rintro y ⟨-, hy⟩
+        obtain ⟨-, hy⟩ := hy0
         have hyI : y ∈ Set.Ico 0 (cut π lam) := cellHat_subset_cut hlt β hy
         have h1 := firstReturn_eq hlt hyI
         have h2 := ret_eq_returnB hlt hy
         rw [h2] at h1
         exact h1.symm
       rw [Set.image_congr hfun]
-      exact measure_image_iterate' π lam μ hμ _ (hmeasInt β (Finset.mem_univ β)) _
+      exact measure_image_iterate π lam μ hμ _ (hmeasInt β (Finset.mem_univ β)) _
     have hsum : μ A = ∑ β, μ (A ∩ cellHat π lam β) := by
       conv_lhs => rw [hcover]
       have hbi := measure_biUnion_finset (μ := μ) hdisj hmeasInt
@@ -164,9 +157,9 @@ theorem restrict_cut_invariant (hlt : lam (topCell π) < lam botCell) (μ : Meas
       conv_lhs => rw [hcover]
       rw [Set.image_iUnion]
     have hdisj' := pairwiseDisjoint_image (injective_exch (piHat π) (lamHat π lam)) hdisj
-    have hmeas' : ∀ β ∈ (Finset.univ : Finset (Fin n)),
+    have hmeas' (β) (hβ : β ∈ (Finset.univ : Finset (Fin n))) :
         MeasurableSet (exch (piHat π) (lamHat π lam) '' (A ∩ cellHat π lam β)) :=
-      fun β _ => measurableSet_image_exch _ _ (hmeasInt β (Finset.mem_univ β))
+            measurableSet_image_exch _ _ (hmeasInt β (Finset.mem_univ β))
     have hsum' : μ (exch (piHat π) (lamHat π lam) '' A)
         = ∑ β, μ (A ∩ cellHat π lam β) := by
       rw [hcov]
@@ -209,8 +202,6 @@ end Tower
 /-! ## 4. Bridge to `IETDatum₂ α n`: `Path.Q` over `ℕ`, renormalised lengths, cells -/
 
 namespace IETDatum₂
-
-open Tower
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -290,9 +281,8 @@ theorem rvMat_toComb_false (P : IETDatum₂ α n) (a b : α) :
 by `piBottom`. -/
 theorem rvMatNat_toComb_false (P : IETDatum₂ α n) (a b : α) :
     P.rvMatNat false a b = multOne P.perm (P.piBottom a) (P.piBottom b) := by
-  have key : ∀ i j : Fin n, (toComb P.perm).rvMat false i j
+  have key (i) (j : Fin n) : (toComb P.perm).rvMat false i j
       = if j = i then 1 else if j = topCell P.perm ∧ i = botCell then 1 else 0 := by
-    intro i j
     rw [rvMat_toComb_false_apply]
     by_cases h1 : i = j
     · subst h1
@@ -309,8 +299,6 @@ end IETDatum₂
 /-! ## 5. The renormalised length vectors in `α` coordinates, and the target statement -/
 
 namespace Tower
-
-open IETDatum₂
 
 variable {n : ℕ} [NeZero n]
 variable {α : Type*} [Fintype α] [DecidableEq α]
@@ -339,11 +327,8 @@ theorem lengthsInBottom_hatLam (P : IETDatum₂ α n) (lam : α → ℝ≥0) :
   have hL : lam (P.piBottom.symm (topCell P.perm)) = lam (P.last true) := by
     rw [← IETDatum₂.piBottom_last_true P, Equiv.symm_apply_apply]
   funext i
-  simp only [IETDatum₂.lengthsInBottom]
-  change (if P.piBottom.symm i = P.last false then lam (P.piBottom.symm i) - lam (P.last true)
-      else lam (P.piBottom.symm i))
-    = if i = botCell then lam (P.piBottom.symm i) - lam (P.piBottom.symm (topCell P.perm))
-      else lam (P.piBottom.symm i)
+  simp only [IETDatum₂.lengthsInBottom, hatLam, lamHat, IETDatum₂.rvStep_piBottom_false,
+    Bool.not_false]
   by_cases hi : i = botCell
   · rw [if_pos ((e2 i).mpr hi), if_pos hi, hL]
   · rw [if_neg (fun hc => hi ((e2 i).mp hc)), if_neg hi]

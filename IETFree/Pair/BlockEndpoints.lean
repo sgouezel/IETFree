@@ -5,10 +5,10 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.Pair.LengthMap
-public import IETFree.Pair.SubintervalTransfer
 public import IETFree.Pair.BlockRescaling
 public import IETFree.Pair.InvariantInterval
+public import IETFree.Pair.LengthMap
+public import IETFree.Pair.SubintervalTransfer
 
 /-!
 The consequences of the explicit shape of the singularity list, and the almost-sure bookkeeping of
@@ -45,9 +45,8 @@ variable {d e : ℕ} [NeZero d] [NeZero e]
 /-- **The number of cells is `d + e - 1`.** -/
 theorem GoodRegion.n_eq {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)} {q₀ : PReal d e}
     (G : GoodRegion d e π σ q₀) : G.n = d + e - 1 := by
-  have hq := G.mem_O
-  have hr := G.subset_region q₀ hq
-  exact (G.pres q₀ hq).card_eq
+  have hr := G.subset_region q₀ G.mem_O
+  exact (G.pres q₀ G.mem_O).card_eq
 
 /-- **The list is exhausted by its four kinds of entries**: `0`, `1`, the cuts of `f` and the
 preimages of the cuts of `g`.  This is a counting statement: the list has `n + 1 = d + e` entries
@@ -56,7 +55,6 @@ theorem GoodRegion.surj {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)} {q�
     (G : GoodRegion d e π σ q₀) (k : Fin (G.n + 1)) :
     k = 0 ∨ k = Fin.last G.n ∨ (∃ i : Fin (d - 1), G.shape.posF i = k) ∨
       ∃ j : Fin (e - 1), G.shape.posG j = k := by
-  classical
   have hcard := G.n_eq
   have hd := NeZero.pos d
   have he := NeZero.pos e
@@ -160,7 +158,7 @@ theorem mkIET1_inv_zero {n : ℕ} [NeZero n] {lam : Fin n → ℝ≥0} (hpos : P
       linarith
     have h := mkIETFun_leftEnd (a := (0 : ℝ)) lam π (hpos _) hb
     rw [zero_add] at h
-    change mkIETFun lam π 0 (leftEnd lam (π.symm 0)) = 0
+    simp only [mkIET1_eq_mkIETFun]
     rw [h, himg, add_zero]
   exact (Equiv.symm_apply_eq (mkIET1' lam π hl).toEquiv).mpr hval.symm
 
@@ -177,8 +175,7 @@ theorem GoodRegion.mem_cutList {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e
     ∃ i : Fin (G.n + 1), G.s i q
       = (mkIET1' (simplexMap d q.1) π (G.simplexMap_mem_simplex_fst hq))⁻¹
           (leftEnd (simplexMap e q.2) j) := by
-  classical
-  have hpos : ∀ i, 0 < simplexMap d q.1 i := fun i => pos_simplexMap (G.subset_region q hq).1 i
+  have hpos (i) : 0 < simplexMap d q.1 i := pos_simplexMap (G.subset_region q hq).1 i
   rcases Nat.eq_zero_or_pos j.val with h0 | hjpos
   · refine ⟨G.a (π.symm 0).castSucc, ?_⟩
     have hj0 : j = 0 := Fin.ext (by simp only [Fin.val_zero]; omega)
@@ -200,7 +197,6 @@ theorem GoodRegion.mem_markD {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)}
     {q₀ : PReal d e} (G : GoodRegion d e π σ q₀) (D : IETDatum d) {q : PReal d e}
     (hq : q ∈ G.O) (hv : D.v = q.1) (k : Fin (d + 1)) :
     ∃ i : Fin (G.n + 1), G.s i q = D.mark k := by
-  classical
   have hr := G.subset_region q hq
   have hl : simplexMap d q.1 ∈ simplex d := G.simplexMap_mem_simplex_fst hq
   have hm : simplexMap e q.2 ∈ simplex e := G.simplexMap_mem_simplex_snd hq
@@ -212,7 +208,6 @@ theorem GoodRegion.mem_markD {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)}
   · refine ⟨Fin.last G.n, ?_⟩
     rw [hk', IETDatum.mark_last, G.s_last hq]
   · have hklt : k.val < d := by
-      have h1 := k.isLt
       have h2 : k.val ≠ d := fun h => hk' (Fin.ext (by simp only [Fin.val_last]; omega))
       omega
     have hkk : k = (⟨k.val, hklt⟩ : Fin d).castSucc := Fin.ext rfl
@@ -228,7 +223,6 @@ theorem GoodRegion.mem_pairSplitting {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm 
     {q : PReal d e} (hq : q ∈ G.O) (hvD : D.v = q.1) (hπD : D.π = π) (hvE : E.v = q.2)
     (hσE : E.π = σ) {x : ℝ} (hx : IsPairSplitting D E x) :
     ∃ i : Fin (G.n + 1), G.s i q = x := by
-  classical
   have hr := G.subset_region q hq
   have hl : simplexMap d q.1 ∈ simplex d := G.simplexMap_mem_simplex_fst hq
   have hm : simplexMap e q.2 ∈ simplex e := G.simplexMap_mem_simplex_snd hq
@@ -265,7 +259,6 @@ theorem GoodRegion.mem_pairSplitting {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm 
     · refine ⟨Fin.last G.n, ?_⟩
       rw [G.s_last hq, hj', IETDatum.mark_last]
     · have hjlt : j.val < e := by
-        have h1 := j.isLt
         have h2 : j.val ≠ e := fun h => hj' (Fin.ext (by simp only [Fin.val_last]; omega))
         omega
       have hmark : IETDatum.mark (IETDatum.ofMem σ hr.2) j
@@ -288,7 +281,7 @@ theorem GoodRegion.mem_pairSplitting {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm 
                 (IETDatum.mark (IETDatum.ofMem σ hr.2) j))
             = (IETDatum.ofMem π hr.1).toIET (IETDatum.mark (IETDatum.ofMem σ hr.2) j)
           rw [IET.apply_symm_apply']
-          exact ((IETDatum.toIET_apply _ _).trans hfix').symm
+          exact ((IETDatum.toIET_apply _ _).trans hfix).symm
         rw [hmark] at h2
         exact h2
       rw [hpre]
@@ -326,7 +319,6 @@ theorem exists_countable_goodRegion_cover {d e : ℕ} [NeZero d] [NeZero e]
     ∃ (ι : Type) (_ : Countable ι) (G : ι → Σ q : PReal d e, GoodRegion d e π σ q),
       ∀ z ∈ goodParams d e, z.1 ∈ simplexRegion d → z.2 ∈ simplexRegion e →
         ∃ i, z ∈ (G i).2.O := by
-  classical
   set s : Set (PReal d e) := goodParams d e ∩ {z | z.1 ∈ simplexRegion d ∧ z.2 ∈ simplexRegion e}
     with hsdef
   have hcover : s ⊆ ⋃ i : (Σ q : PReal d e, GoodRegion d e π σ q), (i.2).O := by

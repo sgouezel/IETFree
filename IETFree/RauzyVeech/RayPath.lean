@@ -5,9 +5,9 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.RauzyPath
-public import IETFree.RauzyVeech.ClosureSimplex
 public import IETFree.RauzyVeech.BoundedSimplex
+public import IETFree.RauzyVeech.ClosureSimplex
+public import IETFree.RauzyVeech.RauzyPath
 
 /-!
 # The path hypotheses of the ray criterion

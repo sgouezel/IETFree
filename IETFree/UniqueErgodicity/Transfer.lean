@@ -140,8 +140,8 @@ theorem defect_identity_meas (G : X → X) (hGm : Measurable G) (_hGinj : Functi
     funext z
     by_cases hz : ∃ c ∈ J, z = e c
     · obtain ⟨c, hc, rfl⟩ := hz
-      have hsingle : ∀ c' ∈ J, c' ≠ c → ¬ (e c = e c') := by
-        intro c' hc' hne h
+      have hsingle (c') (hc' : c' ∈ J) (hne : c' ≠ c) : ¬ (e c = e c') := by
+        intro h
         exact hne (by rw [← hpe c hc, ← hpe c' hc', h])
       rw [hdef c hc, hpe c hc]
       rw [Finset.sum_eq_single c]
@@ -150,7 +150,8 @@ theorem defect_identity_meas (G : X → X) (hGm : Measurable G) (_hGinj : Functi
         rw [if_neg (hsingle c' hc' hne)]
       · intro hc'
         exact absurd hc hc'
-    · have h0 : ∀ c ∈ J, z ≠ e c := fun c hc h => hz ⟨c, hc, h⟩
+    · have h0 (c) (hc : c ∈ J) : z ≠ e c := fun h =>
+      hz ⟨c, hc, h⟩
       rw [hTeq z h0, sub_self]
       refine (Finset.sum_eq_zero ?_).symm
       intro c hc
@@ -193,11 +194,9 @@ theorem map_map_eq_self (G : X → X) (hGm : Measurable G) (hGinj : Function.Inj
     (hdef : ∀ c ∈ J, p (G (e c)) = L c)
     (hTeq : ∀ z : X, (∀ c ∈ J, z ≠ e c) → p (G z) = T (p z))
     (hvan : ∀ c ∈ J, ν {e c} = 0) : (ν.map p).map T = ν.map p := by
-  classical
   refine Measure.ext fun A hA => ?_
   have hgm : Measurable (A.indicator fun _ => (1 : ℝ)) := measurable_const.indicator hA
-  have hgC : ∀ y, |(A.indicator fun _ => (1 : ℝ)) y| ≤ 1 := by
-    intro y
+  have hgC (y) : |(A.indicator fun _ => (1 : ℝ)) y| ≤ 1 := by
     by_cases hy : y ∈ A <;> simp [Set.indicator_of_mem, hy]
   have hmain := defect_identity_meas G hGm hGinj hν p hp T L hT J e hpe hdef hTeq hgm hgC
   have hzero : ∑ c ∈ J, (ν {e c}).toReal * ((A.indicator fun _ => (1 : ℝ)) (L c)
@@ -206,9 +205,7 @@ theorem map_map_eq_self (G : X → X) (hGm : Measurable G) (hGinj : Function.Inj
     rw [hvan c hc]
     simp
   rw [hzero, sub_eq_zero] at hmain
-  have hII : ∀ ρ : Measure ℝ,
-      ∫ y, (A.indicator fun _ => (1 : ℝ)) y ∂ρ = (ρ A).toReal := by
-    intro ρ
+  have hII (ρ : Measure ℝ) : ∫ y, (A.indicator fun _ => (1 : ℝ)) y ∂ρ = (ρ A).toReal := by
     rw [integral_indicator hA, setIntegral_const]
     simp [Measure.real]
   rw [hII, hII] at hmain

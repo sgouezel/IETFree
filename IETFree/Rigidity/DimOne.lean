@@ -5,9 +5,9 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.TopBotFormalism
 public import IETFree.RauzyVeech.Affine
 public import IETFree.RauzyVeech.SimplexAe
+public import IETFree.TopBotFormalism
 
 /-!
 # The `d = 1` case of the root theorem

@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.TowerInjectivity
 public import IETFree.RauzyVeech.TowerCells
+public import IETFree.RauzyVeech.TowerInjectivity
 
 /-!
 # The level-one Rauzy-Veech tower in `IETDatum₂` letters (both step types)
@@ -45,7 +45,6 @@ theorem sum_ite_single {c : α} (t : ℕ) :
 /-- The column sums of `rvMat e`: `1` plus one on the secondary name. -/
 theorem hgt1_eq (P : IETDatum₂ α n) (hne : ∀ e : Bool, P.last e ≠ P.last (!e))
     (e : Bool) (b : α) : hgt1 P e b = 1 + if b = P.last (!e) then 1 else 0 := by
-  classical
   have hsplit (a : α) :
     P.rvMatNat e a b
       = (if a = b then 1 else 0)
@@ -162,7 +161,6 @@ theorem iUnion_floor_true {π : Equiv.Perm (Fin n)} {lam : Fin n → ℝ≥0}
         exact Set.mem_iUnion.mpr ⟨β, by rw [h0] at hx; simpa using hx⟩
       · right
         have hle : TowerTrue.returnBT π β ≤ 2 := TowerTrue.returnBT_le_two π β
-        have hjlt : (j : ℕ) < TowerTrue.returnBT π β := j.isLt
         have hj2 : TowerTrue.returnBT π β = 2 := by omega
         have hbβ : β = TowerTrue.eT π Tower.botCell := by
           rw [TowerTrue.returnBT] at hj2

@@ -285,7 +285,7 @@ review:
     removed), a dead-code scan of the whole library, a docstring pass, and an
     elaboration-performance pass. The comparator pair is checked on every build by
     `Comparator/Check.lean`, which runs the comparator's own comparison on the two compiled modules
-    (30 899 declarations, no difference), and the genuine tool has been run on it as well — comparator
+    (30 825 declarations, no difference), and the genuine tool has been run on it as well — comparator
     `3927ad3` (the last revision with a Lean v4.33 toolchain) with `lean4export` at the `v4.33.0` tag,
     both built with the local Lean 4.33.1, with `landrun` replaced by the repository's
     `fake-landrun` shim (`landrun` is not installed there).  On the final tree it prints `Lean default
@@ -308,8 +308,8 @@ alignment:
       note: >-
         Unconditional: no hypothesis on `d`, `e`, `π` or `σ`.  This is `Challenge.main` in its words,
         and `#print axioms main` reports `[propext, Classical.choice, Quot.sound]`.  It is
-        `main_of_library` (with the two inputs below as hypotheses) applied to `masurVeech` and
-        `veechRigidity`, which discharge them from the two campaigns.
+        The proof applies `masurVeech` and `veechRigidity` (the two inputs below) to discharge
+        every hypothesis, and derives the statement from the a.e. block data.
     - source: "Remark after Theorem 1.1 (the set of pairs is open and of full measure)"
       lean: "—"
       module: "—"

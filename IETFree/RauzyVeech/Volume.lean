@@ -57,8 +57,8 @@ theorem chart_injective {n : ℕ} : Function.Injective (chart n) := by
   have := congrFun h i.castSucc
   simpa using this
 
-theorem chart_pos {n : ℕ} {v : Fin n → ℝ} (hv : v ∈ region n) : ∀ j, 0 < chart n v j := by
-  intro j
+theorem chart_pos {n : ℕ} {v : Fin n → ℝ} (hv : v ∈ region n) (j : Fin (n + 1)) :
+    0 < chart n v j := by
   refine Fin.lastCases ?_ ?_ j
   · rw [chart_last]
     have := hv.2

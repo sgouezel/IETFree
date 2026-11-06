@@ -107,13 +107,11 @@ private theorem lamAfter_pos_of_iterOK {α : Type*} [Fintype α] [DecidableEq α
   | nil => exact hpos
   | cons e es ih =>
     have h1 : TowerTrue.StepOK P lam e := by
-      have h := hOK
-      rw [TowerTrue.IterOK] at h
-      exact h.1
+      rw [TowerTrue.IterOK] at hOK
+      exact hOK.1
     have h2 : TowerTrue.IterOK (P.rvStep e) (Tower.hatLam P e lam) es := by
-      have h := hOK
-      rw [TowerTrue.IterOK] at h
-      exact h.2
+      rw [TowerTrue.IterOK] at hOK
+      exact hOK.2
     rw [Tower.lamAfter_cons]
     exact ih (hatLam_pos hpos h1) h2
 
@@ -133,8 +131,8 @@ private theorem iterOK_of_mem_simplexCyl {α : Type*} [Fintype α] [DecidableEq 
     have hOKγ : TowerTrue.IterOK P lam γ := ih hmemγ
     have hnil : lam ∈ IETDatum₂.simplexCyl P ([] : List Bool) := by
       simpa using mem_simplexCyl_of_append hP hn ([] : List Bool) γ hmemγ
-    have hpos : ∀ a, 0 < lam a := ((IETDatum₂.mem_simplexCyl_nil_iff P lam).mp hnil).2
-    have hposA : ∀ a, 0 < Tower.lamAfter P γ lam a := lamAfter_pos_of_iterOK hpos hOKγ
+    have hpos (a) : 0 < lam a := ((IETDatum₂.mem_simplexCyl_nil_iff P lam).mp hnil).2 a
+    have hposA (a) : 0 < Tower.lamAfter P γ lam a := lamAfter_pos_of_iterOK hpos hOKγ a
     have hren : IETDatum₂.IsRenorm P γ lam (fun a => (Tower.lamAfter P γ lam a : ℝ)) :=
       (IETDatum₂.isRenorm_iff P γ lam _).mpr
         ⟨hposA, (IterGlue.qApply_lamAfter P hP hn γ lam hOKγ).symm⟩
@@ -187,7 +185,6 @@ private theorem exists_good_node_uniform {α : Type*} [Fintype α] [DecidableEq 
         ∀ {lam : α → ℝ≥0},
           lam ∈ IETDatum₂.simplexCyl P (w ++ Bw ++ List.replicate K true) →
           BigCell P (w ++ Bw) lam δ b := by
-  classical
   obtain ⟨π₁, u, hu, hx⟩ := exists_vertex_last_true_eq_piBottom_zero P hP hn
   have hπ₁ : π₁.Irreducible := by
     rw [← hu]
@@ -234,11 +231,10 @@ private theorem exists_good_node_uniform {α : Type*} [Fintype α] [DecidableEq 
             Int.toNat_mul hMℤ0 hSb
       _ = M * height P (w ++ Bw) b := by rw [htoNat, hb']
   -- the big cell at the node `w ++ Bw`, from a run long enough for the prescribed `δ`
-  have hbig : ∀ δ : ℝ, 0 < δ → ∃ K : ℕ, ∀ (w : List Bool), IETDatum₂.vertex P w = π₁ →
-      ∀ {lam : α → ℝ≥0},
-        lam ∈ IETDatum₂.simplexCyl P (w ++ Bw ++ List.replicate K true) →
-        BigCell P (w ++ Bw) lam δ b := by
-    intro δ hδ
+  have hbig (δ : ℝ) (hδ : 0 < δ) : ∃ K : ℕ, ∀ (w : List Bool), IETDatum₂.vertex P w =
+      π₁ → ∀ {lam : α → ℝ≥0},
+        lam ∈ IETDatum₂.simplexCyl P (w ++ Bw ++ List.replicate K true) → BigCell P (w
+            ++ Bw) lam δ b := by
     by_cases hδ1 : δ ≤ 1
     · -- the cone computation, with the strictly positive vector at the end of the run
       have hcard : Fintype.card α = n := by
@@ -383,9 +379,9 @@ theorem ae_rigid_step {α : Type*} [Fintype α] {n : ℕ} [NeZero n]
     have hroot : lam ∈ IETDatum₂.simplexCyl P [] := by
       have h := not_or.mp ((CylRec.mem_Nbad_iff P lam).not.mp hN)
       exact not_not.mp h.2
-    have hstop : ∀ γ : List Bool, lam ∉ IETDatum₂.cylStop P γ := by
+    have hstop (γ : List Bool) : lam ∉ IETDatum₂.cylStop P γ := by
       have h := not_or.mp ((CylRec.mem_Nbad_iff P lam).not.mp hN)
-      exact fun γ hγ => h.1 ⟨γ, hγ⟩
+      exact fun hγ => h.1 ⟨γ, hγ⟩
     have hcyl : IETDatum₂.pathWord P lam (w ++ (Bw ++ List.replicate K true)).length
         = w ++ (Bw ++ List.replicate K true) :=
       pathWord_of_mem_simplexCyl P hP hn hN hwmem

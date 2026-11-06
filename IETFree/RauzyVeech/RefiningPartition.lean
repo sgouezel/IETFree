@@ -76,8 +76,7 @@ theorem measure_eq_of_isClosed [IsFiniteMeasure μ] [IsFiniteMeasure ν]
     {F : Set ℝ} (hF : IsClosed F) (hFI : F ⊆ I) : μ F = ν F := by
   classical
   -- refinement, iterated
-  have href_le : ∀ ⦃n m : ℕ⦄, n ≤ m → ∀ A, A ∈ P m → ∃ B ∈ P n, A ⊆ B := by
-    intro n m hnm
+  have href_le ⦃n m : ℕ⦄ (hnm : n ≤ m) : ∀ A, A ∈ P m → ∃ B ∈ P n, A ⊆ B := by
     refine Nat.le_induction (m := n)
       (P := fun k _ => ∀ A, A ∈ P k → ∃ B ∈ P n, A ⊆ B) ?_ ?_ m hnm
     · exact fun A hA => ⟨A, hA, subset_rfl⟩
@@ -88,9 +87,9 @@ theorem measure_eq_of_isClosed [IsFiniteMeasure μ] [IsFiniteMeasure ν]
   -- the atoms meeting `F`
   set S : ℕ → Finset (Set ℝ) := fun n => (P n).filter fun A => (A ∩ F).Nonempty with hS
   set E : ℕ → Set ℝ := fun n => ⋃ A ∈ S n, A with hE
-  have hES : ∀ n A, A ∈ S n ↔ A ∈ P n ∧ (A ∩ F).Nonempty := fun n A => Finset.mem_filter
-  have hEmeas : ∀ n, MeasurableSet (E n) := fun n =>
-    Finset.measurableSet_biUnion _ fun A hA => hmeas n A ((hES n A).1 hA).1
+  have hES (n) (A) : A ∈ S n ↔ A ∈ P n ∧ (A ∩ F).Nonempty := Finset.mem_filter
+  have hEmeas (n) : MeasurableSet (E n) := Finset.measurableSet_biUnion _ fun A hA => hmeas n A
+      ((hES n A).1 hA).1
   -- `E` is decreasing
   have hanti : Antitone E := by
     intro n m hnm z hz
@@ -115,8 +114,7 @@ theorem measure_eq_of_isClosed [IsFiniteMeasure μ] [IsFiniteMeasure ν]
       obtain ⟨A, hA, hxA⟩ := hcov n x (hFI hx)
       exact Set.mem_biUnion ((hES n A).2 ⟨hA, ⟨x, hxA, hx⟩⟩) hxA
   -- `μ` and `ν` agree on each `E n`
-  have hagree : ∀ n, μ (E n) = ν (E n) := fun n =>
-    measure_biUnion_eq
+  have hagree (n) : μ (E n) = ν (E n) := measure_biUnion_eq
       (fun A hA B hB hne => hdisj n A ((hES n A).1 hA).1 B ((hES n B).1 hB).1 hne)
       (fun A hA => hmeas n A ((hES n A).1 hA).1)
       (fun A hA => hagr n A ((hES n A).1 hA).1)

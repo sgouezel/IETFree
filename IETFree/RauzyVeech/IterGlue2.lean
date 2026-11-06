@@ -80,8 +80,8 @@ theorem iterOK_pathWord (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ 
   induction k with
   | zero =>
     refine ⟨?_, ?_⟩
-    · change True; trivial
-    · change ∀ a, 0 < x a
+    · trivial
+    · simp only [IETDatum₂.pathWord, Tower.lamAfter]
       exact (IETDatum₂.mem_simplexCyl_nil_iff P x).mp h0 |>.2
   | succ k ih =>
     obtain ⟨hOK, hpos⟩ := ih

@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.TopBotFormalism
 public import IETFree.Rigidity.Veech
+public import IETFree.TopBotFormalism
 
 /-!
 # From "arbitrarily large return times" to rigidity by translations
@@ -34,13 +34,11 @@ a.e. statement at the precision `ε k = 1/(k+1)` and the target time `N₀ = k`;
 theorem ae_isRigidByTranslations {α : Type*} [Fintype α] {n : ℕ} [NeZero n]
     (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) :
     ∀ᵐ lam ∂(simplexVolumeOn α), IsRigidByTranslations (P.toIET lam) := by
-  classical
   filter_upwards [Internal.ae_rigid_step P hP hn] with lam hlam
-  have hk : ∀ k : ℕ, ∃ (q : ℕ) (t : ℝ) (B : Set ℝ),
+  have hk (k : ℕ) : ∃ (q : ℕ) (t : ℝ) (B : Set ℝ),
       k ≤ q ∧ |t| ≤ 1 / ((k : ℝ) + 1) ∧ B ⊆ Set.Ico (0:ℝ) 1 ∧ MeasurableSet B ∧
       1 - 1 / ((k : ℝ) + 1) ≤ (volume B).toReal ∧
-      ∀ x ∈ B, (⇑(P.toIET lam))^[q] x = x + t :=
-    fun k => hlam (1 / ((k : ℝ) + 1)) (by positivity) k
+      ∀ x ∈ B, (⇑(P.toIET lam))^[q] x = x + t := hlam (1 / ((k : ℝ) + 1)) (by positivity) k
   choose q t B hq ht hsub hmeas hvol hex using hk
   refine ⟨q, t, B, ?_, ?_, hsub, hmeas, ?_, ?_⟩
   · exact tendsto_atTop_mono (fun k => hq k) tendsto_id
@@ -51,16 +49,14 @@ theorem ae_isRigidByTranslations {α : Type*} [Fintype α] {n : ℕ} [NeZero n]
       (tendsto_one_div_add_atTop_nhds_zero_nat (𝕜 := ℝ))
       (fun k => (abs_le.mp (ht k)).1) (fun k => (abs_le.mp (ht k)).2)
   · -- the measure of `B k` is its volume, and it is sandwiched between `1 - 1/(k+1)` and `1`
-    have hcoe : ∀ k, unitMeas.real (B k) = (volume (B k)).toReal := by
-      intro k
+    have hcoe (k) : unitMeas.real (B k) = (volume (B k)).toReal := by
       rw [unitMeas, Measure.real, Measure.restrict_apply (hmeas k),
         Set.inter_eq_left.mpr (hsub k)]
     have hIco : unitMeas (Set.Ico (0:ℝ) 1) = 1 := by
       rw [unitMeas, Measure.restrict_apply measurableSet_Ico, Set.inter_self,
         Real.volume_Ico]
       norm_num
-    have hle : ∀ k, unitMeas.real (B k) ≤ 1 := by
-      intro k
+    have hle (k) : unitMeas.real (B k) ≤ 1 := by
       have h1 : unitMeas (B k)
           ≤ unitMeas (Set.Ico (0:ℝ) 1) := measure_mono (hsub k)
       have hne : unitMeas (Set.Ico (0:ℝ) 1) ≠ ⊤ := by

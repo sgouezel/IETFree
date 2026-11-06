@@ -5,9 +5,9 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.RichPath.StraddleMass
 public import IETFree.RauzyVeech.RichPath.MinimalExit
 public import IETFree.RauzyVeech.RichPath.RichPathAssembly
+public import IETFree.RauzyVeech.RichPath.StraddleMass
 
 /-!
 # `Γ₂`'s mass constant made dependent on the balance constant of the node
@@ -23,15 +23,12 @@ chase of the balance step with `1/C₂` replaced by `1/(M Cb)` throughout: since
 `NodeHeight.BalanceStep` takes an arbitrary `K : ℝ → ℝ`, nothing else moves. `one_div_mul_two_eq` is
 the elementary arithmetic used in the chase. -/
 
-@[expose] public section
-
-
-open Finset
+open Finset IETDatum₂
 open scoped BigOperators
 
-namespace Induction
+@[expose] public section
 
-open IETDatum₂
+namespace Induction
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -89,8 +86,6 @@ end Induction
 
 namespace Induction
 
-open IETDatum₂
-
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
 /-! ## 3. The balance step with the repaired mass constant -/
@@ -122,7 +117,6 @@ theorem balanceStep_of_extMassGen (P : IETDatum₂ α n) (hP : P.Irreducible) (h
           (∀ b ∈ A', NodeHeight.st P (w ++ η) b
             ≤ 2 * (Fintype.card α : ℝ) * NodeHeight.Mk 1 (NodeHeight.st P w))) :
     NodeHeight.BalanceStep P (KeeGen (α := α) M C2) := by
-  classical
   intro Cb hCb k A' w hk hklt hbal
   have hMpos : (0 : ℝ) < M Cb := hM Cb hCb
   have hCbpos : (0 : ℝ) < Cb := by linarith
@@ -147,9 +141,9 @@ theorem balanceStep_of_extMassGen (P : IETDatum₂ α n) (hP : P.Irreducible) (h
   -- `Γ₂` at the node `w`
   obtain ⟨T2, hT2pf, hT2mass, hT2data⟩ := hB Cb hCb k A' w hk hklt hne hbal
   -- the `A'`-balance at the `Γ₂`-endpoints
-  have hbal' : ∀ η ∈ T2, ∀ b ∈ A',
+  have hbal' (η) (hη : η ∈ T2) : ∀ b ∈ A',
       (1 / (C2 * Cb)) * NodeHeight.Mk 1 (NodeHeight.st P (w ++ η)) ≤ NodeHeight.st P (w ++ η) b :=
-    fun η hη => bal_of_growth P hC2 hCb (w' := w ++ η) hbal
+    bal_of_growth P hC2 hCb (w' := w ++ η) hbal
       (fun b => CylinderMass.state_mono P w η b) (hT2data η hη).2
   -- the `Γ₃` family at each `Γ₂`-endpoint
   have hexG : ∀ η ∈ T2, ∃ F : Finset (List Bool), NodeHeight.PrefixFree F ∧
@@ -165,38 +159,37 @@ theorem balanceStep_of_extMassGen (P : IETDatum₂ α n) (hP : P.Irreducible) (h
       (hT2data η hη).1
   set F : List Bool → Finset (List Bool) :=
     fun η => if h : η ∈ T2 then Classical.choose (hexG η h) else ∅ with hF
-  have hF_spec : ∀ η (h : η ∈ T2), F η = Classical.choose (hexG η h) := by
-    intro η h
+  have hF_spec (η) (h : η ∈ T2) : F η = Classical.choose (hexG η h) := by
     simp only [hF, dif_pos h]
-  have hF_pf : ∀ η, NodeHeight.PrefixFree (F η) := by
-    intro η
+  have hF_pf (η) : NodeHeight.PrefixFree (F η) := by
     by_cases h : η ∈ T2
     · rw [hF_spec η h]
       exact (Classical.choose_spec (hexG η h)).1
     · simp only [hF, dif_neg h]
       exact NodeHeight.prefixFree_empty
-  have hF_mass : ∀ η ∈ T2, 1 / 2 < ∑ δ ∈ F η, CylinderMass.cond P (w ++ η) δ := by
-    intro η h
+  have hF_mass (η) (h : η ∈ T2) :
+      1 / 2 < ∑ δ ∈ F η, CylinderMass.cond P (w ++ η) δ := by
     rw [hF_spec η h]
     exact (Classical.choose_spec (hexG η h)).2.1
-  have hF_data : ∀ η ∈ T2, ∀ δ ∈ F η, ∃ (ν : List Bool) (e : Bool), δ = ν ++ [e] ∧
+  have hF_data (η) (h : η ∈ T2) :
+      ∀ δ ∈ F η, ∃ (ν : List Bool) (e : Bool), δ = ν ++ [e] ∧
       (((P.vertex ((w ++ η) ++ ν)).last e ∈ A'
           ∧ (P.vertex ((w ++ η) ++ ν)).last (!e) ∉ A')
         ∨ 2 * (Fintype.card α : ℝ) * NodeHeight.Mk 1 (NodeHeight.st P (w ++ η))
             < NodeHeight.Mk 1 (NodeHeight.st P ((w ++ η) ++ δ))) ∧
       (∀ b ∈ A', NodeHeight.st P ((w ++ η) ++ δ) b
         ≤ 2 * (Fintype.card α : ℝ) * NodeHeight.Mk 1 (NodeHeight.st P (w ++ η))) := by
-    intro η h δ hδ
+    intro δ hδ
     rw [hF_spec η h] at hδ
     exact (Classical.choose_spec (hexG η h)).2.2 δ hδ
   -- the dichotomy (`Γ₄`) at every composed word
-  have hdich : ∀ η ∈ T2, ∀ δ ∈ F η, ∃ γ₁ : List Bool,
+  have hdich (η) (hη : η ∈ T2) : ∀ δ ∈ F η, ∃ γ₁ : List Bool,
       η <+: γ₁ ∧ γ₁ <+: η ++ δ ∧
       ∃ θ : α, θ ∉ A' ∧ NodeHeight.Mk 1 (NodeHeight.st P (w ++ γ₁)) ≤
         4 * (Fintype.card α : ℝ) * (C2 * Cb) * C2 *
           min (NodeHeight.mmin (insert θ A') (NodeHeight.st P (w ++ γ₁)))
             (NodeHeight.Mk 1 (NodeHeight.st P w)) := by
-    intro η hη δ hδ
+    intro δ hδ
     obtain ⟨ν, e, hδeq, hlast, hbnd⟩ := hF_data η hη δ hδ
     subst hδeq
     obtain ⟨γ₁, hp1, hp2, θ, hθ, hbound⟩ :=
@@ -209,13 +202,12 @@ theorem balanceStep_of_extMassGen (P : IETDatum₂ α n) (hP : P.Irreducible) (h
     fun η δ =>
       if h : η ∈ T2 ∧ δ ∈ F η then Classical.choose (hdich η h.1 δ h.2) else []
       with hgam
-  have hgam_prop : ∀ η δ (h : η ∈ T2 ∧ δ ∈ F η),
+  have hgam_prop (η δ) (h : η ∈ T2 ∧ δ ∈ F η) :
       η <+: gam η δ ∧ gam η δ <+: η ++ δ ∧ ∃ θ : α, θ ∉ A' ∧
         NodeHeight.Mk 1 (NodeHeight.st P (w ++ gam η δ)) ≤
           4 * (Fintype.card α : ℝ) * (C2 * Cb) * C2 *
             min (NodeHeight.mmin (insert θ A') (NodeHeight.st P (w ++ gam η δ)))
               (NodeHeight.Mk 1 (NodeHeight.st P w)) := by
-    intro η δ h
     simp only [hgam, dif_pos h]
     exact Classical.choose_spec (hdich η h.1 δ h.2)
   -- the composed family and its minimal elements
@@ -228,8 +220,7 @@ theorem balanceStep_of_extMassGen (P : IETDatum₂ α n) (hP : P.Irreducible) (h
       ∑ η ∈ T2, CylinderMass.cond P w η * ∑ δ ∈ F η, CylinderMass.cond P (w ++ η) δ := by
     rw [hS]
     exact NodeHeight.sum_comp (T := F) hT2pf P w
-  have hcov : ∀ x ∈ S, ∃ t ∈ U, t <+: x := by
-    intro x hx
+  have hcov (x) (hx : x ∈ S) : ∃ t ∈ U, t <+: x := by
     rw [hS, Finset.mem_biUnion] at hx
     obtain ⟨η, hη, hx⟩ := hx
     rw [Finset.mem_image] at hx
@@ -246,9 +237,9 @@ theorem balanceStep_of_extMassGen (P : IETDatum₂ α n) (hP : P.Irreducible) (h
       have : (0 : ℝ) < 1 / (M Cb) := by positivity
       linarith
     · exact h
-  have hstep1 : ∀ η ∈ T2, CylinderMass.cond P w η * (1 / 2) ≤
+  have hstep1 (η) (hη : η ∈ T2) : CylinderMass.cond P w η * (1 / 2) ≤
       CylinderMass.cond P w η * ∑ δ ∈ F η, CylinderMass.cond P (w ++ η) δ :=
-    fun η hη => mul_le_mul_of_nonneg_left (le_of_lt (hF_mass η hη))
+          mul_le_mul_of_nonneg_left (le_of_lt (hF_mass η hη))
       (le_of_lt (CylinderMass.cond_pos P w η))
   obtain ⟨η₀, hη₀⟩ := hT2ne
   have hstep2 : CylinderMass.cond P w η₀ * (1 / 2) <

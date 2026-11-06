@@ -24,7 +24,7 @@ This is the analytic layer of the volume computation, on top of the geometric la
 
 The hypotheses that the project's statements carry — column sums `1` and `det M ≠ 0` — are exactly
 the ones used below (`AffineVolume.volume_image_inducedMap_of_det`,
-`AffineVolume.inducedMap_mem_region`, `AffineVolume.inducedMap_mem_region'`). -/
+`AffineVolume.inducedMap_mem_region`). -/
 
 @[expose] public section
 
@@ -69,16 +69,14 @@ theorem lastRowOp_apply_castSucc (n : ℕ) (i : Fin n) (j : Fin (n + 1)) :
 theorem isLowerTriangular_lastRowOp (n : ℕ) : (lastRowOp n).IsLowerTriangular := by
   intro i j hij
   -- `toDual j < toDual i` means `i < j`
-  have hij' : i < j := hij
-  have hi : i ≠ Fin.last n := ne_of_lt (hij'.trans_le (Fin.le_last j))
-  have hijne : i ≠ j := ne_of_lt hij'
+  have hi : i ≠ Fin.last n := ne_of_lt ((show i < j from hij).trans_le (Fin.le_last j))
+  have hijne : i ≠ j := ne_of_lt (show i < j from hij)
   simp [lastRowOp, hi, hijne]
 
 theorem isLowerTriangular_lastColOp (n : ℕ) : (lastColOp n).IsLowerTriangular := by
   intro i j hij
-  have hij' : i < j := hij
-  have hi : i ≠ Fin.last n := ne_of_lt (hij'.trans_le (Fin.le_last j))
-  have hijne : i ≠ j := ne_of_lt hij'
+  have hi : i ≠ Fin.last n := ne_of_lt ((show i < j from hij).trans_le (Fin.le_last j))
+  have hijne : i ≠ j := ne_of_lt (show i < j from hij)
   simp [lastColOp, hi, hijne]
 
 theorem det_lastRowOp (n : ℕ) : (lastRowOp n).det = 1 := by
@@ -99,8 +97,8 @@ theorem mul_lastColOp_apply_last {n : ℕ} (M : Matrix (Fin (n + 1)) (Fin (n + 1
     (i : Fin (n + 1)) :
     (M * lastColOp n) i (Fin.last n) = M i (Fin.last n) := by
   rw [Matrix.mul_apply, Fin.sum_univ_castSucc]
-  have h1 : ∀ b : Fin n, lastColOp n b.castSucc (Fin.last n) = 0 := by
-    intro b; rw [lastColOp_apply_last, if_neg (Fin.castSucc_ne_last b)]
+  have h1 (b : Fin n) : lastColOp n b.castSucc (Fin.last n) =
+      0 := by rw [lastColOp_apply_last, if_neg (Fin.castSucc_ne_last b)]
   have h2 : lastColOp n (Fin.last n) (Fin.last n) = 1 := by
     rw [lastColOp_apply_last, if_pos rfl]
   rw [h2]
@@ -191,7 +189,7 @@ theorem det_sub_last_col {n : ℕ} (M : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ)
   have h2 : lastRowOp n * M * lastColOp n = N := lastRowOp_mul_lastColOp M hM
   have hNsub : N.submatrix Fin.castSucc Fin.castSucc = A := by
     ext i j
-    change N i.castSucc j.castSucc = A i j
+    simp only [Matrix.submatrix_apply]
     rw [hN, hA]
     simp only [Matrix.of_apply]
     rw [if_neg (Fin.castSucc_ne_last i), if_neg (Fin.castSucc_ne_last j)]
@@ -289,9 +287,8 @@ theorem det_linInducedMap_of_matrix {n : ℕ} {M : Matrix (Fin (n + 1)) (Fin (n 
 /-! ## 3. Membership in the region -/
 
 /-- `inducedMap M` maps the open region into itself for a nonnegative `M` with column sums `1` and
-`det M ≠ 0`. The determinant hypothesis is missing in
-`IETFree/RauzyVeech/Volume.lean`. Axiom-free. -/
-theorem inducedMap_mem_region' {n : ℕ} {M : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ}
+`det M ≠ 0`.  The determinant hypothesis is necessary. -/
+theorem inducedMap_mem_region {n : ℕ} {M : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ}
     (hM0 : ∀ i j, 0 ≤ M i j) (hM : ∀ j, ∑ i, M i j = 1) (hdet : M.det ≠ 0)
     {v : Fin n → ℝ} (hv : v ∈ region n) : inducedMap M v ∈ region n := by
   -- `det M ≠ 0` forces every row of `M` to have a strictly positive entry
@@ -358,13 +355,6 @@ theorem det_linInducedMap {n : ℕ} {M : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ}
     (hM : ∀ j, ∑ i, M i j = 1) : LinearMap.det (AffineVolume.linInducedMapLinear M) = M.det :=
   AffineVolume.det_linInducedMap_of_matrix (det_sub_last_col M hM)
 
-/-- `inducedMap M` maps the open region into itself for a nonnegative `M` with column sums `1` and
-`det M ≠ 0`.  The determinant hypothesis is necessary. -/
-theorem inducedMap_mem_region {n : ℕ} {M : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ}
-    (hM0 : ∀ i j, 0 ≤ M i j) (hM : ∀ j, ∑ i, M i j = 1) (hdet : M.det ≠ 0)
-    {v : Fin n → ℝ} (hv : v ∈ region n) : inducedMap M v ∈ region n :=
-  AffineVolume.inducedMap_mem_region' hM0 hM hdet hv
-
 /-! ## Permutation invariance of the volume  `chartVolume_map_perm` says that `l ↦ l ∘ σ` is
 `inducedMap (permMat σ)` in the chart, `permMat σ` has nonnegative entries, column sums `1` and
 determinant `±1`, and `inducedMap (permMat σ)` maps the region onto itself (inverse `permMat σ⁻¹`),
@@ -405,7 +395,7 @@ theorem permMat_col_sum {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
 theorem permMat_mul_symm {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
     permMat σ * permMat σ.symm = 1 := by
   ext i k
-  change (∑ j, permMat σ i j * permMat σ.symm j k) = (if i = k then (1 : ℝ) else 0)
+  simp only [Matrix.mul_apply, Matrix.one_apply]
   refine (Finset.sum_eq_single (σ i) ?_ ?_).trans ?_
   · intro b _ hb
     exact mul_eq_zero_of_left (permMat_eq_zero (Ne.symm hb)) _
@@ -415,7 +405,7 @@ theorem permMat_mul_symm {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
 theorem permMat_transpose_mul {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
     (permMat σ)ᵀ * permMat σ = 1 := by
   ext i k
-  change (∑ j, permMat σ j i * permMat σ j k) = (if i = k then (1 : ℝ) else 0)
+  simp only [Matrix.mul_apply, Matrix.one_apply, Matrix.transpose_apply]
   refine (Finset.sum_eq_single (σ.symm i) ?_ ?_).trans ?_
   · intro b _ hb
     exact mul_eq_zero_of_left
@@ -450,7 +440,7 @@ theorem permMat_abs_det {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
 theorem inducedMap_one {n : ℕ} (v : Fin n → ℝ) :
     inducedMap (1 : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ) v = v := by
   funext i
-  change (∑ j, (1 : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ) i.castSucc j * chart n v j) = v i
+  simp only [inducedMap]
   rw [Finset.sum_eq_single i.castSucc]
   · rw [Matrix.one_apply, if_pos rfl, one_mul, chart_castSucc]
   · intro b _ hb
@@ -462,11 +452,10 @@ column sums of `N` are `1`. -/
 theorem inducedMap_comp {n : ℕ} {M N : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ}
     (hN : ∀ j, ∑ i, N i j = 1) (v : Fin n → ℝ) :
     inducedMap M (inducedMap N v) = inducedMap (M * N) v := by
-  have hpt : ∀ j : Fin (n + 1), chart n (inducedMap N v) j = ∑ k, N j k * chart n v k :=
-    fun j => congrFun (chart_inducedMap (M := N) hN v) j
+  have hpt (j : Fin (n + 1)) : chart n (inducedMap N v) j = ∑ k, N j k * chart n v k := congrFun
+      (chart_inducedMap (M := N) hN v) j
   funext i
-  change (∑ j, M i.castSucc j * chart n (inducedMap N v) j)
-      = ∑ j, (M * N) i.castSucc j * chart n v j
+  simp only [inducedMap]
   simp only [Matrix.mul_apply, hpt, Finset.mul_sum]
   rw [Finset.sum_comm]
   refine Finset.sum_congr rfl fun k _ => ?_
@@ -527,10 +516,11 @@ theorem inducedMap_permMat_image_region {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))
     inducedMap (permMat σ) '' region n = region n := by
   refine Set.Subset.antisymm ?_ ?_
   · rintro _ ⟨v, hv, rfl⟩
-    exact inducedMap_mem_region (permMat_nonneg σ) (permMat_col_sum σ) (permMat_det_ne_zero σ) hv
+    exact AffineVolume.inducedMap_mem_region (permMat_nonneg σ) (permMat_col_sum σ)
+      (permMat_det_ne_zero σ) hv
   · intro y hy
     exact ⟨inducedMap (permMat σ.symm) y,
-      inducedMap_mem_region (permMat_nonneg σ.symm) (permMat_col_sum σ.symm)
+      AffineVolume.inducedMap_mem_region (permMat_nonneg σ.symm) (permMat_col_sum σ.symm)
         (permMat_det_ne_zero σ.symm) hy,
       inducedMap_permMat_comp σ y⟩
 
@@ -693,9 +683,7 @@ theorem map_reindex_eq {α : Type*} {n : ℕ} (ν : Measure (Fin n → ℝ≥0))
     ν.map (fun l a => l (e₁ a)) = ν.map (fun l a => l (e₂ a)) := by
   set τ : Equiv.Perm (Fin n) := e₂.symm.trans e₁ with hτ
   have hτa (a : α) : τ (e₂ a) = e₁ a := by
-    rw [hτ]
-    change e₁ (e₂.symm (e₂ a)) = e₁ a
-    rw [Equiv.symm_apply_apply]
+    rw [hτ, Equiv.trans_apply, Equiv.symm_apply_apply]
   have hmeas₂ : Measurable (fun l : Fin n → ℝ≥0 => fun a => l (e₂ a)) := by
     refine measurable_pi_iff.mpr fun a => measurable_pi_apply (e₂ a)
   have hmeasτ : Measurable (fun l : Fin n → ℝ≥0 => fun i => l (τ i)) := by

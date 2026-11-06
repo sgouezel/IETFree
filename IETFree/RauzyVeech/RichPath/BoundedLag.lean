@@ -5,9 +5,9 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.RauzyVeech.Peel
 public import IETFree.RauzyVeech.RauzyReach
 public import IETFree.RauzyVeech.RichPath.CylinderMass
-public import IETFree.RauzyVeech.Peel
 
 /-!
 **Bounded lag at a balanced node.**
@@ -58,7 +58,6 @@ theorem cond_ge_of_balanced (P : IETDatum₂ α n) {C : ℝ} (hC : 1 ≤ C) {w :
     (hbal : Bal P w C) {η : List Bool} {M : ℝ} (hM : 1 ≤ M)
     (hQ : ∀ a b, (IETDatum₂.Path.Q (IETDatum₂.vertex P w) η a b : ℝ) ≤ M) :
     (1 / (C * (Fintype.card α : ℝ) * M)) ^ (Fintype.card α) ≤ CylinderMass.cond P w η := by
-  classical
   have hCpos : (0 : ℝ) < C := lt_of_lt_of_le zero_lt_one hC
   have hMpos : (0 : ℝ) < M := lt_of_lt_of_le zero_lt_one hM
   have hMnn : (0 : ℝ) ≤ M := le_of_lt hMpos
@@ -70,23 +69,20 @@ theorem cond_ge_of_balanced (P : IETDatum₂ α n) {C : ℝ} (hC : 1 ≤ C) {w :
   obtain ⟨b₀, -, hb₀⟩ := Finset.exists_min_image (Finset.univ : Finset α)
     (fun b => ColShrink.cs P w b) (Finset.univ_nonempty_iff.mpr (nonempty_alpha P))
   -- the height of the child at any letter
-  have hbound : ∀ b, ColShrink.cs P (w ++ η) b ≤
+  have hbound (b) : ColShrink.cs P (w ++ η) b ≤
       (Fintype.card α : ℝ) * (M * (C * ColShrink.cs P w b₀)) := by
-    intro b
     rw [CylinderMass.cs_append_eq_sum]
-    have hterm : ∀ c ∈ (Finset.univ : Finset α),
+    have hterm (c) (_ : c ∈ (Finset.univ : Finset α)) :
         (IETDatum₂.Path.Q (IETDatum₂.vertex P w) η c b : ℝ) * ColShrink.cs P w c
           ≤ M * (C * ColShrink.cs P w b₀) := by
-      intro c _
       exact mul_le_mul (hQ c b) (hbal c b₀) (le_of_lt (ColShrink.cs_pos P w c)) hMnn
     calc ∑ c, (IETDatum₂.Path.Q (IETDatum₂.vertex P w) η c b : ℝ) * ColShrink.cs P w c
         ≤ ∑ _c : α, M * (C * ColShrink.cs P w b₀) := Finset.sum_le_sum hterm
       _ = (Fintype.card α : ℝ) * (M * (C * ColShrink.cs P w b₀)) := by
           rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
   -- the child height is at most `C · d · M` times the parent height
-  have hstep : ∀ b, ColShrink.cs P (w ++ η) b ≤
+  have hstep (b) : ColShrink.cs P (w ++ η) b ≤
       C * (Fintype.card α : ℝ) * M * ColShrink.cs P w b := by
-    intro b
     have h2 : (0 : ℝ) ≤ C * (Fintype.card α : ℝ) * M := le_of_lt hden
     calc ColShrink.cs P (w ++ η) b
         ≤ (Fintype.card α : ℝ) * (M * (C * ColShrink.cs P w b₀)) := hbound b
@@ -94,9 +90,8 @@ theorem cond_ge_of_balanced (P : IETDatum₂ α n) {C : ℝ} (hC : 1 ≤ C) {w :
       _ ≤ C * (Fintype.card α : ℝ) * M * ColShrink.cs P w b :=
           mul_le_mul_of_nonneg_left (hb₀ b (Finset.mem_univ b)) h2
   -- each factor of the product is at least `1/(C·d·M)`
-  have hfac : ∀ b, 1 / (C * (Fintype.card α : ℝ) * M) ≤
+  have hfac (b) : 1 / (C * (Fintype.card α : ℝ) * M) ≤
       ColShrink.cs P w b / ColShrink.cs P (w ++ η) b := by
-    intro b
     rw [div_le_div_iff₀ hden (ColShrink.cs_pos P (w ++ η) b), one_mul,
       mul_comm (ColShrink.cs P w b) (C * (Fintype.card α : ℝ) * M)]
     exact hstep b

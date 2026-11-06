@@ -5,10 +5,10 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.RauzyVeech.RichPath.LevelMass
+public import IETFree.RauzyVeech.RichPath.MinimalExit
 public import IETFree.RauzyVeech.RichPath.Stopping
 public import IETFree.RauzyVeech.RichPath.StraddleMass
-public import IETFree.RauzyVeech.RichPath.MinimalExit
-public import IETFree.RauzyVeech.RichPath.LevelMass
 
 /-!
 # The unclean mass at a straddling node is at most `k/(2d)` — the `A'`-sum supermartingale
@@ -66,14 +66,12 @@ Write `S(u) = ∑_{b ∈ A'} st u b` for the `A'`-sum (the potential).
 No assumptions beyond `P.Irreducible` and `2 ≤ n` are used.
 -/
 
-@[expose] public section
-
-open Finset NodeHeight
+open Finset NodeHeight IETDatum₂
 open scoped BigOperators
 
-namespace Potential
+@[expose] public section
 
-open IETDatum₂
+namespace Potential
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -111,10 +109,10 @@ theorem pot_append_singleton (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2
     (u : List Bool) (e : Bool) (A' : Finset α) :
     pot P (u ++ [e]) A' = pot P u A' +
       (if (P.vertex u).last (!e) ∈ A' then NodeHeight.st P u ((P.vertex u).last e) else 0) := by
-  have hstep : ∀ b : α, NodeHeight.st P (u ++ [e]) b =
+  have hstep (b : α) : NodeHeight.st P (u ++ [e]) b =
       NodeHeight.st P u b + (if b = (P.vertex u).last (!e) then
-        NodeHeight.st P u ((P.vertex u).last e) else 0) :=
-    fun b => CylinderMass.cs_append_singleton P hP hn u e b
+        NodeHeight.st P u ((P.vertex u).last e) else 0) := CylinderMass.cs_append_singleton P hP hn
+            u e b
   rw [pot, pot, Finset.sum_congr rfl fun b _ => hstep b, Finset.sum_add_distrib,
     Finset.sum_ite_eq']
 
@@ -151,7 +149,6 @@ letter carries `h_a/(h_a + h_c)` and adds the outside height `h_c` to the `A'`-s
 theorem step_le_of_exitArrow (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) {A' : Finset α}
     {u : List Bool} {e : Bool} (he : Stopping.ExitArrow P A' u [] e) :
     CylinderMass.cond P u [!e] * pot P (u ++ [!e]) A' ≤ pot P u A' := by
-  classical
   have hwin : (P.vertex u).last e ∈ A' := by simpa using he.1
   have hlos : (P.vertex u).last (!e) ∉ A' := by simpa using he.2
   have hnn : (!(!e)) = e := by cases e <;> rfl
@@ -176,7 +173,6 @@ does not move, and the two masses add up to `1`. -/
 theorem step_eq_of_outside (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) {A' : Finset α}
     {u : List Bool} (h1 : (P.vertex u).last true ∉ A') (h2 : (P.vertex u).last false ∉ A') :
     ∑ e : Bool, nw P A' u e = pot P u A' := by
-  classical
   have hne (e : Bool) : ¬ Stopping.ExitArrow P A' u [] e := by
     cases e with
     | false => exact fun h => h2 (by simpa using h.1)
@@ -201,7 +197,6 @@ mass of the non-exit letters never exceeds the potential. -/
 theorem step_sum_le (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) {A' : Finset α}
     {u : List Bool} (hbl : ¬ MinimalExit.Blocked P u A') :
     ∑ e : Bool, nw P A' u e ≤ pot P u A' := by
-  classical
   have hsum : (∑ e : Bool, nw P A' u e) = nw P A' u true + nw P A' u false := by
     rw [show (Finset.univ : Finset Bool) = {true, false} from by decide]
     rw [Finset.sum_pair (by simp)]
@@ -244,20 +239,17 @@ theorem blocked_append_of_not_exitArrow (P : IETDatum₂ α n) {A' : Finset α} 
     {e : Bool} (hbl : ¬ MinimalExit.Blocked P u A')
     (hne : ¬ Stopping.ExitArrow P A' u [] e) :
     ¬ MinimalExit.Blocked P (u ++ [e]) A' := by
-  classical
   intro hb
   simp only [MinimalExit.Blocked] at hbl hb
   simp only [Stopping.ExitArrow, List.append_nil] at hne
   cases e with
   | true =>
     have hpar : (P.vertex u).last true ∈ A' := by
-      have h := hb.1
-      rwa [vertex_last_append_singleton P u true] at h
+      simpa only [vertex_last_append_singleton P u true] using hb.1
     exact hne ⟨hpar, fun hc => hbl ⟨hpar, hc⟩⟩
   | false =>
     have hpar : (P.vertex u).last false ∈ A' := by
-      have h := hb.2
-      rwa [vertex_last_append_singleton P u false] at h
+      simpa only [vertex_last_append_singleton P u false] using hb.2
     exact hne ⟨hpar, fun hc => hbl ⟨hc, hpar⟩⟩
 
 /-- A word none of whose letters is an exit arrow, read successively from `w`. -/
@@ -473,7 +465,6 @@ theorem child_weight (P : IETDatum₂ α n) (A' : Finset α) (w γ : List Bool) 
     (if Alive P A' w (γ ++ [e]) then wt P A' w (γ ++ [e]) else 0)
         + (if FirstCr P A' w (γ ++ [e]) then wt P A' w (γ ++ [e]) else 0)
       = CylinderMass.cond P w γ * nw P A' (w ++ γ) e := by
-  classical
   by_cases hex : Stopping.ExitArrow P A' w γ e
   · obtain ⟨h1, h2⟩ := not_alive_not_firstCr_of_exitArrow P e hex
     rw [if_neg h1, if_neg h2, zero_add, nw_of_exitArrow P (e := e)
@@ -501,7 +492,6 @@ theorem child_sum (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) {A'
     ∑ e : Bool, ((if Alive P A' w (γ ++ [e]) then wt P A' w (γ ++ [e]) else 0)
         + (if FirstCr P A' w (γ ++ [e]) then wt P A' w (γ ++ [e]) else 0))
       ≤ wt P A' w γ := by
-  classical
   have hbl : ¬ MinimalExit.Blocked P (w ++ γ) A' :=
     not_blocked_of_noExit P hbl0 hγ.1
   calc ∑ e : Bool, ((if Alive P A' w (γ ++ [e]) then wt P A' w (γ ++ [e]) else 0)
@@ -549,7 +539,6 @@ theorem frontier_bound (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n
       + (∑ m ∈ Finset.range (N + 1),
           ∑ δ ∈ (Stopping.levelWords m).filter (FirstCr P A' w), wt P A' w δ)
       ≤ pot P w A' := by
-  classical
   induction N with
   | zero =>
     have halive : Alive P A' w [] := by
@@ -585,14 +574,12 @@ theorem frontier_bound (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n
       by_cases hal : Alive P A' w γ
       · rw [if_pos hal]
         exact child_sum2 P hP hn hbl0 hal
-      · have hz : ∀ e : Bool, (if Alive P A' w (γ ++ [e]) then wt P A' w (γ ++ [e]) else 0)
+      · have hz (e : Bool) : (if Alive P A' w (γ ++ [e]) then wt P A' w (γ ++ [e]) else 0)
             + (if FirstCr P A' w (γ ++ [e]) then wt P A' w (γ ++ [e]) else 0) = 0 := by
-          intro e
           rw [if_neg (fun h => hal (alive_take_of_alive_append P h)),
             if_neg (fun h => hal (alive_take_of_firstCr_append P h)), add_zero]
         rw [if_neg hal, hz true, hz false]
         simp
-    have hfin := ih
     rw [hsplit]
     linarith [hkey, ih]
 
@@ -612,12 +599,11 @@ theorem sum_firstCr_le (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n
     (∑ m ∈ Finset.range (N + 1),
         ∑ δ ∈ (Stopping.levelWords m).filter (FirstCr P A' w), CylinderMass.cond P w δ)
       ≤ pot P w A' / Stopping.thr P w := by
-  classical
   have hthr : 0 < Stopping.thr P w := thr_pos P w
-  have hterm : ∀ m ∈ Finset.range (N + 1),
-      ∀ δ ∈ (Stopping.levelWords m).filter (FirstCr P A' w),
+  have hterm (m) (_ : m ∈ Finset.range (N + 1)) : ∀ δ ∈ (Stopping.levelWords m).filter
+      (FirstCr P A' w),
       CylinderMass.cond P w δ ≤ wt P A' w δ / Stopping.thr P w := by
-    intro m _ δ hδ
+    intro δ hδ
     obtain ⟨-, hfc⟩ := Finset.mem_filter.mp hδ
     have hgt := pot_gt_thr_of_firstCr P hfc
     rw [wt, le_div_iff₀ hthr]
@@ -688,7 +674,6 @@ theorem exists_bad_stop (P : IETDatum₂ α n) {A' : Finset α} {w δ : List Boo
     (hbad : Stopping.Bad P A' w δ) :
     ∃ j, j ≤ δ.length ∧ (∀ g < j, ¬ Stopping.StopEv P A' w δ g) ∧
       ¬ Stopping.Clean P A' w (δ.take j) := by
-  classical
   have hex : ∃ g, g ∈ Finset.range (δ.length + 1) ∧ Stopping.StopEv P A' w δ g := by
     by_contra h
     refine hbad (Or.inl ?_)
@@ -736,7 +721,6 @@ theorem mem_FC {P : IETDatum₂ α n} {A' : Finset α} {w : List Bool} {N : ℕ}
 theorem bad_extends_firstCr (P : IETDatum₂ α n) {A' : Finset α} {w δ : List Bool} {N : ℕ}
     (hlev : δ ∈ Stopping.levelWords N) (hbad : Stopping.Bad P A' w δ) :
     ∃ γ ∈ FC P A' w N, γ <+: δ := by
-  classical
   obtain ⟨j, hjle, hmin, hclean⟩ := exists_bad_stop P hbad
   have hlen : δ.length = N := Stopping.length_of_mem_levelWords hlev
   have hnotclean : ∃ b ∈ A', Stopping.thr P w < NodeHeight.st P (w ++ δ.take j) b := by
@@ -745,16 +729,15 @@ theorem bad_extends_firstCr (P : IETDatum₂ α n) {A' : Finset α} {w δ : List
       by_contra hlt
       exact h ⟨b, hb, not_le.mp hlt⟩)
   have hCr : Cr P A' w (δ.take j) := hnotclean
-  have hnoCr : ∀ i < j, ¬ Cr P A' w (δ.take i) := by
-    intro i hi hcr
+  have hnoCr (i) (hi : i < j) : ¬ Cr P A' w (δ.take i) := by
+    intro hcr
     obtain ⟨b, hb, hgt⟩ := hcr
     have hH : Stopping.Huge P w (δ.take i) :=
       lt_of_lt_of_le hgt (Stopping.st_le_Mx P (w ++ δ.take i) b)
     exact hmin i hi (Or.inl hH)
   have hnoexit : NoExit P A' w (δ.take j) := by
     intro g hg
-    have hg' : g < (δ.take j).length := hg
-    rw [List.length_take] at hg'
+    rw [List.length_take] at hg
     have hgj : g < j := by omega
     intro hexit
     refine hmin g hgj (Or.inr ⟨?_, ?_⟩)
@@ -790,7 +773,6 @@ theorem bad_mass_le (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) {
     ∑ δ ∈ (Stopping.levelWords N).filter (fun δ => Stopping.Bad P A' w δ),
         CylinderMass.cond P w δ
       ≤ (k : ℝ) / (2 * (Fintype.card α : ℝ)) := by
-  classical
   set S : Finset (List Bool) :=
     (Stopping.levelWords N).filter (fun δ => Stopping.Bad P A' w δ) with hS
   have hSpf : NodeHeight.PrefixFree S := by
@@ -798,8 +780,7 @@ theorem bad_mass_le (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) {
     intro δ hδ
     rw [hS, Finset.mem_filter] at hδ
     exact Stopping.length_of_mem_levelWords hδ.1
-  have hcov : ∀ δ ∈ S, ∃ γ ∈ FC P A' w N, γ <+: δ := by
-    intro δ hδ
+  have hcov (δ) (hδ : δ ∈ S) : ∃ γ ∈ FC P A' w N, γ <+: δ := by
     rw [hS, Finset.mem_filter] at hδ
     exact bad_extends_firstCr P hδ.1 hδ.2
   calc ∑ δ ∈ S, CylinderMass.cond P w δ
@@ -833,7 +814,6 @@ theorem good_mass_gt_half (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 �
     (1 / 2 : ℝ) <
       ∑ δ ∈ (Stopping.levelWords N).filter (fun δ => ¬ Stopping.Bad P A' w δ),
         CylinderMass.cond P w δ := by
-  classical
   have hsplit : (∑ δ ∈ Stopping.levelWords N, CylinderMass.cond P w δ)
       = (∑ δ ∈ (Stopping.levelWords N).filter (fun δ => Stopping.Bad P A' w δ),
           CylinderMass.cond P w δ)
@@ -878,7 +858,6 @@ theorem straddleMassCard_of_goodMass_straddle (P : IETDatum₂ α n) (hP : P.Irr
                 < NodeHeight.Mk 1 (NodeHeight.st P (w ++ η))) ∧
           (∀ b ∈ A', NodeHeight.st P (w ++ η) b
             ≤ 2 * (Fintype.card α : ℝ) * NodeHeight.Mk 1 (NodeHeight.st P w)) := by
-  classical
   have hα : Nonempty α := Fintype.card_pos_iff.mp (by
     have := NodeHeight.card_pos P
     omega)
@@ -891,8 +870,7 @@ theorem straddleMassCard_of_goodMass_straddle (P : IETDatum₂ α n) (hP : P.Irr
     intro δ hδ
     rw [hG, Finset.mem_filter] at hδ
     exact Stopping.length_of_mem_levelWords hδ.1
-  have hcov : ∀ δ ∈ G, ∃ η ∈ Stopping.StopFam P A' w N, η <+: δ := by
-    intro δ hδ
+  have hcov (δ) (hδ : δ ∈ G) : ∃ η ∈ Stopping.StopFam P A' w N, η <+: δ := by
     rw [hG, Finset.mem_filter] at hδ
     have hlen : δ.length = N := Stopping.length_of_mem_levelWords hδ.1
     have hstop : ∃ g ∈ Finset.range (δ.length + 1), Stopping.StopEv P A' w δ g := by
@@ -907,10 +885,9 @@ theorem straddleMassCard_of_goodMass_straddle (P : IETDatum₂ α n) (hP : P.Irr
   · linarith
   · intro η hη
     obtain ⟨hW, hAb, -, -⟩ := Stopping.mem_stopFam hη
-    have hbnd : ∀ b ∈ A',
+    have hbnd (b) (hb : b ∈ A') :
         NodeHeight.st P (w ++ η) b ≤
           2 * (Fintype.card α : ℝ) * NodeHeight.Mk 1 (NodeHeight.st P w) := by
-      intro b hb
       have h1 := hAb η.length (by rw [Finset.mem_range]; omega) b hb
       rw [List.take_length] at h1
       simpa [Stopping.thr, Stopping.Mx] using h1

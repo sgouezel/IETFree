@@ -32,7 +32,6 @@ theorem bad_first_stop {P : IETDatum₂ α n} {A' : Finset α} {w δ : List Bool
     (hb : Bad P A' w δ) :
     ∃ j, j ≤ δ.length ∧ StopEv P A' w δ j ∧ (∀ g < j, ¬ StopEv P A' w δ g) ∧
       ¬ Clean P A' w (δ.take j) := by
-  classical
   rw [Bad, Good, not_or] at hb
   obtain ⟨hns, hgf⟩ := hb
   push Not at hns
@@ -43,11 +42,11 @@ theorem bad_first_stop {P : IETDatum₂ α n} {A' : Finset α} {w δ : List Bool
     ⟨g, Finset.mem_filter.mpr ⟨by rw [Finset.mem_range]; omega, hge⟩⟩
   set j := S.min' hSne with hjdef
   have hjS : j ∈ S := Finset.min'_mem S hSne
-  have hjmin : ∀ g ∈ S, j ≤ g := fun g hg' => Finset.min'_le S g hg'
+  have hjmin (g) (hg' : g ∈ S) : j ≤ g := Finset.min'_le S g hg'
   obtain ⟨hjrange, hjstop⟩ := Finset.mem_filter.mp hjS
   rw [Finset.mem_range] at hjrange
-  have hfirst : ∀ g < j, ¬ StopEv P A' w δ g := by
-    intro g hg' hcon
+  have hfirst (g) (hg' : g < j) : ¬ StopEv P A' w δ g := by
+    intro hcon
     have hmem : g ∈ S := Finset.mem_filter.mpr ⟨by rw [Finset.mem_range]; omega, hcon⟩
     have hle := hjmin g hmem
     omega

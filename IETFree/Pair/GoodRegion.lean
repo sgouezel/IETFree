@@ -110,12 +110,10 @@ theorem imageInG {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
       leftEnd (simplexMap e w) (B k) ≤ mkIET1' (simplexMap d v) π hl (s k.castSucc) ∧
         mkIET1' (simplexMap d v) π hl (s k.castSucc) + (s k.succ - s k.castSucc)
           ≤ leftEnd (simplexMap e w) (B k) + (simplexMap e w (B k) : ℝ) := by
-  classical
   have hsum_mu : (∑ j, (simplexMap e w j : ℝ)) = 1 := by
     rw [← NNReal.coe_sum]; exact_mod_cast hm
   -- `f (s k)` lies in `[0, 1)`
-  have hk0 : ∀ k : Fin n, 0 ≤ s k.castSucc := by
-    intro k; rw [← hzero]; exact hmono.monotone (Fin.zero_le _)
+  have hk0 (k : Fin n) : 0 ≤ s k.castSucc := by rw [← hzero]; exact hmono.monotone (Fin.zero_le _)
   have hk1 (k : Fin n) : s k.castSucc < 1 := by
     rw [← htop]
     exact hmono (by simp only [Fin.lt_def, Fin.val_castSucc, Fin.val_last]; have := k.isLt; omega)
@@ -123,9 +121,9 @@ theorem imageInG {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
     rw [← htop]
     exact hmono.monotone (by
       simp only [Fin.le_def, Fin.val_succ, Fin.val_last]; have := k.isLt; omega)
-  have hfmem : ∀ k : Fin n,
-      mkIET1' (simplexMap d v) π hl (s k.castSucc) ∈ Set.Ico (0 : ℝ) 1 :=
-    fun k => (mkIET1' (simplexMap d v) π hl).isIET.mapsTo ⟨hk0 k, hk1 k⟩
+  have hfmem (k : Fin n) :
+      mkIET1' (simplexMap d v) π hl (s k.castSucc) ∈ Set.Ico (0 : ℝ) 1 := (mkIET1' (simplexMap d v)
+          π hl).isIET.mapsTo ⟨hk0 k, hk1 k⟩
   refine ⟨fun k => idx (simplexMap e w) (mkIET1' (simplexMap d v) π hl (s k.castSucc))
     (hfmem k).1, ?_⟩
   intro k
@@ -169,7 +167,6 @@ theorem imageInG {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
       exact absurd (le_of_Ico_subset hup hsub) (not_le.mpr hcon)
     · -- not the last cell: the next cut lies strictly inside the image
       have hcv : c.val + 1 < e := by
-        have h1 := c.isLt
         rcases Nat.lt_or_ge (c.val + 1) e with h | h
         · exact h
         · exfalso
@@ -263,8 +260,6 @@ theorem markedCell_g_transl {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm
       have hjj : (⟨(⟨j.val - 1, by have := j.isLt; have := NeZero.pos e; omega⟩ :
           Fin (e - 1)).val + 1, by have := j.isLt; omega⟩ : Fin e) = j := by
         ext
-        change (⟨j.val - 1, by have := j.isLt; have := NeZero.pos e; omega⟩ :
-          Fin (e - 1)).val + 1 = j.val
         exact Nat.succ_pred_eq_of_pos hpos
       have key := no_gcut_inside_image π hv hl hmono hzero htop hcut hpre (k := k)
         (j := ⟨j.val - 1, by have := j.isLt; have := NeZero.pos e; omega⟩)
@@ -434,7 +429,6 @@ theorem compTypeA_cut {d e n : ℕ} [NeZero d] {τ : Fin (n - 1) ≃ (Fin (d - 1
     have hcast : (⟨(⟨i.val - 1, by have := i.isLt; have := NeZero.pos d; omega⟩ :
         Fin (d - 1)).val + 1, by have := i.isLt; omega⟩ : Fin (d + 1)) = i.castSucc := by
       ext
-      change i.val - 1 + 1 = i.val
       exact Nat.succ_pred_eq_of_pos hpos
     rw [← hcast, compTypeA_succ, hcut]
     congr 1
@@ -477,7 +471,6 @@ theorem exists_compImage_on_ball {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv
         mkIET1' (simplexMap d q.1) π hl (withEnds hn A k.castSucc q)
             + (withEnds hn A k.succ q - withEnds hn A k.castSucc q)
           ≤ leftEnd (simplexMap e q.2) (B k) + (simplexMap e q.2 (B k) : ℝ) := by
-  classical
   have hq₀ : q₀ ∈ Metric.ball q₀ ε := Metric.mem_ball_self hε
   have hr₀ := hr q₀ hq₀
   have hl₀ : simplexMap d q₀.1 ∈ simplex d := simplexMap_mem_simplex_fin hr₀.1.1 hr₀.1.2
@@ -516,9 +509,8 @@ theorem exists_compImage_on_ball {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv
   -- the index of the `g`-cell containing the image, at `q₀`
   let B : Fin n → Fin e := fun k =>
     idx (simplexMap e q₀.2) (markedPos (e := e) π τ k q₀) (hfmem q₀ hq₀ k).1
-  have hidxmem : ∀ k : Fin n, (markedPos (e := e) π τ k q₀)
+  have hidxmem (k : Fin n) : (markedPos (e := e) π τ k q₀)
       ∈ Set.Ico (0 : ℝ) (∑ j, (simplexMap e q₀.2 j : ℝ)) := by
-    intro k
     exact ⟨(hfmem q₀ hq₀ k).1, by rw [hsum_mu]; exact (hfmem q₀ hq₀ k).2⟩
   -- the image sits above the left end of its `g`-cell
   have hlow (q : PReal d e) (hq : q ∈ Metric.ball q₀ ε) : ∀ k : Fin n,
@@ -527,9 +519,9 @@ theorem exists_compImage_on_ball {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv
     by_cases hB0 : B k = 0
     · rw [hB0, cutAffineRight_eq_leftEnd (d := d) (hr q hq).2, leftEnd_zero]
       exact (hfmem q hq k).1
-    · have hGapp : ∀ x : PReal d e,
+    · have hGapp (x : PReal d e) :
           (markedPos (e := e) π τ k - cutAffineRight (d := d) (B k)) x
-            = markedPos (e := e) π τ k x - cutAffineRight (d := d) (B k) x := fun x => rfl
+            = markedPos (e := e) π τ k x - cutAffineRight (d := d) (B k) x := rfl
       have hres := nonneg_on_ball_of_vanish_imp (d := d) (e := e)
         (G := markedPos (e := e) π τ k - cutAffineRight (d := d) (B k)) hε ?_ ?_ q hq
       · have := hres
@@ -558,9 +550,9 @@ theorem exists_compImage_on_ball {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv
     · -- not the last cell of `g`
       have hU : upperEndAffineRight (d := d) (B k) = cutAffineRight (d := d) ⟨(B k).val + 1, hlt⟩ :=
         upperEndAffineRight_of_lt hlt
-      have hGapp : ∀ x : PReal d e,
+      have hGapp (x : PReal d e) :
           (upperEndAffineRight (d := d) (B k) - markedPos (e := e) π τ k) x
-            = upperEndAffineRight (d := d) (B k) x - markedPos (e := e) π τ k x := fun x => rfl
+            = upperEndAffineRight (d := d) (B k) x - markedPos (e := e) π τ k x := rfl
       have hres := pos_on_ball_of_vanish_imp (d := d) (e := e)
         (G := upperEndAffineRight (d := d) (B k) - markedPos (e := e) π τ k) hε ?_ ?_ q hq
       · have := hres
@@ -700,14 +692,12 @@ theorem partialSum_image {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (F
     (hl : simplexMap d q.1 ∈ simplex d) (hm : simplexMap e q.2 ∈ simplex e) (i : Fin n) :
     F i q = ∑ j ∈ Finset.univ.filter (fun j : Fin n => F j q < F i q),
       (s j.succ q - s j.castSucc q) := by
-  classical
   set h := mkIET1' (simplexMap e q.2) σ hm * mkIET1' (simplexMap d q.1) π hl with hh
-  have hν : ∀ j : Fin n, 0 < s j.succ q - s j.castSucc q := fun j =>
-    sub_pos.mpr ((hmono q hq) (Fin.castSucc_lt_succ (i := j)))
-  have hν' : ∀ j : Fin n, 0 < s j.succ q - s j.castSucc q := hν
+  have hν (j : Fin n) : 0 < s j.succ q - s j.castSucc q := sub_pos.mpr ((hmono q hq)
+      (Fin.castSucc_lt_succ (i := j)))
+  have hν' (j : Fin n) : 0 < s j.succ q - s j.castSucc q := hν j
   -- `h` maps each cell into `[0, 1)` and is a bijection of `[0, 1)`
-  have hmem_map : ∀ x ∈ Set.Ico (0 : ℝ) 1, h x ∈ Set.Ico (0 : ℝ) 1 := fun x hx =>
-    h.isIET.mapsTo hx
+  have hmem_map (x) (hx : x ∈ Set.Ico (0 : ℝ) 1) : h x ∈ Set.Ico (0 : ℝ) 1 := h.isIET.mapsTo hx
   have hσinj : Function.Injective h := h.injective
   -- the images are the intervals `Ico (F j q) (F j q + ν j)`
   have himg (j : Fin n) :
@@ -723,15 +713,13 @@ theorem partialSum_image {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (F
     congr 1
     linarith [h1]
   -- the marked cells tile `[0, 1)`
-  have hcover_cell : ∀ y ∈ Set.Ico (0 : ℝ) 1,
+  have hcover_cell (y) (hy : y ∈ Set.Ico (0 : ℝ) 1) :
       ∃ j : Fin n, y ∈ Set.Ico (s j.castSucc q) (s j.succ q) := by
-    intro y hy
     exact exists_cell_of_strictMono (hmono q hq) (hzero q hq) (htop q hq) hy
   -- the images tile `[0, 1)`
-  have hdisj : ∀ i j : Fin n, i ≠ j →
-      Disjoint (Set.Ico (F i q) (F i q + (s i.succ q - s i.castSucc q)))
+  have hdisj (i j : Fin n) (hij : i ≠ j) : Disjoint (Set.Ico (F i q) (F i q + (s i.succ
+      q - s i.castSucc q)))
         (Set.Ico (F j q) (F j q + (s j.succ q - s j.castSucc q))) := by
-    intro i j hij
     rw [← himg i, ← himg j]
     refine Set.disjoint_left.mpr ?_
     rintro y ⟨x, hx, rfl⟩ ⟨x', hx', hxx'⟩
@@ -753,9 +741,8 @@ theorem partialSum_image {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (F
         have := hgt
         omega
       exact absurd hx.1 (not_le.mpr (lt_of_lt_of_le hx'.2 hle))
-  have hcover : ∀ y ∈ Set.Ico (0 : ℝ) 1,
+  have hcover (y) (hy : y ∈ Set.Ico (0 : ℝ) 1) :
       ∃ j : Fin n, y ∈ Set.Ico (F j q) (F j q + (s j.succ q - s j.castSucc q)) := by
-    intro y hy
     -- a preimage of `y` lies in some cell
     obtain ⟨S, hS⟩ := h.isIET.exists_isCutSet (by norm_num : (0 : ℝ) < 1)
     have hpre : h.symm y ∈ Set.Ico (0 : ℝ) 1 := Equiv.IsIET.symm_mapsTo (e := h.toEquiv) hS hy
@@ -816,10 +803,9 @@ theorem partialSum_cell {d e n : ℕ} {q₀ : PReal d e} {ε : ℝ}
     (q : PReal d e) (hq : q ∈ Metric.ball q₀ ε) (i : Fin n) :
     s i.castSucc q = ∑ j ∈ Finset.univ.filter (fun j : Fin n => j < i),
       (s j.succ q - s j.castSucc q) := by
-  classical
-  have hν : ∀ j : Fin n, 0 < s j.succ q - s j.castSucc q := fun j =>
-    sub_pos.mpr ((hmono q hq) (Fin.castSucc_lt_succ (i := j)))
-  have h0 : ∀ j : Fin n, 0 ≤ s j.castSucc q := fun j => by
+  have hν (j : Fin n) : 0 < s j.succ q - s j.castSucc q := sub_pos.mpr ((hmono q hq)
+      (Fin.castSucc_lt_succ (i := j)))
+  have h0 (j : Fin n) : 0 ≤ s j.castSucc q := by
     rw [← hzero q hq]
     exact (hmono q hq).monotone (Fin.zero_le _)
   have hlast_le (j : Fin n) : j.succ ≤ Fin.last n := by
@@ -830,10 +816,9 @@ theorem partialSum_cell {d e n : ℕ} {q₀ : PReal d e} {ε : ℝ}
     rw [← htop q hq]
     have h := (hmono q hq).monotone (hlast_le j)
     linarith
-  have hdisj : ∀ i j : Fin n, i ≠ j →
-      Disjoint (Set.Ico (s i.castSucc q) (s i.castSucc q + (s i.succ q - s i.castSucc q)))
+  have hdisj (i j : Fin n) (hij : i ≠ j) : Disjoint (Set.Ico (s i.castSucc q) (s
+      i.castSucc q + (s i.succ q - s i.castSucc q)))
         (Set.Ico (s j.castSucc q) (s j.castSucc q + (s j.succ q - s j.castSucc q))) := by
-    intro i j hij
     refine Set.disjoint_left.mpr ?_
     rintro y ⟨hy1, hy2⟩ ⟨hy1', hy2'⟩
     rcases lt_or_gt_of_ne (Ne.symm hij) with hlt | hlt
@@ -848,9 +833,8 @@ theorem partialSum_cell {d e n : ℕ} {q₀ : PReal d e} {ε : ℝ}
         simp only [Fin.le_def, Fin.val_succ, Fin.val_castSucc]
         omega
       linarith
-  have hcover : ∀ y ∈ Set.Ico (0 : ℝ) 1, ∃ j : Fin n,
+  have hcover (y) (hy : y ∈ Set.Ico (0 : ℝ) 1) : ∃ j : Fin n,
       y ∈ Set.Ico (s j.castSucc q) (s j.castSucc q + (s j.succ q - s j.castSucc q)) := by
-    intro y hy
     obtain ⟨j, hj⟩ := exists_cell_of_strictMono (hmono q hq) (hzero q hq) (htop q hq) hy
     exact ⟨j, hj.1, by linarith [hj.2]⟩
   have hmain := sum_len_eq_of_tiling hν h0 h1 hdisj hcover i
@@ -885,7 +869,6 @@ theorem exists_compPresentation_on_ball {d e : ℕ} [NeZero d] [NeZero e]
                 IsCompPresentation (simplexMap d q.1) π (simplexMap e q.2) σ hl hm n
                     (fun k => s k q) ρ ∧
                   IsCompType (simplexMap d q.1) π hl (simplexMap e q.2) (fun k => s k q) a B := by
-  classical
   obtain ⟨k, ε₁, hε₁, hgood₁, hreg₁, hineq₁, hinv₁⟩ := exists_ball_forall_imageLeft_lt π hq₀ hr₀
   have hn : 1 ≤ d + e - 1 := by
     have hd := NeZero.pos d
@@ -903,16 +886,15 @@ theorem exists_compPresentation_on_ball {d e : ℕ} [NeZero d] [NeZero e]
       (i : Fin (d + e - 1)) :
       (mkIET1' (simplexMap e q.2) σ hm * mkIET1' (simplexMap d q.1) π hl)
         (withEnds hn A i.castSucc q) = Ggf i q := by
-    have hM : ∀ i : Fin (d + e - 1),
-        mkIET1' (simplexMap d q.1) π hl (withEnds hn A i.castSucc q) = markedPos (e := e) π τ i q :=
-      fun i => markedPos_spec (hn := hn) (A := A) (q := q) π k τ hA (hreg q hq)
+    have hM (i : Fin (d + e - 1)) :
+        mkIET1' (simplexMap d q.1) π hl (withEnds hn A i.castSucc q) = markedPos (e := e) π τ i q
+            := markedPos_spec (hn := hn) (A := A) (q := q) π k τ hA (hreg q hq)
         (hzero q hq) (fun i => hcut q hq i) (fun j' => hpre q hq j' hl) i
-    have hB' : ∀ i : Fin (d + e - 1),
+    have hB' (i : Fin (d + e - 1)) :
         leftEnd (simplexMap e q.2) (B i) ≤ markedPos (e := e) π τ i q ∧
           markedPos (e := e) π τ i q
               + (withEnds hn A i.succ q - withEnds hn A i.castSucc q)
             ≤ leftEnd (simplexMap e q.2) (B i) + (simplexMap e q.2 (B i) : ℝ) := by
-      intro i
       have h := hB q hq hl i
       rw [hM i] at h
       exact h

@@ -48,10 +48,8 @@ namespace GoodRegion
 theorem exists_isIntAffine_s {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)}
     {q₀ : PReal d e} (G : GoodRegion d e π σ q₀) (k : Fin (G.n + 1)) :
     ∃ g : ParamAffine d e, IsIntAffine g ∧ ∀ q ∈ G.O, G.s k q = g q := by
-  classical
   -- the lengths of `f` and `g` are positive on the region, so the map is the free-coordinate map
-  have hmem : ∀ q ∈ G.O, simplexMap d q.1 ∈ simplex d ∧ simplexMap e q.2 ∈ simplex e := by
-    intro q hq
+  have hmem (q) (hq : q ∈ G.O) : simplexMap d q.1 ∈ simplex d ∧ simplexMap e q.2 ∈ simplex e := by
     have hq' := G.subset_region q hq
     exact ⟨simplexMap_mem_simplex_fin hq'.1.1 hq'.1.2,
       simplexMap_mem_simplex_fin hq'.2.1 hq'.2.2⟩
@@ -183,7 +181,6 @@ theorem IsDiophantine.of_intAffine_family {d e : ℕ} [NeZero d] [NeZero e]
     (hFnn : ∀ i, 0 ≤ Fs i q) (hHnn : ∀ j, 0 ≤ Hs j q) :
     IsDiophantine (fun i => ⟨Fs i q / L, div_nonneg (hFnn i) hL0.le⟩)
       (fun j => ⟨Hs j q / L, div_nonneg (hHnn j) hL0.le⟩) := by
-  classical
   obtain ⟨p, rfl⟩ : ∃ p, d = p + 1 := ⟨d - 1, (Nat.sub_add_cancel (NeZero.pos d)).symm⟩
   obtain ⟨p', rfl⟩ : ∃ p', e = p' + 1 := ⟨e - 1, (Nat.sub_add_cancel (NeZero.pos e)).symm⟩
   -- the coefficient matrices and the constants of the two families
@@ -430,7 +427,6 @@ theorem exists_isIntAffine_truncatedLengths (G : GoodRegion d e π σ q₀)
     ∃ (Hs : Fin e → ParamAffine d e), (∀ j, IsIntAffine (Hs j)) ∧
       ∀ j : Fin e, Hs j q = max 0 (min (G.s i₁ q) (upperEnd (simplexMap e q.2) j : ℝ)
         - max (G.s i₀ q) (leftEnd (simplexMap e q.2) j : ℝ)) := by
-  classical
   obtain ⟨hp, hw⟩ := G.subset_region q hq
   have hex (j : Fin e) :
     ∃ h : ParamAffine d e, IsIntAffine h ∧

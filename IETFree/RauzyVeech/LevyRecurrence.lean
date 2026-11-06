@@ -54,7 +54,6 @@ theorem levy_recurrence {Y : ℕ → Type*} [∀ n, MeasurableSpace (Y n)]
     (h : ∀ (n : ℕ), N ≤ n → ∀ y : Y n, ∃ Fy : Set X, Fy ⊆ {x | π n x = y} ∧
       ENNReal.ofReal δ * μ {x | π n x = y} ≤ μ Fy ∧ Disjoint Fy Z) :
     μ Z = 0 := by
-  classical
   suffices h : ¬ 0 < μ Z by simpa only [not_lt, nonpos_iff_eq_zero] using h
   intro hZpos
   -- ## Step 0: the level σ-algebras and measurability of atoms
@@ -66,16 +65,15 @@ theorem levy_recurrence {Y : ℕ → Type*} [∀ n, MeasurableSpace (Y n)]
   have hAtom (n : ℕ) (y : Y n) : MeasurableSet {x | π n x = y} :=
     hπ n (measurableSet_singleton y)
   have hAtomF (n : ℕ) (y : Y n) : MeasurableSet[F n] {x | π n x = y} := by
-    change MeasurableSet[MeasurableSpace.comap (π n) ⊤] {x | π n x = y}
     exact (MeasurableSpace.measurableSet_comap (m := ⊤)).mpr ⟨{y}, trivial, rfl⟩
   -- ## Step 1: `F` is a filtration
-  have hFle : ∀ n, F n ≤ ‹MeasurableSpace X› := by
-    intro n s hs
+  have hFle (n) : F n ≤ ‹MeasurableSpace X› := by
+    intro s hs
     rw [hFdef] at hs
     obtain ⟨s', -, rfl⟩ := MeasurableSpace.measurableSet_comap.mp hs
     exact hπ n (hAllMeas n s')
-  have hstep : ∀ n, F n ≤ F (n + 1) := by
-    intro n s hs
+  have hstep (n) : F n ≤ F (n + 1) := by
+    intro s hs
     rw [hFdef] at hs ⊢
     obtain ⟨s', -, rfl⟩ := MeasurableSpace.measurableSet_comap.mp hs
     have hEq : (π n) ⁻¹' s' = ⋃ y ∈ s', {x | π n x = y} := by
@@ -84,7 +82,6 @@ theorem levy_recurrence {Y : ℕ → Type*} [∀ n, MeasurableSpace (Y n)]
       exact ⟨fun hx => ⟨π n x, hx, rfl⟩, by rintro ⟨y, hy, hxy⟩; rw [hxy]; exact hy⟩
     rw [hEq]
     refine MeasurableSet.biUnion (Set.toFinite s').countable fun y _ => ?_
-    change MeasurableSet[MeasurableSpace.comap (π (n + 1)) ⊤] {x | π n x = y}
     refine MeasurableSpace.measurableSet_comap.mpr
       ⟨{z : Y (n + 1) | ∀ x, π (n + 1) x = z → π n x = y}, trivial, ?_⟩
     ext x
@@ -92,23 +89,21 @@ theorem levy_recurrence {Y : ℕ → Type*} [∀ n, MeasurableSpace (Y n)]
     exact ⟨fun hx => hx x rfl, fun hx x' hx' => by rw [hrefine n x' x hx', hx]⟩
   have hFmono : Monotone F := monotone_nat_of_le_succ hstep
   let ℱ : Filtration ℕ ‹MeasurableSpace X› := ⟨F, hFmono, hFle⟩
-  have hZfilt : MeasurableSet[⨆ n, ℱ n] Z := hZ
-  have hZamb : MeasurableSet Z := (iSup_le hFle) Z hZfilt
+  have hZamb : MeasurableSet Z := (iSup_le hFle) Z hZ
   -- ## Step 2: Lévy's upward theorem for `g = 1_Z`
   set g : X → ℝ := Z.indicator (fun _ => 1) with hgdef
   have hg_int : Integrable g μ := (integrable_const (1 : ℝ)).indicator hZamb
   have hg_sm : StronglyMeasurable[⨆ n, ℱ n] g :=
-    (stronglyMeasurable_const (b := (1 : ℝ))).indicator hZfilt
+    (stronglyMeasurable_const (b := (1 : ℝ))).indicator hZ
   have htendsto : ∀ᵐ x ∂μ, Tendsto (fun n => (μ[g | ℱ n]) x) atTop (𝓝 (g x)) :=
     hg_int.tendsto_ae_condExp hg_sm
   -- ## Step 3: the levels `U n` where the conditional expectation is close to `1`
   set U : ℕ → Set X := fun n => {x | 1 - δ / 2 < (μ[g | ℱ n]) x} with hUdef
-  have hUmeas : ∀ n, MeasurableSet[F n] (U n) := by
-    intro n
+  have hUmeas (n) : MeasurableSet[F n] (U n) := by
     have h1 : StronglyMeasurable[F n] fun x => (μ[g | ℱ n]) x := stronglyMeasurable_condExp
     have h2 : StronglyMeasurable[F n] fun _ : X => (1 - δ / 2 : ℝ) := stronglyMeasurable_const
     exact h2.measurableSet_lt h1
-  have hUamb : ∀ n, MeasurableSet (U n) := fun n => hFle n (U n) (hUmeas n)
+  have hUamb (n) : MeasurableSet (U n) := hFle n (U n) (hUmeas n)
   have hconv : ∀ᵐ x ∂μ, x ∈ Z → ∀ᶠ n in atTop, x ∈ U n := by
     filter_upwards [htendsto] with x hx hxZ
     have hgx : g x = 1 := by simp only [hgdef, Set.indicator_of_mem hxZ]
@@ -119,9 +114,7 @@ theorem levy_recurrence {Y : ℕ → Type*} [∀ n, MeasurableSpace (Y n)]
     have h := ae_iff.mp hconv
     refine measure_mono_null ?_ h
     intro x hx
-    have hxZ : x ∈ Z := hx.1
-    have hxW : x ∉ W := hx.2
-    exact fun hZ => hxW (hZ hxZ)
+    exact fun hZ => hx.2 (hZ hx.1)
   have hposT : 0 < μ (Z ∩ W) := by
     refine lt_of_lt_of_le hZpos ?_
     have hsub : Z ⊆ (Z ∩ W) ∪ (Z \ W) := by
@@ -135,8 +128,7 @@ theorem levy_recurrence {Y : ℕ → Type*} [∀ n, MeasurableSpace (Y n)]
   -- ## Step 4: forget the points whose level-`n` atom is null
   set bad : ℕ → Set X :=
     fun n => ⋃ y : Y n, if μ {x | π n x = y} = 0 then {x | π n x = y} else ∅ with hbaddef
-  have hbadnull : ∀ n, μ (bad n) = 0 := by
-    intro n
+  have hbadnull (n) : μ (bad n) = 0 := by
     rw [hbaddef]
     refine measure_iUnion_null fun y => ?_
     by_cases hy : μ {x | π n x = y} = 0
@@ -161,11 +153,9 @@ theorem levy_recurrence {Y : ℕ → Type*} [∀ n, MeasurableSpace (Y n)]
     simp only [measure_empty] at hpos
     exact lt_irrefl 0 hpos
   obtain ⟨x, hxmem⟩ := hne
-  have hxbad : x ∉ ⋃ n, bad n := hxmem.2
   have hxZ : x ∈ Z := hxmem.1.1
   have hxW : x ∈ W := hxmem.1.2
-  have hxev : ∀ᶠ n in atTop, x ∈ U n := hxW
-  obtain ⟨n₁, hn₁⟩ := Filter.eventually_atTop.mp hxev
+  obtain ⟨n₁, hn₁⟩ := Filter.eventually_atTop.mp hxW
   -- level `n ≥ N` at which the bound holds at `x`
   set n : ℕ := max n₁ N with hndef
   have hnN : N ≤ n := le_max_right _ _
@@ -178,7 +168,7 @@ theorem levy_recurrence {Y : ℕ → Type*} [∀ n, MeasurableSpace (Y n)]
   have hxA : x ∈ A := rfl
   have hAne : μ A ≠ 0 := by
     intro h0
-    refine hxbad (Set.mem_iUnion.mpr ⟨n, ?_⟩)
+    refine hxmem.2 (Set.mem_iUnion.mpr ⟨n, ?_⟩)
     rw [hbaddef]
     refine Set.mem_iUnion.mpr ⟨π n x, ?_⟩
     have h0' : μ {y : X | π n y = π n x} = 0 := by simpa only [hAdef] using h0
@@ -190,12 +180,11 @@ theorem levy_recurrence {Y : ℕ → Type*} [∀ n, MeasurableSpace (Y n)]
     rw [hFdef] at hu
     obtain ⟨s, -, hs⟩ := MeasurableSpace.measurableSet_comap.mp hu
     intro y hy
-    have h1 : π n y = π n x := hy
     have h2 : π n x ∈ s := by
       have hx : x ∈ (π n) ⁻¹' s := by rw [hs]; exact hxU
       exact hx
     have h3 : y ∈ (π n) ⁻¹' s := by
-      have h4 : π n y ∈ s := by rw [h1]; exact h2
+      have h4 : π n y ∈ s := by rw [hy]; exact h2
       exact h4
     rw [hs] at h3
     exact h3
@@ -216,15 +205,14 @@ theorem levy_recurrence {Y : ℕ → Type*} [∀ n, MeasurableSpace (Y n)]
       _ ≤ _ := hle
   -- the recurrence hypothesis at the atom
   obtain ⟨Fy, hFysub, hFybd, hFydisj⟩ := h n hnN (π n x)
-  have hFyA : Fy ⊆ A := hFysub
-  have hFysub' : Fy ⊆ A \ Z := fun y hy => ⟨hFyA hy, hFydisj.le_compl_right hy⟩
+  have hFysub' : Fy ⊆ A \ Z := fun y hy => ⟨hFysub hy, hFydisj.le_compl_right hy⟩
   have hStep1 : μ.real Fy ≤ μ.real (A \ Z) := measureReal_mono hFysub'
   have hAfin : μ A ≠ ⊤ := by
     have hle : μ A ≤ 1 := by
       have h1 : μ A ≤ μ Set.univ := measure_mono (Set.subset_univ A)
       simpa using h1
     exact ne_top_of_le_ne_top (by simp) hle
-  have hFyfin : μ Fy ≠ ⊤ := ne_top_of_le_ne_top hAfin (measure_mono hFyA)
+  have hFyfin : μ Fy ≠ ⊤ := ne_top_of_le_ne_top hAfin (measure_mono hFysub)
   have hStep2 : δ * μ.real A ≤ μ.real Fy := by
     rw [Measure.real_def, Measure.real_def]
     calc δ * (μ A).toReal = (ENNReal.ofReal δ * μ A).toReal := by

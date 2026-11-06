@@ -63,10 +63,10 @@ The hole is pinned down by `coe_mkIETEquiv`, a *theorem target*: the solution ha
 
 ## The solution
 
-`IETFree/ChallengeSolved.lean` proves `coe_mkIETEquiv` from `mkIETEquiv_apply`, and proves `main` by
-quoting `ChallengeSolved.main_of_library` — Theorem 1.1 for the library's own exchanges — which
-applies the two theorems of the literature, `masurVeech` and `veechRigidity`
-(`IETFree/Pair/Irreducible.lean`); nothing is left as a hypothesis.
+`IETFree/ChallengeSolved.lean` proves `coe_mkIETEquiv` from `mkIETEquiv_apply`, and proves `main`
+directly — Theorem 1.1 for the library's own exchanges — by applying the two theorems of the
+literature, `masurVeech` and `veechRigidity` (`IETFree/Pair/Irreducible.lean`); nothing is left
+as a hypothesis.
 
 ## Checking the pair without the comparator
 

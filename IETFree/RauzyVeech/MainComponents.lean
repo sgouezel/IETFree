@@ -5,9 +5,9 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.RauzyVeech.ColDiam
 public import IETFree.RauzyVeech.InvariantMeasure
 public import IETFree.TopBotFormalism
-public import IETFree.RauzyVeech.ColDiam
 
 /-!
 # The ray condition, and the positive blocks that yield it

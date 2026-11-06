@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.TopBotFormalism
 public import IETFree.RauzyVeech.TrueStep
+public import IETFree.TopBotFormalism
 
 /-!
 # Veech rigidity: the node vocabulary

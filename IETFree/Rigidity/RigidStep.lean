@@ -260,8 +260,8 @@ theorem rigid_step {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero 
       N₀ ≤ q ∧ |t| ≤ ε ∧ B ⊆ Set.Ico (0:ℝ) 1 ∧ MeasurableSet B ∧
       1 - ε ≤ (volume B).toReal ∧
       ∀ x ∈ B, (⇑(P.toIET lam))^[q] x = x + t := by
-  classical
-  -- `hstop` is part of the interface, but the proof does not need it
+  -- `hstop` is part of the interface, but the proof does not need it; the `have` keeps the
+  -- unused hypothesis mentioned, so that the unused-variable linter stays quiet.
   have _hstop := hstop
   rcases lt_or_ge 1 ε with hε1 | hε1
   · refine ⟨N₀, 0, ∅, le_rfl, ?_, Set.empty_subset _, MeasurableSet.empty, ?_, ?_⟩
@@ -306,10 +306,9 @@ theorem rigid_step {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero 
           (height P γ c : ℝ) * (Tower.lamAfter P γ lam c : ℝ))
         ≤ (M : ℝ) * (height P γ b : ℝ)
           * (baseLen P γ lam - (Tower.lamAfter P γ lam b : ℝ)) := by
-      have hstep : ∀ c ∈ Finset.univ.erase b,
+      have hstep (c) (_ : c ∈ Finset.univ.erase b) :
           (height P γ c : ℝ) * (Tower.lamAfter P γ lam c : ℝ)
             ≤ ((M : ℝ) * (height P γ b : ℝ)) * (Tower.lamAfter P γ lam c : ℝ) := by
-        intro c _
         have hc : (height P γ c : ℝ) ≤ (M : ℝ) * (height P γ b : ℝ) := by
           exact_mod_cast hdom c
         exact mul_le_mul_of_nonneg_right hc (Tower.lamAfter P γ lam c).coe_nonneg

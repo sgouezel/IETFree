@@ -46,7 +46,6 @@ omit [CompactSpace X] in
 corresponding finite sum of values. -/
 theorem integral_finset_sum_dirac (g : X →ᵇ ℝ) (s : Finset ℕ) (y : ℕ → X) :
     ∫ x, g x ∂((∑ i ∈ s, Measure.dirac (y i)) : Measure X) = ∑ i ∈ s, g (y i) := by
-  classical
   induction s using Finset.induction with
   | empty => simp
   | insert a s ha ih =>
@@ -118,10 +117,10 @@ theorem integral_map_eq_of_tendsto_birkhoffMeasure (f : X → X) (hf : Continuou
     (hntop : Tendsto n p atTop) (g : X →ᵇ ℝ) :
     ∫ y, g y ∂((ν : Measure X).map f) = ∫ y, g y ∂(ν : Measure X) := by
   have hν' := (ProbabilityMeasure.tendsto_iff_forall_integral_tendsto (F := p)).mp hν
-  have heq : ∀ μ : ProbabilityMeasure X,
+  have heq (μ : ProbabilityMeasure X) :
       ∫ y, g y ∂((μ : Measure X).map f)
-        = ∫ y, (g.compContinuous ⟨f, hf⟩) y ∂(μ : Measure X) := fun μ =>
-    MeasureTheory.integral_map hf.measurable.aemeasurable g.continuous.aestronglyMeasurable
+        = ∫ y, (g.compContinuous ⟨f, hf⟩) y ∂(μ : Measure X) := MeasureTheory.integral_map
+            hf.measurable.aemeasurable g.continuous.aestronglyMeasurable
   have hshift : Tendsto
       (fun i => ∫ y, g y ∂(((birkhoffMeasure f (x i) (n i) (hn i)) : Measure X).map f)) p
       (𝓝 (∫ y, g y ∂((ν : Measure X).map f))) := by
@@ -150,8 +149,7 @@ theorem map_eq_self_of_integral_eq (f : X → X) (hf : Continuous f) (ν₀ : Me
     (hint : ∀ g : X →ᵇ ℝ, ∫ x, g x ∂(ν₀.map f) = ∫ x, g x ∂ν₀) :
     ν₀.map f = ν₀ := by
   -- the key closed-set inequality, via Urysohn functions and outer regularity
-  have hclosed : ∀ ⦃C : Set X⦄, IsCompact C → ν₀ (f ⁻¹' C) ≤ ν₀ C := by
-    intro C hC
+  have hclosed ⦃C : Set X⦄ (hC : IsCompact C) : ν₀ (f ⁻¹' C) ≤ ν₀ C := by
     refine ENNReal.le_of_forall_pos_le_add fun ε hε _ => ?_
     obtain ⟨U, hCU, hUopen, hU⟩ :=
       Measure.OuterRegular.outerRegular (μ := ν₀) hC.measurableSet (ν₀ C + ↑ε)
@@ -200,8 +198,7 @@ theorem map_eq_self_of_integral_eq (f : X → X) (hf : Continuous f) (ν₀ : Me
   have hfinite : IsFiniteMeasure (ν₀.map f) := ⟨by
     rw [Measure.map_apply hf.measurable MeasurableSet.univ, Set.preimage_univ]
     exact measure_lt_top _ _⟩
-  have hle : ∀ A, MeasurableSet A → (ν₀.map f) A ≤ ν₀ A := by
-    intro A hA
+  have hle (A) (hA : MeasurableSet A) : (ν₀.map f) A ≤ ν₀ A := by
     rw [MeasurableSet.measure_eq_iSup_isCompact (μ := ν₀.map f) hA]
     refine iSup_le fun K => ?_
     refine iSup_le fun hKA => ?_
@@ -266,8 +263,7 @@ theorem birkhoffMeasure_apply_of_forall_mem (f : X → X) (x : X) (n : ℕ) (hn 
   rw [ProbabilityMeasure.coe_mk, Measure.smul_apply, smul_eq_mul, Measure.finsetSum_apply]
   have hsum : (∑ i ∈ Finset.range n, ((Measure.dirac (f^[i] x) : Measure X)) C) =
       (n : ℝ≥0∞) := by
-    have h1 : ∀ i ∈ Finset.range n, ((Measure.dirac (f^[i] x) : Measure X)) C = 1 := by
-      intro i hi
+    have h1 (i) (hi : i ∈ Finset.range n) : ((Measure.dirac (f^[i] x) : Measure X)) C = 1 := by
       rw [Measure.dirac_apply' _ hC, Set.indicator_of_mem (h i hi)]
       rfl
     rw [Finset.sum_congr rfl h1, Finset.sum_const, Finset.card_range,
@@ -290,11 +286,10 @@ theorem tendsto_uniform_birkhoffAverage_aux (f : X → X) (hf : Continuous f) (�
   intro ε hε
   by_contra hcon
   push Not at hcon
-  have hspec : ∀ k : ℕ, ∃ n : ℕ, k + 1 ≤ n ∧ ∃ x : X, x ∈ S ∧
-      ε < |birkhoffAverage ℝ f φ n x - c| := fun k => hcon (k + 1) (Nat.succ_pos k)
+  have hspec (k : ℕ) : ∃ n : ℕ, k + 1 ≤ n ∧ ∃ x : X, x ∈ S ∧
+      ε < |birkhoffAverage ℝ f φ n x - c| := hcon (k + 1) (Nat.succ_pos k)
   choose n hn x hxS hx using hspec
-  have hn_ne : ∀ k, n k ≠ 0 := by
-    intro k
+  have hn_ne (k) : n k ≠ 0 := by
     have := hn k
     omega
   -- a nontrivial ultrafilter on the averaging times
@@ -310,9 +305,9 @@ theorem tendsto_uniform_birkhoffAverage_aux (f : X → X) (hf : Continuous f) (�
   have hνt : Tendsto (fun k => birkhoffMeasure f (x k) (n k) (hn_ne k))
       (p : Filter ℕ) (𝓝 ν) := hν
   -- the limit is invariant, hence regularisable and quantitatively controlled
-  have hinv : ∀ g : X →ᵇ ℝ,
+  have hinv (g : X →ᵇ ℝ) :
       ∫ y, g y ∂((ν : Measure X).map f) = ∫ y, g y ∂(ν : Measure X) :=
-    fun g => integral_map_eq_of_tendsto_birkhoffMeasure f hf hn_ne hνt hntop g
+          integral_map_eq_of_tendsto_birkhoffMeasure f hf hn_ne hνt hntop g
   obtain ⟨ν₀, hreg, hint, hmap⟩ := exists_regular_map_eq_self f hf ν hinv
   -- `ν₀` gives full mass to `C`
   have hprobC : ((ν₀ : Measure X)) C = 1 := by
@@ -329,10 +324,9 @@ theorem tendsto_uniform_birkhoffAverage_aux (f : X → X) (hf : Continuous f) (�
       obtain ⟨g, hgC, -, hgU, hg01⟩ :=
         exists_continuousMap_one_of_isCompact_subset_isOpen hC.isCompact hUopen hCU
       let gb : X →ᵇ ℝ := BoundedContinuousFunction.mkOfCompact g
-      have hemp : ∀ k, (1 : ℝ) ≤
+      have hemp (k) : (1 : ℝ) ≤
           ∫ y, gb y ∂((birkhoffMeasure f (x k) (n k) (hn_ne k)) : Measure X) := by
-        intro k
-        have hmem : ∀ i ∈ Finset.range (n k), f^[i] (x k) ∈ C := fun i _ => hS (x k) (hxS k) i
+        have hmem (i) (hi : i ∈ Finset.range (n k)) : f^[i] (x k) ∈ C := hS (x k) (hxS k) i
         have hmass : ((birkhoffMeasure f (x k) (n k) (hn_ne k) : Measure X)) C = 1 :=
           birkhoffMeasure_apply_of_forall_mem f (x k) (n k) (hn_ne k) hCmeas hmem
         have hgen : ((((birkhoffMeasure f (x k) (n k) (hn_ne k)) : Measure X)) C).toReal ≤
@@ -379,9 +373,8 @@ theorem tendsto_uniform_birkhoffAverage_aux (f : X → X) (hf : Continuous f) (�
       (F := (p : Filter ℕ))).mp hνt φb
     rw [hνφ] at hmain
     exact hmain
-  have hbound : ∀ k, ε ≤
+  have hbound (k) : ε ≤
       |∫ y, φ y ∂((birkhoffMeasure f (x k) (n k) (hn_ne k)) : Measure X) - c| := by
-    intro k
     have hbk : ∫ y, φ y ∂((birkhoffMeasure f (x k) (n k) (hn_ne k)) : Measure X)
         = birkhoffAverage ℝ f φ (n k) (x k) :=
       integral_birkhoffMeasure f (x k) (n k) (hn_ne k) φb

@@ -24,15 +24,12 @@ The combinatorial mass machinery that the `Γ₃` argument of
   at most that of `B` (`sum_cond_le_sum_of_covers`).
 -/
 
-@[expose] public section
-
-
-open Finset NodeHeight
+open Finset NodeHeight IETDatum₂
 open scoped BigOperators
 
-namespace LevelMass
+@[expose] public section
 
-open IETDatum₂
+namespace LevelMass
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -118,9 +115,8 @@ theorem sum_cond_levelWords (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 
   induction N with
   | zero => simp [levelWords]
   | succ N ih =>
-    have hstep : ∀ δ : List Bool, CylinderMass.cond P w (δ ++ [true])
+    have hstep (δ : List Bool) : CylinderMass.cond P w (δ ++ [true])
         + CylinderMass.cond P w (δ ++ [false]) = CylinderMass.cond P w δ := by
-      intro δ
       rw [CylinderMass.cond_append, CylinderMass.cond_append, ← mul_add,
         cond_arrow_add_one P hP hn (w ++ δ), mul_one]
     rw [levelWords_succ, Finset.sum_union (hdisj N),
@@ -182,9 +178,8 @@ theorem sum_cond_eq_sum_count (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 
     ∑ γ ∈ G, CylinderMass.cond P w γ =
       ∑ δ ∈ levelWords N, CylinderMass.cond P w δ *
         ((G.filter (fun γ => γ <+: δ)).card : ℝ) := by
-  have h1 : ∀ γ ∈ G, CylinderMass.cond P w γ
+  have h1 (γ) (hγ : γ ∈ G) : CylinderMass.cond P w γ
       = ∑ δ ∈ levelWords N, (if γ <+: δ then CylinderMass.cond P w δ else 0) := by
-    intro γ hγ
     rw [← sum_cond_extends P hP hn w γ (hG γ hγ), Finset.sum_filter]
   calc ∑ γ ∈ G, CylinderMass.cond P w γ
       = ∑ γ ∈ G, ∑ δ ∈ levelWords N,
@@ -207,11 +202,10 @@ theorem sum_cond_le_sum_of_covers (P : IETDatum₂ α n) (hP : P.Irreducible) (h
     (w : List Bool) {B S : Finset (List Bool)} (hS : PrefixFree S)
     (hcov : ∀ η ∈ S, ∃ β ∈ B, β <+: η) :
     ∑ η ∈ S, CylinderMass.cond P w η ≤ ∑ β ∈ B, CylinderMass.cond P w β := by
-  classical
-  have hSN : ∀ γ ∈ S, γ.length ≤ max (S.sup List.length) (B.sup List.length) :=
-    fun γ hγ => le_trans (Finset.le_sup (s := S) (f := List.length) hγ) (le_max_left _ _)
-  have hBN : ∀ γ ∈ B, γ.length ≤ max (S.sup List.length) (B.sup List.length) :=
-    fun γ hγ => le_trans (Finset.le_sup (s := B) (f := List.length) hγ) (le_max_right _ _)
+  have hSN (γ) (hγ : γ ∈ S) : γ.length ≤ max (S.sup List.length) (B.sup List.length) := le_trans
+      (Finset.le_sup (s := S) (f := List.length) hγ) (le_max_left _ _)
+  have hBN (γ) (hγ : γ ∈ B) : γ.length ≤ max (S.sup List.length) (B.sup List.length) := le_trans
+      (Finset.le_sup (s := B) (f := List.length) hγ) (le_max_right _ _)
   rw [sum_cond_eq_sum_count P hP hn w (N := max (S.sup List.length) (B.sup List.length)) S hSN,
     sum_cond_eq_sum_count P hP hn w (N := max (S.sup List.length) (B.sup List.length)) B hBN]
   refine Finset.sum_le_sum fun δ _ => ?_

@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.TopBotFormalism
 public import IETFree.IET
+public import IETFree.TopBotFormalism
 
 /-!
 Proposition 2.5 of the paper (`ae_diophantine`): almost every pair of length vectors is Diophantine.
@@ -94,7 +94,6 @@ lemma volume_ubox_affine {n : ℕ} (f : Fin (n + 1) → ℤ) (k : ℝ) (i : Fin 
     volume (ubox (n + 1) ∩
         {x : Fin (n + 1) → ℝ | |(∑ j, (f j : ℝ) * x j) + k| < ε})
       ≤ ENNReal.ofReal (2 * ε) := by
-  classical
   set S : Set (Fin (n + 1) → ℝ) :=
     ubox (n + 1) ∩ {x : Fin (n + 1) → ℝ | |(∑ j, (f j : ℝ) * x j) + k| < ε} with hS
   have hcont : Continuous fun x : Fin (n + 1) → ℝ => |(∑ j, (f j : ℝ) * x j) + (k : ℝ)| := by
@@ -207,7 +206,6 @@ lemma volume_prod_ubox_affine {p q : ℕ} (f : Fin p → ℤ) (g : Fin q → ℤ
         {z : (Fin p → ℝ) × (Fin q → ℝ) |
           |(∑ i, (f i : ℝ) * z.1 i) + (∑ j, (g j : ℝ) * z.2 j) + K| < ε})
       ≤ ENNReal.ofReal (2 * ε) := by
-  classical
   set T : Set ((Fin p → ℝ) × (Fin q → ℝ)) :=
     (ubox p ×ˢ ubox q) ∩
       {z : (Fin p → ℝ) × (Fin q → ℝ) |
@@ -372,10 +370,9 @@ noncomputable def badBound (p q N : ℕ) : ℝ :=
 lemma measure_badSet_le (p q N : ℕ) :
     (volume.prod volume) (badSet p q N) ≤ ENNReal.ofReal (badBound p q N) := by
   have hε : (0 : ℝ) ≤ ((N : ℝ) + 1) ^ (-(expo p q : ℝ)) := Real.rpow_nonneg (by positivity) _
-  have hterm : ∀ x ∈ (formBox p q N).filter (fun x => x.1 ≠ 0 ∨ x.2.1 ≠ 0),
+  have hterm (x) (hx : x ∈ (formBox p q N).filter (fun x => x.1 ≠ 0 ∨ x.2.1 ≠ 0)) :
       (volume.prod volume) (tube p q N x) ≤ ENNReal.ofReal (2 * ((N : ℝ) + 1) ^ (-(expo p q : ℝ)))
         := by
-    intro x hx
     rw [Finset.mem_filter] at hx
     exact volume_prod_ubox_affine x.1 x.2.1 _ hx.2 hε
   have h1 : (volume.prod volume) (badSet p q N)
@@ -439,9 +436,8 @@ lemma summable_badBound (p q : ℕ) : Summable (badBound p q) := by
 lemma ae_eventually_notMem_badSet {p q : ℕ} (R : Set (Fin p → ℝ)) (R' : Set (Fin q → ℝ)) :
     ∀ᵐ z ∂((volume.restrict R).prod (volume.restrict R')), ∀ᶠ N in atTop, z ∉ badSet p q N := by
   apply MeasureTheory.ae_eventually_notMem
-  have hle : ∀ N, ((volume.restrict R).prod (volume.restrict R')) (badSet p q N)
+  have hle (N) : ((volume.restrict R).prod (volume.restrict R')) (badSet p q N)
       ≤ ENNReal.ofReal (badBound p q N) := by
-    intro N
     rw [Measure.prod_restrict]
     exact (Measure.restrict_apply_le _ _).trans (measure_badSet_le p q N)
   have hsum : (∑' N, ENNReal.ofReal (badBound p q N)) ≠ ∞ := by
@@ -478,8 +474,8 @@ lemma sum_simplexMap_mul {p : ℕ} {v : Fin p → ℝ} (hpos : ∀ i, 0 < v i) (
       = (∑ i : Fin p, ((a i.castSucc - a (Fin.last p) : ℤ) : ℝ) * v i) + (a (Fin.last p) : ℝ) := by
   rw [Fin.sum_univ_castSucc, simplexMap_last_coe hsum]
   simp only [simplexMap_castSucc_coe hpos]
-  have h1 : ∀ i : Fin p, ((a i.castSucc - a (Fin.last p) : ℤ) : ℝ)
-      = (a i.castSucc : ℝ) - (a (Fin.last p) : ℝ) := fun i => by push_cast; ring
+  have h1 (i : Fin p) : ((a i.castSucc - a (Fin.last p) : ℤ) : ℝ)
+      = (a i.castSucc : ℝ) - (a (Fin.last p) : ℝ) := by push_cast; ring
   simp only [h1, sub_mul, Finset.sum_sub_distrib, ← Finset.mul_sum]
   ring
 
@@ -511,7 +507,7 @@ lemma goodFree_of_eventually {p q : ℕ} {z : (Fin p → ℝ) × (Fin q → ℝ)
     GoodFree p q z := by
   obtain ⟨N₀, hN₀⟩ := Filter.eventually_atTop.mp hev
   set N₁ := max N₀ 1 with hN₁def
-  have hN₁ : ∀ N ≥ N₁, z ∉ badSet p q N := fun N hN => hN₀ N (le_trans (le_max_left _ _) hN)
+  have hN₁ (N) (hN : N ≥ N₁) : z ∉ badSet p q N := hN₀ N (le_trans (le_max_left _ _) hN)
   have hN₁pos : 1 ≤ N₁ := le_max_right _ _
   obtain ⟨n, hn⟩ := exists_nat_gt (((N₁ : ℝ) + 1) ^ (expo p q : ℝ))
   have hNpos : (0 : ℝ) < (N₁ : ℝ) + 1 := by positivity
@@ -529,10 +525,10 @@ lemma goodFree_of_eventually {p q : ℕ} {z : (Fin p → ℝ) × (Fin q → ℝ)
   refine ⟨n, fun f g k hne haff => ?_⟩
   set M := max (coeffMax f) (max (coeffMax g) k.natAbs) with hMdef
   have hcoeff : (∀ i, |f i| ≤ (M : ℤ)) ∧ (∀ j, |g j| ≤ (M : ℤ)) ∧ |k| ≤ (M : ℤ) := by
-    have h1 : ∀ i, (f i).natAbs ≤ M := fun i =>
-      le_trans (Finset.le_sup (f := fun i => (f i).natAbs) (Finset.mem_univ i)) (le_max_left _ _)
-    have h2 : ∀ j, (g j).natAbs ≤ M := fun j =>
-      le_trans (Finset.le_sup (f := fun j => (g j).natAbs) (Finset.mem_univ j))
+    have h1 (i) : (f i).natAbs ≤ M := le_trans (Finset.le_sup (f := fun i => (f i).natAbs)
+        (Finset.mem_univ i)) (le_max_left _ _)
+    have h2 (j) : (g j).natAbs ≤ M := le_trans (Finset.le_sup (f := fun j => (g j).natAbs)
+        (Finset.mem_univ j))
         (le_trans (le_max_left _ _) (le_max_right _ _))
     have h3 : k.natAbs ≤ M :=
       le_trans (le_max_right _ _) (le_max_right _ _)
@@ -695,8 +691,7 @@ lemma isDiophC_of_goodFree {p q : ℕ} {v : Fin p → ℝ} {w : Fin q → ℝ}
       simp [ha, hb]
     · exact hpos
   have hMle : M ≤ 2 * N := by
-    have h1 : ∀ i, (f i).natAbs ≤ 2 * N := by
-      intro i
+    have h1 (i) : (f i).natAbs ≤ 2 * N := by
       simp only [hf]
       have h2 := Int.natAbs_sub_le (a i.castSucc) (a (Fin.last p))
       have h3 : (a i.castSucc).natAbs ≤ N :=
@@ -704,8 +699,7 @@ lemma isDiophC_of_goodFree {p q : ℕ} {v : Fin p → ℝ} {w : Fin q → ℝ}
       have h4 : (a (Fin.last p)).natAbs ≤ N :=
         le_trans (Finset.le_sup (f := fun i => (a i).natAbs) (Finset.mem_univ _)) (le_max_left _ _)
       omega
-    have h2 : ∀ j, (g j).natAbs ≤ 2 * N := by
-      intro j
+    have h2 (j) : (g j).natAbs ≤ 2 * N := by
       simp only [hg]
       have h3 := Int.natAbs_sub_le (b j.castSucc) (b (Fin.last q))
       have h4 : (b j.castSucc).natAbs ≤ N :=
@@ -909,7 +903,6 @@ theorem measurableSet_simplex (d : ℕ) : MeasurableSet (simplex d) :=
 which sum to `1`. -/
 theorem simplexMap_mem_simplex {p : ℕ} {v : Fin p → ℝ} (hpos : ∀ i, 0 < v i)
     (hsum : ∑ i, v i < 1) : simplexMap (p + 1) v ∈ simplex (p + 1) := by
-  change ∑ i, simplexMap (p + 1) v i = 1
   refine NNReal.coe_injective ?_
   rw [NNReal.coe_sum, NNReal.coe_one, Fin.sum_univ_castSucc,
     simplexMap_last_coe hsum]
@@ -984,8 +977,7 @@ theorem natAbs_sum_mul_le {ι : Type*} [Fintype ι] (f g : ι → ℤ) (N K : �
     (hf : ∀ i, (f i).natAbs ≤ N) (hg : ∀ i, (g i).natAbs ≤ K) :
     (∑ i, f i * g i).natAbs ≤ Fintype.card ι * (N * K) := by
   refine (Int.natAbs_sum_le _ _).trans ?_
-  have h1 : ∀ i, (f i * g i).natAbs ≤ N * K := by
-    intro i
+  have h1 (i) : (f i * g i).natAbs ≤ N * K := by
     rw [Int.natAbs_mul]
     exact Nat.mul_le_mul (hf i) (hg i)
   calc (∑ i, (f i * g i).natAbs) ≤ ∑ _i : ι, N * K := Finset.sum_le_sum (fun i _ => h1 i)
@@ -1005,7 +997,6 @@ theorem IsDiophantine.of_int_combination (hdio : IsDiophantine lam mu) {K : ℕ}
     IsDiophantine (fun i => ⟨(w i : ℝ) / u, div_nonneg (w i).coe_nonneg hu0.le⟩)
       (fun j => ⟨(w' j : ℝ) / u, div_nonneg (w' j).coe_nonneg hu0.le⟩) := by
   obtain ⟨C, hCpos, c, hcpos, hC⟩ := hdio
-  classical
   set Acomb : (Fin r → ℤ) → (Fin n → ℤ) → Fin d → ℤ := fun a b k =>
     ∑ i, a i * A i k + ∑ j, b j * A' j k with hAcombdef
   set Bcomb : (Fin r → ℤ) → (Fin n → ℤ) → Fin e → ℤ := fun a b l =>
@@ -1016,10 +1007,10 @@ theorem IsDiophantine.of_int_combination (hdio : IsDiophantine lam mu) {K : ℕ}
   have hAbound (a : Fin r → ℤ) (b : Fin n → ℤ) (k : Fin d) :
       (Acomb a b k).natAbs ≤ Ktot * max (coeffMax a) (coeffMax b) := by
     set N : ℕ := max (coeffMax a) (coeffMax b) with hNdef
-    have ha : ∀ i, (a i).natAbs ≤ N := fun i =>
-      le_trans (Finset.le_sup (f := fun i => (a i).natAbs) (Finset.mem_univ i)) (le_max_left _ _)
-    have hb : ∀ j, (b j).natAbs ≤ N := fun j =>
-      le_trans (Finset.le_sup (f := fun j => (b j).natAbs) (Finset.mem_univ j)) (le_max_right _ _)
+    have ha (i) : (a i).natAbs ≤ N := le_trans (Finset.le_sup (f := fun i => (a i).natAbs)
+        (Finset.mem_univ i)) (le_max_left _ _)
+    have hb (j) : (b j).natAbs ≤ N := le_trans (Finset.le_sup (f := fun j => (b j).natAbs)
+        (Finset.mem_univ j)) (le_max_right _ _)
     have h1 : (∑ i, a i * A i k).natAbs ≤ Fintype.card (Fin r) * (N * K) :=
       natAbs_sum_mul_le a (fun i => A i k) N K ha (fun i => hA i k)
     have h2 : (∑ j, b j * A' j k).natAbs ≤ Fintype.card (Fin n) * (N * K) :=
@@ -1033,10 +1024,10 @@ theorem IsDiophantine.of_int_combination (hdio : IsDiophantine lam mu) {K : ℕ}
   have hBbound (a : Fin r → ℤ) (b : Fin n → ℤ) (l : Fin e) :
       (Bcomb a b l).natAbs ≤ Ktot * max (coeffMax a) (coeffMax b) := by
     set N : ℕ := max (coeffMax a) (coeffMax b) with hNdef
-    have ha : ∀ i, (a i).natAbs ≤ N := fun i =>
-      le_trans (Finset.le_sup (f := fun i => (a i).natAbs) (Finset.mem_univ i)) (le_max_left _ _)
-    have hb : ∀ j, (b j).natAbs ≤ N := fun j =>
-      le_trans (Finset.le_sup (f := fun j => (b j).natAbs) (Finset.mem_univ j)) (le_max_right _ _)
+    have ha (i) : (a i).natAbs ≤ N := le_trans (Finset.le_sup (f := fun i => (a i).natAbs)
+        (Finset.mem_univ i)) (le_max_left _ _)
+    have hb (j) : (b j).natAbs ≤ N := le_trans (Finset.le_sup (f := fun j => (b j).natAbs)
+        (Finset.mem_univ j)) (le_max_right _ _)
     have h1 : (∑ i, a i * B i l).natAbs ≤ Fintype.card (Fin r) * (N * K) :=
       natAbs_sum_mul_le a (fun i => B i l) N K ha (fun i => hB i l)
     have h2 : (∑ j, b j * B' j l).natAbs ≤ Fintype.card (Fin n) * (N * K) :=
@@ -1052,16 +1043,14 @@ theorem IsDiophantine.of_int_combination (hdio : IsDiophantine lam mu) {K : ℕ}
   · intro a b hne
     change C / (Ktot : ℝ) ^ c / ((max (coeffMax a) (coeffMax b) : ℕ) : ℝ) ^ c
       ≤ |∑ i, (a i : ℝ) * ((w i : ℝ) / u) + ∑ j, (b j : ℝ) * ((w' j : ℝ) / u)|
-    have hsub1 : ∀ i, (a i : ℝ) * (w i : ℝ)
+    have hsub1 (i) : (a i : ℝ) * (w i : ℝ)
         = (∑ k, ((a i : ℝ) * (A i k : ℝ)) * (lam k : ℝ))
           + ∑ l, ((a i : ℝ) * (B i l : ℝ)) * (mu l : ℝ) := by
-      intro i
       rw [hw i, mul_add, Finset.mul_sum, Finset.mul_sum]
       congr 1 <;> refine Finset.sum_congr rfl (fun j _ => ?_) <;> ring
-    have hsub2 : ∀ j, (b j : ℝ) * (w' j : ℝ)
+    have hsub2 (j) : (b j : ℝ) * (w' j : ℝ)
         = (∑ k, ((b j : ℝ) * (A' j k : ℝ)) * (lam k : ℝ))
           + ∑ l, ((b j : ℝ) * (B' j l : ℝ)) * (mu l : ℝ) := by
-      intro j
       rw [hw' j, mul_add, Finset.mul_sum, Finset.mul_sum]
       congr 1 <;> refine Finset.sum_congr rfl (fun j' _ => ?_) <;> ring
     have hsum1 : (∑ i, (a i : ℝ) * (w i : ℝ))
@@ -1147,16 +1136,14 @@ theorem IsDiophantine.of_int_combination (hdio : IsDiophantine lam mu) {K : ℕ}
         < ((max (coeffMax (Acomb a b)) (coeffMax (Bcomb a b)) : ℕ) : ℝ) := by
       rcases Nat.eq_zero_or_pos (max (coeffMax (Acomb a b)) (coeffMax (Bcomb a b))) with h | h
       · exfalso
-        have hA0 : ∀ k, Acomb a b k = 0 := by
-          intro k
+        have hA0 (k) : Acomb a b k = 0 := by
           have h1 : (Acomb a b k).natAbs
               ≤ max (coeffMax (Acomb a b)) (coeffMax (Bcomb a b)) :=
             le_trans (Finset.le_sup (f := fun k => (Acomb a b k).natAbs) (Finset.mem_univ k))
               (le_max_left _ _)
           rw [h] at h1
           exact Int.natAbs_eq_zero.mp (Nat.le_zero.mp h1)
-        have hB0 : ∀ l, Bcomb a b l = 0 := by
-          intro l
+        have hB0 (l) : Bcomb a b l = 0 := by
           have h1 : (Bcomb a b l).natAbs
               ≤ max (coeffMax (Acomb a b)) (coeffMax (Bcomb a b)) :=
             le_trans (Finset.le_sup (f := fun l => (Bcomb a b l).natAbs) (Finset.mem_univ l))

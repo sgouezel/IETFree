@@ -31,19 +31,16 @@ outside `A'`, bound the `A'`-coordinates with Kerckhoff's lemma, and the final c
 notion that `gradedStep_succ` takes as input; it is proved, for a suitable `K`, in
 `IETFree/RauzyVeech/RichPath/InductionAssembly.lean`.
 
-
 -/
+
+open MeasureTheory Finset IETDatum₂
+open scoped BigOperators NNReal ENNReal
 
 @[expose] public section
 
 -- section instances used in the proofs but not in every statement
 
-open MeasureTheory Finset
-open scoped BigOperators NNReal ENNReal
-
 namespace NodeHeight
-
-open IETDatum₂
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -199,25 +196,22 @@ theorem gradedStep_min {P : IETDatum₂ α n} {k : ℕ} {Cb Cm : ℝ} (hst : Gra
     GradedStepMin P k Cb (Cm * (((Finset.univ : Finset α).powersetCard k).card : ℝ)) := by
   intro w
   obtain ⟨S, hpf, hb, hm⟩ := hst w
-  have hchoice : ∀ δ ∈ S, ∃ A' : Finset α,
+  have hchoice (δ) (_ : δ ∈ S) : ∃ A' : Finset α,
       A'.card = k ∧ Mk k (st P (w ++ δ)) = mmin A' (st P (w ++ δ)) := by
-    intro δ _
     have hne : ((Finset.univ : Finset α).powersetCard k).Nonempty :=
       powersetCard_univ_nonempty hk
     obtain ⟨A', hA', hsup⟩ := Finset.exists_mem_eq_sup' hne (fun s => mmin s (st P (w ++ δ)))
     exact ⟨A', (Finset.mem_powersetCard.mp hA').2, by rw [Mk_eq hne, hsup]⟩
   set g : List Bool → Finset α :=
     fun δ => if hδ : δ ∈ S then Classical.choose (hchoice δ hδ) else ∅ with hg
-  have hg_card : ∀ δ ∈ S, (g δ).card = k := by
-    intro δ hδ
+  have hg_card (δ) (hδ : δ ∈ S) : (g δ).card = k := by
     simp only [hg, dif_pos hδ]
     exact (Classical.choose_spec (hchoice δ hδ)).1
-  have hg_Mk : ∀ δ ∈ S, Mk k (st P (w ++ δ)) = mmin (g δ) (st P (w ++ δ)) := by
-    intro δ hδ
+  have hg_Mk (δ) (hδ : δ ∈ S) : Mk k (st P (w ++ δ)) = mmin (g δ) (st P (w ++ δ)) := by
     simp only [hg, dif_pos hδ]
     exact (Classical.choose_spec (hchoice δ hδ)).2
-  have hg_mem : ∀ δ ∈ S, g δ ∈ (Finset.univ : Finset α).powersetCard k :=
-    fun δ hδ => mem_powersetCard_univ (hg_card δ hδ)
+  have hg_mem (δ) (hδ : δ ∈ S) : g δ ∈ (Finset.univ : Finset α).powersetCard k :=
+      mem_powersetCard_univ (hg_card δ hδ)
   set Nk : ℝ := (((Finset.univ : Finset α).powersetCard k).card : ℝ) with hNk
   have hNk_pos : 0 < Nk := by
     rw [hNk]
@@ -428,9 +422,9 @@ theorem gradedStep_succ {P : IETDatum₂ α n} {K : ℝ → ℝ} {Cb Cm : ℝ} (
   intro w
   obtain ⟨A', hA'card, S, hpf, hb, hm⟩ := hst w
   have hCpos : 0 < K Cb := by linarith
-  have hprem : ∀ δ ∈ S, ∀ b ∈ A',
+  have hprem (δ) (hδ : δ ∈ S) : ∀ b ∈ A',
       (1 / Cb) * Mk 1 (st P (w ++ δ)) ≤ st P (w ++ δ) b := by
-    intro δ hδ b hbA
+    intro b hbA
     have h1 := hb δ hδ
     have h2 : min (mmin A' (st P (w ++ δ))) (Mk 1 (st P w)) ≤ st P (w ++ δ) b :=
       le_trans (min_le_left _ _) (mmin_le hbA)
@@ -438,29 +432,27 @@ theorem gradedStep_succ {P : IETDatum₂ α n} {K : ℝ → ℝ} {Cb Cm : ℝ} (
       le_of_lt (lt_of_lt_of_le h1 (mul_le_mul_of_nonneg_left h2 (by linarith)))
     rw [div_mul_eq_mul_div, one_mul, div_le_iff₀ (by linarith : (0 : ℝ) < Cb)]
     linarith
-  have hex : ∀ δ ∈ S, ∃ T : Finset (List Bool), PrefixFree T ∧
+  have hex (δ) (hδ : δ ∈ S) : ∃ T : Finset (List Bool), PrefixFree T ∧
       1 / K Cb < ∑ η ∈ T, CylinderMass.cond P (w ++ δ) η ∧
       ∀ η ∈ T, ∃ θ : α, θ ∉ A' ∧
         Mk 1 (st P ((w ++ δ) ++ η)) ≤
-          K Cb * min (mmin (insert θ A') (st P ((w ++ δ) ++ η))) (Mk 1 (st P (w ++ δ))) :=
-    fun δ hδ => hbal Cb hCb k A' (w ++ δ) hA'card hk (hprem δ hδ)
+          K Cb * min (mmin (insert θ A') (st P ((w ++ δ) ++ η))) (Mk 1 (st P (w ++
+              δ))) := hbal Cb hCb k A' (w ++ δ) hA'card hk (hprem δ hδ)
   set T : List Bool → Finset (List Bool) :=
     fun δ => if hδ : δ ∈ S then Classical.choose (hex δ hδ) else ∅ with hT
-  have hT_pf : ∀ δ, PrefixFree (T δ) := by
-    intro δ
+  have hT_pf (δ) : PrefixFree (T δ) := by
     by_cases hδ : δ ∈ S
     · rw [hT]; simp only [dif_pos hδ]
       exact (Classical.choose_spec (hex δ hδ)).1
     · rw [hT]; simp only [dif_neg hδ]
       exact prefixFree_empty
-  have hT_mass : ∀ δ ∈ S, 1 / K Cb < ∑ η ∈ T δ, CylinderMass.cond P (w ++ δ) η := by
-    intro δ hδ
+  have hT_mass (δ) (hδ : δ ∈ S) : 1 / K Cb < ∑ η ∈ T δ, CylinderMass.cond P (w ++ δ) η := by
     rw [hT]; simp only [dif_pos hδ]
     exact (Classical.choose_spec (hex δ hδ)).2.1
-  have hT_wit : ∀ δ ∈ S, ∀ η ∈ T δ, ∃ θ : α, θ ∉ A' ∧
+  have hT_wit (δ) (hδ : δ ∈ S) : ∀ η ∈ T δ, ∃ θ : α, θ ∉ A' ∧
       Mk 1 (st P ((w ++ δ) ++ η)) ≤
         K Cb * min (mmin (insert θ A') (st P ((w ++ δ) ++ η))) (Mk 1 (st P (w ++ δ))) := by
-    intro δ hδ η hη
+    intro η hη
     rw [hT] at hη
     simp only [dif_pos hδ] at hη
     exact (Classical.choose_spec (hex δ hδ)).2.2 η hη
@@ -559,9 +551,9 @@ theorem gradedStep_succ {P : IETDatum₂ α n} {K : ℝ → ℝ} {Cb Cm : ℝ} (
         linarith
       · exact h
     rw [sum_comp hpf P w]
-    have h1 : ∀ δ ∈ S, CylinderMass.cond P w δ * (1 / (K Cb))
+    have h1 (δ) (hδ : δ ∈ S) : CylinderMass.cond P w δ * (1 / (K Cb))
         ≤ CylinderMass.cond P w δ * ∑ η ∈ T δ, CylinderMass.cond P (w ++ δ) η :=
-      fun δ hδ => mul_le_mul_of_nonneg_left (le_of_lt (hT_mass δ hδ))
+            mul_le_mul_of_nonneg_left (le_of_lt (hT_mass δ hδ))
         (le_of_lt (CylinderMass.cond_pos P w δ))
     obtain ⟨δ₀, hδ₀⟩ := hSne
     have h2 : CylinderMass.cond P w δ₀ * (1 / (K Cb))
@@ -640,9 +632,9 @@ theorem volume_union_ge (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ 
     ENNReal.ofReal (1 / C) * simplexVolumeOn α (IETDatum₂.simplexCyl P w)
       ≤ simplexVolumeOn α (⋃ δ ∈ S, IETDatum₂.simplexCyl P (w ++ δ)) := by
   rw [BalancedCylinders.volume_iUnion_antichain P hP hn w S hS.antichain]
-  have hterm : ∀ δ ∈ S, simplexVolumeOn α (IETDatum₂.simplexCyl P (w ++ δ))
+  have hterm (δ) (hδ : δ ∈ S) : simplexVolumeOn α (IETDatum₂.simplexCyl P (w ++ δ))
       = ENNReal.ofReal (CylinderMass.cond P w δ) * simplexVolumeOn α (IETDatum₂.simplexCyl P w) :=
-    fun δ _ => CylinderMass.volume_append_eq_cond P w δ
+          CylinderMass.volume_append_eq_cond P w δ
   rw [Finset.sum_congr rfl hterm, ← Finset.sum_mul,
     ← ENNReal.ofReal_sum_of_nonneg (fun δ _ => le_of_lt (CylinderMass.cond_pos P w δ))]
   exact mul_le_mul_left (ENNReal.ofReal_le_ofReal (le_of_lt hm))

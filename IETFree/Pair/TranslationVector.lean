@@ -100,7 +100,6 @@ noncomputable def dispCoeff {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π :
 
 theorem dispCoeff_abs_le_one {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
     (a y : ℝ) (i : Fin n) : |dispCoeff lam π a y i| ≤ 1 := by
-  classical
   unfold dispCoeff
   split_ifs
   · exact abs_translationCoeff_le_one π _ i
@@ -109,7 +108,6 @@ theorem dispCoeff_abs_le_one {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π 
 theorem mkIETFun_sub_eq_sum_dispCoeff {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0)
     (π : Equiv.Perm (Fin n)) (a y : ℝ) :
     mkIETFun lam π a y - y = ∑ i, (dispCoeff lam π a y i : ℝ) * (lam i : ℝ) := by
-  classical
   unfold dispCoeff
   split_ifs with hy
   · rw [mkIETFun_of_mem lam π a hy, translationVector_eq_sum_coeff]
@@ -146,7 +144,7 @@ theorem cellCuts_lattice {n : ℕ} (lam : Fin n → ℝ≥0) {c : ℝ} (hc : c �
     ∃ a : Fin n → ℤ, (∀ i, |a i| ≤ 1) ∧ c = ∑ i, (a i : ℝ) * (lam i : ℝ) := by
   obtain ⟨i, rfl, -, -⟩ := mem_cellCuts lam |>.mp hc
   refine ⟨fun j => if j < i then 1 else 0, fun j => ?_, leftEnd_eq_sum lam i⟩
-  change |(if j < i then (1 : ℤ) else 0)| ≤ 1
+  simp only []
   split_ifs <;> simp
 
 end
