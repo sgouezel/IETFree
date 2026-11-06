@@ -94,7 +94,7 @@ theorem compLenVec_eq_simplexMap {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin
     have hR : ((simplexMap G.n (compLenAffine G.s q) k : ℝ))
         = 1 - ∑ j : Fin (G.n - 1), compLenAffine G.s q j := by
       simp only [simplexMap]
-      rw [dif_pos hk, Real.coe_toNNReal _ hpos]
+      rw [dite_eq_left hk, Real.coe_toNNReal _ hpos]
     rw [hL, hR, htel']
   · -- any other cell
     have hkn : (k : ℕ) < G.n - 1 := by have := k.isLt; omega
@@ -108,7 +108,7 @@ theorem compLenVec_eq_simplexMap {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin
     have hR : ((simplexMap G.n (compLenAffine G.s q) k : ℝ))
         = compLenAffine G.s q ⟨(k : ℕ), hkn⟩ := by
       simp only [simplexMap]
-      rw [dif_neg hk, Real.coe_toNNReal _ hnn]
+      rw [dite_eq_right hk, Real.coe_toNNReal _ hnn]
     rw [hR, compLenAffine_apply]
     simp only [hL]
 

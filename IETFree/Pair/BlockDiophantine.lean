@@ -448,32 +448,32 @@ theorem exists_isIntAffine_truncatedLengths (G : GoodRegion d e π σ q₀)
         IsIntAffine.ite _ (hv.sub hu) isIntAffine_zero, ?_⟩
       rw [min_eq_left h2, max_eq_left h1]
       by_cases h3 : (0 : ℝ) ≤ v q - u q
-      · rw [if_pos h3, AffineMap.coe_sub, Pi.sub_apply, max_eq_right h3]
-      · rw [if_neg h3, max_eq_left (le_of_lt (not_le.mp h3))]
+      · rw [ite_eq_left h3, AffineMap.coe_sub, Pi.sub_apply, max_eq_right h3]
+      · rw [ite_eq_right h3, max_eq_left (le_of_lt (not_le.mp h3))]
         simp
     · -- `L ≤ u`, `U ≤ v`: the piece is `U - u`
       refine ⟨if (0 : ℝ) ≤ U q - u q then U - u else 0,
         IsIntAffine.ite _ (hU.sub hu) isIntAffine_zero, ?_⟩
       rw [min_eq_right h2, max_eq_left h1]
       by_cases h3 : (0 : ℝ) ≤ U q - u q
-      · rw [if_pos h3, AffineMap.coe_sub, Pi.sub_apply, max_eq_right h3]
-      · rw [if_neg h3, max_eq_left (le_of_lt (not_le.mp h3))]
+      · rw [ite_eq_left h3, AffineMap.coe_sub, Pi.sub_apply, max_eq_right h3]
+      · rw [ite_eq_right h3, max_eq_left (le_of_lt (not_le.mp h3))]
         simp
     · -- `u ≤ L`, `v ≤ U`: the piece is `v - L`
       refine ⟨if (0 : ℝ) ≤ v q - L q then v - L else 0,
         IsIntAffine.ite _ (hv.sub hL) isIntAffine_zero, ?_⟩
       rw [min_eq_left h2, max_eq_right h1]
       by_cases h3 : (0 : ℝ) ≤ v q - L q
-      · rw [if_pos h3, AffineMap.coe_sub, Pi.sub_apply, max_eq_right h3]
-      · rw [if_neg h3, max_eq_left (le_of_lt (not_le.mp h3))]
+      · rw [ite_eq_left h3, AffineMap.coe_sub, Pi.sub_apply, max_eq_right h3]
+      · rw [ite_eq_right h3, max_eq_left (le_of_lt (not_le.mp h3))]
         simp
     · -- `u ≤ L`, `U ≤ v`: the piece is `U - L`
       refine ⟨if (0 : ℝ) ≤ U q - L q then U - L else 0,
         IsIntAffine.ite _ (hU.sub hL) isIntAffine_zero, ?_⟩
       rw [min_eq_right h2, max_eq_right h1]
       by_cases h3 : (0 : ℝ) ≤ U q - L q
-      · rw [if_pos h3, AffineMap.coe_sub, Pi.sub_apply, max_eq_right h3]
-      · rw [if_neg h3, max_eq_left (le_of_lt (not_le.mp h3))]
+      · rw [ite_eq_left h3, AffineMap.coe_sub, Pi.sub_apply, max_eq_right h3]
+      · rw [ite_eq_right h3, max_eq_left (le_of_lt (not_le.mp h3))]
         simp
   choose Hs hHs hval using hex
   exact ⟨Hs, hHs, hval⟩

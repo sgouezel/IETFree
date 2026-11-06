@@ -404,7 +404,7 @@ theorem compTypeA_succ {d e n : ℕ} (τ : Fin (n - 1) ≃ (Fin (d - 1) ⊕ Fin 
   have hidx : (⟨(⟨i.val + 1, by have := i.isLt; omega⟩ : Fin (d + 1)).val - 1,
       by have := i.isLt; omega⟩ : Fin (d - 1)) = i :=
     Fin.ext (by simp)
-  rw [compTypeA, dif_neg h0, dif_neg hd]
+  rw [compTypeA, dite_eq_right h0, dite_eq_right hd]
   simp only [hidx]
 
 /-- **The cuts of `f` sit at the marked positions given by `a`**:
@@ -438,11 +438,11 @@ theorem compTypeA_cut {d e n : ℕ} [NeZero d] {τ : Fin (n - 1) ≃ (Fin (d - 1
 
 theorem upperEndAffineRight_of_lt {d e : ℕ} [NeZero e] {j : Fin e} (h : j.val + 1 < e) :
     upperEndAffineRight (d := d) j = cutAffineRight (d := d) ⟨j.val + 1, h⟩ := by
-  rw [upperEndAffineRight, dif_neg (by omega)]
+  rw [upperEndAffineRight, dite_eq_right (by omega)]
 
 theorem upperEndAffineRight_of_last {d e : ℕ} [NeZero e] {j : Fin e} (h : j.val + 1 = e) :
     upperEndAffineRight (d := d) j = AffineMap.const ℝ (PReal d e) (1 : ℝ) := by
-  rw [upperEndAffineRight, dif_pos h]
+  rw [upperEndAffineRight, dite_eq_left h]
 
 /-- **The `g`-cell containing the image of each marked cell is locally constant**, with the
 two-sided interval condition of `IsCompType.image`. -/

@@ -55,11 +55,11 @@ theorem rvMat_eq_one_of_last_eq (P : IETDatum₂ α n) (ε : Bool) (h : P.last �
   ext a b
   rw [rvMat, Matrix.one_apply]
   by_cases hab : a = b
-  · rw [if_pos hab, if_pos hab]
+  · rw [ite_eq_left hab, ite_eq_left hab]
   · have hP : ¬ (a = P.last ε ∧ b = P.last (!ε)) := by
       rintro ⟨h1, h2⟩
       exact hab (h1.trans (h.trans h2.symm))
-    rw [if_neg hab, if_neg hP, if_neg hab]
+    rw [ite_eq_right hab, ite_eq_right hP, ite_eq_right hab]
 
 /-- `rvMat` is the elementary transvection `1 + single (last ε) (last (!ε)) 1` when the two last
 letters differ. -/
@@ -70,14 +70,14 @@ theorem rvMat_eq_one_add_single (P : IETDatum₂ α n) (ε : Bool) (h : P.last �
   by_cases hab : a = b
   · subst hab
     have hP : ¬ (P.last ε = a ∧ P.last (!ε) = a) := fun ⟨h1, h2⟩ => h (h1.trans h2.symm)
-    rw [if_pos rfl, if_pos rfl, if_neg hP, add_zero]
-  · rw [if_neg hab, if_neg hab]
+    rw [ite_eq_left rfl, ite_eq_left rfl, ite_eq_right hP, add_zero]
+  · rw [ite_eq_right hab, ite_eq_right hab]
     by_cases hP : (a = P.last ε ∧ b = P.last (!ε))
     · have hQ : (P.last ε = a ∧ P.last (!ε) = b) := ⟨hP.1.symm, hP.2.symm⟩
-      rw [if_pos hP, if_pos hQ, zero_add]
+      rw [ite_eq_left hP, ite_eq_left hQ, zero_add]
     · have hQ : ¬ (P.last ε = a ∧ P.last (!ε) = b) :=
         fun ⟨h1, h2⟩ => hP ⟨h1.symm, h2.symm⟩
-      rw [if_neg hP, if_neg hQ, zero_add]
+      rw [ite_eq_right hP, ite_eq_right hQ, zero_add]
 
 theorem det_rvMat (P : IETDatum₂ α n) (ε : Bool) : (P.rvMat ε).det = 1 := by
   by_cases h : P.last ε = P.last (!ε)
@@ -106,8 +106,8 @@ theorem Path.Q_nonneg (P : IETDatum₂ α n) (γ : List Bool) (a b : α) : 0 ≤
 /-- The column sum of the identity matrix. -/
 theorem colsum_one (b : α) : (∑ a : α, (1 : Matrix α α ℤ) a b) = 1 := by
   rw [Finset.sum_eq_single b]
-  · rw [Matrix.one_apply, if_pos rfl]
-  · intro a _ ha; rw [Matrix.one_apply, if_neg ha]
+  · rw [Matrix.one_apply, ite_eq_left rfl]
+  · intro a _ ha; rw [Matrix.one_apply, ite_eq_right ha]
   · intro h; exact absurd (Finset.mem_univ b) h
 
 theorem rvMat_colsum_ge (P : IETDatum₂ α n) (ε : Bool) (b : α) :
@@ -312,8 +312,8 @@ theorem image_openRealSimplex_eq (N : Matrix (Fin (m + 1)) (Fin (m + 1)) ℤ)
 theorem colsum_one_real (b : Fin (m + 1)) :
     (∑ a : Fin (m+1), (1 : Matrix (Fin (m+1)) (Fin (m+1)) ℝ) a b) = 1 := by
   rw [Finset.sum_eq_single b]
-  · rw [Matrix.one_apply, if_pos rfl]
-  · intro a _ ha; rw [Matrix.one_apply, if_neg ha]
+  · rw [Matrix.one_apply, ite_eq_left rfl]
+  · intro a _ ha; rw [Matrix.one_apply, ite_eq_right ha]
   · intro h; exact absurd (Finset.mem_univ b) h
 
 /-- The column sums of the inverse of a stochastic invertible matrix are `1`. -/

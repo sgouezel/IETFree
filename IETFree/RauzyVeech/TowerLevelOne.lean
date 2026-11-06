@@ -38,8 +38,8 @@ theorem rvMatNat_eq (P : IETDatum₂ α n) (e : Bool) (a b : α) :
 
 theorem sum_ite_single {c : α} (t : ℕ) :
     (∑ a, (if a = c then t else 0)) = t := by
-  refine (Finset.sum_eq_single c ?_ ?_).trans (if_pos rfl)
-  · intro a _ ha; exact if_neg ha
+  refine (Finset.sum_eq_single c ?_ ?_).trans (ite_eq_left rfl)
+  · intro a _ ha; exact ite_eq_right ha
   · intro h; exact absurd (Finset.mem_univ c) h
 
 /-- The column sums of `rvMat e`: `1` plus one on the secondary name. -/
@@ -51,20 +51,20 @@ theorem hgt1_eq (P : IETDatum₂ α n) (hne : ∀ e : Bool, P.last e ≠ P.last 
         + (if a = P.last e then (if b = P.last (!e) then 1 else 0) else 0) := by
     rw [rvMatNat_eq]
     by_cases hab : a = b
-    · rw [hab, if_pos rfl, if_pos rfl]
+    · rw [hab, ite_eq_left rfl, ite_eq_left rfl]
       by_cases h1 : b = P.last e
-      · rw [if_pos h1]
+      · rw [ite_eq_left h1]
         by_cases h2 : b = P.last (!e)
         · exact absurd (h1.symm.trans h2) (hne e)
-        · rw [if_neg h2]
-      · rw [if_neg h1]
-    · rw [if_neg hab, if_neg hab]
+        · rw [ite_eq_right h2]
+      · rw [ite_eq_right h1]
+    · rw [ite_eq_right hab, ite_eq_right hab]
       by_cases h1 : a = P.last e
-      · rw [if_pos h1]
+      · rw [ite_eq_left h1]
         by_cases h2 : b = P.last (!e)
-        · rw [if_pos h2, if_pos ⟨h1, h2⟩]
-        · rw [if_neg h2, if_neg (fun h => h2 h.2)]
-      · rw [if_neg h1, if_neg (fun h : a = P.last e ∧ b = P.last (!e) => h1 h.1)]
+        · rw [ite_eq_left h2, ite_eq_left ⟨h1, h2⟩]
+        · rw [ite_eq_right h2, ite_eq_right (fun h => h2 h.2)]
+      · rw [ite_eq_right h1, ite_eq_right (fun h : a = P.last e ∧ b = P.last (!e) => h1 h.1)]
   calc hgt1 P e b = ∑ a, P.rvMatNat e a b := rfl
     _ = ∑ a, ((if a = b then 1 else 0)
           + (if a = P.last e then (if b = P.last (!e) then 1 else 0) else 0)) :=
@@ -84,8 +84,8 @@ theorem returnB_eq_hgt1 (P : IETDatum₂ α n) (hne : ∀ e : Bool, P.last e ≠
   rw [hgt1_eq P hne, Tower.returnB]
   simp only [Bool.not_false]
   by_cases h : b = P.last true
-  · rw [if_pos (hiff.mpr h), if_pos h]
-  · rw [if_neg (fun hc => h (hiff.mp hc)), if_neg h]
+  · rw [ite_eq_left (hiff.mpr h), ite_eq_left h]
+  · rw [ite_eq_right (fun hc => h (hiff.mp hc)), ite_eq_right h]
 
 /-- `returnBT` of the level-one vertex, in letters, is `hgt1` of the true step. -/
 theorem returnBT_eq_hgt1 (P : IETDatum₂ α n) (hne : ∀ e : Bool, P.last e ≠ P.last (!e))
@@ -99,8 +99,8 @@ theorem returnBT_eq_hgt1 (P : IETDatum₂ α n) (hne : ∀ e : Bool, P.last e �
   rw [hgt1_eq P hne, TowerTrue.returnBT]
   simp only [Bool.not_true, hc]
   by_cases h : b = P.last false
-  · rw [if_pos h, if_pos h]
-  · rw [if_neg h, if_neg h]
+  · rw [ite_eq_left h, ite_eq_left h]
+  · rw [ite_eq_right h, ite_eq_right h]
 
 omit [Fintype α] [DecidableEq α] in
 /-- Reindexing a union along an equivalence of the index types. -/
@@ -166,7 +166,7 @@ theorem iUnion_floor_true {π : Equiv.Perm (Fin n)} {lam : Fin n → ℝ≥0}
           rw [TowerTrue.returnBT] at hj2
           by_cases h : β = TowerTrue.eT π Tower.botCell
           · exact h
-          · rw [if_neg h] at hj2; omega
+          · rw [ite_eq_right h] at hj2; omega
         have hj1 : (j : ℕ) = 1 := by omega
         subst hbβ
         rw [hj1] at hx
@@ -406,8 +406,8 @@ theorem names_true_image (P : IETDatum₂ α n) (L : α → ℝ≥0)
 
 theorem sum_ite_single_int {c : α} (t : α → ℤ) :
     (∑ x, (if x = c then t x else 0)) = t c := by
-  refine (Finset.sum_eq_single c ?_ ?_).trans (if_pos rfl)
-  · intro x _ hx; exact if_neg hx
+  refine (Finset.sum_eq_single c ?_ ?_).trans (ite_eq_left rfl)
+  · intro x _ hx; exact ite_eq_right hx
   · intro h; exact absurd (Finset.mem_univ c) h
 
 /-- Multiplying a column of `Q` by `rvMat e` adds the main-name column to the secondary one. -/
@@ -420,20 +420,20 @@ theorem mulVec_rvMat (Q : Matrix α α ℤ) (V : IETDatum₂ α n) (e : Bool)
       = (if c = b then Q a c else 0)
         + (if c = V.last e then (if b = V.last (!e) then Q a c else 0) else 0) := by
     by_cases h1 : c = b
-    · rw [h1, IETDatum₂.rvMat, if_pos rfl, mul_one, if_pos rfl]
+    · rw [h1, IETDatum₂.rvMat, ite_eq_left rfl, mul_one, ite_eq_left rfl]
       by_cases h3 : b = V.last e
-      · rw [if_pos h3]
+      · rw [ite_eq_left h3]
         by_cases h2 : b = V.last (!e)
         · exact absurd (h3.symm.trans h2) hne
-        · rw [if_neg h2]; ring
-      · rw [if_neg h3]; ring
-    · rw [if_neg h1, IETDatum₂.rvMat, if_neg h1, zero_add]
+        · rw [ite_eq_right h2]; ring
+      · rw [ite_eq_right h3]; ring
+    · rw [ite_eq_right h1, IETDatum₂.rvMat, ite_eq_right h1, zero_add]
       by_cases h3 : c = V.last e
-      · rw [if_pos h3]
+      · rw [ite_eq_left h3]
         by_cases h2 : b = V.last (!e)
-        · rw [if_pos h2, if_pos ⟨h3, h2⟩, mul_one]
-        · rw [if_neg h2, if_neg (fun h => h2 h.2), mul_zero]
-      · rw [if_neg h3, if_neg (fun h => h3 h.1), mul_zero]
+        · rw [ite_eq_left h2, ite_eq_left ⟨h3, h2⟩, mul_one]
+        · rw [ite_eq_right h2, ite_eq_right (fun h => h2 h.2), mul_zero]
+      · rw [ite_eq_right h3, ite_eq_right (fun h => h3 h.1), mul_zero]
   calc (∑ c, Q a c * V.rvMat e c b)
       = ∑ c, ((if c = b then Q a c else 0)
           + (if c = V.last e then (if b = V.last (!e) then Q a c else 0) else 0)) :=

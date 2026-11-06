@@ -157,8 +157,8 @@ theorem IsIntAffine.ite {f g : ParamAffine d e} (P : Prop) [Decidable P]
     (hf : IsIntAffine f) (hg : IsIntAffine g) :
     IsIntAffine (if P then f else g) := by
   by_cases hP : P
-  · rw [if_pos hP]; exact hf
-  · rw [if_neg hP]; exact hg
+  · rw [ite_eq_left hP]; exact hf
+  · rw [ite_eq_right hP]; exact hg
 
 end Closure
 
@@ -178,24 +178,24 @@ theorem isIntAffine_imageLeftAffine [NeZero d] (π : Equiv.Perm (Fin d)) (k : Fi
   unfold imageLeftAffine
   refine IsIntAffine.sum _ (fun j _ => ?_)
   by_cases hj : π j < π k
-  · rw [if_pos hj]
+  · rw [ite_eq_left hj]
     exact isIntAffine_imageLenAffine j
-  · rw [if_neg hj]
+  · rw [ite_eq_right hj]
     exact isIntAffine_zero
 
 theorem isIntAffine_cutAffine (i : Fin d) : IsIntAffine (cutAffine (e := e) i) := by
   unfold cutAffine
   refine IsIntAffine.sum _ (fun j _ => ?_)
   by_cases hj : j.val < i.val
-  · rw [if_pos hj]; exact isIntAffine_leftCoordAffine j
-  · rw [if_neg hj]; exact isIntAffine_zero
+  · rw [ite_eq_left hj]; exact isIntAffine_leftCoordAffine j
+  · rw [ite_eq_right hj]; exact isIntAffine_zero
 
 theorem isIntAffine_cutAffineRight (j : Fin e) : IsIntAffine (cutAffineRight (d := d) j) := by
   unfold cutAffineRight
   refine IsIntAffine.sum _ (fun m _ => ?_)
   by_cases hm : m.val < j.val
-  · rw [if_pos hm]; exact isIntAffine_rightCoordAffine m
-  · rw [if_neg hm]; exact isIntAffine_zero
+  · rw [ite_eq_left hm]; exact isIntAffine_rightCoordAffine m
+  · rw [ite_eq_right hm]; exact isIntAffine_zero
 
 theorem isIntAffine_preimageCutAffine [NeZero d] (π : Equiv.Perm (Fin d)) (j : Fin e)
     (k : Fin d) :

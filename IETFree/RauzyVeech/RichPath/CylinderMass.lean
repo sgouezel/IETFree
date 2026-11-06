@@ -72,8 +72,8 @@ theorem prod_ite_eq_mul {M : Type*} [CommMonoid M] (f : α → M) (β : α) (y :
   rw [← Finset.prod_erase_mul (s := Finset.univ) (f := fun b => if b = β then y else f b)
     (Finset.mem_univ β)]
   congr 1
-  · exact Finset.prod_congr rfl fun b hb => by rw [if_neg (Finset.ne_of_mem_erase hb)]
-  · rw [if_pos rfl]
+  · exact Finset.prod_congr rfl fun b hb => by rw [ite_eq_right (Finset.ne_of_mem_erase hb)]
+  · rw [ite_eq_left rfl]
 
 /-- The product of the column sums one letter later. -/
 theorem prod_cs_append_singleton (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
@@ -88,8 +88,8 @@ theorem prod_cs_append_singleton (P : IETDatum₂ α n) (hP : P.Irreducible) (hn
     refine Finset.prod_congr rfl fun b _ => ?_
     rw [cs_append_singleton P hP hn w e b]
     by_cases hb : b = (P.vertex w).last (!e)
-    · rw [if_pos hb, if_pos hb, hb]
-    · rw [if_neg hb, if_neg hb, add_zero]
+    · rw [ite_eq_left hb, ite_eq_left hb, hb]
+    · rw [ite_eq_right hb, ite_eq_right hb, add_zero]
   rw [h1, prod_ite_eq_mul]
 
 /-- **The conditional mass of one letter**: the loser's height over the sum of the two heights
@@ -182,11 +182,13 @@ theorem sum_cond_mul_cs (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ 
   simp only [Bool.not_true, Bool.not_false]
   rcases eq_or_ne α ((P.vertex w).last true) with hα | hα
   · subst hα
-    rw [if_neg (by simp), if_pos hFT, if_pos rfl, zero_add, div_mul_cancel₀ _ hTF']
+    rw [ite_eq_right (by simp), ite_eq_left hFT, ite_eq_left rfl, zero_add, div_mul_cancel₀ _ hTF']
   · rcases eq_or_ne α ((P.vertex w).last false) with hβ | hβ
     · subst hβ
-      rw [if_pos hTF, if_pos rfl, if_neg (by simp), add_zero, div_mul_cancel₀ _ hFT']
-    · rw [if_pos (Ne.symm hα), if_neg hβ, add_zero, if_pos (Ne.symm hβ), if_neg hα, add_zero]
+      rw [ite_eq_left hTF, ite_eq_left rfl, ite_eq_right (by simp), add_zero,
+          div_mul_cancel₀ _ hFT']
+    · rw [ite_eq_left (Ne.symm hα), ite_eq_right hβ, add_zero, ite_eq_left (Ne.symm hβ),
+        ite_eq_right hα, add_zero]
       field_simp
       ring
 
@@ -368,14 +370,15 @@ theorem kerckhoff_aux (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
             · have h2 : NoWin P w α δ₀ := hwin δ₀ hδ₀
               rw [eq_cons_tail_of_head? hh] at h2
               exact h2.1 hf
-          · rw [hb_empty true ht, Finset.sum_empty, if_neg (by rw [ht]; simp), if_pos hf]
+          · rw [hb_empty true ht, Finset.sum_empty, ite_eq_right (by rw [ht]; simp), ite_eq_left hf]
             simp only [zero_add, zero_div]
             exact hb_lt false
         · rcases eq_or_ne ((P.vertex w).last false) α with hf | hf
-          · rw [hb_empty false hf, Finset.sum_empty, if_pos ht, if_neg (by rw [hf]; simp)]
+          · rw [hb_empty false hf, Finset.sum_empty, ite_eq_left ht,
+              ite_eq_right (by rw [hf]; simp)]
             simp only [add_zero, zero_div]
             exact hb_lt true
-          · rw [if_pos ht, if_pos hf]
+          · rw [ite_eq_left ht, ite_eq_left hf]
             exact add_lt_add (hb_lt true) (hb_lt false)
 
 /-- **Kerckhoff's lemma in cylinder-mass form.**  Let `T > 0`, let `w` be a finite path, `α` a

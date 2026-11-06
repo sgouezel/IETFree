@@ -246,7 +246,7 @@ theorem evalWord_conj_apply {F G F' G' : IET 0 1} {φ : ℝ → ℝ}
     (hG : ∀ y ∈ Set.Ico (0 : ℝ) 1, G (φ y) = φ (G' y))
     (hGi : ∀ y ∈ Set.Ico (0 : ℝ) 1, G⁻¹ (φ y) = φ (G'⁻¹ y)) (w : FreeGroup Gen) :
     ∀ y ∈ Set.Ico (0 : ℝ) 1, (evalWord w F G) (φ y) = φ ((evalWord w F' G') y) := by
-  refine FreeGroup.induction_on (C := fun w => ∀ y ∈ Set.Ico (0 : ℝ) 1,
+  refine FreeGroup.induction_on (motive := fun w => ∀ y ∈ Set.Ico (0 : ℝ) 1,
     (evalWord w F G) (φ y) = φ ((evalWord w F' G') y)) w ?_ ?_ ?_ ?_
   · intro y _
     rw [evalWord_one, IET.one_apply, evalWord_one, IET.one_apply]
@@ -274,7 +274,7 @@ noncomputable def lamNat (lam : Fin n → ℝ≥0) (m : ℕ) : ℝ :=
   if h : m < n then (lam ⟨m, h⟩ : ℝ) else 0
 
 theorem lamNat_of_lt {lam : Fin n → ℝ≥0} {m : ℕ} (h : m < n) : lamNat lam m = (lam ⟨m, h⟩ : ℝ) :=
-  dif_pos h
+  dite_eq_left h
 
 /-- The `ℕ`-indexed extension of the `i`-th cut, as a summand. -/
 noncomputable def leftEndNat (lam : Fin n → ℝ≥0) (i : Fin n) (m : ℕ) : ℝ :=
@@ -282,7 +282,7 @@ noncomputable def leftEndNat (lam : Fin n → ℝ≥0) (i : Fin n) (m : ℕ) : �
 
 theorem leftEndNat_of_lt {lam : Fin n → ℝ≥0} {i : Fin n} {m : ℕ} (hm : m < n) :
     leftEndNat lam i m = if (⟨m, hm⟩ : Fin n) < i then (lam ⟨m, hm⟩ : ℝ) else 0 :=
-  dif_pos hm
+  dite_eq_left hm
 
 /-- `leftEnd` as a sum over `Finset.range`. -/
 theorem leftEnd_eq_sum_range (lam : Fin n → ℝ≥0) (i : Fin n) :
@@ -300,11 +300,11 @@ theorem leftEnd_eq_sum_range (lam : Fin n → ℝ≥0) (i : Fin n) :
   have hvanish (m) (hm : m ∈ Finset.range n) (hnot : m ∉ Finset.range i.val) :
       leftEndNat lam i m = 0 := by
     rw [Finset.mem_range] at hm hnot
-    rw [leftEndNat_of_lt hm, if_neg (by simp only [Fin.lt_def]; omega)]
+    rw [leftEndNat_of_lt hm, ite_eq_right (by simp only [Fin.lt_def]; omega)]
   rw [h1, ← Finset.sum_subset hsub hvanish]
   refine Finset.sum_congr rfl (fun m hm => ?_)
   rw [Finset.mem_range] at hm
-  rw [leftEndNat_of_lt (by omega), if_pos (by simp only [Fin.lt_def]; exact hm),
+  rw [leftEndNat_of_lt (by omega), ite_eq_left (by simp only [Fin.lt_def]; exact hm),
     lamNat_of_lt (by omega)]
 
 end LeftEnd
@@ -807,7 +807,7 @@ theorem listImageLeft_eq_imageLeft (hmono : StrictMono s) (ρ : Equiv.Perm (Fin 
 noncomputable def sExt (s : Fin (n + 1) → ℝ) (m : ℕ) : ℝ :=
   if h : m ≤ n then s ⟨m, by omega⟩ else 0
 
-theorem sExt_of_le {m : ℕ} (h : m ≤ n) : sExt s m = s ⟨m, by omega⟩ := dif_pos h
+theorem sExt_of_le {m : ℕ} (h : m ≤ n) : sExt s m = s ⟨m, by omega⟩ := dite_eq_left h
 
 /-- **The left end of the `i`-th cell of the list is the `i`-th marked point.** -/
 theorem leftEnd_compLen (hmono : StrictMono s) (h0 : s 0 = 0) (i : Fin n) :

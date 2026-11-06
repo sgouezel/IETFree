@@ -61,7 +61,7 @@ theorem colsum_mul_one_add_single (M : Matrix α α ℤ) (c c' β : α) :
   by_cases h : β = c'
   · subst h
     simp
-  · rw [if_neg h]
+  · rw [ite_eq_right h]
     simp [h]
 
 end MatrixColsum

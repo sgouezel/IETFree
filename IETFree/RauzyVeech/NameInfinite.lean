@@ -100,7 +100,7 @@ theorem coe_next_of_ne (P : IETDatum₂ α n) (γ : ℕ → Bool) (lam : ℕ →
     ((lam (k + 1) a : ℝ)) = ((lam k a : ℝ)) := by
   rw [next_apply P γ lam hnxt k a]
   show ((Real.toNNReal (nextR lam k (mn P γ k) (sc P γ k) a) : ℝ)) = ((lam k a : ℝ))
-  rw [nextR, if_neg hne, Real.coe_toNNReal _ (NNReal.coe_nonneg _)]
+  rw [nextR, ite_eq_right hne, Real.coe_toNNReal _ (NNReal.coe_nonneg _)]
 
 /-- The length of the main name is decreased by the length of the secondary name. -/
 theorem coe_next_main (P : IETDatum₂ α n) (γ : ℕ → Bool) (lam : ℕ → α → ℝ≥0) (k : ℕ)
@@ -109,7 +109,7 @@ theorem coe_next_main (P : IETDatum₂ α n) (γ : ℕ → Bool) (lam : ℕ → 
       ((lam k (mn P γ k) : ℝ)) - ((lam k (sc P γ k) : ℝ)) := by
   rw [next_apply P γ lam hnxt k (mn P γ k)]
   show ((Real.toNNReal (nextR lam k (mn P γ k) (sc P γ k) (mn P γ k)) : ℝ)) = _
-  rw [nextR, if_pos rfl, Real.coe_toNNReal _ (by have := hty k; linarith)]
+  rw [nextR, ite_eq_left rfl, Real.coe_toNNReal _ (by have := hty k; linarith)]
 
 /-! ## 3. The total length and its telescoping -/
 
@@ -122,8 +122,8 @@ theorem sum_next (P : IETDatum₂ α n) (γ : ℕ → Bool) (lam : ℕ → α �
       ((lam k a : ℝ)) - (if a = mn P γ k then ((lam k (sc P γ k) : ℝ)) else 0) := by
     by_cases h : a = mn P γ k
     · subst h
-      rw [coe_next_main P γ lam k hty hnxt, if_pos rfl]
-    · rw [coe_next_of_ne P γ lam k hnxt h, if_neg h, sub_zero]
+      rw [coe_next_main P γ lam k hty hnxt, ite_eq_left rfl]
+    · rw [coe_next_of_ne P γ lam k hnxt h, ite_eq_right h, sub_zero]
   calc (∑ a, ((lam (k + 1) a : ℝ)))
       = ∑ a, (((lam k a : ℝ)) - (if a = mn P γ k then ((lam k (sc P γ k) : ℝ)) else 0)) :=
         Finset.sum_congr rfl fun a _ => hterm a
@@ -132,7 +132,7 @@ theorem sum_next (P : IETDatum₂ α n) (γ : ℕ → Bool) (lam : ℕ → α �
         rw [Finset.sum_sub_distrib]
     _ = (∑ a, ((lam k a : ℝ))) - ((lam k (sc P γ k) : ℝ)) := by
         rw [Finset.sum_ite_eq' Finset.univ (mn P γ k) (fun _ => ((lam k (sc P γ k) : ℝ))),
-          if_pos (Finset.mem_univ _)]
+          ite_eq_left (Finset.mem_univ _)]
 
 omit [DecidableEq α] in
 /-- The total length is nonnegative. -/
@@ -318,7 +318,7 @@ theorem posT_succ_false_of_le (P : IETDatum₂ α n) (γ : ℕ → Bool) (k : �
   have hmn : (Vs P γ k).last false = mn P γ k := by simp [mn, hγ]
   have h := IETDatum₂.rvStep_piTop_false_apply_val (Vs P γ k) a
   rw [hmn] at h
-  rw [posT, Vs_succ, hγ, h, if_pos ha]
+  rw [posT, Vs_succ, hγ, h, ite_eq_left ha]
   rfl
 
 omit [DecidableEq α] in
@@ -332,7 +332,7 @@ theorem posT_succ_false_of_gt (P : IETDatum₂ α n) (γ : ℕ → Bool) (k : �
   have hmn : (Vs P γ k).last false = mn P γ k := by simp [mn, hγ]
   have h := IETDatum₂.rvStep_piTop_false_apply_val (Vs P γ k) a
   rw [hmn] at h
-  rw [posT, Vs_succ, hγ, h, if_neg (by omega), if_neg hne]
+  rw [posT, Vs_succ, hγ, h, ite_eq_right (by omega), ite_eq_right hne]
   rfl
 
 omit [DecidableEq α] in
@@ -344,7 +344,7 @@ theorem posB_succ_true_of_le (P : IETDatum₂ α n) (γ : ℕ → Bool) (k : ℕ
   have hmn : (Vs P γ k).last true = mn P γ k := by simp [mn, hγ]
   have h := IETDatum₂.rvStep_piBottom_true_apply_val (Vs P γ k) a
   rw [hmn] at h
-  rw [posB, Vs_succ, hγ, h, if_pos ha]
+  rw [posB, Vs_succ, hγ, h, ite_eq_left ha]
   rfl
 
 omit [DecidableEq α] in
@@ -358,7 +358,7 @@ theorem posB_succ_true_of_gt (P : IETDatum₂ α n) (γ : ℕ → Bool) (k : ℕ
   have hmn : (Vs P γ k).last true = mn P γ k := by simp [mn, hγ]
   have h := IETDatum₂.rvStep_piBottom_true_apply_val (Vs P γ k) a
   rw [hmn] at h
-  rw [posB, Vs_succ, hγ, h, if_neg (by omega), if_neg hne]
+  rw [posB, Vs_succ, hγ, h, ite_eq_right (by omega), ite_eq_right hne]
   rfl
 
 omit [DecidableEq α] in
@@ -536,7 +536,7 @@ theorem frozen_lt_posT (P : IETDatum₂ α n) (γ : ℕ → Bool) {x : α} {N vT
         exact (show ((Vs P γ N).piTop x).val = vT from hconst N le_rfl).trans h
       have h2 : x = (Vs P γ N).last true := by
         rw [IETDatum₂.last]
-        simp only [if_true]
+        simp only [ite_true]
         rw [← h', Equiv.symm_apply_apply]
       exact hxtopN h2
     omega
@@ -623,7 +623,7 @@ theorem frozen_lt_posB (P : IETDatum₂ α n) (γ : ℕ → Bool) {x : α} {N vB
         exact (show ((Vs P γ N).piBottom x).val = vB from hconst N le_rfl).trans h
       have h2 : x = (Vs P γ N).last false := by
         rw [IETDatum₂.last]
-        simp only [Bool.false_eq_true, if_false]
+        simp only [Bool.false_eq_true, ite_false]
         rw [← h', Equiv.symm_apply_apply]
       exact hxbotN h2
     omega

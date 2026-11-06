@@ -41,9 +41,9 @@ group power — the `…Fun` predicates of the conditional challenge are gone (s
 ## Status — measured, not remembered
 
 - **The build is `lake build`.** 114 modules in `IETFree/`, plus the umbrella `IETFree.lean` and
-  `Challenge.lean`; the last build from an empty `.lake/build` was 8825 jobs, exit 0, no warnings
-  (8823 since Addendum 158 removed two modules), but that directory is **not** wiped to re-check
-  warnings any more (see `## Commands`): after an
+  `Challenge.lean`; the last full build was **9164 jobs, exit 0, no warnings, no errors** (on Lean
+  4.35.0 / Mathlib `v4.35.0`, Addendum 192; it was 8823 jobs on Lean 4.33.1).  The directory is
+  **not** wiped to re-check warnings (see `## Commands`): after an
   edit, `lake build` reports the warnings of the modules it recompiles, and a full sweep is
   `./SlowBuild.sh`.  It is incremental and parallel (no-op ≈ 6 s, ordinary edit
   seconds, deep module one to two minutes).  It works in this VM because
@@ -56,9 +56,23 @@ group power — the `…Fun` predicates of the conditional challenge are gone (s
   3, all in `Challenge.lean` and deliberate (the definition hole `mkIETEquiv`, the statements
   `coe_mkIETEquiv` and `main`); the library has none.  `lakefile.toml` sets `warn.sorry = false`, so
   `lake build` says nothing about them — the axiom report is the guard.
-- **Comparator**: `Comparator/Check.lean` accepts the pair `Challenge` / `IETFree.ChallengeSolved`
-  (30 825 declarations compared, only the permitted axioms); the genuine tool was run on it too
-  (`Comparator/run.sh`, comparator `3927ad3`).  Two mutations of the challenge are caught
+- **The toolchain is Lean 4.35.0 with Mathlib `v4.35.0`** (Addendum 192).  `lean-toolchain`,
+  `lakefile.toml` and `lake-manifest.json` all say so, and `.lake/packages/*` are checked out at the
+  matching revisions.  The dependency build directories used to be **symlinks into `/opt`**, which
+  broke the day the VM's toolchain moved: Lake had to rebuild the dependencies and could not write
+  there.  They are now ordinary writable copies of the same oleans; a `lake update` that changes a
+  dependency keeps working, and nothing writes into `/opt`.
+- **Deprecations are swept, not tolerated** (Addendum 192): the migration off 4.33.1 produced 563
+  deprecation warnings in six families (`if_pos`, `if_neg`, `dif_pos`, `dif_neg`, `if_true`,
+  `if_false`), and each was renamed everywhere in one pass — 57 files — rather than at the sites
+  where the compiler happened to complain.  `lake build` is warning-free again.
+- **Comparator, three ways, all green**: `lake comparator` (the tool in Lean core, which upstream
+  now recommends) reads `comparator.json` and prints `Lean default kernel accepts the solution`;
+  `Comparator/Check.lean` accepts the pair at 31 547 declarations; and the standalone comparator at
+  `865edc1` — with nanoda and Lean's kernel — prints `== accepted`.  The core tool's nanoda step
+  cannot run here (`bwrap` cannot bind `/opt/lean/bin/nanoda_bin`, `/opt/lean` being a symlink);
+  Lean's kernel is unaffected and the standalone run covers nanoda.  See `Comparator/README.md`.
+  Two mutations of the challenge are caught by `Check.lean`
   (`w ≠ 1` → `w = 1`: *the statement differs*; `0 < v i` → `0 ≤ v i`: *differs: simplexRegion*).
 - **Declaration linters** (Batteries' `runLinter`, which `lake build` does not run): 0 findings for
   `IETFree` and 0 for `Challenge`, 14 linters (`runLinter` does not print its declaration count, so

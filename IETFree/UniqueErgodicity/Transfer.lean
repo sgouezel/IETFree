@@ -145,9 +145,9 @@ theorem defect_identity_meas (G : X → X) (hGm : Measurable G) (_hGinj : Functi
         exact hne (by rw [← hpe c hc, ← hpe c' hc', h])
       rw [hdef c hc, hpe c hc]
       rw [Finset.sum_eq_single c]
-      · rw [if_pos rfl]
+      · rw [ite_eq_left rfl]
       · intro c' hc' hne
-        rw [if_neg (hsingle c' hc' hne)]
+        rw [ite_eq_right (hsingle c' hc' hne)]
       · intro hc'
         exact absurd hc hc'
     · have h0 (c) (hc : c ∈ J) : z ≠ e c := fun h =>
@@ -155,7 +155,7 @@ theorem defect_identity_meas (G : X → X) (hGm : Measurable G) (_hGinj : Functi
       rw [hTeq z h0, sub_self]
       refine (Finset.sum_eq_zero ?_).symm
       intro c hc
-      exact if_neg (h0 c hc)
+      exact ite_eq_right (h0 c hc)
   have hFint : ∫ z, (∑ c ∈ J, if z = e c then (g (L c) - g (T c)) else 0) ∂ν
       = ∑ c ∈ J, (g (L c) - g (T c)) * (ν {e c}).toReal := by
     have h := integral_finsetSum (μ := ν) (s := J)

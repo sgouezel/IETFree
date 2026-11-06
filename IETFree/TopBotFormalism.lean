@@ -123,7 +123,7 @@ single-permutation construction applied to `π_top ∘ π_bottom⁻¹`. -/
 theorem toIET_eq_mkIET1 (P : IETDatum₂ α n) [NeZero n] {lam : α → ℝ≥0}
     (h : lam ∈ simplexOn α) :
     P.toIET lam = mkIET1' (P.lengthsInBottom lam) P.perm (P.sum_lengthsInBottom h) := by
-  rw [toIET, dif_pos h]
+  rw [toIET, dite_eq_left h]
 
 /-- The involution `π_top ↔ π_bottom`; by source 2.4 it sends the exchange to its inverse. -/
 def inv (P : IETDatum₂ α n) : IETDatum₂ α n := ⟨P.piBottom, P.piTop⟩

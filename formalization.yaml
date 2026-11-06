@@ -184,10 +184,11 @@ automation:
     - method: "agent"
       framework: "SAIR Open Math OS"
       tool_setup: >-
-        An AI agent working in a Linux VM under Open Math OS, writing Lean 4.33.1 against Mathlib
-        pinned at the `v4.33.1` tag. The repository is a genuine Lake project — `lakefile.toml`,
+        An AI agent working in a Linux VM under Open Math OS, writing Lean 4.35.0 against Mathlib
+        pinned at the `v4.35.0` tag. The repository is a genuine Lake project — `lakefile.toml`,
         `lake-manifest.json`, `lean-toolchain` — with one Lean library for `IETFree/` and one for each
-        of the two statement files, so `lake build` (after `lake exe cache get`) builds all 32 modules.
+        of the two statement files, so `lake build` (after `lake exe cache get`) builds all 114
+        modules.
         That build enables the Mathlib linter set and is warning-free: a clean `lake build` reports no
         linter warning at all, and neither does `SlowBuild.sh`.  The declaration linters, which
         `lake build` does not run, are clean as well: Mathlib's lint driver (`runLinter`) reports
@@ -285,9 +286,9 @@ review:
     removed), a dead-code scan of the whole library, a docstring pass, and an
     elaboration-performance pass. The comparator pair is checked on every build by
     `Comparator/Check.lean`, which runs the comparator's own comparison on the two compiled modules
-    (30 825 declarations, no difference), and the genuine tool has been run on it as well — comparator
-    `3927ad3` (the last revision with a Lean v4.33 toolchain) with `lean4export` at the `v4.33.0` tag,
-    both built with the local Lean 4.33.1, with `landrun` replaced by the repository's
+    (31 547 declarations, no difference), and the genuine tool has been run on it as well — comparator
+    at `865edc1` (its revision on Lean 4.35.0) with the `lean4export` it pins, both built with the
+    installed Lean 4.35.0, with `landrun` replaced by the repository's
     `fake-landrun` shim (`landrun` is not installed there).  On the final tree it prints `Lean default
     kernel accepts the solution.  Your solution is okay!` and `== accepted`, and two mutations of the
     challenge are rejected by `Check.lean` (`the statement differs: main` for `w ≠ 1` → `w = 1`,

@@ -20,9 +20,10 @@
 #
 # Environment:
 #
-#     COMPARATOR_REV      comparator revision to build.  Default `3927ad3`, the last revision whose
-#                         `lean-toolchain` is Lean v4.33 (this library is Lean 4.33.1).  If your Lean
-#                         is newer, pass the last revision on your version's toolchain.
+#     COMPARATOR_REV      comparator revision to build.  This library is Lean 4.35.0, so the
+#                         default is `865edc1`, comparator's revision on that toolchain
+#                         (comparator has also moved into Lean core at 4.35.0, as `lake
+#                         comparator` / `lake check`).  On another toolchain, pass its revision.
 #     COMPARATOR_WORK     where the tools and the scratch Lake project live (default `.scratch/cmp`).
 #     MATHLIB             path to a Mathlib checkout.  Needed when `lake` cannot resolve Mathlib by
 #                         itself, as in this VM, where Mathlib is prebuilt at `/opt/mathlib` and is
@@ -37,7 +38,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."                                       # -> IET2
 ROOT=$PWD
 
-COMPARATOR_REV=${COMPARATOR_REV:-3927ad3}
+COMPARATOR_REV=${COMPARATOR_REV:-865edc14486c3388e9225daa971da8e157488c3e}
 WORK=${COMPARATOR_WORK:-$ROOT/.scratch/cmp}
 MATHLIB=${MATHLIB:-}
 REBUILD=0

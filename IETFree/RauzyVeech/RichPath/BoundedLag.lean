@@ -103,7 +103,7 @@ theorem cond_ge_of_balanced (P : IETDatum₂ α n) {C : ℝ} (hC : 1 ≤ C) {w :
       = ∏ _b : α, 1 / (C * (Fintype.card α : ℝ) * M) := by
         rw [Finset.prod_const, Finset.card_univ]
     _ ≤ ∏ b, (ColShrink.cs P w b / ColShrink.cs P (w ++ η) b) :=
-        Finset.prod_le_prod (fun b _ => by positivity) (fun b _ => hfac b)
+        Finset.prod_le_prod₀ (fun b _ => by positivity) (fun b _ => hfac b)
 
 /-! ## 2. A nonempty return word -/
 
@@ -120,9 +120,9 @@ theorem padWord_spec {P Q : IETDatum₂ α n} (h : RauzyReach.Reach P Q) :
     IETDatum₂.vertex Q (padWord P Q) = P := by
   unfold padWord
   by_cases hnil : RauzyReach.returnWord P Q = []
-  · rw [if_pos hnil, List.singleton_append, IETDatum₂.vertex_cons]
+  · rw [ite_eq_left hnil, List.singleton_append, IETDatum₂.vertex_cons]
     exact RauzyReach.returnWord_spec (RauzyReach.reach_step h true)
-  · rw [if_neg hnil]
+  · rw [ite_eq_right hnil]
     exact RauzyReach.returnWord_spec h
 
 /-! ## 3. A uniform bound on the entries of the transfer matrix of the pad -/

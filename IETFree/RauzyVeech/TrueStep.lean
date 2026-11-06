@@ -91,11 +91,11 @@ theorem eT_botCell (hlt : lam Tower.botCell < lam (Tower.topCell π)) :
 /-! ## 4. The new length vector: elementary values -/
 
 theorem lamH_of_ne {a : Fin n} (ha : a ≠ Tower.topCell π) : lamH π lam a = lam a := by
-  rw [lamH]; exact if_neg ha
+  rw [lamH]; exact ite_eq_right ha
 
 theorem lamH_topCell : lamH π lam (Tower.topCell π)
     = lam (Tower.topCell π) - lam Tower.botCell := by
-  rw [lamH]; exact if_pos rfl
+  rw [lamH]; exact ite_eq_left rfl
 
 theorem lamT_apply (j : Fin n) : lamT π lam j = lamH π lam ((eT π).symm j) := rfl
 
@@ -134,11 +134,11 @@ theorem sum_lamH (hlt : lam Tower.botCell < lam (Tower.topCell π)) :
     (lamH π lam a : ℝ)
       = (lam a : ℝ) - (if a = Tower.topCell π then (lam Tower.botCell : ℝ) else 0) := by
     by_cases ha : a = Tower.topCell π
-    · rw [ha, lamH_topCell, NNReal.coe_sub (le_of_lt hlt), if_pos rfl]
-    · rw [lamH_of_ne ha, if_neg ha, sub_zero]
+    · rw [ha, lamH_topCell, NNReal.coe_sub (le_of_lt hlt), ite_eq_left rfl]
+    · rw [lamH_of_ne ha, ite_eq_right ha, sub_zero]
   rw [Finset.sum_congr rfl (fun a _ => hterm a), Finset.sum_sub_distrib,
     Finset.sum_ite_eq' Finset.univ (Tower.topCell π) (fun _ => (lam Tower.botCell : ℝ))]
-  simp only [Finset.mem_univ, if_true]
+  simp only [Finset.mem_univ, ite_true]
   rw [Tower.tot]
 
 theorem sum_lamT (hlt : lam Tower.botCell < lam (Tower.topCell π)) :
@@ -221,12 +221,12 @@ theorem filter_eT_lt_of_le (_hlt : lam Tower.botCell < lam (Tower.topCell π)) {
   simp only [Finset.mem_filter, Finset.mem_univ, true_and, Fin.lt_def]
   rw [eT_apply_val]
   by_cases ha : a.val ≤ (Tower.topCell π).val
-  · rw [if_pos ha]
-  · rw [if_neg ha]
+  · rw [ite_eq_left ha]
+  · rw [ite_eq_right ha]
     by_cases hb : a = IETDatum₂.lastPos n
-    · rw [if_pos hb, hb]
+    · rw [ite_eq_left hb, hb]
       constructor <;> intro h <;> omega
-    · rw [if_neg hb]
+    · rw [ite_eq_right hb]
       constructor <;> intro h <;> omega
 
 theorem filter_eT_lt_succ (hlt : lam Tower.botCell < lam (Tower.topCell π)) :
@@ -245,15 +245,15 @@ theorem filter_eT_lt_succ (hlt : lam Tower.botCell < lam (Tower.topCell π)) :
   simp only [Finset.mem_filter, Finset.mem_univ, true_and, Fin.lt_def]
   rw [eT_apply_val]
   by_cases ha : a.val ≤ (Tower.topCell π).val
-  · rw [if_pos ha]; omega
-  · rw [if_neg ha]
+  · rw [ite_eq_left ha]; omega
+  · rw [ite_eq_right ha]
     by_cases hb : a = IETDatum₂.lastPos n
-    · rw [if_pos hb, hb]
+    · rw [ite_eq_left hb, hb]
       have hle : (Tower.topCell π).val ≤ (IETDatum₂.lastPos n).val :=
         Fin.le_def.mp (Tower.le_lastPos (Tower.topCell π))
       have hpv := topCell_succ_lt hlt
       omega
-    · rw [if_neg hb]; omega
+    · rw [ite_eq_right hb]; omega
 
 theorem filter_eT_lt_of_gt (_hlt : lam Tower.botCell < lam (Tower.topCell π)) {j : Fin n}
     (hj : (Tower.topCell π).val + 1 < j.val) :
@@ -264,13 +264,13 @@ theorem filter_eT_lt_of_gt (_hlt : lam Tower.botCell < lam (Tower.topCell π)) {
   simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_insert, Fin.lt_def]
   rw [eT_apply_val]
   by_cases ha : a.val ≤ (Tower.topCell π).val
-  · rw [if_pos ha]
+  · rw [ite_eq_left ha]
     exact ⟨fun _ => Or.inr (by omega), fun _ => by omega⟩
-  · rw [if_neg ha]
+  · rw [ite_eq_right ha]
     by_cases hb : a = IETDatum₂.lastPos n
-    · rw [if_pos hb]
+    · rw [ite_eq_left hb]
       exact ⟨fun _ => Or.inl hb, fun _ => by omega⟩
-    · rw [if_neg hb]
+    · rw [ite_eq_right hb]
       constructor
       · intro h; exact Or.inr (by omega)
       · rintro (h | h)
@@ -341,11 +341,11 @@ theorem leftEnd_lamT_of_gt (hlt : lam Tower.botCell < lam (Tower.topCell π)) {j
     (lamH π lam a : ℝ)
       = (lam a : ℝ) - (if a = Tower.topCell π then (lam Tower.botCell : ℝ) else 0) := by
     by_cases ha : a = Tower.topCell π
-    · rw [ha, lamH_topCell, NNReal.coe_sub (le_of_lt hlt), if_pos rfl]
-    · rw [lamH_of_ne ha, if_neg ha, sub_zero]
+    · rw [ha, lamH_topCell, NNReal.coe_sub (le_of_lt hlt), ite_eq_left rfl]
+    · rw [lamH_of_ne ha, ite_eq_right ha, sub_zero]
   rw [Finset.sum_congr rfl (fun a _ => hterm a), Finset.sum_sub_distrib,
     Finset.sum_ite_eq' (Finset.univ.filter (fun a : Fin n => a.val < j.val - 1))
-      (Tower.topCell π) (fun _ => (lam Tower.botCell : ℝ)), if_pos hp]
+      (Tower.topCell π) (fun _ => (lam Tower.botCell : ℝ)), ite_eq_left hp]
   have hLe : Finset.univ.filter (fun a : Fin n => a.val < j.val - 1)
       = Finset.univ.filter (fun a : Fin n => a < i) := by
     rw [← hival]
@@ -484,11 +484,11 @@ def retT (π : Equiv.Perm (Fin n)) (lam : Fin n → ℝ≥0) (y : ℝ) : ℕ :=
 
 theorem retT_of_mem {y : ℝ} (h : Tower.exch π lam y ∈ Set.Ico 0 (cutT lam)) :
     retT π lam y = 1 := by
-  rw [retT]; exact if_pos h
+  rw [retT]; exact ite_eq_left h
 
 theorem retT_of_not_mem {y : ℝ} (h : Tower.exch π lam y ∉ Set.Ico 0 (cutT lam)) :
     retT π lam y = 2 := by
-  rw [retT]; exact if_neg h
+  rw [retT]; exact ite_eq_right h
 
 /-! ## 12. The cells of the new arrangement -/
 
@@ -757,7 +757,7 @@ def returnBT (π : Equiv.Perm (Fin n)) (β : Fin n) : ℕ :=
   if β = eT π Tower.botCell then 2 else 1
 
 theorem returnBT_eq_two : returnBT π (eT π Tower.botCell) = 2 := by
-  rw [returnBT]; exact if_pos rfl
+  rw [returnBT]; exact ite_eq_left rfl
 
 theorem returnBT_pos (π : Equiv.Perm (Fin n)) (β : Fin n) : 0 < returnBT π β := by
   rw [returnBT]; split <;> omega
@@ -774,7 +774,7 @@ theorem retT_eq_returnBT (hlt : lam Tower.botCell < lam (Tower.topCell π)) {β 
   have hidxH : idx (lamT π lam) y hyc.1 = β := by
     refine idx_eq (lamT π lam) (mem_Ico_sum_lamT hlt hyc) hy.1 hy.2
   by_cases hβ : β = eT π Tower.botCell
-  · rw [returnBT, if_pos hβ]
+  · rw [returnBT, ite_eq_left hβ]
     have hβv : β = (⟨(Tower.topCell π).val + 1, topCell_succ_lt hlt⟩ : Fin n) := by
       rw [hβ, eT_botCell hlt]
     have hy' : y ∈ Set.Ico (splitT π lam) (upperEnd lam (Tower.topCell π)) := by
@@ -790,7 +790,7 @@ theorem retT_eq_returnBT (hlt : lam Tower.botCell < lam (Tower.topCell π)) {β 
       have hge := (exch_mem_Ico_cutT_tot_of_top_high hlt hyc hidx hy'.1).1
       linarith [hc.2]
     exact retT_of_not_mem hnot
-  · rw [returnBT, if_neg hβ]
+  · rw [returnBT, ite_eq_right hβ]
     have hmem : Tower.exch π lam y ∈ Set.Ico 0 (cutT lam) := by
       rcases lt_or_ge (Tower.topCell π).val β.val with hgt | hle
       · -- β above the top cell: it is the successor of a cell `i > p`
@@ -1038,7 +1038,7 @@ theorem tower_formula_one_step_true (hlt : lam Tower.botCell < lam (Tower.topCel
     rw [cellHatL_bot hlt]; exact hmeas _
   by_cases hα : α = Tower.topCell π
   · subst hα
-    rw [if_pos rfl, cellHatL_top, cellHatL_bot hlt]
+    rw [ite_eq_left rfl, cellHatL_top, cellHatL_bot hlt]
     have hsplit : Set.Ico (leftEnd lam (Tower.topCell π)) (upperEnd lam (Tower.topCell π))
         = cellHatT π lam (Tower.topCell π)
           ∪ cellHatT π lam (⟨(Tower.topCell π).val + 1, topCell_succ_lt hlt⟩ : Fin n) := by
@@ -1053,7 +1053,7 @@ theorem tower_formula_one_step_true (hlt : lam Tower.botCell < lam (Tower.topCel
         simp only at hv
         omega)
     rw [hsplit, measure_union hd (hmeas _)]
-  · rw [if_neg hα, add_zero]
+  · rw [ite_eq_right hα, add_zero]
     by_cases hαb : α = Tower.botCell
     · subst hαb
       rw [cellHatL_bot hlt, ← himg,
@@ -1070,21 +1070,21 @@ theorem multOneT_cast_mul {f : Fin n → ℝ≥0∞} (hne : Tower.topCell π ≠
   unfold multOneT
   by_cases h1 : j = i
   · rw [h1]
-    rw [if_pos rfl, if_pos rfl]
+    rw [ite_eq_left rfl, ite_eq_left rfl]
     by_cases h2 : i = Tower.topCell π
-    · rw [if_pos h2, if_neg (fun h => hne (h2.symm.trans h))]
+    · rw [ite_eq_left h2, ite_eq_right (fun h => hne (h2.symm.trans h))]
       simp
-    · rw [if_neg h2]
+    · rw [ite_eq_right h2]
       simp
-  · rw [if_neg h1, if_neg (Ne.symm h1), zero_add]
+  · rw [ite_eq_right h1, ite_eq_right (Ne.symm h1), zero_add]
     by_cases h2 : i = Tower.topCell π
-    · rw [if_pos h2]
+    · rw [ite_eq_left h2]
       by_cases h3 : j = Tower.botCell
-      · rw [if_pos ⟨h2, h3⟩, if_pos h3]
+      · rw [ite_eq_left ⟨h2, h3⟩, ite_eq_left h3]
         simp
-      · rw [if_neg (fun h => h3 h.2), if_neg h3]
+      · rw [ite_eq_right (fun h => h3 h.2), ite_eq_right h3]
         simp
-    · rw [if_neg (fun h => h2 h.1), if_neg h2]
+    · rw [ite_eq_right (fun h => h2 h.1), ite_eq_right h2]
       simp
 
 /-- **The level-one tower formula, matrix form, type `true`**: for a `T`-invariant measure `μ`, `μ
@@ -1105,16 +1105,16 @@ theorem tower_formula_one_step_mult_true (hlt : lam Tower.botCell < lam (Tower.t
     exact multOneT_cast_mul (f := fun j => μ (cellHatL π lam j)) hne i j
   rw [hsum, Finset.sum_add_distrib,
     Finset.sum_ite_eq Finset.univ i (fun j => μ (cellHatL π lam j))]
-  simp only [Finset.mem_univ, if_true]
+  simp only [Finset.mem_univ, ite_true]
   have hinner : (∑ j, (if i = Tower.topCell π then
         (if j = Tower.botCell then μ (cellHatL π lam j) else 0) else 0))
       = if i = Tower.topCell π then μ (cellHatL π lam Tower.botCell) else 0 := by
     by_cases hi : i = Tower.topCell π
-    · rw [if_pos hi,
-        Finset.sum_congr rfl (fun j _ => if_pos hi),
+    · rw [ite_eq_left hi,
+        Finset.sum_congr rfl (fun j _ => ite_eq_left hi),
         Finset.sum_ite_eq' Finset.univ (Tower.botCell) (fun j => μ (cellHatL π lam j))]
       simp
-    · rw [if_neg hi, Finset.sum_eq_zero (fun j _ => if_neg hi)]
+    · rw [ite_eq_right hi, Finset.sum_eq_zero (fun j _ => ite_eq_right hi)]
   rw [hinner]
 
 /-! ## 20. The level-`n` formula along an arbitrary word  The per-step condition is `StepOK P lam
@@ -1181,11 +1181,11 @@ theorem lengthsInBottom_hatLam_true (P : IETDatum₂ α n) (lam : α → ℝ≥0
   by_cases hj : (TowerTrue.eT P.perm).symm j = Tower.topCell P.perm
   · have hj' : P.piBottom.symm ((TowerTrue.eT P.perm).symm j)
         = P.piBottom.symm (Tower.topCell P.perm) := by rw [hj]
-    rw [if_pos hj, if_pos hj']
+    rw [ite_eq_left hj, ite_eq_left hj']
     rfl
   · have hj' : ¬ (P.piBottom.symm ((TowerTrue.eT P.perm).symm j)
         = P.piBottom.symm (Tower.topCell P.perm)) := fun h => hj (P.piBottom.symm.injective h)
-    rw [if_neg hj, if_neg hj']
+    rw [ite_eq_right hj, ite_eq_right hj']
 
 /-- `rvMat true` of `IETDatum₂` data is `rvMat true` of the permutation, in bottom coordinates. -/
 theorem rvMat_toComb_true (P : IETDatum₂ α n) (a b : α) :
@@ -1210,18 +1210,18 @@ theorem rvMatNat_toComb_true (P : IETDatum₂ α n) (a b : α) :
     rw [rvMat_toComb_true P a b, IETDatum₂.rvMat]
     simp only [Tower.toComb_last_true, Tower.toComb_last_false, Bool.not_true]
     by_cases h2 : P.piBottom b = P.piBottom a
-    · rw [if_pos h2, if_pos h2.symm]
-    · rw [if_neg h2, if_neg (Ne.symm h2)]
+    · rw [ite_eq_left h2, ite_eq_left h2.symm]
+    · rw [ite_eq_right h2, ite_eq_right (Ne.symm h2)]
   rw [IETDatum₂.rvMatNat, key]
   unfold TowerTrue.multOneT
   by_cases h2 : P.piBottom b = P.piBottom a
-  · rw [if_pos h2, if_pos h2]
+  · rw [ite_eq_left h2, ite_eq_left h2]
     exact Int.toNat_natCast 1
-  · rw [if_neg h2, if_neg h2]
+  · rw [ite_eq_right h2, ite_eq_right h2]
     by_cases h3 : P.piBottom a = Tower.topCell P.perm ∧ P.piBottom b = Tower.botCell
-    · rw [if_pos h3, if_pos h3]
+    · rw [ite_eq_left h3, ite_eq_left h3]
       exact Int.toNat_natCast 1
-    · rw [if_neg h3, if_neg h3]
+    · rw [ite_eq_right h3, ite_eq_right h3]
       exact Int.toNat_natCast 0
 
 /-- The cell of the letter `b` after one step of type `ε`. -/
@@ -1355,11 +1355,11 @@ theorem tower_formula_level_pathQ_exch :
           = ∑ b, ((IETDatum₂.Path.Q P γ a b).toNat : ℝ≥0∞) * ν (Tower.cellAt P γ lam b)
   | P, lam, ν, _, [], _, a => by
     rw [IETDatum₂.Path.Q_nil, Finset.sum_eq_single a]
-    · rw [Matrix.one_apply, if_pos rfl]
+    · rw [Matrix.one_apply, ite_eq_left rfl]
       rw [show ((1 : ℤ).toNat : ℝ≥0∞) = 1 from by norm_num, one_mul]
       rfl
     · intro b _ hba
-      rw [Matrix.one_apply, if_neg (fun h : a = b => hba h.symm)]
+      rw [Matrix.one_apply, ite_eq_right (fun h : a = b => hba h.symm)]
       simp
     · intro ha
       exact absurd (Finset.mem_univ a) ha

@@ -112,7 +112,8 @@ theorem le_norm_of_pow_eq [DecidableEq α] {g q : FreeGroup α} {k : ℕ} (hk : 
       = 2 * (FreeGroup.reduceCyclically.conjugator q.toWord).length
         + k * (reduceCyclically q.toWord).length := by
     have h1 : FreeGroup.norm g = (q ^ k).toWord.length := by rw [h]; rfl
-    rw [h1, toWord_pow, FreeGroup.reduceCyclically.reduce_flatten_replicate hL k, if_neg (by omega),
+    rw [h1, toWord_pow, FreeGroup.reduceCyclically.reduce_flatten_replicate hL k,
+        ite_eq_right (by omega),
       List.length_append, List.length_append, FreeGroup.invRev_length, length_flatten_replicate]
     ring
   have hpos : 0 < (reduceCyclically q.toWord).length := List.length_pos_of_ne_nil hcyc
@@ -200,7 +201,7 @@ theorem zpow_eq_one_iff {q : FreeGroup α} {j : ℤ} :
     have h5 : q ^ (-j).toNat = (1 : FreeGroup α) ^ (-j).toNat := by
       rw [one_pow, ← zpow_natCast, hj]
       exact h3
-    exact IsMulTorsionFree.pow_left_injective h4 h5
+    exact IsMulTorsionFree.eq_of_pow_eq_pow_of_commute h4 (Commute.one_right q) h5
   · exact Or.inl heq
   · right
     have hj : (((j.toNat : ℤ)) = j) := Int.toNat_of_nonneg (le_of_lt hgt)
@@ -208,7 +209,7 @@ theorem zpow_eq_one_iff {q : FreeGroup α} {j : ℤ} :
     have h5 : q ^ j.toNat = (1 : FreeGroup α) ^ j.toNat := by
       rw [one_pow, ← zpow_natCast, hj]
       exact h
-    exact IsMulTorsionFree.pow_left_injective h4 h5
+    exact IsMulTorsionFree.eq_of_pow_eq_pow_of_commute h4 (Commute.one_right q) h5
 
 /-! ### The norm of a power, and conjugate powers -/
 
@@ -219,7 +220,7 @@ theorem norm_pow_eq [DecidableEq α] {q : FreeGroup α} {k : ℕ} (hk : 0 < k) :
       + k * (reduceCyclically q.toWord).length := by
   have hL : IsReduced q.toWord := isReduced_toWord
   rw [show FreeGroup.norm (q ^ k) = (q ^ k).toWord.length from rfl, toWord_pow,
-    FreeGroup.reduceCyclically.reduce_flatten_replicate hL k, if_neg (by omega),
+    FreeGroup.reduceCyclically.reduce_flatten_replicate hL k, ite_eq_right (by omega),
     List.length_append, List.length_append, FreeGroup.invRev_length, length_flatten_replicate]
   ring
 
@@ -361,7 +362,7 @@ theorem natAbs_eq_of_conj_zpow {q : FreeGroup α} (hq : q ≠ 1) {g : FreeGroup 
 theorem exists_zpow_eq_of_subsingleton {ι : Type*} [Subsingleton ι] (a : ι) (g : FreeGroup ι) :
     ∃ n : ℤ, g = of a ^ n := by
   induction g using FreeGroup.induction_on with
-  | C1 => exact ⟨0, by simp⟩
+  | one => exact ⟨0, by simp⟩
   | of x => exact ⟨1, by rw [zpow_one, Subsingleton.elim x a]⟩
   | inv_of x ih => obtain ⟨n, hn⟩ := ih; exact ⟨-n, by rw [hn, zpow_neg]⟩
   | mul x y ihx ihy =>

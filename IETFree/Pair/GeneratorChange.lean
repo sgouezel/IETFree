@@ -53,12 +53,12 @@ theorem invSubstGen_substGen_apply (i : Gen) :
       ((FreeGroup.lift (fun i : Gen => if i = 0 then genY * genX else genY)) (FreeGroup.of 1))
       = FreeGroup.of 1
     rw [FreeGroup.lift_apply_of]
-    simp only [if_neg (by norm_num : ¬ ((1 : Gen) = 0)), FreeGroup.lift_apply_of, genY]
+    simp only [ite_eq_right (by norm_num : ¬ ((1 : Gen) = 0)), FreeGroup.lift_apply_of, genY]
 
 /-- **The substitution is injective**, because `invSubstGen` is a left inverse. -/
 theorem invSubstGen_substGen (w : FreeGroup Gen) : invSubstGen (substGen w) = w := by
   induction w using FreeGroup.induction_on with
-  | C1 => rw [map_one, map_one]
+  | one => rw [map_one, map_one]
   | of i => exact invSubstGen_substGen_apply i
   | inv_of i ih => rw [map_inv, map_inv, ih]
   | mul u v hu hv => rw [map_mul, map_mul, hu, hv]
@@ -88,7 +88,7 @@ theorem evalWord_substGen (w : FreeGroup Gen) (f g : IET 0 1) :
         ((FreeGroup.lift (fun i : Gen => if i = 0 then genY * genX else genY)) (FreeGroup.of 1))
         = if (1 : Gen) = 0 then g * f else g
       rw [FreeGroup.lift_apply_of]
-      simp only [if_neg (by norm_num : ¬ ((1 : Gen) = 0)), FreeGroup.lift_apply_of, genY]
+      simp only [ite_eq_right (by norm_num : ¬ ((1 : Gen) = 0)), FreeGroup.lift_apply_of, genY]
   have h := FreeGroup.lift_unique ((FreeGroup.lift (fun i : Gen => if i = 0 then f else g)).comp
     substGen) hgen (x := w)
   simp only [MonoidHom.comp_apply] at h

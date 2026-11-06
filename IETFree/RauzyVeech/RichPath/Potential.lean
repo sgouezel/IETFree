@@ -137,12 +137,12 @@ noncomputable def nw (P : IETDatum₂ α n) (A' : Finset α) (u : List Bool) (e 
 
 theorem nw_of_exitArrow (P : IETDatum₂ α n) {A' : Finset α} {u : List Bool} {e : Bool}
     (h : Stopping.ExitArrow P A' u [] e) : nw P A' u e = 0 := by
-  rw [nw, if_pos h]
+  rw [nw, ite_eq_left h]
 
 theorem nw_of_not_exitArrow (P : IETDatum₂ α n) {A' : Finset α} {u : List Bool} {e : Bool}
     (h : ¬ Stopping.ExitArrow P A' u [] e) :
     nw P A' u e = CylinderMass.cond P u [e] * pot P (u ++ [e]) A' := by
-  rw [nw, if_neg h]
+  rw [nw, ite_eq_right h]
 
 /-- **Straddling step**: the letter whose winner is the `A'`-row end is an exit arrow, and the other
 letter carries `h_a/(h_a + h_c)` and adds the outside height `h_c` to the `A'`-sum. -/
@@ -162,7 +162,7 @@ theorem step_le_of_exitArrow (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2
     simpa [ha, hc] using h
   have hpot : pot P (u ++ [!e]) A' = pot P u A' + c := by
     have h := pot_append_singleton P hP hn u (!e) A'
-    rw [hnn, if_pos hwin] at h
+    rw [hnn, ite_eq_left hwin] at h
     simpa [hc] using h
   have hle : a ≤ pot P u A' := st_le_pot P u hwin
   rw [hcond, hpot, div_mul_eq_mul_div, div_le_iff₀ (by linarith)]
@@ -183,7 +183,7 @@ theorem step_eq_of_outside (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 �
       cases e with
       | false => simpa using h1
       | true => simpa using h2
-    rw [if_neg hlos, add_zero] at h
+    rw [ite_eq_right hlos, add_zero] at h
     exact h
   have hsum : (∑ e : Bool, nw P A' u e)
       = nw P A' u true + nw P A' u false := by
@@ -467,7 +467,7 @@ theorem child_weight (P : IETDatum₂ α n) (A' : Finset α) (w γ : List Bool) 
       = CylinderMass.cond P w γ * nw P A' (w ++ γ) e := by
   by_cases hex : Stopping.ExitArrow P A' w γ e
   · obtain ⟨h1, h2⟩ := not_alive_not_firstCr_of_exitArrow P e hex
-    rw [if_neg h1, if_neg h2, zero_add, nw_of_exitArrow P (e := e)
+    rw [ite_eq_right h1, ite_eq_right h2, zero_add, nw_of_exitArrow P (e := e)
       ((exitArrow_append_iff P A' w γ e).mp hex)]
     ring
   · have hwt : wt P A' w (γ ++ [e])
@@ -481,9 +481,10 @@ theorem child_weight (P : IETDatum₂ α n) (A' : Finset α) (w γ : List Bool) 
         rw [show List.take (γ.length + 1) (γ ++ [e]) = γ ++ [e] from by
           simp] at h3
         exact h3 hcr
-      rw [if_neg hnotAlive, if_pos (firstCr_append_singleton P hγ e hex hcr), zero_add, hwt]
+      rw [ite_eq_right hnotAlive, ite_eq_left (firstCr_append_singleton P hγ e hex hcr),
+          zero_add, hwt]
     · have hfirst : ¬ FirstCr P A' w (γ ++ [e]) := fun h => hcr h.2.1
-      rw [if_pos (alive_append_singleton P hγ e hex hcr), if_neg hfirst, add_zero, hwt]
+      rw [ite_eq_left (alive_append_singleton P hγ e hex hcr), ite_eq_right hfirst, add_zero, hwt]
 
 /-- **The children of an alive word carry at most its weight.** -/
 theorem child_sum (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) {A' : Finset α}
@@ -550,10 +551,11 @@ theorem frontier_bound (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n
     have hlev : Stopping.levelWords 0 = {[]} := rfl
     have h1 : (∑ δ ∈ (Stopping.levelWords 0).filter (Alive P A' w), wt P A' w δ)
         = pot P w A' := by
-      rw [hlev, Finset.filter_singleton, if_pos halive, Finset.sum_singleton, wt_nil]
+      rw [hlev, Finset.filter_singleton, ite_eq_left halive, Finset.sum_singleton, wt_nil]
     have h2 : (∑ m ∈ Finset.range (0 + 1),
         ∑ δ ∈ (Stopping.levelWords m).filter (FirstCr P A' w), wt P A' w δ) = 0 := by
-      rw [Finset.range_one, Finset.sum_singleton, hlev, Finset.filter_singleton, if_neg hfirst,
+      rw [Finset.range_one, Finset.sum_singleton, hlev, Finset.filter_singleton,
+          ite_eq_right hfirst,
         Finset.sum_empty]
     rw [h1, h2, add_zero]
   | succ N ih =>
@@ -572,13 +574,13 @@ theorem frontier_bound (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n
       rw [Finset.sum_filter (p := Alive P A' w)]
       refine Finset.sum_le_sum fun γ _ => ?_
       by_cases hal : Alive P A' w γ
-      · rw [if_pos hal]
+      · rw [ite_eq_left hal]
         exact child_sum2 P hP hn hbl0 hal
       · have hz (e : Bool) : (if Alive P A' w (γ ++ [e]) then wt P A' w (γ ++ [e]) else 0)
             + (if FirstCr P A' w (γ ++ [e]) then wt P A' w (γ ++ [e]) else 0) = 0 := by
-          rw [if_neg (fun h => hal (alive_take_of_alive_append P h)),
-            if_neg (fun h => hal (alive_take_of_firstCr_append P h)), add_zero]
-        rw [if_neg hal, hz true, hz false]
+          rw [ite_eq_right (fun h => hal (alive_take_of_alive_append P h)),
+            ite_eq_right (fun h => hal (alive_take_of_firstCr_append P h)), add_zero]
+        rw [ite_eq_right hal, hz true, hz false]
         simp
     rw [hsplit]
     linarith [hkey, ih]

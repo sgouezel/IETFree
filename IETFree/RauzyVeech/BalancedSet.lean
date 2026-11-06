@@ -43,20 +43,20 @@ theorem colsum_mul_single {ι : Type*} [Fintype ι] [DecidableEq ι] (M : Matrix
     rw [Matrix.mul_apply]
     rw [Finset.sum_eq_single i]
     · by_cases hb : b = j
-      · rw [if_pos hb, Matrix.single_apply, if_pos ⟨rfl, hb.symm⟩]
-      · rw [if_neg hb, Matrix.single_apply,
-          if_neg (fun h : i = i ∧ j = b => hb h.2.symm), mul_zero]
+      · rw [ite_eq_left hb, Matrix.single_apply, ite_eq_left ⟨rfl, hb.symm⟩]
+      · rw [ite_eq_right hb, Matrix.single_apply,
+          ite_eq_right (fun h : i = i ∧ j = b => hb h.2.symm), mul_zero]
     · intro k _ hk
-      rw [Matrix.single_apply, if_neg, mul_zero]
+      rw [Matrix.single_apply, ite_eq_right, mul_zero]
       rintro ⟨rfl, -⟩
       exact hk rfl
     · intro h
       exact absurd (Finset.mem_univ i) h
   rw [Finset.sum_congr rfl (fun a _ => h1 a)]
   by_cases hb : b = j
-  · rw [if_pos hb]
-    simp only [if_pos hb, Finset.sum_mul]
-  · simp only [if_neg hb, Finset.sum_const_zero]
+  · rw [ite_eq_left hb]
+    simp only [ite_eq_left hb, Finset.sum_mul]
+  · simp only [ite_eq_right hb, Finset.sum_const_zero]
 
 /-- **The one-step formula for the column sums.**  A step of type `e` adds the column sum of the
 name `last e` to the column sum of the secondary name `last !e`, at the current vertex. -/
@@ -88,7 +88,7 @@ theorem one_le_diag_Path.Q (P : IETDatum₂ α n) (γ : List Bool) (a : α) :
     1 ≤ Path.Q P γ a a := by
   induction γ generalizing P with
   | nil =>
-    rw [Path.Q_nil, Matrix.one_apply, if_pos rfl]
+    rw [Path.Q_nil, Matrix.one_apply, ite_eq_left rfl]
   | cons e es ih =>
     rw [Path.Q_cons, Matrix.mul_apply]
     refine le_trans ?_
@@ -97,7 +97,7 @@ theorem one_le_diag_Path.Q (P : IETDatum₂ α n) (γ : List Bool) (a : α) :
         (fun k _ => mul_nonneg (rvMat_nonneg P e a k) (Path.Q_nonneg (P.rvStep e) es k a))
         (Finset.mem_univ a))
     have h1 : P.rvMat e a a = 1 := by
-      rw [rvMat, if_pos rfl]
+      rw [rvMat, ite_eq_left rfl]
     rw [h1, one_mul]
     exact ih (P.rvStep e)
 

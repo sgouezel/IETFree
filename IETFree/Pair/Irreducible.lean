@@ -484,7 +484,7 @@ theorem irreducible_case {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin
     have hmain := (iterate_word (mkIET1' lam π hlam) (mkIET1' mu σ hmu) ε hε N hN w₀ hw₀ hsmall
       hbirk w hw).choose_spec
     rw [show next w = (iterate_word (mkIET1' lam π hlam) (mkIET1' mu σ hmu) ε hε N hN w₀ hw₀
-      hsmall hbirk w hw).choose from dif_pos hw]
+      hsmall hbirk w hw).choose from dite_eq_left hw]
     refine ⟨hmain.1, ?_, hmain.2.2⟩
     rw [hKdef]
     omega

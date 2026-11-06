@@ -57,14 +57,14 @@ theorem lastColOp_apply_last (n : ℕ) (i : Fin (n + 1)) :
 
 theorem lastColOp_apply_castSucc (n : ℕ) (i : Fin (n + 1)) (j : Fin n) :
     lastColOp n i j.castSucc = if i = j.castSucc then 1 else if i = Fin.last n then -1 else 0 := by
-  rw [lastColOp, if_neg (Fin.castSucc_ne_last j)]
+  rw [lastColOp, ite_eq_right (Fin.castSucc_ne_last j)]
 
 theorem lastRowOp_apply_last (n : ℕ) (j : Fin (n + 1)) : lastRowOp n (Fin.last n) j = 1 := by
   simp [lastRowOp]
 
 theorem lastRowOp_apply_castSucc (n : ℕ) (i : Fin n) (j : Fin (n + 1)) :
     lastRowOp n i.castSucc j = if i.castSucc = j then 1 else 0 := by
-  rw [lastRowOp, if_neg (Fin.castSucc_ne_last i)]
+  rw [lastRowOp, ite_eq_right (Fin.castSucc_ne_last i)]
 
 theorem isLowerTriangular_lastRowOp (n : ℕ) : (lastRowOp n).IsLowerTriangular := by
   intro i j hij
@@ -98,9 +98,9 @@ theorem mul_lastColOp_apply_last {n : ℕ} (M : Matrix (Fin (n + 1)) (Fin (n + 1
     (M * lastColOp n) i (Fin.last n) = M i (Fin.last n) := by
   rw [Matrix.mul_apply, Fin.sum_univ_castSucc]
   have h1 (b : Fin n) : lastColOp n b.castSucc (Fin.last n) =
-      0 := by rw [lastColOp_apply_last, if_neg (Fin.castSucc_ne_last b)]
+      0 := by rw [lastColOp_apply_last, ite_eq_right (Fin.castSucc_ne_last b)]
   have h2 : lastColOp n (Fin.last n) (Fin.last n) = 1 := by
-    rw [lastColOp_apply_last, if_pos rfl]
+    rw [lastColOp_apply_last, ite_eq_left rfl]
   rw [h2]
   simp [h1]
 
@@ -112,16 +112,17 @@ theorem mul_lastColOp_apply_castSucc {n : ℕ} (M : Matrix (Fin (n + 1)) (Fin (n
     rw [lastColOp_apply_castSucc]
     by_cases hbj : b = j
     · subst hbj; simp
-    · rw [if_neg (fun h => hbj (Fin.castSucc_injective n h)), if_neg (Fin.castSucc_ne_last b),
-        if_neg hbj]
+    · rw [ite_eq_right (fun h => hbj (Fin.castSucc_injective n h)),
+        ite_eq_right (Fin.castSucc_ne_last b),
+        ite_eq_right hbj]
   have h2 : lastColOp n (Fin.last n) j.castSucc = -1 := by
-    rw [lastColOp_apply_castSucc, if_neg (Fin.castSucc_ne_last j).symm, if_pos rfl]
+    rw [lastColOp_apply_castSucc, ite_eq_right (Fin.castSucc_ne_last j).symm, ite_eq_left rfl]
   rw [h2]
   simp only [h1, mul_neg, mul_one]
   have hsum : (∑ b : Fin n, M i b.castSucc * (if b = j then 1 else 0)) = M i j.castSucc := by
     rw [Finset.sum_eq_single j]
     · simp
-    · intro b _ hb; rw [if_neg hb, mul_zero]
+    · intro b _ hb; rw [ite_eq_right hb, mul_zero]
     · intro h; exact absurd (Finset.mem_univ j) h
   rw [hsum]
   ring
@@ -137,9 +138,9 @@ theorem lastRowOp_mul_apply_castSucc {n : ℕ} (P : Matrix (Fin (n + 1)) (Fin (n
     (lastRowOp n * P) i.castSucc j = P i.castSucc j := by
   rw [Matrix.mul_apply]
   rw [Finset.sum_eq_single i.castSucc]
-  · rw [lastRowOp_apply_castSucc, if_pos rfl, one_mul]
+  · rw [lastRowOp_apply_castSucc, ite_eq_left rfl, one_mul]
   · intro b _ hb
-    rw [lastRowOp_apply_castSucc, if_neg (Ne.symm hb), zero_mul]
+    rw [lastRowOp_apply_castSucc, ite_eq_right (Ne.symm hb), zero_mul]
   · intro h; exact absurd (Finset.mem_univ _) h
 
 /-! ## The main computation -/
@@ -158,20 +159,21 @@ theorem lastRowOp_mul_lastColOp {n : ℕ} (M : Matrix (Fin (n + 1)) (Fin (n + 1)
     · -- last row, last column
       rw [lastRowOp_mul_apply_last,
         Finset.sum_congr rfl (fun k (_ : k ∈ Finset.univ) => mul_lastColOp_apply_last M k),
-        hM, if_pos rfl, if_pos rfl]
+        hM, ite_eq_left rfl, ite_eq_left rfl]
     · intro j'
       rw [lastRowOp_mul_apply_last,
         Finset.sum_congr rfl
           (fun k (_ : k ∈ Finset.univ) => mul_lastColOp_apply_castSucc M k j'),
-        Finset.sum_sub_distrib, hM, hM, if_pos rfl, if_neg (Fin.castSucc_ne_last j')]
+        Finset.sum_sub_distrib, hM, hM, ite_eq_left rfl, ite_eq_right (Fin.castSucc_ne_last j')]
       ring
   · intro i'
     refine Fin.lastCases ?_ ?_ j
-    · rw [lastRowOp_mul_apply_castSucc, mul_lastColOp_apply_last, if_neg (Fin.castSucc_ne_last i'),
-        if_pos rfl]
+    · rw [lastRowOp_mul_apply_castSucc, mul_lastColOp_apply_last,
+        ite_eq_right (Fin.castSucc_ne_last i'),
+        ite_eq_left rfl]
     · intro j'
       rw [lastRowOp_mul_apply_castSucc, mul_lastColOp_apply_castSucc,
-        if_neg (Fin.castSucc_ne_last i'), if_neg (Fin.castSucc_ne_last j')]
+        ite_eq_right (Fin.castSucc_ne_last i'), ite_eq_right (Fin.castSucc_ne_last j')]
 
 /-- **The determinant identity.**  Subtracting the last column from each of the first `n` columns
 of a matrix whose column sums are all `1` does not change the determinant. -/
@@ -192,7 +194,7 @@ theorem det_sub_last_col {n : ℕ} (M : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ)
     simp only [Matrix.submatrix_apply]
     rw [hN, hA]
     simp only [Matrix.of_apply]
-    rw [if_neg (Fin.castSucc_ne_last i), if_neg (Fin.castSucc_ne_last j)]
+    rw [ite_eq_right (Fin.castSucc_ne_last i), ite_eq_right (Fin.castSucc_ne_last j)]
   have h3 : N.det = A.det := by
     rw [Matrix.det_succ_row N (Fin.last n), Finset.sum_eq_single (Fin.last n)]
     · rw [Fin.succAbove_last, hNsub, hN]
@@ -371,11 +373,11 @@ theorem permMat_apply {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) (i j : Fin (n + 
 
 theorem permMat_eq_one {n : ℕ} {σ : Equiv.Perm (Fin (n + 1))} {i j : Fin (n + 1)}
     (h : σ i = j) : permMat σ i j = 1 := by
-  rw [permMat_apply, if_pos h]
+  rw [permMat_apply, ite_eq_left h]
 
 theorem permMat_eq_zero {n : ℕ} {σ : Equiv.Perm (Fin (n + 1))} {i j : Fin (n + 1)}
     (h : σ i ≠ j) : permMat σ i j = 0 := by
-  rw [permMat_apply, if_neg h]
+  rw [permMat_apply, ite_eq_right h]
 
 theorem permMat_nonneg {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
     ∀ i j, 0 ≤ permMat σ i j := by
@@ -442,9 +444,9 @@ theorem inducedMap_one {n : ℕ} (v : Fin n → ℝ) :
   funext i
   simp only [inducedMap]
   rw [Finset.sum_eq_single i.castSucc]
-  · rw [Matrix.one_apply, if_pos rfl, one_mul, chart_castSucc]
+  · rw [Matrix.one_apply, ite_eq_left rfl, one_mul, chart_castSucc]
   · intro b _ hb
-    rw [Matrix.one_apply, if_neg (Ne.symm hb), zero_mul]
+    rw [Matrix.one_apply, ite_eq_right (Ne.symm hb), zero_mul]
   · intro h; exact absurd (Finset.mem_univ _) h
 
 /-- **Composition of induced maps**: `inducedMap M ∘ inducedMap N = inducedMap (M * N)` when the

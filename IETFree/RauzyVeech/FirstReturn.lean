@@ -199,17 +199,17 @@ theorem lamHat_coe {π : Equiv.Perm (Fin n)} {lam : Fin n → ℝ≥0}
   rw [lamHat]
   by_cases hj : j = botCell
   · subst hj
-    rw [if_pos rfl, if_pos rfl, NNReal.coe_sub (le_of_lt hlt)]
-  · rw [if_neg hj, if_neg hj, sub_zero]
+    rw [ite_eq_left rfl, ite_eq_left rfl, NNReal.coe_sub (le_of_lt hlt)]
+  · rw [ite_eq_right hj, ite_eq_right hj, sub_zero]
 
 theorem lamHat_of_ne {π : Equiv.Perm (Fin n)} {lam : Fin n → ℝ≥0} {j : Fin n}
     (hj : j ≠ botCell) : lamHat π lam j = lam j := by
-  rw [lamHat, if_neg hj]
+  rw [lamHat, ite_eq_right hj]
 
 theorem lamHat_botCell {π : Equiv.Perm (Fin n)} {lam : Fin n → ℝ≥0}
     (hlt : lam (topCell π) < lam botCell) :
     (lamHat π lam botCell : ℝ) = (lam botCell : ℝ) - (lam (topCell π) : ℝ) := by
-  rw [lamHat, if_pos rfl, NNReal.coe_sub (le_of_lt hlt)]
+  rw [lamHat, ite_eq_left rfl, NNReal.coe_sub (le_of_lt hlt)]
 
 theorem sum_filter_lamHat {π : Equiv.Perm (Fin n)} {lam : Fin n → ℝ≥0}
     (hlt : lam (topCell π) < lam botCell) (S : Finset (Fin n)) :
@@ -236,7 +236,7 @@ theorem sum_lamHat {π : Equiv.Perm (Fin n)} {lam : Fin n → ℝ≥0}
     (hlt : lam (topCell π) < lam botCell) :
     ∑ i, (lamHat π lam i : ℝ) = tot lam - (lam (topCell π) : ℝ) := by
   have h := sum_filter_lamHat (π := π) hlt Finset.univ
-  simpa only [tot, Finset.mem_univ, if_true] using h
+  simpa only [tot, Finset.mem_univ, ite_true] using h
 
 /-- The cut point `c = Λ - λ (topCell π)`. -/
 def cut (π : Equiv.Perm (Fin n)) (lam : Fin n → ℝ≥0) : ℝ := tot lam - (lam (topCell π) : ℝ)
@@ -344,7 +344,7 @@ theorem imageLeft_lamHat_of_ne (hlt : lam (topCell π) < lam botCell) (i : Fin n
     have hmain :
         ∑ j ∈ Finset.univ.filter (fun j => piHat π j < piHat π i), (lamHat π lam j : ℝ)
           = ∑ j ∈ Finset.univ.filter (fun j => π j < π i), (lam j : ℝ) := by
-      rw [hS, sum_filter_lamHat hlt, if_neg hnotmem, sub_zero]
+      rw [hS, sum_filter_lamHat hlt, ite_eq_right hnotmem, sub_zero]
     exact hmain
   · -- case 2: the image of `i` lies strictly after the image of `botCell`
     have hcase' : (π botCell).val < (π i).val := by omega
@@ -377,7 +377,7 @@ theorem imageLeft_lamHat_of_ne (hlt : lam (topCell π) < lam botCell) (i : Fin n
     have hmain :
         ∑ j ∈ Finset.univ.filter (fun j => piHat π j < piHat π i), (lamHat π lam j : ℝ)
           = ∑ j ∈ Finset.univ.filter (fun j => π j < π i), (lam j : ℝ) := by
-      rw [hS, Finset.sum_insert hnotmem, sum_filter_lamHat hlt, if_pos hmem,
+      rw [hS, Finset.sum_insert hnotmem, sum_filter_lamHat hlt, ite_eq_left hmem,
         lamHat_of_ne (topCell_ne_botCell hlt)]
       ring
     exact hmain
@@ -425,7 +425,7 @@ theorem imageLeft_lamHat_topCell (hlt : lam (topCell π) < lam botCell) :
       ∑ j ∈ Finset.univ.filter (fun j => piHat π j < piHat π (topCell π)), (lamHat π lam j : ℝ)
         = ∑ j ∈ Finset.univ.filter (fun j => π j < π botCell), (lam j : ℝ)
           + ((lam botCell : ℝ) - (lam (topCell π) : ℝ)) := by
-    rw [hSp, Finset.sum_insert hnotmem, sum_filter_lamHat hlt, if_neg hnotmem, sub_zero,
+    rw [hSp, Finset.sum_insert hnotmem, sum_filter_lamHat hlt, ite_eq_right hnotmem, sub_zero,
       lamHat_botCell hlt]
     ring
   exact hmain
@@ -636,11 +636,11 @@ def ret (π : Equiv.Perm (Fin n)) (lam : Fin n → ℝ≥0) (y : ℝ) : ℕ :=
 
 theorem ret_of_mem {π : Equiv.Perm (Fin n)} {lam : Fin n → ℝ≥0} {y : ℝ}
     (h : exch π lam y ∈ Set.Ico 0 (cut π lam)) : ret π lam y = 1 := by
-  rw [ret]; exact if_pos h
+  rw [ret]; exact ite_eq_left h
 
 theorem ret_of_not_mem {π : Equiv.Perm (Fin n)} {lam : Fin n → ℝ≥0} {y : ℝ}
     (h : exch π lam y ∉ Set.Ico 0 (cut π lam)) : ret π lam y = 2 := by
-  rw [ret]; exact if_neg h
+  rw [ret]; exact ite_eq_right h
 
 /-- **The first return map (source 4.1, first half)**: the first return map of the exchange to the
 Rauzy subinterval `[0, cut)` is the exchange with lengths `lamHat` and permutation `piHat`, i.e. the
@@ -718,10 +718,10 @@ theorem tower_decomp (hlt : lam (topCell π) < lam botCell) :
 def returnB (π : Equiv.Perm (Fin n)) (β : Fin n) : ℕ := if β = topCell π then 2 else 1
 
 theorem returnB_eq_one {π : Equiv.Perm (Fin n)} {β : Fin n} (h : β ≠ topCell π) :
-    returnB π β = 1 := by rw [returnB, if_neg h]
+    returnB π β = 1 := by rw [returnB, ite_eq_right h]
 
 theorem returnB_eq_two {π : Equiv.Perm (Fin n)} : returnB π (topCell π) = 2 := by
-  rw [returnB, if_pos rfl]
+  rw [returnB, ite_eq_left rfl]
 
 theorem returnB_pos (π : Equiv.Perm (Fin n)) (β : Fin n) : 0 < returnB π β := by
   rw [returnB]; split <;> omega
@@ -950,7 +950,7 @@ theorem tower_formula_one_step (hlt : lam (topCell π) < lam botCell) (μ : Meas
   have hmeas := measurableSet_cellHat π lam
   by_cases hb : α = botCell
   · subst hb
-    rw [if_pos rfl]
+    rw [ite_eq_left rfl]
     have hsplit : Set.Ico (leftEnd lam botCell) (upperEnd lam botCell)
         = cellHat π lam botCell ∪ exch π lam '' cellHat π lam (topCell π) := by
       rw [upperEnd_botCell, cellHat_topCell hlt, exch_image_topCell hlt, cellHat,
@@ -965,7 +965,7 @@ theorem tower_formula_one_step (hlt : lam (topCell π) < lam botCell) (μ : Meas
       rw [cellHat_topCell hlt, exch_image_topCell hlt]
       exact measurableSet_Ico
     rw [hsplit, measure_union hd hm, measure_image_exch π lam μ hμ _ (hmeas (topCell π))]
-  · rw [if_neg hb, add_zero]
+  · rw [ite_eq_right hb, add_zero]
     congr 1
     rw [cellHat, upperEnd_lamHat_of_ne hb, leftEnd_lamHat]
 

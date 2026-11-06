@@ -52,7 +52,7 @@ noncomputable def mmin (s : Finset α) (q : α → ℝ) : ℝ :=
 
 omit [Fintype α] [DecidableEq α] in
 theorem mmin_eq {s : Finset α} (h : s.Nonempty) (q : α → ℝ) : mmin s q = s.inf' h q :=
-  dif_pos h
+  dite_eq_left h
 
 omit [Fintype α] [DecidableEq α] in
 theorem mmin_le {s : Finset α} {q : α → ℝ} {b : α} (hb : b ∈ s) : mmin s q ≤ q b := by
@@ -82,7 +82,7 @@ noncomputable def Mk (k : ℕ) (q : α → ℝ) : ℝ :=
 omit [DecidableEq α] in
 theorem Mk_eq {k : ℕ} (h : (Finset.univ.powersetCard k).Nonempty) (q : α → ℝ) :
     Mk k q = (Finset.univ.powersetCard k).sup' h (fun s => mmin s q) :=
-  dif_pos h
+  dite_eq_left h
 
 omit [DecidableEq α] in
 theorem mmin_le_Mk {s : Finset α} {k : ℕ} {q : α → ℝ} (hs : s.card = k) :
@@ -205,10 +205,10 @@ theorem gradedStep_min {P : IETDatum₂ α n} {k : ℕ} {Cb Cm : ℝ} (hst : Gra
   set g : List Bool → Finset α :=
     fun δ => if hδ : δ ∈ S then Classical.choose (hchoice δ hδ) else ∅ with hg
   have hg_card (δ) (hδ : δ ∈ S) : (g δ).card = k := by
-    simp only [hg, dif_pos hδ]
+    simp only [hg, dite_eq_left hδ]
     exact (Classical.choose_spec (hchoice δ hδ)).1
   have hg_Mk (δ) (hδ : δ ∈ S) : Mk k (st P (w ++ δ)) = mmin (g δ) (st P (w ++ δ)) := by
-    simp only [hg, dif_pos hδ]
+    simp only [hg, dite_eq_left hδ]
     exact (Classical.choose_spec (hchoice δ hδ)).2
   have hg_mem (δ) (hδ : δ ∈ S) : g δ ∈ (Finset.univ : Finset α).powersetCard k :=
       mem_powersetCard_univ (hg_card δ hδ)
@@ -442,19 +442,19 @@ theorem gradedStep_succ {P : IETDatum₂ α n} {K : ℝ → ℝ} {Cb Cm : ℝ} (
     fun δ => if hδ : δ ∈ S then Classical.choose (hex δ hδ) else ∅ with hT
   have hT_pf (δ) : PrefixFree (T δ) := by
     by_cases hδ : δ ∈ S
-    · rw [hT]; simp only [dif_pos hδ]
+    · rw [hT]; simp only [dite_eq_left hδ]
       exact (Classical.choose_spec (hex δ hδ)).1
-    · rw [hT]; simp only [dif_neg hδ]
+    · rw [hT]; simp only [dite_eq_right hδ]
       exact prefixFree_empty
   have hT_mass (δ) (hδ : δ ∈ S) : 1 / K Cb < ∑ η ∈ T δ, CylinderMass.cond P (w ++ δ) η := by
-    rw [hT]; simp only [dif_pos hδ]
+    rw [hT]; simp only [dite_eq_left hδ]
     exact (Classical.choose_spec (hex δ hδ)).2.1
   have hT_wit (δ) (hδ : δ ∈ S) : ∀ η ∈ T δ, ∃ θ : α, θ ∉ A' ∧
       Mk 1 (st P ((w ++ δ) ++ η)) ≤
         K Cb * min (mmin (insert θ A') (st P ((w ++ δ) ++ η))) (Mk 1 (st P (w ++ δ))) := by
     intro η hη
     rw [hT] at hη
-    simp only [dif_pos hδ] at hη
+    simp only [dite_eq_left hδ] at hη
     exact (Classical.choose_spec (hex δ hδ)).2.2 η hη
   refine ⟨S.biUnion fun δ => (T δ).image (fun η => δ ++ η),
     prefixFree_comp hpf hT_pf, ?_, ?_⟩

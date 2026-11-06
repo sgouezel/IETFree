@@ -132,8 +132,8 @@ theorem levy_recurrence {Y : ℕ → Type*} [∀ n, MeasurableSpace (Y n)]
     rw [hbaddef]
     refine measure_iUnion_null fun y => ?_
     by_cases hy : μ {x | π n x = y} = 0
-    · simp only [hy, if_true]
-    · simp only [hy, if_false]; exact measure_empty
+    · simp only [hy, ite_true]
+    · simp only [hy, ite_false]; exact measure_empty
   have hbadUnion : μ (⋃ n, bad n) = 0 := measure_iUnion_null hbadnull
   have hpos : 0 < μ ((Z ∩ W) \ ⋃ n, bad n) := by
     refine lt_of_lt_of_le hposT ?_
@@ -172,7 +172,7 @@ theorem levy_recurrence {Y : ℕ → Type*} [∀ n, MeasurableSpace (Y n)]
     rw [hbaddef]
     refine Set.mem_iUnion.mpr ⟨π n x, ?_⟩
     have h0' : μ {y : X | π n y = π n x} = 0 := by simpa only [hAdef] using h0
-    simp only [h0', if_true]
+    simp only [h0', ite_true]
     exact hxA
   -- ## Step 5: the bound holds on the whole atom (the conditional expectation is atom-constant)
   have hAsubU : A ⊆ U n := by

@@ -72,12 +72,12 @@ theorem volume_normalize_preimage_null {r : ℕ} {Z : Set (Fin r → ℝ)} (hZ :
     · have heq : (fun x : Fin (r + 1) → ℝ => G x j)
           = fun x => x (Fin.last r) * (1 - ∑ i : Fin r, x i.castSucc) := by
         funext x
-        simp only [hGdef, if_pos hj]
+        simp only [hGdef, ite_eq_left hj]
       rw [heq]
       fun_prop
     · have heq : (fun x : Fin (r + 1) → ℝ => G x j) = fun x => x (Fin.last r) * x j := by
         funext x
-        simp only [hGdef, if_neg hj]
+        simp only [hGdef, ite_eq_right hj]
       rw [heq]
       fun_prop
   have hGA : volume (G '' A) = 0 :=
@@ -129,7 +129,7 @@ theorem volume_normalize_preimage_null {r : ℕ} {Z : Set (Fin r → ℝ)} (hZ :
       have hx2 : (Fin.snoc (α := fun _ : Fin (r + 1) => ℝ) z S) (i.castSucc) = z i :=
         Fin.snoc_castSucc ..
       have hj' : ¬ (i.castSucc).val = r := by simp only [Fin.val_castSucc]; omega
-      simp only [hGdef, hj', if_false, hx, hx2]
+      simp only [hGdef, hj', ite_false, hx, hx2]
       exact hcast i
 /-- The length of the `m`-th cell of the simplex point with free coordinates `x`. -/
 noncomputable def cellLen {n : ℕ} (x : Fin (n - 1) → ℝ) (m : ℕ) : ℝ :=
@@ -160,43 +160,43 @@ theorem eIdx_injective (hk : k + r ≤ m) : Function.Injective (eIdx hk) := by
     have hv : k + i.val = k + i'.val := congrArg Fin.val h
     exact congrArg Sum.inl (Fin.ext (by omega))
   · by_cases hj : j'.val < k
-    · simp only [eIdx, dif_pos hj] at h
+    · simp only [eIdx, dite_eq_left hj] at h
       exfalso
       have hv := congrArg (Fin.val : Fin m → ℕ) h
       simp only at hv
       omega
-    · simp only [eIdx, dif_neg hj] at h
+    · simp only [eIdx, dite_eq_right hj] at h
       exfalso
       have hv := congrArg (Fin.val : Fin m → ℕ) h
       simp only at hv
       omega
   · by_cases hj : j.val < k
-    · simp only [eIdx, dif_pos hj] at h
+    · simp only [eIdx, dite_eq_left hj] at h
       exfalso
       have hv := congrArg Fin.val h
       simp only at hv
       omega
-    · simp only [eIdx, dif_neg hj] at h
+    · simp only [eIdx, dite_eq_right hj] at h
       exfalso
       have hv := congrArg Fin.val h
       simp only at hv
       omega
   · by_cases hj : j.val < k <;> by_cases hj' : j'.val < k
-    · simp only [eIdx, dif_pos hj, dif_pos hj'] at h
+    · simp only [eIdx, dite_eq_left hj, dite_eq_left hj'] at h
       have hv := congrArg (Fin.val : Fin m → ℕ) h
       simp only at hv
       exact congrArg Sum.inr (Fin.ext (by omega))
-    · simp only [eIdx, dif_pos hj, dif_neg hj'] at h
+    · simp only [eIdx, dite_eq_left hj, dite_eq_right hj'] at h
       exfalso
       have hv := congrArg (Fin.val : Fin m → ℕ) h
       simp only at hv
       omega
-    · simp only [eIdx, dif_neg hj, dif_pos hj'] at h
+    · simp only [eIdx, dite_eq_right hj, dite_eq_left hj'] at h
       exfalso
       have hv := congrArg (Fin.val : Fin m → ℕ) h
       simp only at hv
       omega
-    · simp only [eIdx, dif_neg hj, dif_neg hj'] at h
+    · simp only [eIdx, dite_eq_right hj, dite_eq_right hj'] at h
       have hv := congrArg (Fin.val : Fin m → ℕ) h
       simp only at hv
       exact congrArg Sum.inr (Fin.ext (by omega))
@@ -232,16 +232,16 @@ theorem injective_split {n k r : ℕ} (hk : k + r ≤ n - 1) :
   rcases p with i | j
   · exact h1 i
   · by_cases hj : j.val < k
-    · simpa only [eIdx, dif_pos hj] using h2 j
-    · simpa only [eIdx, dif_neg hj] using h2 j
+    · simpa only [eIdx, dite_eq_left hj] using h2 j
+    · simpa only [eIdx, dite_eq_right hj] using h2 j
 
 theorem cellLen_of_lt {n m : ℕ} (x : Fin (n - 1) → ℝ) (h : m < n - 1) :
     cellLen x m = x ⟨m, h⟩ := by
-  simp only [cellLen, dif_pos h]
+  simp only [cellLen, dite_eq_left h]
 
 theorem cellLen_of_not_lt {n m : ℕ} (x : Fin (n - 1) → ℝ) (h : ¬ m < n - 1) :
     cellLen x m = 1 - ∑ j, x j := by
-  simp only [cellLen, dif_neg h]
+  simp only [cellLen, dite_eq_right h]
 
 theorem blockLen_of_lt {n k r : ℕ} (x : Fin (n - 1) → ℝ) (i : Fin r) (h : k + i.val < n - 1) :
     blockLen k r x i = x ⟨k + i.val, h⟩ := by
@@ -263,10 +263,10 @@ theorem sum_cellLen {m : ℕ} (x : Fin m → ℝ) :
     (∑ i : Fin (m + 1), cellLen (n := m + 1) x i) = 1 := by
   rw [Fin.sum_univ_castSucc]
   have h1 (i : Fin m) : cellLen (n := m + 1) x i.castSucc = x i := by
-    rw [cellLen, dif_pos (by simp)]
+    rw [cellLen, dite_eq_left (by simp)]
     exact congrArg x (Fin.ext rfl)
   have h2 : cellLen (n := m + 1) x (Fin.last m) = 1 - ∑ j, x j := by
-    rw [cellLen, dif_neg (by rw [Fin.val_last]; omega)]
+    rw [cellLen, dite_eq_right (by rw [Fin.val_last]; omega)]
     rfl
   rw [Finset.sum_congr rfl (fun i _ => h1 i), h2]
   ring
@@ -292,9 +292,9 @@ theorem splitMap_apply {n k r : ℕ} (hk : k + r ≤ n - 1) (x : Fin (n - 1) →
   · funext j
     rw [LinearMap.pi_apply]
     by_cases h : j.val < k
-    · rw [dif_pos h, dif_pos h]
+    · rw [dite_eq_left h, dite_eq_left h]
       rfl
-    · rw [dif_neg h, dif_neg h]
+    · rw [dite_eq_right h, dite_eq_right h]
       rfl
 
 theorem splitMap_injective {n k r : ℕ} (hk : k + r ≤ n - 1) :
@@ -353,9 +353,9 @@ theorem splitMapLast_apply {n k r : ℕ} (x : Fin (n - 1) → ℝ) :
   · funext i
     rw [AffineMap.pi_apply]
     by_cases h : k + i.val < n - 1
-    · rw [dif_pos h, blockLen_of_lt x i h]
+    · rw [dite_eq_left h, blockLen_of_lt x i h]
       rfl
-    · rw [dif_neg h, blockLen_of_not_lt x i h, lastAffine_apply]
+    · rw [dite_eq_right h, blockLen_of_not_lt x i h, lastAffine_apply]
   · funext j
     rw [AffineMap.pi_apply]
     rfl

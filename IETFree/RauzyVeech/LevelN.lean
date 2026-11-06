@@ -287,10 +287,10 @@ theorem rvMatNat_toComb_false (P : IETDatum₂ α n) (a b : α) :
     by_cases h1 : i = j
     · subst h1
       simp
-    · rw [if_neg h1, if_neg (Ne.symm h1)]
+    · rw [ite_eq_right h1, ite_eq_right (Ne.symm h1)]
       by_cases h2 : i = botCell ∧ j = topCell P.perm
-      · rw [if_pos h2, if_pos ⟨h2.2, h2.1⟩]
-      · rw [if_neg h2, if_neg (fun hc => h2 ⟨hc.2, hc.1⟩)]
+      · rw [ite_eq_left h2, ite_eq_left ⟨h2.2, h2.1⟩]
+      · rw [ite_eq_right h2, ite_eq_right (fun hc => h2 ⟨hc.2, hc.1⟩)]
   rw [rvMatNat, IETDatum₂.rvMat_toComb_false P a b, key (P.piBottom a) (P.piBottom b), multOne]
   split_ifs <;> simp
 
@@ -330,8 +330,8 @@ theorem lengthsInBottom_hatLam (P : IETDatum₂ α n) (lam : α → ℝ≥0) :
   simp only [IETDatum₂.lengthsInBottom, hatLam, lamHat, IETDatum₂.rvStep_piBottom_false,
     Bool.not_false]
   by_cases hi : i = botCell
-  · rw [if_pos ((e2 i).mpr hi), if_pos hi, hL]
-  · rw [if_neg (fun hc => hi ((e2 i).mp hc)), if_neg hi]
+  · rw [ite_eq_left ((e2 i).mpr hi), ite_eq_left hi, hL]
+  · rw [ite_eq_right (fun hc => hi ((e2 i).mp hc)), ite_eq_right hi]
 
 /-- The cell of the letter `b` in the exchange renormalised at the end of `γ`: the cell of
 `mkIETFun ((vertex P γ).lengthsInBottom (lamAfter P γ lam)) (vertex P γ).perm 0`. -/

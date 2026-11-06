@@ -40,8 +40,8 @@ theorem qApply_rvMat_hatLam (P : IETDatum₂ α n) (ε : Bool)
       = (lam b : ℝ) - (if b = P.last ε then (lam (P.last (!ε)) : ℝ) else 0) := by
     rw [Tower.hatLam]
     by_cases hb : b = P.last ε
-    · rw [hb, if_pos rfl, if_pos rfl, NNReal.coe_sub hle]
-    · rw [if_neg hb, if_neg hb, sub_zero]
+    · rw [hb, ite_eq_left rfl, ite_eq_left rfl, NNReal.coe_sub hle]
+    · rw [ite_eq_right hb, ite_eq_right hb, sub_zero]
   have hle' : (lam (P.last (!ε)) : ℝ) ≤ (lam (P.last ε) : ℝ) := by exact_mod_cast hle
   calc ∑ b, (P.rvMat ε a b : ℝ) * (Tower.hatLam P ε lam b : ℝ)
       = ∑ b, (if a = b then (lam b : ℝ) - (if b = P.last ε then (lam (P.last (!ε)) : ℝ) else 0)
@@ -64,9 +64,9 @@ theorem qApply_rvMat_hatLam (P : IETDatum₂ α n) (ε : Bool)
         simp
     _ = (lam a : ℝ) := by
         by_cases ha : a = P.last ε
-        · rw [if_pos ha, if_pos ha, hval, if_neg (Ne.symm hne)]
+        · rw [ite_eq_left ha, ite_eq_left ha, hval, ite_eq_right (Ne.symm hne)]
           ring
-        · rw [if_neg ha, if_neg ha, sub_zero, add_zero]
+        · rw [ite_eq_right ha, ite_eq_right ha, sub_zero, add_zero]
 
 omit [DecidableEq α] in
 /-- The type condition at a step, as an inequality of lengths. -/
