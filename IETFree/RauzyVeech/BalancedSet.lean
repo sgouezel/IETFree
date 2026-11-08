@@ -5,7 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.CylinderVolume
+public import IETFree.RauzyVeech.CocycleVolume
 public import IETFree.RauzyVeech.Nesting
 
 /-!
@@ -17,46 +17,29 @@ Column sums of a matrix multiplied by an elementary matrix (`colsum_mul_single`,
 sibling cylinders and of incomparable prefixes (`disjoint_simplexCyl_cons_cons`,
 `disjoint_simplexCyl_of_not_isPrefix`), the antichain formula `volume_iUnion_antichain`, and
 multiplicativity of the volume along extensions (`volume_append_mul`, `volume_simplexCyl_lt_top`).
-These are the `BalancedCylinders` facts of the volume computation. -/
+These are the volume facts the cylinder computation runs on. -/
 
-open MeasureTheory Matrix IETDatum₂
+open MeasureTheory Matrix IntervalExchange.IETDatum₂
 open scoped BigOperators ENNReal NNReal
 
 @[expose] public section
 
-namespace BalancedCylinders
+namespace IntervalExchange.RauzyVeech
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
-/-! ## 1. Column sums of `Path.Q`  Write `cs γ b = ∑ a, Path.Q P γ a b` for the `b`-th column sum of
-the path matrix.  The step `Path.Q P (γ ++ [e]) = Path.Q P γ * V` with `V = 1 + E_{a,b'}` (`a = last
-e`, `b' = last !e`) multiplies the column sums on the right by `V`, hence adds the `a`-th column sum
-to the `b'`-th one and leaves the others alone.  In particular they are non-decreasing, which is
-what makes the balance inequalities of Lemma 5 monotone in the path. -/
+/-! ## 1. Column sums of `Path.Q`  Write `colSum γ b = ∑ a, Path.Q P γ a b` for the `b`-th column
+sum of the path matrix.  The step `Path.Q P (γ ++ [e]) = Path.Q P γ * V` with `V = 1 + E_{a,b'}`
+(`a = last e`, `b' = last !e`) multiplies the column sums on the right by `V`, hence adds the
+`a`-th column sum to the `b'`-th one and leaves the others alone.  In particular they are
+non-decreasing, which is what makes the balance inequalities of Lemma 5 monotone in the path. -/
 
 /-- Column sums on the right by an elementary matrix `single i j c`: only the `j`-th column
 sum changes, and it is multiplied by `c`. -/
 theorem colsum_mul_single {ι : Type*} [Fintype ι] [DecidableEq ι] (M : Matrix ι ι ℤ)
     (i j : ι) (c : ℤ) (b : ι) :
     (∑ a, (M * Matrix.single i j c) a b) = if b = j then (∑ a, M a i) * c else 0 := by
-  have h1 (a) : (M * Matrix.single i j c) a b = if b = j then M a i * c else 0 := by
-    rw [Matrix.mul_apply]
-    rw [Finset.sum_eq_single i]
-    · by_cases hb : b = j
-      · rw [ite_eq_left hb, Matrix.single_apply, ite_eq_left ⟨rfl, hb.symm⟩]
-      · rw [ite_eq_right hb, Matrix.single_apply,
-          ite_eq_right (fun h : i = i ∧ j = b => hb h.2.symm), mul_zero]
-    · intro k _ hk
-      rw [Matrix.single_apply, ite_eq_right, mul_zero]
-      rintro ⟨rfl, -⟩
-      exact hk rfl
-    · intro h
-      exact absurd (Finset.mem_univ i) h
-  rw [Finset.sum_congr rfl (fun a _ => h1 a)]
-  by_cases hb : b = j
-  · rw [ite_eq_left hb]
-    simp only [ite_eq_left hb, Finset.sum_mul]
-  · simp only [ite_eq_right hb, Finset.sum_const_zero]
+  by_cases hb : b = j <;> simp [hb, Finset.sum_mul]
 
 /-- **The one-step formula for the column sums.**  A step of type `e` adds the column sum of the
 name `last e` to the column sum of the secondary name `last !e`, at the current vertex. -/
@@ -83,24 +66,6 @@ theorem colsum_append (P : IETDatum₂ α n) (γ δ : List Bool) (b : α) :
   rw [Finset.sum_comm]
   exact Finset.sum_congr rfl fun c _ => (Finset.sum_mul _ _ _).symm
 
-/-- The diagonal entries of a path matrix are at least `1`. -/
-theorem one_le_diag_Path.Q (P : IETDatum₂ α n) (γ : List Bool) (a : α) :
-    1 ≤ Path.Q P γ a a := by
-  induction γ generalizing P with
-  | nil =>
-    rw [Path.Q_nil, Matrix.one_apply, ite_eq_left rfl]
-  | cons e es ih =>
-    rw [Path.Q_cons, Matrix.mul_apply]
-    refine le_trans ?_
-      (Finset.single_le_sum
-        (f := fun k => P.rvMat e a k * Path.Q (P.rvStep e) es k a)
-        (fun k _ => mul_nonneg (rvMat_nonneg P e a k) (Path.Q_nonneg (P.rvStep e) es k a))
-        (Finset.mem_univ a))
-    have h1 : P.rvMat e a a = 1 := by
-      rw [rvMat, ite_eq_left rfl]
-    rw [h1, one_mul]
-    exact ih (P.rvStep e)
-
 /-- Column sums are non-decreasing along an arbitrary extension. -/
 theorem colsum_le_colsum_append (P : IETDatum₂ α n) (γ δ : List Bool) (b : α) :
     (∑ a, Path.Q P γ a b) ≤ (∑ a, Path.Q P (γ ++ δ) a b) := by
@@ -111,7 +76,7 @@ theorem colsum_le_colsum_append (P : IETDatum₂ α n) (γ δ : List Bool) (b : 
       (fun c _ => mul_nonneg (le_of_lt (Path.Q_colsum_pos P γ c))
         (Path.Q_nonneg (vertex P γ) δ c b))
       (Finset.mem_univ b))
-  have h1 : (1 : ℤ) ≤ Path.Q (vertex P γ) δ b b := one_le_diag_Path.Q (vertex P γ) δ b
+  have h1 : (1 : ℤ) ≤ Path.Q (vertex P γ) δ b b := Path.one_le_Q_diag (vertex P γ) δ b
   calc (∑ a, Path.Q P γ a b) = (∑ a, Path.Q P γ a b) * 1 := (mul_one _).symm
     _ ≤ (∑ a, Path.Q P γ a b) * Path.Q (vertex P γ) δ b b :=
         mul_le_mul_of_nonneg_left h1 (le_of_lt (Path.Q_colsum_pos P γ b))
@@ -120,16 +85,6 @@ theorem colsum_le_colsum_append (P : IETDatum₂ α n) (γ δ : List Bool) (b : 
 Two extensions either are comparable (hence nested) or give disjoint cylinders; so a finite set of
 words no one of which is a strict prefix of another ("antichain") gives pairwise disjoint cylinders,
 and the volume of their union is the sum of the volumes. -/
-
-/-- Nesting for an arbitrary extension. -/
-theorem simplexCyl_append_prefix (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
-    (γ δ : List Bool) : simplexCyl P (γ ++ δ) ⊆ simplexCyl P γ := by
-  induction δ generalizing γ with
-  | nil => simp
-  | cons e es ih =>
-    have h1 : γ ++ e :: es = (γ ++ [e]) ++ es := by simp
-    rw [h1]
-    exact Set.Subset.trans (ih (γ ++ [e])) (simplexCyl_append_subset P hP hn γ e)
 
 /-- Two extensions whose first letters differ give disjoint cylinders. -/
 theorem disjoint_simplexCyl_cons_cons (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
@@ -150,14 +105,13 @@ theorem disjoint_simplexCyl_cons_cons (P : IETDatum₂ α n) (hP : P.Irreducible
   | false => simpa using (disjoint_simplexCyl_true_false P hP hn γ).symm
 
 /-- **Laminarity**: two extensions of a common word whose cylinders meet are prefix-comparable. -/
-theorem isPrefix_or_isPrefix_of_mem_inter (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) :
-    ∀ (δ : List Bool) (γ δ' : List Bool) (x : α → ℝ≥0),
-      x ∈ simplexCyl P (γ ++ δ) → x ∈ simplexCyl P (γ ++ δ') → δ <+: δ' ∨ δ' <+: δ := by
-  intro δ
-  induction δ with
-  | nil => intro γ δ' x _ _; exact Or.inl List.nil_prefix
+theorem isPrefix_or_isPrefix_of_mem_inter (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
+    (δ : List Bool) (γ δ' : List Bool) (x : α → ℝ≥0)
+    (hx : x ∈ simplexCyl P (γ ++ δ)) (hy : x ∈ simplexCyl P (γ ++ δ')) :
+    δ <+: δ' ∨ δ' <+: δ := by
+  induction δ generalizing γ δ' x with
+  | nil => exact Or.inl List.nil_prefix
   | cons a δ₁ ih =>
-    intro γ δ' x hx hy
     cases δ' with
     | nil => exact Or.inr List.nil_prefix
     | cons a' δ₁' =>
@@ -231,32 +185,32 @@ theorem volume_region_lt_top (m : ℕ) : volume (region m) < ⊤ := by
 
 omit [DecidableEq α] in
 /-- The `simplexVolumeOn`-mass of the whole simplex, as a Lebesgue volume. -/
-theorem simplexVolumeOn_simplexOn (P : IETDatum₂ α n) :
-    simplexVolumeOn α (simplexOn α) = volume (region (n - 1)) := by
+theorem simplexVolumeOn_simplex (P : IETDatum₂ α n) :
+    simplexVolumeOn α (simplex α) = volume (region (n - 1)) := by
   obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by have := NeZero.ne n; omega⟩
-  have hpre : (fun l : Fin (m + 1) → ℝ≥0 => fun a => l (P.piBottom a)) ⁻¹' (simplexOn α)
-      = simplexOn (Fin (m + 1)) := by
+  have hpre : (fun l : Fin (m + 1) → ℝ≥0 => fun a => l (P.piBottom a)) ⁻¹' (simplex α)
+      = simplex (Fin (m + 1)) := by
     ext l
-    simp only [Set.mem_preimage, mem_simplexOn]
+    simp only [Set.mem_preimage, mem_simplex]
     rw [Equiv.sum_comp P.piBottom l]
-  have hmeas : MeasurableSet (simplexOn α) := by
-    have h3 : simplexOn α = {x : α → ℝ≥0 | ∑ a, x a = 1} := rfl
+  have hmeas : MeasurableSet (simplex α) := by
+    have h3 : simplex α = {x : α → ℝ≥0 | ∑ a, x a = 1} := (rfl)
     rw [h3]
     exact (isClosed_eq (continuous_finsetSum _ fun a _ => continuous_apply a)
       continuous_const).measurableSet
   rw [simplexVolumeOn_eq_map P,
     Measure.map_apply (measurable_pi_iff.mpr fun a => measurable_pi_apply (P.piBottom a)) hmeas,
-    hpre, simplexVolume_simplexOn m]
+    hpre, simplexVolume_simplex m]
   simp
 
 /-- Every path cylinder has finite volume. -/
 theorem volume_simplexCyl_lt_top (P : IETDatum₂ α n) (γ : List Bool) :
     simplexVolumeOn α (simplexCyl P γ) < ⊤ := by
-  have hsub : simplexCyl P γ ⊆ simplexOn α := fun x hx => hx.2
+  have hsub : simplexCyl P γ ⊆ simplex α := fun x hx => hx.2
   refine lt_of_le_of_lt (measure_mono hsub) ?_
-  rw [simplexVolumeOn_simplexOn P]
+  rw [simplexVolumeOn_simplex P]
   exact volume_region_lt_top _
 
-end BalancedCylinders
+end IntervalExchange.RauzyVeech
 
 end

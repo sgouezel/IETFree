@@ -6,15 +6,13 @@ Authors: Sébastien Gouëzel
 module
 
 public import IETFree.RauzyVeech.PairReach
-public import IETFree.RauzyVeech.RauzyReach
-public import IETFree.RauzyVeech.RichPath.LevelMass
 
 /-!
 # The vocabulary of the extension step, and the minimal extension to a row end outside `A'`
 
-The proof of the source's distortion theorem extends each `γ_s ∈ Γ₁` *minimally* to a path ending at
+The proof of AGY's distortion theorem extends each `γ_s ∈ Γ₁` *minimally* to a path ending at
 a vertex one of whose row ends lies outside `A'`.  This file carries the vocabulary of that step and
-its existence half (`NodeHeight.st = cs` is `B_w·1`, so `Mk 1` is the source's `𝔐 = max`):
+its existence half (`colSum` is `B_w·1`, so `mkMass 1` is AGY's `𝔐 = max`):
 
 * §1 (definitions): `Blocked` — both row ends at the node lie in `A'`; `Exit` — one lies outside;
   and `blocked_iff_not_exit`.  (The straddle criterion, the stop word and the cleanness predicate
@@ -22,26 +20,26 @@ its existence half (`NodeHeight.st = cs` is `B_w·1`, so `Mk 1` is the source's 
 * §2 (existence): `exists_exit` — from every node and every non-empty proper `A'` some
   continuation ends at a node with a row end outside `A'`.  The proof applies
   `IETDatum₂.pairReach_all` to a pair `(a, θ)` with `θ ∉ A'`, so it even prescribes *both* row ends.
-  `exists_minimal_exit` gives the *minimal-length* such word, together with the paper's structural
+  `exists_minimal_exit` gives the *minimal-length* such word, together with AGY's structural
   fact that all its proper prefixes are blocked.
 -/
 
-open Finset NodeHeight IETDatum₂
+open Finset IntervalExchange.IETDatum₂
 open scoped BigOperators
 
 @[expose] public section
 
-namespace MinimalExit
+namespace IntervalExchange.RauzyVeech.RichPath
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
 /-! ## 1. Definitions -/
 
-/-- Both row ends at the node `w` lie in `A'`: the source's "cleanness" at `w`. -/
+/-- Both row ends at the node `w` lie in `A'`: AGY's "cleanness" at `w`. -/
 def Blocked (P : IETDatum₂ α n) (w : List Bool) (A' : Finset α) : Prop :=
   (P.vertex w).last true ∈ A' ∧ (P.vertex w).last false ∈ A'
 
-/-- Some row end at the node `w` lies outside `A'`: the source's stopping condition of `Γ₂`. -/
+/-- Some row end at the node `w` lies outside `A'`: AGY's stopping condition of `Γ₂`. -/
 def Exit (P : IETDatum₂ α n) (w : List Bool) (A' : Finset α) : Prop :=
   (P.vertex w).last true ∉ A' ∨ (P.vertex w).last false ∉ A'
 
@@ -65,8 +63,7 @@ theorem exists_exit (P : IETDatum₂ α n) (hP : P.Irreducible) (w : List Bool) 
   obtain ⟨b, hb⟩ := hne
   have hbθ : b ≠ θ := fun h => hθ (h ▸ hb)
   obtain ⟨u, e, h1, h2⟩ :=
-    IETDatum₂.pairReach_all (P.vertex w) (IETDatum₂.vertex_irreducible P w hP)
-      (P.vertex w) (IETDatum₂.vertex_irreducible P w hP) b θ hbθ
+    IETDatum₂.pairReach_all (P.vertex w) (IETDatum₂.vertex_irreducible P w hP) b θ hbθ
   have hu : P.vertex (w ++ u) = (P.vertex w).vertex u := IETDatum₂.vertex_append P w u
   refine ⟨u, ?_⟩
   cases e with
@@ -93,6 +90,6 @@ theorem exists_minimal_exit (P : IETDatum₂ α n) (hP : P.Irreducible) (w : Lis
   have h2 : (u.take i).length = i := by rw [List.length_take]; omega
   omega
 
-end MinimalExit
+end IntervalExchange.RauzyVeech.RichPath
 
 end

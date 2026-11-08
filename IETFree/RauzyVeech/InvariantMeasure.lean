@@ -6,7 +6,7 @@ Authors: Sébastien Gouëzel
 module
 
 public import IETFree.RauzyVeech.SimplexAe
-public import IETFree.TopBotFormalism
+import Mathlib.Tactic.Linarith.NNRealPreprocessor
 
 /-!
 # Invariant probability measures of an exchange
@@ -18,14 +18,14 @@ and the uniqueness step: an invariant probability measure carried by `[0, 1)` is
 length vector once every such length vector lies in the ray `ℝ • lam` and the length map is
 injective (`existsUnique_of_lengths`, `masurVeech_of_components`).
 
-Nothing here uses the measure estimates of the source's Lemmas 1–6: the file is where the remaining
+Nothing here uses the measure estimates of Yoccoz's Lemmas 1–6: the file is where the remaining
 inputs (the a.e. shrink, the tower formula and the injectivity of the length map) are plugged in.
 
 **The measures considered lie on `[0,1)`.**  An exchange `P.toIET lam` is the identity off the
 interval `[0,1)` (`mkIETFun_of_notMem`), so *every* probability measure on `[0,1)ᶜ` is invariant:
 the unrestricted statement `∃! μ, Invariant μ (P.toIET lam)` is false for every `lam` (Lebesgue's
 measure and the Dirac mass at `2` are both invariant, and they disagree on `[0,1)`).  The measures
-are therefore required to satisfy `μ (Ico 0 1) = 1`, which is the source's setting (an exchange *of
+are therefore required to satisfy `μ (Ico 0 1) = 1`, which is Yoccoz's setting (an exchange *of
 the interval*); `existsUnique_of_lengths` and `masurVeech_of_components` carry this condition
 explicitly.
 
@@ -49,8 +49,9 @@ and Lebesgue is one of them. -/
 
 open MeasureTheory
 open scoped BigOperators ENNReal NNReal
+open IntervalExchange.IET
 
-namespace InvariantMeasure
+namespace IntervalExchange.RauzyVeech
 
 variable {α : Type*} [Fintype α]
 
@@ -83,7 +84,7 @@ theorem invariant_unitMeas (T : IET 0 1) :
     Invariant (⟨unitMeas, inferInstance⟩ : ProbabilityMeasure ℝ) T := by
   refine Measure.ext fun A hA => ?_
   rw [Measure.map_apply T.measurable hA]
-  exact IET.unitMeas_preimage T hA
+  exact unitMeas_preimage T hA
 
 /-- The cell of the letter `a`: the interval it occupies in the bottom order. -/
 noncomputable def cellOf {α : Type*} [Fintype α] {n : ℕ} (P : IETDatum₂ α n) (lam : α → ℝ≥0)
@@ -101,13 +102,13 @@ noncomputable def lebesgue : ProbabilityMeasure ℝ := ⟨unitMeas, inferInstanc
 
 /-- **Lebesgue measure, as a measure**: the coercion of `lebesgue` is `unitMeas`, the restriction of
 `volume` to `[0, 1)`.  The computation form proofs unfolding it need. -/
-theorem coe_lebesgue : (lebesgue : Measure ℝ) = unitMeas := rfl
+theorem coe_lebesgue : (lebesgue : Measure ℝ) = unitMeas := (rfl)
 
 /-- **The length vector of Lebesgue measure is the length vector.**  Each cell `[leftEnd, upperEnd)`
 of the bottom order lies in `[0,1)` (because the lengths sum to `1`) and has Lebesgue measure equal
 to the length of its letter. -/
 theorem lambdaOf_lebesgue {α : Type*} [Fintype α] {n : ℕ} (P : IETDatum₂ α n)
-    {lam : α → ℝ≥0} (h : lam ∈ simplexOn α) :
+    {lam : α → ℝ≥0} (h : lam ∈ simplex α) :
     lambdaOf lebesgue P lam = fun a : α => (lam a : ℝ) := by
   have hsum : ∑ j, (P.lengthsInBottom lam j : ℝ) = 1 := by
     have h' := P.sum_lengthsInBottom h
@@ -139,7 +140,6 @@ theorem lambdaOf_lebesgue {α : Type*} [Fintype α] {n : ℕ} (P : IETDatum₂ �
   simp only [lambdaOf, lebesgue]
   exact key
 
-
 /-! ## The bottom cells partition `[0, 1)`
 
 `cellOf P lam a` is the interval of the letter `a` in the bottom order.  When `lam` is a point of
@@ -148,39 +148,6 @@ the masses of the cells add up to `μ [0, 1)`.  This is what turns `μ (Ico 0 1)
 hypothesis `∑ a, lambdaOf μ P lam a = 1` of `existsUnique_of_lengths`. -/
 
 variable {n : ℕ} [NeZero n]
-
-omit [NeZero n] in
-/-- `leftEnd` is monotone in the index. -/
-theorem leftEnd_mono (lam : Fin n → ℝ≥0) {i j : Fin n} (h : i ≤ j) :
-    leftEnd lam i ≤ leftEnd lam j := by
-  rw [leftEnd, leftEnd]
-  refine Finset.sum_le_sum_of_subset_of_nonneg (fun k hk => ?_)
-    (fun k _ _ => (lam k).coe_nonneg)
-  simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hk ⊢
-  exact lt_of_lt_of_le hk h
-
-omit [NeZero n] in
-/-- The left end of the `(i+1)`-st interval is the right end of the `i`-th. -/
-theorem leftEnd_succ_eq_upperEnd (lam : Fin n → ℝ≥0) (i : Fin n) (h : i.val + 1 < n) :
-    leftEnd lam ⟨i.val + 1, h⟩ = upperEnd lam i := by
-  rw [leftEnd, upperEnd]
-  congr 1
-
-omit [NeZero n] in
-/-- Distinct intervals of the arrangement are ordered. -/
-theorem upperEnd_le_leftEnd (lam : Fin n → ℝ≥0) {i j : Fin n} (h : i < j) :
-    upperEnd lam i ≤ leftEnd lam j := by
-  have hij : i.val + 1 < n := by
-    have := j.isLt
-    rw [Fin.lt_def] at h
-    omega
-  have h1 : leftEnd lam ⟨i.val + 1, hij⟩ ≤ leftEnd lam j := by
-    refine leftEnd_mono lam ?_
-    rw [Fin.le_def]
-    dsimp only [Fin.val_mk]
-    rw [Fin.lt_def] at h
-    omega
-  rwa [leftEnd_succ_eq_upperEnd lam i hij] at h1
 
 /-- The arrangement covers `[0, ∑ lam)`: a point there lies in the interval of its index `idx`. -/
 theorem mem_cellOf_idx (P : IETDatum₂ α n) (lam : α → ℝ≥0) {x : ℝ}
@@ -208,7 +175,7 @@ theorem disjoint_cellOf (P : IETDatum₂ α n) (lam : α → ℝ≥0) {a b : α}
   · exact absurd (lt_of_lt_of_le hxb.2 (upperEnd_le_leftEnd _ hlt)) (not_lt.mpr hxa.1)
 
 /-- For a point of the simplex the cells cover `[0, 1)`. -/
-theorem iUnion_cellOf (P : IETDatum₂ α n) {lam : α → ℝ≥0} (h : lam ∈ simplexOn α) :
+theorem iUnion_cellOf (P : IETDatum₂ α n) {lam : α → ℝ≥0} (h : lam ∈ simplex α) :
     (⋃ a, cellOf P lam a) = Set.Ico (0 : ℝ) 1 := by
   have hsum : (∑ i, (P.lengthsInBottom lam i : ℝ)) = 1 := by
     have h' := P.sum_lengthsInBottom h
@@ -220,7 +187,7 @@ theorem iUnion_cellOf (P : IETDatum₂ α n) {lam : α → ℝ≥0} (h : lam ∈
 
 /-- **The length vector of a measure carried by `[0, 1)` has total mass `1`.** -/
 theorem sum_lambdaOf (P : IETDatum₂ α n) (μ : ProbabilityMeasure ℝ) {lam : α → ℝ≥0}
-    (h : lam ∈ simplexOn α) (hmass : (μ : Measure ℝ) (Set.Ico (0 : ℝ) 1) = 1) :
+    (h : lam ∈ simplex α) (hmass : (μ : Measure ℝ) (Set.Ico (0 : ℝ) 1) = 1) :
     ∑ a, lambdaOf μ P lam a = 1 := by
   have hdisj : (↑(Finset.univ : Finset α) : Set α).PairwiseDisjoint (cellOf P lam) :=
     fun a _ b _ hne => disjoint_cellOf P lam hne
@@ -238,11 +205,11 @@ theorem sum_lambdaOf (P : IETDatum₂ α n) (μ : ProbabilityMeasure ℝ) {lam :
     _ = ((μ : Measure ℝ) (Set.Ico (0:ℝ) 1)).toReal := by rw [hunion]
     _ = 1 := by rw [hmass]; norm_num
 
-/-- Lebesgue on `[0,1)` has mass `1` there. -/
+/-- Lebesgue on `[0,1)` has mass `1` there: the canonical `unitMeas_Ico`, through the definition of
+`lebesgue`. -/
 theorem lebesgue_Ico : (lebesgue : Measure ℝ) (Set.Ico (0 : ℝ) 1) = 1 := by
-  rw [coe_lebesgue, unitMeas]
-  rw [Measure.restrict_apply measurableSet_Ico, Set.inter_self, Real.volume_Ico, sub_zero]
-  norm_num
+  rw [coe_lebesgue]
+  exact unitMeas_Ico
 
 /-- **The assembly.**  The main theorem follows from two a.e. statements about the length map of an
 invariant probability measure carried by `[0,1)`:
@@ -266,12 +233,12 @@ theorem masurVeech_of_components {α : Type*} [Fintype α] [Nonempty α] {n : �
         lambdaOf μ P lam = lambdaOf ν P lam → μ = ν) :
     ∀ᵐ lam ∂(simplexVolumeOn α), ∃! μ : ProbabilityMeasure ℝ,
       Invariant μ (P.toIET lam) ∧ (μ : Measure ℝ) (Set.Ico 0 1) = 1 := by
-  filter_upwards [ae_mem_simplexOn_of_nonempty (α := α), h_ray, h_inj] with lam hmem h_ray' h_inj'
+  filter_upwards [ae_mem_simplex_of_nonempty (α := α), h_ray, h_inj] with lam hmem h_ray' h_inj'
   exact existsUnique_of_lengths (P.toIET lam) (fun μ => lambdaOf μ P lam)
     (fun a : α => (lam a : ℝ)) (by exact_mod_cast hmem) ⟨unitMeas, inferInstance⟩
     (lambdaOf_lebesgue P hmem) (invariant_unitMeas _) lebesgue_Ico h_ray'
     (fun μ _ hmass => sum_lambdaOf P μ hmem hmass) h_inj'
 
-end InvariantMeasure
+end IntervalExchange.RauzyVeech
 
 end

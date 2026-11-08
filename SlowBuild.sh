@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # The SLOW, thorough check of the interval-exchange project: plain `lean`, one process per module,
-# in dependency order, followed by the axiom report, the sorry count and `Comparator/Check.lean`.
+# in dependency order, followed by the axiom report, the sorry count and the comparator gate.
 #
 # **This is not the build.**  `lake build` is: it is incremental (hash-based), parallel across the
 # cores, and takes seconds for an ordinary edit and under three minutes from a removed `.lake/build`.
@@ -11,8 +11,8 @@
 #   * it compiles with `warn.sorry` ON (the lakefile has `warn.sorry = false`), so it can count the
 #     declarations that still depend on `sorryAx`;
 #   * `--strict` fails if `sorryAx` is reachable from the main theorem;
-#   * it runs `Comparator/Check.lean`, the local stand-in for the comparator, on the two compiled
-#     modules.
+#   * it runs the comparator gate, `lake comparator`, which checks the challenge against the solution
+#     declaration by declaration (see `NOTES.md` for the nanoda caveat in this VM).
 #
 # Run it only when a thorough check is wanted (an owner's request, a release, a change to the
 # challenge/library boundary); use `lake build` for ordinary work.  Its module list is derived from
@@ -87,9 +87,9 @@ fi
 echo "ok   IETFree.lean"
 
 echo
-echo "=== the comparator pair (Comparator/Check.lean) ==="
-if ! LEAN_PATH="$PWD:$LEAN_PATH" lean --run Comparator/Check.lean; then
-  echo "FAIL Comparator/Check.lean -- the challenge and the solution do not match"
+echo "=== the comparator gate: the challenge against the solution (lake comparator) ==="
+if ! lake comparator; then
+  echo "FAIL lake comparator -- the challenge and the solution do not match, or an axiom is not permitted"
   exit 1
 fi
 

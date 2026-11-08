@@ -3,8 +3,8 @@
 This file is the archive.  It gathers, in one place:
 
 * **Part I** — the complete ledger of the `IET2` campaign (`IET2/NOTES.md` as it stood after
-  Addendum 154): the 154 addenda, the reconciliation table of every declaration name that no longer
-  exists, and the pitfalls paid for along the way.
+  Addendum 154, and one addendum for every change since): the addenda, the reconciliation table of
+  every declaration name that no longer exists, and the pitfalls paid for along the way.
 * **Part II** — everything the two Masur–Veech campaigns left in prose, reproduced from the separate
   project they were carried out in: the programme's own overview; for Veech's rigidity
   (`IETFree/Rigidity/`) its blueprint, campaign plan, ledger and two dependency-graph documents; for
@@ -84,9 +84,9 @@ says it was dropped), so an old entry can still be read.
   definition hole `mkIETEquiv`, `coe_mkIETEquiv`, and `main`).  There is no second statement file any
   more.  The library itself has **none**: it carries a **single axiom check**, `#print axioms main`,
   registered directly below `main` in `ChallengeSolved.lean`, which reports
-  `[propext, Classical.choice, Quot.sound]`.  `Comparator/Check.lean`, the local stand-in for the
-  comparator, accepts the pair `Challenge` / `IETFree.ChallengeSolved` (30899 declarations compared, no
-  difference).
+  `[propext, Classical.choice, Quot.sound]`.  The comparator gate `lake comparator` accepts the pair
+  `Challenge` / `IETFree.ChallengeSolved`: it prints `Lean default kernel accepts the solution` and
+  `Your solution is okay!` (Addendum 193; the local stand-in it replaced is gone).
 - **All of the paper's Section 3 is proved**: Lemma 3.1 (`compLen_injective` plus the absolute
   continuity `compLenAffine_absolutelyContinuousAt`/`compLen_absolutelyContinuousAt`), Lemma 3.2
   (`block_irreducible_on_good`, `irreduciblePerm_blockPerm`), Lemma 3.4
@@ -6091,7 +6091,7 @@ duplicated, and pruning them is a judgement call, so nothing was deleted.  The c
     Centralizer.lean: isReduced_append
     Centralizer.lean: mk_ne_one_of_isReduced
     Commensurable.lean: take_length_flatten_replicate
-    CutSet.lean: not_separated_iff
+    CutSet/Basic.lean: not_separated_iff
     Diophantine.lean: ae_mem_simplex
     GeneratorChange.lean: substGen_apply
     GoodRegion.lean: exists_ball_subset_goodParams
@@ -7450,8 +7450,8 @@ the library `MasurVeech`. `lake build` is **green: 8714 jobs, exit 0, ~35 s warm
 `[DecidableEq α]` were removed by `omit`/dropping the binder). `.gitignore` gained
 `.lake/` and the stray-olean patterns.
 
-**Copied API (verbatim except the import lines):** `CutSet.lean`,
-`CutSetMeasure.lean`, `IET.lean` from `IET2/IETFree` — 2241 lines, root namespace (the files use
+**Copied API (verbatim except the import lines):** `CutSet/Basic.lean`,
+`CutSet/Measure.lean`, `IET.lean` from `IET2/IETFree` — 2241 lines, root namespace (the files use
 `namespace CutSetData` / root, not `IETFree`), so a future merge with `IETFree` will need a
 namespace pass. Deliberate: `IETFree.Irreducible.lean` is *not* copied; only `IsIrreduciblePerm` is
 re-stated in `Basic.lean`.
@@ -10499,12 +10499,13 @@ only real `sorry` is `Main.lean:66`.
 Prompted by the author ("the proofs are supposed to be in the papers — which steps are unclear?"), I
 re-read `blueprint.md` Part I against the tree.  Findings:
 
-* The source (Yoccoz's survey) has **one non-local gap, G1** (the last paragraph of §4.4, p. 20: it
-  infers "infinitely many `n_k`" from Lemma 6, which is a one-simplex statement, and then applies
-  Lemma 2 to a path of `λ` that need not follow the contracted extension), plus five local ones
-  (G2–G6) and three proof slips (S1–S3).  G2–G6 and S1–S3 are all repaired and formalised in the
-  tree; **G1 is the only one still open, and it is exactly where the campaign stands.**
-* G1's repair (`blueprint.md` §10.5) is formalised abstractly: `NestedCylinder.nested_cylinder_tendsto`
+* The source (Yoccoz's survey) compresses six steps that a formalisation has to write out — G1 at
+  the last paragraph of §4.4, p. 20 (it infers "infinitely many `n_k`" from Lemma 6, which is a
+  one-simplex statement, and then applies Lemma 2 to a path of `λ` that need not follow the
+  contracted extension), G2–G6, and the constants and indices S1–S3.  **They are not gaps in the
+  proof: the author has ruled so, and Addendum 229 removes that claim from every document**; the
+  labels are kept as names for those places.  The §4.4 step is where the campaign stood.
+* The tree's form of that step (`blueprint.md` §10.5) is formalised abstractly: `NestedCylinder.nested_cylinder_tendsto`
   says any `CylTree` with `0 < c < 1` whose stopping process survives a.e. has a.e. `diam → 0`.  All
   the concrete ingredients are landed unconditionally: `lemma6Shape_unconditional` (uniform Lemma 6),
   `ExtData`/`extData` (Lemma 2's uniform extension), `CylTreeReal.carrier_fields` (root, nest, cover,
@@ -12283,7 +12284,7 @@ their contents, verified declaration by declaration:
 * `RauzyVeech/LevelN.lean` — announced `IterFalseP` and the level-`n` formula `tower_formula_level`,
   neither of which is in the file (they are `TowerTrue.tower_formula_level_pathQ_any` in
   `TrueStep.lean`); the header now lists the five sections that are there;
-* `RauzyVeech/TowerLevel.lean` — announced `Tower.induced_invariant` and `Tower.tower_formula_level`;
+* `RauzyVeech/Tower/Level.lean` — announced `Tower.induced_invariant` and `Tower.tower_formula_level`;
   the file has `tower_formula_one_step_mult` (`multOne`) and `image_Ico_tot`, and says so.
 
 **Verification** (all run after the last edit):
@@ -14486,7 +14487,7 @@ equality of the underlying functions; it is the only new proof of the round.
 unchanged (a finite union of half-open intervals `S`, `unitMeas.real S ≤ ε`, an `N` with a uniform
 bound `2ε` on the Birkhoff sums of the indicator), hypothesis `UniqueErgodic f` — the weak form —
 and proof unchanged apart from `uniformBirkhoff_of_uniqueErgodic` supplying the convergence.  Its
-notion `IsFiniteUnionIntervals` moved from `Pair/MeasureTools.lean` to `IETFree/CutSet.lean`, for
+notion `IsFiniteUnionIntervals` moved from `Pair/MeasureTools.lean` to `IETFree/CutSet/Basic.lean`, for
 the same reason: it is a statement about subsets of `ℝ`, `UniformConvergence/` may not import
 `Pair/`, and `Pair/MeasureTools.lean` keeps the API lemma that produces it
 (`isFiniteUnionIntervals_ne_id`).
@@ -15141,7 +15142,7 @@ x` (the arrow has to become a hypothesis binder, whose name must be taken from t
 `∀ x ∈ s, …` whose proof does not open with a matching `intro` (a term proof of the lemma, a `simp`,
 an `exact`), and the one declaration-level case left, `eventually_eq_of_monotone_bdd`, whose proof
 is a pattern match on the binder.  The heaviest files are `RichPath/LargeLetter.lean` (14),
-`Pair/BlockIrreducibility.lean` (12), `Pair/Irreducible.lean` (12), `RauzyVeech/CylinderVolume.lean`
+`Pair/Block/Irreducibility.lean` (12), `Pair/Irreducible.lean` (12), `RauzyVeech/Cylinder/Volume.lean`
 (12), `Rigidity/RigidSet.lean` (12).
 
 **§4, `abbrev`: no conversion, and the reason is recorded.**  All 14 `abbrev`s were examined one by
@@ -15181,7 +15182,7 @@ three files use it; what was missing is its counterpart for the product: `toReal
 **Four `change`s in `ChallengeSolved.lean` removed.**  Each was unfolding `prodSimplexMap` so that
 `toReal_simplexMap` would apply; they are now `rw [toReal_prodSimplexMap hv hw]`, `exact
 toReal_prodSimplexMap hz.1 hz.2`, and two of the same shape.  A second lemma,
-`IsCutSet.cellStarts_eq_coe` (`CutSet.lean`), replaced the coercion `change` in
+`IsCutSet.cellStarts_eq_coe` (`CutSet/Basic.lean`), replaced the coercion `change` in
 `IsCutSet.cellStarts_zero`: `cellStarts i` is definitionally the `i`-th element of `{a} ∪ s` read as
 a real, and the lemma says so.
 
@@ -15245,7 +15246,7 @@ what `simp` does to the whole library.
 **Counts.**  `change` sites: 144 at the start of Addendum 176, 139 after its five, 120 now (43
 files).  New API lemmas so far: `toReal_prodSimplexMap`, `IsCutSet.cellStarts_eq_coe`,
 `IETDatum₂.last_true`, `IETDatum₂.last_false`, `IETDatum₂.perm_apply`, `IETDatum₂.Irreducible_def`.
-The heaviest files left are `Pair/BlockDatum.lean` (11), `Pair/SingularityList.lean` (8),
+The heaviest files left are `Pair/Block/Datum.lean` (11), `Pair/Singularity/List.lean` (8),
 `RauzyVeech/Affine.lean` (7), `RauzyVeech/RauzyReach.lean` (6), `UniqueErgodicity/Split.lean` (6).
 
 **Checks.**  `lake build` green at 8823 jobs; `#print axioms main` unchanged; the comparator
@@ -15259,7 +15260,7 @@ removed as in the example above.  That is the simplest fix when possible.  Start
 the build order."*
 
 **The procedure.**  Every `change` in the 43 remaining files was tried by plain deletion, file by
-file in reverse build order (from `Pair/BlockLemma.lean` backwards), each attempt checked by
+file in reverse build order (from `Pair/Block/Lemma.lean` backwards), each attempt checked by
 compiling that module.  Per file the whole set was removed first; on failure the sites were tried
 one at a time.  A `change` that carried a `·` bullet kept it, moved onto the next line of its block.
 
@@ -15272,9 +15273,9 @@ default transparency.  The rest (94) do not compile without their `change`: they
 `IterGlue`, `RichPathAssembly`, `NameInfinite`, `MeasureTools`, `Diophantine`.
 
 **Counts.**  `change` sites: 144 at the start, 120 after Addendum 177, **94 now**, in 33 files.  The
-heaviest remaining: `Pair/BlockDatum.lean` (8), `Pair/SingularityList.lean` (8),
+heaviest remaining: `Pair/Block/Datum.lean` (8), `Pair/Singularity/List.lean` (8),
 `RauzyVeech/Affine.lean` (7), `UniqueErgodicity/Split.lean` (6), `Pair/GeneratorChange.lean` (5),
-`Pair/SingularityBound.lean` (5), `Pair/SubintervalTransfer.lean` (5).
+`Pair/Singularity/Bound.lean` (5), `Pair/SubintervalTransfer.lean` (5).
 
 **Checks.**  `lake build` green at 8823 jobs; no warnings; no line over 100 characters (the
 bullet-move step could have produced one, none did); `#print axioms main` unchanged; the comparator
@@ -15288,7 +15289,7 @@ Owner's instruction: *"Continue with BlockDatum and SingularityList: if a `chang
 by a `simp` or `simp only` or `rw` with an API lemma, do it (and add the API lemma if it is
 missing)."*
 
-**`Pair/BlockDatum.lean`: 8 → 0.**  Three new lemmas did most of it.  `IETDatum.toFun_apply`
+**`Pair/Block/Datum.lean`: 8 → 0.**  Three new lemmas did most of it.  `IETDatum.toFun_apply`
 (`D.toFun x = mkIETFun D.lam D.π 0 x`, a `rfl`) turned the three `change`s that unfolded `toFun`
 into `rw [IETDatum.toFun_apply]`.  What remained of the two `mkIET1'` sites was already in the
 library as `mkIET1_eq_mkIETFun`, so they became `rw [mkIET1_eq_mkIETFun]` (one of them now a single
@@ -15298,7 +15299,7 @@ leftEnd D.lam ⟨k, ⋯⟩ + blockMass … * y`, in the proof of the block's end
 removable outright: the goal was already in that form, and only the bullet structure had stopped the
 mechanical pass of Addendum 178 from seeing it.
 
-**`Pair/SingularityList.lean`: 8 → 1.**  Four were `Fin`-coercion computations and are now `simp
+**`Pair/Singularity/List.lean`: 8 → 1.**  Four were `Fin`-coercion computations and are now `simp
 only [Fin.val_zero]`, `simp only [Fin.val_castSucc]` and two `simp only []` (beta reduction of a
 `fun j => …` applied to `j`, which is what `change` was doing at line 357).  The `lastIdx` one
 needed a new lemma, `lastIdx_val : (lastIdx n).val = n - 1` (a `rfl`), and became `rw
@@ -15341,7 +15342,7 @@ between the two, not a missing lemma.
 d = decide ((d : ℝ) ≤ proj z)` — the standard `ext`-then-`change` idiom for a structure with a
 `Set`-valued field, with no lemma to name; `GeneratorChange`'s four are the `if`-elaboration case
 above; the rest are mostly `Fin`-cast and `if` computations.  The files where a `simp`/`rw`
-conversion is still plausible are `Pair/SingularityBound.lean` (5), `Pair/SubintervalTransfer.lean`
+conversion is still plausible are `Pair/Singularity/Bound.lean` (5), `Pair/SubintervalTransfer.lean`
 (5), `Pair/MeasureTools.lean` (4), `RauzyVeech/LevelN.lean` (4), `RauzyVeech/RauzyReach.lean` (4),
 `UniqueErgodicity/Limits.lean` (4).
 
@@ -15357,7 +15358,7 @@ comparator stand-in `OK` at 30 825 declarations; no README anchor moved this rou
 The instruction was to go through every remaining file and then say which surviving `change`s are
 genuinely unavoidable.
 
-**Four more files converted.**  `Pair/SingularityBound.lean` 5 → 0: four were beta-redexes (`(fun i
+**Four more files converted.**  `Pair/Singularity/Bound.lean` 5 → 0: four were beta-redexes (`(fun i
 => a1 i - a2 i) i`), so `simp only []`; the fifth restated `(A * e') y` as `A (e' y)`, which is
 `simp only [Equiv.Perm.mul_apply]`.  `Pair/MeasureTools.lean` 4 → 1: `wordLength` was a `def` equal
 to `FreeGroup.norm`, so it got the `rfl` lemma `wordLength_eq_norm` and three sites became `simp
@@ -15498,7 +15499,7 @@ structure field, and there is no equation to rewrite.
 * `Pair/SubintervalTransfer.lean` (4): `Fin.snoc`/`blockLen`/`cellLen` restatements where the
 `change` fixes the index form before a `Fin`-level rewrite.
 
-* `Pair/BlockData.lean` (2), `Pair/BlockLemma.lean` (2), `Pair/BlockEndpoints.lean` (1):
+* `Pair/Block/Data.lean` (2), `Pair/Block/Lemma.lean` (2), `Pair/Block/Endpoints.lean` (1):
 structure-projection and local-`set` unfoldings (`B.lam`, `Fs`, `Hs`) that make the next `rw` match;
 `simp only [BlockGoodAt]` and a direct `exact` were both tried and fail.
 
@@ -15511,8 +15512,8 @@ structure-projection and local-`set` unfoldings (`B.lam`, `Fs`, `Hs`) that make 
 rvStep_piTop_true]` rewrites the wrong `rvStep` (verified: it produces `((Q.rvStep true).rvStep
 true).piTop`).
 
-* `Pair/Diophantine.lean` (2), `CutSetMeasure.lean` (1), `Pair/MeasureTools.lean` (1),
-`Pair/SingularityList.lean` (1), `RauzyVeech/CylinderVolume.lean` (1), `RauzyVeech/MeshShrink.lean`
+* `Pair/Diophantine.lean` (2), `CutSet/Measure.lean` (1), `Pair/MeasureTools.lean` (1),
+`Pair/Singularity/List.lean` (1), `RauzyVeech/Cylinder/Volume.lean` (1), `RauzyVeech/MeshShrink.lean`
 (1), `RauzyVeech/RichPath/LargeLetter.lean` (1): one-off restatements for `linarith`, for a `rw`
 that follows, or a computation at a fixed index.
 
@@ -15556,7 +15557,7 @@ and the pair placed after the module docstring; the old lines were deleted.  `op
 alone — it scopes to the next command.  Every edited file was compiled on its own before the full
 build.
 
-**What did not convert.**  `Pair/SingularityBound.lean` keeps a late `open CutBound` because the
+**What did not convert.**  `Pair/Singularity/Bound.lean` keeps a late `open CutBound` because the
 `CutBound` namespace is defined later in that same file: opening it at the top fails with *unknown
 namespace `CutBound`*.  Two apparent cases were prose: a docstring line beginning with the word
 `open` in `RauzyVeech/Affine.lean` and in `UniqueErgodicity/IET.lean`.
@@ -15583,8 +15584,8 @@ kept as is when the goal still has that shape.  Each site was tried both ways (s
 keep the proof) and the file compiled after each attempt; a failed attempt was reverted before
 moving on.  The run took 16 minutes for 70 files.
 
-**Result: 134 conversions, plus one in `CutSet.lean` done by hand — 314 → 179 sites, in 56 files,
-and 46 208 → 46 073 lines.**  The heaviest gains were `Pair/BlockIrreducibility.lean` (10),
+**Result: 134 conversions, plus one in `CutSet/Basic.lean` done by hand — 314 → 179 sites, in 56 files,
+and 46 208 → 46 073 lines.**  The heaviest gains were `Pair/Block/Irreducibility.lean` (10),
 `Pair/Diophantine.lean` (9), `Rigidity/RigidSet.lean` (8), `Pair/Irreducible.lean` (6),
 `UniqueErgodicity/Limits.lean` (6), `RauzyVeech/Nesting.lean` (6), `Rigidity/Combinatorics.lean`
 (5), `Pair/SubintervalTransfer.lean` (5) and `UniqueErgodicity/IET.lean` (5).
@@ -15626,12 +15627,12 @@ compiler was the oracle at every site, and every survivor has a recorded failure
 remain all fail with *failed to synthesize instance of type class* when removed, i.e. the proof
 genuinely needs a classical decidability instance there (a `by_cases` on a proposition with no
 decidable instance, a `Set` membership in a `Finset` filter, `Classical.choose`).  The largest
-gains: `RichPath/Potential` 13 of 14, `Pair/BlockIrreducibility` 11, `Rigidity/RigidSet` 8,
+gains: `RichPath/Potential` 13 of 14, `Pair/Block/Irreducibility` 11, `Rigidity/RigidSet` 8,
 `Pair/Centralizer` 7 of 10, `CutSetMeasure` 6, `RauzyVeech/NameInfinite` 6 of 11,
-`Pair/BlockEndpoints`, `Pair/BlockRescaling`, `Pair/GoodRegion` and `UniqueErgodicity/IET` 5 each.
+`Pair/Block/Endpoints`, `Pair/Block/Rescaling`, `Pair/GoodRegion` and `UniqueErgodicity/IET` 5 each.
 
 **Where `classical` survives**, with the count: `RauzyVeech/NameInfinite` 5, `Pair/Centralizer` 3,
-`RauzyVeech/RauzyReach` 3, `RauzyVeech/CylinderGrowth` 2, and one each in `Pair/{BlockLemma,
+`RauzyVeech/RauzyReach` 3, `RauzyVeech/Cylinder/Growth` 2, and one each in `Pair/{BlockLemma,
 Commensurable, IntegerAffine, Presentation, ReductionData}`, `RauzyVeech/{PairReach, PosBlock,
 RauzyPath, RefiningPartition, TowerTiling}`, `RauzyVeech/RichPath/{HeightDichotomy, MinimalExit,
 Potential}`, `Rigidity/Veech`, `TopBotFormalism`, `UniqueErgodicity/{Germ, MainTheorem, Split,
@@ -15741,31 +15742,31 @@ error text usually named something other than the reason.  What the 26 needed:
 **And three outside the 45**, found by the closing scan: `have h2 := hc.inv_left` and
 `have h := hc.inv_left` (`Pair/Commensurable`) became
 `simpa only [inv_inv, Commute, SemiconjBy] using hc.inv_left`, and
-`hmono := hS.cellStarts_strictMono` (`Pair/BlockIrreducibility`) became
+`hmono := hS.cellStarts_strictMono` (`Pair/Block/Irreducibility`) became
 `hS.cellStarts_strictMono.le_iff_le`.
 
 **The 19 that stay, each with the reason the compiler gave.**  They fall into six kinds, and not one
 of them is a renaming.
 
-* **`omega` reads the context** (7): `hcard := G.n_eq` (`Pair/BlockEndpoints`); `hkl := I.hkl` and
-  `hln := I.hln`, twice each (`Pair/BlockRescaling`: `set k := I.k` and `set l := I.l` make `k` a
+* **`omega` reads the context** (7): `hcard := G.n_eq` (`Pair/Block/Endpoints`); `hkl := I.hkl` and
+  `hln := I.hln`, twice each (`Pair/Block/Rescaling`: `set k := I.k` and `set l := I.l` make `k` a
   *different atom* from `I.k` for `omega`, which does not unfold a `set`); `hlt' := j.isLt`, twice
   (`RauzyVeech/TrueStep`, for the `Fin`-against-`Nat` bounds of the `by omega`s in the statements of
   the `set`s that follow).
 * **`linarith` needs the fact in the goal's vocabulary** (4): `hbig'` (`Rigidity/RigidStep`, which
   unfolds `BigCell` into the inequality that two `linarith`s below read from the context);
-  `hleft := hcmem.1` (`Pair/BlockIrreducibility`, `leftEnd` against `mark`); `hv2` in
+  `hleft := hcmem.1` (`Pair/Block/Irreducibility`, `leftEnd` against `mark`); `hv2` in
   `RauzyVeech/RauzyPath` and in `RauzyVeech/SimplexAe` (the `Fin (m + 1 - 1)` and `Fin m` index
   shapes are definitionally equal, but `linarith` compares atoms syntactically).
 * **a rewrite target must be a hypothesis** (2): `h2 := hy'.2` (`RauzyVeech/TrueStep`), which
   `rw [splitT] at h2` unfolds, and `hc_k := hperk` (`UniqueErgodicity/Limits`), which two `rw`s
   quote and which restates a `set` abbreviation.
 * **a definitional restatement that no tactic reproduces** (3): `h2 : decide ((0 : ℝ) < 0) = true :=
-  h1` (`UniqueErgodicity/Germ`) and `h2' : decide (x ≤ x) = false := h2`
+  h1` (`UniqueErgodicity/Germ/Basic`) and `h2' : decide (x ≤ x) = false := h2`
   (`UniqueErgodicity/Split`, twice).  `simpa using h1` was tried at all three and fails: `simp` does
   not reduce the structure field `(↑(rightGerm x hx)).2 ⟨x, hxD⟩` to `decide (x ≤ x)`.
 * **a type-class-level restatement** (1): `hle : leftEnd D.lam i ≤ x := hx.1`
-  (`Pair/BlockIrreducibility`), because `hx.1` states the same thing with the `LE` instance reached
+  (`Pair/Block/Irreducibility`), because `hx.1` states the same thing with the `LE` instance reached
   by another path (`Real.instPreorder.toLE` against `Real.instLE`), which `simpa` reports as a type
   mismatch.
 * **one each**: `hcontra'` (`UniqueErgodicity/Limits`) coerces an equation of `ProbabilityMeasure`s
@@ -15826,11 +15827,11 @@ of an `intro` are consumed, so a `∉` or a nested `∀` in the conclusion keeps
 
 **The 6 that stay**, each with the reason:
 
-* `Pair/SingularityList.lean` `hstep`, and `Pair/SubintervalTransfer.lean` `h2` (twice): the
+* `Pair/Singularity/List.lean` `hstep`, and `Pair/SubintervalTransfer.lean` `h2` (twice): the
   statement contains a `by have := j.isLt; omega` term inside a `Fin` cast, and once the binder is
   moved out of the `∀` the kernel rejects the elaborated proof term (*application type mismatch*).
   The statement cannot be written without that term, so the site stays.
-* `RauzyVeech/CylinderGrowth.lean` `hall`: the proof is `refine hP 0 (fun i hi => ?_)`, which
+* `RauzyVeech/Cylinder/Growth.lean` `hall`: the proof is `refine hP 0 (fun i hi => ?_)`, which
   introduces *its own* `i`; with the statement's `i` already a binder the two are different
   variables and the branch proves the wrong thing.
 * `RauzyVeech/RichPath/MassFunction.lean` `hexG`: the statement binds its own `F`
@@ -15840,13 +15841,13 @@ of an `intro` are consumed, so a `∉` or a nested `∀` in the conclusion keeps
   *is* the `∀ ε > 0, …`; with the binder moved, the application leaves unsolved goals and the
   `?_`s no longer line up.
 
-One conversion is deliberately **partial**: `RauzyVeech/CylinderGrowth.lean` `key` now reads
+One conversion is deliberately **partial**: `RauzyVeech/Cylinder/Growth.lean` `key` now reads
 `have key (m) : 1 ≤ m → m ≤ Fintype.card α → …`, keeping the two arrows, because the proof inducts
 on `m` before introducing them — the arrows cannot become binders without rewriting the induction.
 
 **Thirty-one lines went past 100 characters** (the new head plus the conclusion on one line).
 All are wrapped; one wrap broke the layout of a `by` whose tactics began on the same line
-(`RauzyVeech/TowerTiling.lean`, `hmeas`/`hsub`), which the build caught and which is fixed by
+(`RauzyVeech/Tower/Tiling.lean`, `hmeas`/`hsub`), which the build caught and which is fixed by
 putting the tactics on their own line.
 
 **The bare arrow chains (`have h : P → Q`), checked afterwards: there are none.**  A scan for a
@@ -15899,7 +15900,7 @@ Lake write the trace files it needs.
 mathematical:
 
 * `FreeGroup.induction_on`: the motive binder `C` became `motive` and the case `C1` became `one`
-  (`Pair/BlockAssembly`, `Pair/BlockRescaling`, `Pair/Centralizer`, `Pair/GeneratorChange`,
+  (`Pair/Block/Assembly`, `Pair/Block/Rescaling`, `Pair/Centralizer`, `Pair/GeneratorChange`,
   `ChallengeSolved`);
 * `IsMulTorsionFree.pow_left_injective` is now the alias of `eq_of_pow_eq_pow_of_commute`, which
   takes a `Commute` proof (`Pair/Centralizer`, two sites);
@@ -15945,6 +15946,3477 @@ and the accompanying `lake check`", and advises moving to it.  On this tree:
 
 `Comparator/run.sh`'s default revision is now `865edc1`, and `README.md`, `Comparator/README.md` and
 `NOTES.md` describe the core route first and the two others after it.
+
+### Addendum 193: the `Comparator/` directory removed; `lake comparator` is the gate
+
+Owner's instruction: *"delete it along with the `SlowBuild.sh` block and the references list I gave,
+and make `lake comparator` the documented gate"*, after the review at `results/review-IET2.md` found
+that the directory was in no Lake target while `formalization.yaml` and `Comparator/README.md` said
+the pair was "checked on every build".
+
+**What was removed.**  The three files of `Comparator/` — `Check.lean` (the local stand-in that
+compared the two compiled environments, 31 547 declarations), `README.md` (its run records) and
+`run.sh` (the recipe for the standalone pre-core tool) — and the block of `SlowBuild.sh` that ran
+`Check.lean`.  Nothing imported them; `lake build` is unchanged.
+
+**What replaces them.**  `lake comparator`, the comparator now in Lean core: it reads the root
+`comparator.json`, builds and exports both modules inside its `bwrap` sandbox, compares them
+declaration by declaration and replays the solution into Lean's kernel.  On this tree it prints
+`Lean default kernel accepts the solution` and `Your solution is okay!` and exits 0 (about 80 s).
+`SlowBuild.sh` now runs it at the end of the thorough check instead of `Check.lean`, and `README.md`,
+`NOTES.md`, `formalization.yaml` and the docstring of `Challenge.lean` describe it as *the* gate.
+
+**`enable_nanoda` is now `false`** in `comparator.json`.  With the key on, the run ends with
+`nanoda exited with 1` — `bwrap` cannot create the parents of `/opt/lean/bin/nanoda_bin` because
+this VM's `/opt/lean` is a symlink — although Lean's kernel accepted the solution.  Setting the key
+back to `true` where the sandbox can bind that path is the intended use; the external nanoda checker
+is not exercised here.
+
+**What was lost.**  The two mutation tests recorded against `Check.lean` (a challenge with `w ≠ 1`
+changed to `w = 1`, and `simplexRegion` weakened) can no longer be re-run, and the standalone tool's
+run record is gone with the directory.  The claim they supported — that the comparison bites — now
+rests on the structure of the core tool rather than on a local experiment.
+
+**Not changed.**  `comparator.json` itself stays (it is the gate's configuration), and so does
+`Challenge.lean`.  `lake build` remains green (9 164 jobs) and `#print axioms main` still reports
+`[propext, Classical.choice, Quot.sound]`.
+
+
+### Addendum 194: the two merged duplicate declarations, moved to their common ancestors
+
+Owner's instruction, acting on §3 B1 of the review `results/review-IET2.md`: *"if the statement can
+be put in an existing common ancestor to both files that use it, do it"*.
+
+`IETDatum₂.rvMat_nonneg` was declared twice — `RauzyVeech/Cylinder/Volume.lean:94` and
+`RauzyVeech/LevelN.lean:211` — and `IETDatum₂.Path.Q_nonneg` twice — `RauzyVeech/Cylinder/Volume.lean:97`
+and `RauzyVeech/Cylinder/Growth.lean:71`.  The modules are import-incomparable, so nothing objected;
+Lean's `import` *subsumes* a theorem with an identical statement, keeping one proof body while
+`const2ModIdx` still names the first module, so one proof of each never entered the environment.
+
+**Moved, not duplicated.**  Each statement now sits once, in an existing module below both of its
+users:
+
+* `IETDatum₂.rvMat_nonneg` in `RauzyVeech/Step.lean`, directly after `def rvMat`;
+* `IETDatum₂.Path.Q_nonneg` in `RauzyVeech/Path.lean`, after `Q_singleton` (the induction on the word
+  with `Matrix.mul_apply` and `Finset.sum_nonneg`; it uses `rvMat_nonneg` from `Step`).
+
+**Deleted.**  The two copies in `CylinderVolume`, the one in `LevelN`, and the two in
+`CylinderGrowth` — the last two include a third spelling, `IETDatum₂.Path.rvMat_nonneg`, which was
+already a separate (non-merged) name.  The docstrings of `CylinderVolume` and `CylinderGrowth` now
+say where the two lemmas live instead of claiming them locally.
+
+**Checked.**  `env.const2ModIdx` after `import IETFree` reports exactly one owner for each name:
+`IETFree.RauzyVeech.Step` and `IETFree.RauzyVeech.Path`.  A source scan over the 114 modules finds no
+other duplicate full name except the `private` pair `deltaOf_pos` (private names are module-mangled,
+so that one is not an environment duplicate — §4.3 of the review, not this).  `lake build` green,
+9 164 jobs, no warnings, 0 lines over 100 characters; `linter` driver 0 findings; `lake comparator`
+still accepts the pair; `#print axioms main` unchanged.
+
+
+### Addendum 195: `deltaOf_pos` public and defined once
+
+Owner's instruction after Addendum 194: *"I would still like `deltaOf_pos` to be defined only once.
+And make it public: if it's used twice, it means it should be part of the public interface."*
+
+`deltaOf_pos` was `private` in both `Rigidity/RigidStep.lean` and `Rigidity/Veech.lean` —
+byte-identical statement and proof.  Private names are module-mangled, so this was never an
+environment duplicate; it was two copies of one fact, and neither copy could be shared with the
+other file.
+
+It is now a **public** theorem in `Rigidity/Defs.lean`, directly after `def deltaOf`, as
+`IETFree.Rigidity.deltaOf_pos`; both private copies are deleted and the five use sites
+(`RigidStep.lean:87,193,326,330`, `Veech.lean:362`) resolve to it.  The other three `deltaOf`
+bounds stay private in `RigidStep`, where they are used.
+
+A source scan over the 114 modules now finds **no** duplicate full name at all, public or private.
+`lake build` green (9 164 jobs, no warnings), the linter driver 0 findings, `lake comparator` accepts
+the pair, `#print axioms main` unchanged.
+
+
+### Addendum 196: `levelWords` given one definition and one API, in a module below both users
+
+Owner's instruction, from §3 B3 of the review: *"make `levelWords` defined only once and reconcile
+the two APIs in LevelMass and Stopping."*
+
+`levelWords` and its API existed twice, in two namespaces that both claimed it: `LevelMass`
+(`levelWords`, `levelWords_zero`, `levelWords_succ`, `length_mem_levelWords`, `mem_levelWords_iff`,
+`sum_cond_levelWords`, plus the helper `append_true_ne_append_false`) and `Stopping` (`levelWords`
+with a different body, `length_of_mem_levelWords`, `mem_levelWords_of_length`,
+`mem_levelWords_iff`, `eq_of_append_singleton_eq`, `pairwiseDisjoint_levelWords`,
+`sum_cond_levelWords`).  The bodies differed — two images under appending `true`/`false` against a
+`biUnion` of the two-element sets — and 33 modules import both.
+
+**The home.**  A new module `RauzyVeech/RichPath/LevelWords.lean`, in `namespace LevelWords`,
+importing `NodeHeight` and sitting below both users (both already import it transitively).  It carries
+the single definition, in the `image` form, and one copy of each shared lemma:
+
+* `levelWords`, `levelWords_zero`, `levelWords_succ`;
+* `length_mem_levelWords` and `mem_levelWords_of_length`, with `mem_levelWords_iff` as the pair;
+* `append_true_ne_append_false`, `eq_of_append_singleton_eq`;
+* `pairwiseDisjoint_levelWords` (the `{γ ++ [true], γ ++ [false]}` form that a `sum_biUnion` needs);
+* `sum_cond_levelWords`, with `CylinderMass.cond_append` and `NodeHeight.cond_arrow_sum`.
+
+**The users.**  `LevelMass.lean` and `Stopping.lean` import the new module and `open LevelWords`, so
+every unqualified use in their remaining proofs resolves unchanged.  `LevelMass` loses §2
+(`cond_arrow_add_one`, which was `NodeHeight.cond_arrow_sum` under another name and had no other
+user) and its §3 definition block; its sections are renumbered.  `Stopping` loses its §1 definition
+block and keeps `prefixFree_of_length`.  `Potential.lean` and `HeightDichotomy.lean` now write
+`LevelWords.levelWords` (36 and 9 references); `Potential.sum_levelWords_succ` was reproved from the
+`image` form (`sum_union` on the two disjoint images, then the two `sum_image`s) instead of the
+`biUnion` form.  Both module docstrings point at the new file.
+
+**Checked.**  `env.const2ModIdx`: `LevelWords.levelWords` is owned by
+`IETFree.RauzyVeech.RichPath.LevelWords`, and `LevelMass.levelWords` / `Stopping.levelWords` are
+absent; the same for `sum_cond_levelWords`.  A source scan over the 115 modules finds no duplicate
+full name at all.  The umbrella `IETFree.lean` carries the new import in sorted position (the
+`mk_all` order).  `lake build` green, 9 165 jobs, no warnings, 0 lines over 100 characters; the
+linter driver 0 findings; `lake comparator` accepts the pair; `#print axioms main` unchanged.
+
+
+### Addendum 197: `wordLength` and `zpow_eq_one_iff` deleted in favour of Mathlib
+
+Owner's instruction, from §4.3 of the review: *"delete `wordLength` and `zpow_eq_one_iff` and let the
+build find the sites."*  These were the two of the `reuse` list that the rubric calls `block`: a
+project declaration that a located Mathlib declaration directly replaces.
+
+**`wordLength`** (`Pair/MeasureTools.lean`) was `(FreeGroup.toWord w).length`, i.e. `FreeGroup.norm`
+(`GroupTheory/FreeGroup/Reduce.lean:424`) by `rfl` — the tree itself had
+`wordLength_eq_norm : wordLength w = FreeGroup.norm w := rfl`.  Deleted, with the four one-line
+restatements of Mathlib lemmas (`wordLength_genX`, `wordLength_genY`, `wordLength_genX_pow`,
+`wordLength_inv`); the call sites use `FreeGroup.norm_of`, `FreeGroup.norm_of_pow` and
+`FreeGroup.norm_inv_eq` directly.  The four lemmas with real content are restated in terms of
+`FreeGroup.norm`, in `namespace FreeGroup` (their first explicit argument is a `FreeGroup`):
+`norm_commutatorElement_le`, `norm_conj_le_of`, `norm_conjX_le`, `norm_conjX_pow_le`.  The 42 uses in
+`Pair/Irreducible.lean` are now `FreeGroup.norm`, and the file's `set L : ℕ := wordLength (W n)` trap
+noted in Part I disappears with the name.
+
+**`zpow_eq_one_iff`** (`Pair/Centralizer.lean`) was `q ^ j = 1 ↔ j = 0 ∨ q = 1`, proved in twenty
+lines from `IsMulTorsionFree.eq_of_pow_eq_pow_of_commute`; Mathlib has
+`IsMulTorsionFree.zpow_eq_one_iff : a ^ n = 1 ↔ a = 1 ∨ n = 0` (`Algebra/Group/Torsion.lean:100`),
+with the disjuncts in the other order.  Deleted; the two uses (`Centralizer.lean:462,471`) now call
+the Mathlib lemma and destructure `a = 1 ∨ n = 0`.
+
+**Checked.**  `lake build` green, 9 165 jobs, no warnings, 0 lines over 100 characters; the linter
+driver 0 findings; `#print axioms main` unchanged; a source scan finds no duplicate full name.  The
+comparator was **not** run for this change: by the owner's instruction it is a final step, not a
+per-change check.
+
+**Noted, not done.**  `FreeGroup.norm_conj_le` (`Centralizer.lean:225`,
+`norm (g * s * g⁻¹) ≤ norm s + 2 * norm g`) subsumes `FreeGroup.norm_conj_le_of` in `MeasureTools`;
+unifying them needs the general lemma moved below both files (a small `FreeGroup` support module, or
+`MeasureTools` itself plus an import in `Centralizer`).  Left as the next `reuse` item.
+
+
+### Addendum 198: the general conjugation bound moved down, its special case deleted
+
+Owner's instruction, from the note closing Addendum 197: *"move the general lemma and delete the
+special case."*
+
+`FreeGroup.norm_conj_le` — `norm (g * s * g⁻¹) ≤ norm s + 2 * norm g` — lived in
+`Pair/Centralizer.lean`, above `Pair/MeasureTools.lean`, which could therefore not use it and carried
+its own special case `FreeGroup.norm_conj_le_of` (`norm (a⁻¹ * u * a) ≤ norm u + 2` for `norm a = 1`).
+The general lemma now sits in `Pair/Commensurable.lean`, the tree's generic free-group module
+(`import Mathlib` only, "nothing here is specific to two generators"), inside its `FreeGroup`
+namespace; `MeasureTools` imports that module.  The special case is **deleted**, and the three
+consequences are derived from the general bound in one step each:
+
+* `norm_conjX_le` (`genX`), `norm_conjY_le` (`genY`) — new, from `norm_conj_le` at `g = genX⁻¹`
+  and `genY⁻¹` with `norm genX⁻¹ = norm genY⁻¹ = 1`;
+* `norm_conjX_pow_le` (a power of `genX`) — from `norm_conj_le` at `g = (genX ^ i)⁻¹` with
+  `norm (genX ^ i)⁻¹ = i`, replacing the four-inequality `norm_mul_le` chain it had.
+
+`Irreducible.lean` uses `norm_conjY_le` where it used the deleted special case;
+`Centralizer.lean`'s `norm_le_norm_conj` and its one call site of `norm_conj_le` are unchanged and
+now resolve to the moved lemma.
+
+`[DecidableEq α]` is part of the statement: it is needed by `FreeGroup.toWord`, hence by
+`FreeGroup.norm` itself, and dropping the binder fails to synthesize.
+
+**Checked.**  `lake build` green, 9 165 jobs, no warnings, 0 lines over 100 characters; the linter
+driver 0 findings; `#print axioms main` unchanged; no duplicate full name.  As instructed, the
+comparator was not run.
+
+
+### Addendum 199: the generic `List` lemmas moved out of `Pair/` into `IETFree/ListPeriodicity.lean`
+
+Owner's instruction, from §4.3 of the review: *"move the five generic `List` lemmas in
+`Pair/Commensurable.lean` into a `List` support module and delete the copies."*
+
+The five lemmas — `List.hasPeriod_flatten_replicate`, `List.drop_mul_prefix`,
+`List.take_drop_mul_eq_take`, `List.take_eq_flatten_replicate_of_hasPeriod`,
+`List.append_comm_of_flatten_replicate_eq` — are about `List.HasPeriod` and flattening, mention no
+interval exchange, and lived in a directory named for pairs of exchanges.  Mathlib has no version of
+any of them: its periodicity file (`Mathlib/Data/List/PeriodicityLemma.lean`) stops at
+`HasPeriod.gcd`, which the last lemma here uses.
+
+**The new module** `IETFree/ListPeriodicity.lean` imports `Mathlib` only and holds the five, verbatim,
+in `namespace List`, under a module docstring that says what each is for (the Fine–Wilf step behind
+root uniqueness in a free group) and points at Mathlib's `HasPeriod` API.  It is registered in the
+umbrella `IETFree.lean` in `mk_all` order, which is how `SlowBuild.sh` learns about it.
+
+**The copies** are deleted from `Pair/Commensurable.lean`, which now imports the new module; its
+docstring keeps the proof sketch and says where the list lemmas live.  Nothing else in the tree used
+them, so this is a pure relocation: no proof changed.
+
+**Checked.**  `env.const2ModIdx` reports all five owned by `IETFree.ListPeriodicity`; `lake build`
+green, 9 166 jobs, no warnings, 0 lines over 100 characters; the linter driver 0 findings;
+`#print axioms main` unchanged; no duplicate full name.  As instructed, the comparator was not run.
+
+
+### Addendum 200: one `simplex`, general over the alphabet; `simplexOn` deleted
+
+Owner's instruction, from §4.3 of the review: *"keep `simplex` as the only name and delete
+`simplexOn`."*
+
+The tree had two definitions of the same set: `simplexOn (α : Type*) [Fintype α]` and
+`simplex (d : ℕ) : Set (Fin d → ℝ≥0)`, the second the `α = Fin d` case of the first, with 24 files
+using the general form and 35 the `Fin d` one.  Since a definition of the `Fin d` form cannot serve
+the Rauzy–Veech layer, which works over an arbitrary finite alphabet, the name kept is `simplex` and
+the *definition* kept is the general one:
+
+```lean
+/-- The simplex of `α`-indexed length vectors: total mass `1`.  It does not involve the
+combinatorial data, and it does not require the coordinates to be positive. -/
+def simplex (α : Type*) [Fintype α] : Set (α → ℝ≥0) := {lam | ∑ a, lam a = 1}
+```
+
+`simplexOn` is gone (0 occurrences in the tree), and the `Fin d` uses are now `simplex (Fin d)` — 126
+sites in 19 files, plus the ones inside `TopBotFormalism` itself.
+
+**The API was reconciled in the same pass.**  Every identifier containing `simplexOn` was renamed to
+its `simplex` form (155 occurrences): `mem_simplexOn` → `mem_simplex`,
+`ae_mem_simplexOn_of_nonempty` → `ae_mem_simplex_of_nonempty`,
+`ae_mem_simplexOn_of_card_ne_zero` → `ae_mem_simplex_of_card_ne_zero`,
+`measurableSet_simplexOn` → `measurableSet_simplex`, and so on.  `simplexVolumeOn` is untouched (it
+does not contain the substring), and the `_simplex_fin` stems such as `simplexMap_mem_simplex_fin`
+keep their names, which remain accurate: they are the `α = Fin d` instances.
+
+Two declarations collapsed in the process, because the rename made them the same statement:
+
+* `measurableSet_simplex` existed twice — `(d : ℕ) : MeasurableSet (simplex (Fin d))` in
+  `Pair/Diophantine.lean` and `(α : Type*) [Fintype α] : MeasurableSet (simplex α)` in
+  `RauzyVeech/SimplexAe.lean`.  The general one moved down beside the definition, in
+  `TopBotFormalism.lean`; the `Fin d` copy is deleted, and its two uses in
+  `simplexVolume_compl_simplex` call the general one at `α = Fin (p + 1)`.
+* the `TopBotFormalism` docstring that explained why the `Fin d` form was kept under its own name is
+  gone with the definition it described.
+
+`isClosed_simplex` (in `Pair/Diophantine`) and `isBounded_simplex` (in `RauzyVeech/BoundedSimplex`)
+survive as they were: one is the `Fin d` instance, the other already general.  Generalising
+`isClosed_simplex` is a `generality` item, not this one.
+
+**Checked.**  `lake build` green, 9 166 jobs, no warnings, 0 lines over 100 characters (seven
+statements and two docstrings were rewrapped where the `(Fin …)` made a line too long); the linter
+driver 0 findings; `#print axioms main` unchanged; one `def simplex` in the tree, no duplicate full
+name.  As instructed, the comparator was not run.
+
+
+### Addendum 201: `exch`, `exchEquiv`, `toComb` deleted in favour of `mkIETFun`, `mkIETEquiv`, `ofPerm`
+
+Owner's instruction, from §4.3 of the review: *"unify them with `mkIETFun`, `mkIETEquiv` and
+`ofPerm` and delete the copies."*
+
+The three were synonyms with a transposed argument order or a different name for the same datum:
+
+* `Tower.exch (π) (lam) : ℝ → ℝ` was `mkIETFun lam π 0` (`FirstReturn.lean`);
+* `Tower.exchEquiv (π) (lam) : Equiv ℝ ℝ` was `mkIETEquiv lam π 0`;
+* `Tower.toComb (π) : IETDatum₂ (Fin n) n` was `IETDatum₂.ofPerm π` (`⟨π, 1⟩` against `⟨π, refl⟩`).
+
+**Deleted:** the three definitions, `coe_exchEquiv` (which was `coe_mkIETEquiv` word for word) and
+`Tower.exch_of_mem` (which was `Tower.mkIETFun_zero_of_mem`; the surviving lemma moved up to the
+place the deleted one occupied, because its first use precedes its old position).
+
+**Rewritten:** every application, 194 sites in 9 files — `exch π lam` → `mkIETFun lam π 0`,
+`exchEquiv π lam` → `mkIETEquiv lam π 0`, `toComb π` → `IETDatum₂.ofPerm π` — in statements, proofs
+and docstrings. Proofs that unfolded the definitions lost the unfolding step (`rw [exch, …]`,
+`simpa [exch]`, `simp only [← coe_exchEquiv]`), and four `have … := by rw […]; rfl` steps lost their
+`rfl` because the rewrite now reaches the goal syntactically.
+
+**Renamed**, since a name that refers to a deleted declaration is a name about nothing: the surviving
+lemmas take the stem of the object they are about. `Tower.`: `injective_mkIETFun`,
+`measurable_mkIETFun`, `measurable_mkIETFun_symm_iterate`, `mkIETFun_apply_iterate_symm`,
+`mkIETFun_symm_apply_iterate`, `map_mkIETFun_symm`, `map_mkIETFun_symm_iterate`,
+`measure_image_mkIETFun`, `mkIETFun_mem_cut_of_ne`, `mkIETFun_mem_Ico_cut_tot`,
+`mkIETFun_mkIETFun_eq`, `mkIETFun_image_topCell`, `exchHat_eq_mkIETFun`,
+`exchHat_eq_mkIETFun_sq` (the `exchHat` side is a different object and keeps its name),
+`measurable_mkIETEquiv`, `ofPerm_last_false`, `ofPerm_last_true`, `rvMat_ofPerm_false_apply`.
+`TowerTrue.`: `mkIETFun_apply_cutT`, `mkIETFun_mem_cutT_of_ne_top`, `mkIETFun_mem_cutT_of_top_low`,
+`mkIETFun_mem_Ico_cutT_tot_of_top_high`, `idx_mkIETFun_of_idx_topCell`, `mkIETFun_mkIETFun_eq_true`,
+`mkIETFun_image_cellHatT_succ`, `mkIETFun_rvStep_false_hatLam`, `mkIETFun_rvStep_true_hatLam`,
+`tower_formula_level_pathQ_mkIETFun`. `IETDatum₂.`: `rvMat_ofPerm_false`, `rvMat_ofPerm_true`,
+`rvMatNat_ofPerm_false`, `rvMatNat_ofPerm_true`. `TowerInjectivity.`: `mapsTo_mkIETFun`,
+`mkIETFun_iterate_mapsTo_one`; `TowerTiling.`: `mkIETFun_mapsTo_one`; `LevelN`: `injective_mkIETFun`,
+`measurableSet_image_mkIETFun`; `Rigidity`: `mkIETFun_eq_add_of_mem`.
+
+**Checked.**  `lake build` green, 9 166 jobs, no warnings, 0 lines over 100 characters (17 lines
+rewrapped); the linter driver 0 findings; `#print axioms main` unchanged; no duplicate full name; no
+identifier containing `exch` or `toComb` survives except the `exchHat` family, which names its own
+object.  As instructed, the comparator was not run.
+
+
+### Addendum 202: `sum_Ico_succ_sub` and `sum_fin_sub` deleted in favour of Mathlib
+
+Owner's instruction, from §4.3 of the review: *"replace them with `Finset.sum_range_sub` and delete
+the copies."*
+
+* `sum_Ico_succ_sub (S) (hAB : A ≤ B) : ∑ k ∈ Ico A B, (S (k + 1) - S k) = S B - S A` was
+  `Finset.sum_Ico_eq_sub` followed by two `Finset.sum_range_sub` and `ring`; Mathlib also has
+  **`Finset.sum_Ico_sub`**, which is that statement verbatim.  Deleted; its one use
+  (`LengthMap.lean:159`) now calls `Finset.sum_Ico_sub (markExt s) hAB`.
+* `sum_fin_sub (f) : ∑ j : Fin (n - 1), (f (j + 1) - f j) = f (n - 1) - f 0` was
+  `Fin.sum_univ_eq_sum_range` composed with `Finset.sum_range_sub`.  Deleted; its one use
+  (`LengthMap.lean:454`, in the telescoping identity of `sum_compLenAffine`) rewrites in the other
+  direction with the same two Mathlib lemmas:
+  `rw [← Finset.sum_range_sub (…), ← Fin.sum_univ_eq_sum_range (…)]`.
+
+Both uses are in the same file; nothing else in the tree referred to them.  No proof changed
+otherwise.
+
+**Checked.**  `lake build` green, 9 166 jobs, no warnings, 0 lines over 100 characters; the linter
+driver 0 findings; `#print axioms main` unchanged.  As instructed, the comparator was not run.
+
+
+### Addendum 203: one `height`, general in the word; `hgt1` and `hgt` deleted
+
+Owner's instruction, from §4.3 of the review: *"unify `height`/`hgt1` and the other
+RauzyVeech/Rigidity duplicates; start with `hgt1` and its lemmas."*
+
+Three declarations computed the same thing, the number of floors of the tower over a letter — the
+column sum of a path matrix:
+
+| declaration | where | statement |
+|---|---|---|
+| `IETFree.Rigidity.height P γ b` | `Rigidity/Defs.lean` | `∑ a, (Path.Q P γ a b).toNat` |
+| `TowerInjectivity.hgt P γ k b` | `TowerInjectivity.lean` | `∑ a, (Path.Q P (γ k) a b).toNat` |
+| `TowerInjectivity.hgt1 P e b` | `TowerLevelOne.lean` | `∑ a, (rvMat e a b).toNat` |
+
+The second is the first at `γ := γ k`, and the third at `γ := [e]` (`Path.Q_singleton`).
+
+**`height` moved down.**  The general one is now `IETDatum₂.Path.height` in `RauzyVeech/Path.lean`,
+beside `Q` and `Q_singleton`, where it is a statement about the path matrix and where every later
+module can see it; the `Rigidity` definition is deleted, and the three Rigidity files use
+`IETDatum₂.Path.height` (120 sites, eight statements and two docstrings rewrapped at the 100-character
+limit).
+
+**`hgt1` deleted.**  Its sites are now `IETDatum₂.Path.height P [e] b`.  Its lemma `hgt1_eq` became
+`height_singleton_eq` (the same formula, derived from `Path.height` and `Q_singleton`), and the two
+bounds that existed twice — `TowerTiling.hgt1_le_two`/`hgt1_eq_one_of_ne` for the vertex `VV P γ k`,
+and the `private` copies in `RigidSet` for an arbitrary `P` — are one pair of public lemmas in
+`TowerLevelOne`, stated for an arbitrary irreducible `P`:
+`TowerInjectivity.height_singleton_le_two` and `height_singleton_eq_one_of_ne`.  `TowerTiling` and
+`RigidSet` call them at `VV P γ k` and at `vertex P γ` respectively; `returnB_eq_hgt1`/
+`returnBT_eq_hgt1` are `returnB_eq_height`/`returnBT_eq_height`.
+
+**`hgt` deleted too**, being `height` at `γ k`: its two uses (`floors` and `HH`) write
+`IETDatum₂.Path.height P (γ k) b`, and the three `simp only [TowerStep.HH, hgt]` steps unfold
+`Path.height` instead.  `HH` stays: it is the local notation of the induction, with many consumers.
+
+**Checked.**  One definition (`IETDatum₂.Path.height`), zero occurrences of `hgt`/`hgt1`; `lake build`
+green, 9 166 jobs, no warnings, 0 lines over 100 characters; the linter driver 0 findings;
+`#print axioms main` unchanged; no duplicate full name.  As instructed, the comparator was not run.
+
+**Still to unify from the same list:** the `cover_step_false`/`cover_step_true` pair
+(`TowerTiling` sequence-indexed against `RigidSet` node-indexed), `hgt1_le_two`'s old siblings
+`hgt1_eq_one_of_ne`, done, and the remaining singles: `thr_pos`, `cutAffine_eq_leftEnd`,
+`eq_of_proj_eq_of_notMem`, `upperEnd_le_leftEnd`, `card_pos`.
+
+
+### Addendum 204: the node-indexed tower development moved below `TowerTiling`, and the sequence `cover_step_*` derived from it
+
+Owner's instruction, on §8.10 of the review: *"Do the move."*
+
+`Rigidity/RigidSet.lean` re-proved, node by node, what `RauzyVeech/Tower/Tiling.lean` proves along an
+infinite sequence of words — deliberately, as its docstring said: the sequence statements assume
+`∀ k, IterOK P lam (γ k)`, which cannot be continued past the finite node `γ`.  The node statements
+are the stronger ones, so they are now the primary development.
+
+**Moved.**  A new module `RauzyVeech/Tower/Node.lean` (`namespace TowerNode`, importing
+`TowerLevelOne`, i.e. below `TowerTiling`) carries the node-indexed tower theory, 445 lines taken
+verbatim from `RigidSet` and made public: `baseLen` (from `Rigidity/Defs.lean`), `nodeExch` and its
+API, `cellAt_node`, `height_nil`, `height_succ`, `cc_sub_false`/`cc_sub_true`/`cc_sub_true_scd`,
+`kk_image_false_scd`/`kk_image_true_scd`, `FR_list`, `cellAt_sub_base`, `cellAt_eq_of_mem`,
+`height_le_succ_false`, `height_succ_ne`, `height_succ_true_scd`, `height_succ_false_scd`,
+`LVL1_node`, `baseLen_eq_sum`, `cellOf_node`, `cover_step_false`, `cover_step_true`.  Its module
+docstring records why the node form exists.
+
+**Three elementary lemmas moved down** out of `TowerTiling` so the node module can use them:
+`cellAt_succ`, `tot_lengthsInBottom`, `coe_toIET`, now in `TowerLevelOne` under the same
+`TowerInjectivity` names.
+
+**Derived.**  `TowerTiling.cover_step_false`/`cover_step_true` are now five-line derivations from
+`TowerNode.cover_step_false`/`_true` at `γ := γ k`, with `IterOK P lam (γ k ++ [p k])` from
+`hOK (k+1)` and `hstep k`; their unused `hzero` hypothesis is gone and the two call sites updated.
+`RigidSet` deletes its 24 `private` declarations and uses `TowerNode`'s (via `open TowerNode`);
+`Hit`, `RigidStep` and `Veech` open it as well, for `baseLen`.  `Defs.lean` keeps only `BigCell`,
+`deltaOf` and `deltaOf_pos`.
+
+**Checked.**  One proof of each `cover_step_*` (`TowerNode`), one derivation (`TowerTiling`), no
+`private` copies left; `lake build` green, 9 167 jobs (117 modules), no warnings, 0 lines over 100
+characters; the linter driver 0 findings; `#print axioms main` unchanged; no duplicate full name;
+umbrella at 117 imports for 117 modules.  As instructed, the comparator was not run.
+
+
+### Addendum 205: the five one-line duplicates unified
+
+Owner's instruction, closing the list left open by Addendum 203: *"Now the one-line duplicates:
+`thr_pos`, `cutAffine_eq_leftEnd`, `eq_of_proj_eq_of_notMem`, `upperEnd_le_leftEnd`, `card_pos` —
+go ahead."*
+
+Each was one statement with one-line proofs, written twice.  In every case the surviving copy is
+the one in the lowest module both users can import, and the other is deleted with its use sites
+repointed.  None of the five pairs carried the same full name — the two copies sat in different
+namespaces — so no duplicate-name scan would ever have found them; they were found by reading.
+
+**`upperEnd_le_leftEnd`.**  Root in `IET.lean`, `InvariantMeasure.upperEnd_le_leftEnd` in
+`RauzyVeech/InvariantMeasure.lean`; the second is the one `disjoint_cellOf` used, the first is what
+`RauzyVeech/LevelN.lean`'s `disjoint_cell`, `Pair/LengthMap.lean` and `Pair/Singularity/Bound.lean`
+already resolved to (they are outside `namespace InvariantMeasure`).  The `InvariantMeasure` copy is
+deleted.  Its proof was the only user of `leftEnd_mono` and `leftEnd_succ_eq_upperEnd`, so both move
+to `IET.lean`, beside the definitions of `leftEnd` and `upperEnd` they are about, and
+`upperEnd_le_leftEnd` is now derived from them (successor identity, then monotonicity) rather than
+from a direct `Finset.sum_le_sum_of_subset_of_nonneg`; the three lemmas are the API of the
+`leftEnd`/`upperEnd` pair, in its own module, and every one of them is used.
+
+**`card_pos`.**  The same fact — the alphabet has at least one letter — existed under four names,
+all derived from `P.piTop : α ≃ Fin n` and `[NeZero n]`:
+
+| declaration | where | statement |
+|---|---|---|
+| `NodeHeight.card_pos P` | `RichPath/NodeHeight.lean` | `1 ≤ Fintype.card α` |
+| `MeshShrink.card_pos P (hn : 2 ≤ n)` | `RauzyVeech/MeshShrink.lean` | `0 < Fintype.card α` |
+| `Stopping.card_ge_one P` | `RichPath/Stopping.lean` | `1 ≤ Fintype.card α` |
+| `BoundedLag.nonempty_alpha P` | `RichPath/BoundedLag.lean` | `Nonempty α` |
+
+It is a fact about the datum, so it now lives in `IETDatum₂`, in `TopBotFormalism.lean`:
+`IETDatum₂.card_pos P : 1 ≤ Fintype.card α`, with `IETDatum₂.card_eq_n P : Fintype.card α = n`
+moved down from `Stopping` beside it (`card_pos` is `card_eq_n` plus `NeZero.ne n`).
+`NodeHeight.card_pos`, `MeshShrink.card_pos` and `Stopping.card_ge_one` are deleted and their
+use sites write `P.card_pos`: dot notation, no `open` needed, and `0 < Fintype.card α` is
+`1 ≤ Fintype.card α` definitionally on `ℕ`, so `MeshShrink`'s three uses of the strict form take it
+unchanged.  `MeshShrink` cannot see `NodeHeight` at all (it imports `NameInfinite` and `RayPath`),
+which is why the statement had been reproved there.  `Lam_pos` loses its `hn : 2 ≤ n`, unused once
+`card_pos` supplies `Nonempty α`, and its single caller drops the argument; `card_ge_oneR` (the
+`ℝ`-valued form) and `card_ge_two` stay, being different statements, with `card_ge_one` replaced by
+`P.card_pos` and `card_eq_n` by `IETDatum₂.card_eq_n`.  `nonempty_alpha` stays: it is about the
+type, not the cardinal.
+
+**`eq_of_proj_eq_of_notMem`.**  In `UniqueErgodicity/MeasPrep.lean` under `namespace SplitI`, and in
+`UniqueErgodicity/Germ/Basic.lean` under `namespace UniqueErgodicity` with explicit `SplitI.`
+qualifications — so `SplitI.eq_of_proj_eq_of_notMem` and `eq_of_proj_eq_of_notMem` were two
+different names for the same statement, and both compiled.  The statement is about `proj`,
+`coord_of_lt` and `ext`, all of `SplitI`, so it now sits in `UniqueErgodicity/Split.lean` just after
+`ext`, with the four-line proof (trichotomy on the projection) that was in `MeasPrep`.  The `Germ`
+copy proved it through `eq_rightGerm_of_side_true`, four steps for what is a case split; it is
+deleted, as is the `MeasPrep` copy, and the single use (`UniqueErgodicity/IET.lean`) already wrote
+`SplitI.eq_of_proj_eq_of_notMem`.
+
+**`thr_pos`.**  `HeightDichotomy.thr_pos` and `Potential.thr_pos`, both `0 < Stopping.thr P w`; the
+first re-derived it from `Mx_pos` and `0 < Fintype.card α` by `nlinarith`, the second from `Mx_pos`
+and `Mx_lt_thr` in one `lt_trans`.  It is now `Stopping.thr_pos`, in `RichPath/Stopping.lean` next
+to `Mx_pos`/`Mx_lt_thr`, with the `lt_trans` proof; the copies are deleted and the two use sites
+(`kerckhoff_letter` in `HeightDichotomy`, `sum_firstCr_le` in `Potential`) write `Stopping.thr_pos`.
+
+**`cutAffine_eq_leftEnd`.**  Root in `Pair/Presentation.lean`, beside `cutAffine` and
+`leftEnd_simplexMap`, and `GoodRegion.cutAffine_eq_leftEnd` in `Pair/Block/Diophantine.lean`, with
+the same statement and the same two-line proof.  The `GoodRegion` copy had **no user**: its
+namespace is not opened by `BlockDatum` or `SingularityList`, so their five `rw`s already resolved
+to the root one, and nothing inside `BlockDiophantine` used it either.  It is deleted and the
+module docstring no longer lists it among the file's contents.
+
+**Checked.**  `lake build` green, 9 167 jobs (117 modules); `#print axioms main` =
+`[propext, Classical.choice, Quot.sound]`; the linter driver 0 findings; 0 lines over 100 characters
+and no trailing whitespace anywhere in the tree.  Warnings: each of the 119 modules
+(`IETFree/**`, `Challenge`, `IETFree`) was re-elaborated on its own with the project's `leanOptions`,
+and the only line any of them printed is `ChallengeSolved`'s axiom report — so no module carries a
+warning, which a build whose tail was truncated could not have shown.  Each of the eight resulting
+names (`thr_pos`, `cutAffine_eq_leftEnd`, `eq_of_proj_eq_of_notMem`, `upperEnd_le_leftEnd`,
+`card_pos`, `card_eq_n`, `leftEnd_mono`, `leftEnd_succ_eq_upperEnd`) has exactly one owner in
+`env.const2ModIdx`, and `rg` finds no occurrence of any deleted name outside this file.  As
+instructed, the comparator was not run.
+
+**Docs.**  `NOTES.md` gains a section naming the two alphabet facts, so that a third `card_pos` is not
+grown; `README.md` and `NOTES.md` say 205 addenda, and this file's Part I header no longer quotes a
+total.
+
+**Still open from the review:** the `warn.sorry = false` half of B2 and the whole-library axiom
+audit, the `formalization.yaml`/`NOTES.md` prose defects of §4.8, and the larger rows — `@[expose]`
+removal from the leaves up, namespacing the unpinned root declarations, the `Pair/Block/` and
+`RauzyVeech/Tower/` subdirectories, the `IET.lean` basename clash, and the naming rows.
+
+
+### Addendum 206: `warningAsError`, and `Challenge` stays a default target
+
+Owner's instruction on the trust half of B2: *"ok for warningAsError and put Challenge in
+defaultTargets.  But keep `warn.sorry = false`, and don't do a SlowBuild."*
+
+`lakefile.toml` gains `warningAsError = true`.  It changes nothing today — all 119 modules
+elaborate without a warning (Addendum 205 measured it module by module) — and it makes the next
+warning fail the build instead of scrolling past in a 9 000-job log: the only reason the earlier
+"no warnings" claims had to be re-measured by hand.
+
+`warn.sorry = false` stays, now with its reason written beside it: `Challenge.lean` carries three
+deliberate `sorryAx` (the `mkIETEquiv` definition hole and the statements `coe_mkIETEquiv` and
+`main`), so its `sorry` warnings stay off and `#print axioms main` remains their guard.  Without
+that, `warningAsError` would turn the frozen statement file into a build failure.
+
+`defaultTargets` is unchanged: `Challenge` was already in it (`["IETFree", "Challenge"]`) and
+stays, so `lake build` checks the statement file on every run.  The B2 trust half is therefore done
+only in its first part; the whole-library axiom audit and the `SlowBuild.sh --strict` wiring are
+**not** done, and no `SlowBuild.sh` was run.
+
+**Verified.**  `lake build` green from scratch under the new option — all 117 `IETFree` modules
+recompiled, 9 167 jobs, no warning and no error in the full log, `#print axioms main` unchanged.
+The option is exercised rather than assumed: unknown keys in `[leanOptions]` are silently ignored,
+so a one-line file with an unused variable was compiled with `-DwarningAsError=true` and exits 1
+(it prints the linter's message as an `error`).  `lake env lean <file>` does not read the lakefile,
+so a single-file check still only *prints* warnings; that is now `NOTES.md`'s trap entry, with the
+`-DwarningAsError=true` flag to opt in.
+
+
+### Addendum 207: a from-scratch audit, and the README anchors re-pointed
+
+Owner's instruction: *"Next, you will redo an audit of the library using the skill files and the tau
+ceti rules, from scratch."*
+
+**The audit.** `results/review-IET2-v2.md`: the whole library judged again, on the tree as it
+stands, against the four project skills
+(`.skill/lean-{code-cleanup,naming-style,project-architecture,statement-audit}`, with their
+references) and the Tau Ceti review protocol (`.scratch/tauceti/TauCetiReview/rubrics/`,
+`_common.md` plus the ten angle files and the naming-conventions reference). It is independent of
+`results/review-IET2.md` in the sense that every number and every finding was re-derived from the
+tree; that report was read, but nothing was inherited. Four further auditors ran the four
+integrity-heavy angles (correctness, reuse, attribution, proof-quality) as a swarm in this VM and
+their findings were checked before being kept.
+
+Its verdict: **3 block, ~24 request_changes**. The three blockers are all Mathlib duplication —
+`birkhoffAverage_comp_apply` (`CompactTool.lean:69`), `image_preimage_inter`
+(`CutSet/Measure.lean:125`), `restrict_eq_of_ae_mem` (`RauzyVeech/LengthInjective.lean:26`) — each
+replaced by a compiled one-liner. The largest non-blocking items: the empirical-measure layer of
+`CompactTool.lean` re-derives Mathlib's `Dynamics/Ergodic/EmpiricalMeasure.lean`; three public
+theorems carry an unused `hstop` (`Peel.lean:260,312`, `RigidStep.lean:249`) silenced by `have
+_hstop := hstop`; `@[expose]` is on all 119 files while the cross-module need is 69 `unfold`s in 21;
+eight data structures have no `@[ext]`; `Pair/Block*` (9 files) and `RauzyVeech/Tower*` (8) should
+be directories; 27 modules have no `# Title`; and the Rauzy–Veech development's own sources
+(Yoccoz's survey, the Avila–Gouëzel–Yoccoz appendix) are in no `sources:` entry and no README. The
+mathematics is faithful: `main` was compared with Theorem 1.1 binder by binder and the paper's `Δ_π`
+with `simplexVolume`.
+
+**The anchors.** `README.md`'s 159 `#L` links had drifted: of the 131 that name a locatable
+declaration, **42 pointed at the wrong line** — 16 of them moved by this session's own edits to
+`IET.lean` and `TopBotFormalism.lean`. They are re-pointed, with the script that does it
+(`.scratch/audit2/refix_anchors.py`) and the checker (`.scratch/audit2/anchors2.py`, 128 checkable
+links, 0 stale after). Three links stay ambiguous (the name occurs twice in the target file) and one
+does not resolve; 28 are labelled with `file:line` text and cannot be checked mechanically. A source
+edit must now be followed by the checker — that is the finding, not the 42.
+
+**Checked.** No `.lean` file changed in this round: `lake build` still replays 9 167 jobs, `#print
+axioms main` unchanged, `runLinter` clean. Documentation only (`README.md`, this addendum,
+`results/review-IET2-v2.md`). As instructed, the comparator was not run.
+
+
+
+
+
+
+### Addendum 208: the three reuse blockers of the audit closed
+
+Owner's instruction, on §2 of `results/review-IET2-v2.md`: *"Go ahead with the three reuse blockers:
+`birkhoffAverage_comp_apply`, `image_preimage_inter` and `restrict_eq_of_ae_mem`."*
+
+Each was a declaration a located Mathlib declaration directly replaces.  All three are deleted, with
+their single use site moved to the Mathlib lemma.
+
+**`image_preimage_inter` (`CutSet/Measure.lean:125`) deleted.**  It was Mathlib's
+`Set.image_preimage_inter` (`Data/Set/Image.lean:457`) at `f : ℝ → ℝ`, with a ten-line
+`ext`/`rintro` proof; the single use `rw [image_preimage_inter]` (in the tiling computation of
+`Equiv.IsIET.measure_preimage`) now writes `rw [Set.image_preimage_inter]`.  No other file referred
+to it.
+
+**`restrict_eq_of_ae_mem` (`RauzyVeech/LengthInjective.lean:26`) deleted.**  Its proof *was*
+`Measure.restrict_eq_self_of_ae_mem h` — a wrapper kept only for the `ℝ`/`Ico 0 1` spelling.  The
+two uses in `measure_eq_of_floors` now write `Measure.restrict_eq_self_of_ae_mem haeμ`/ `… haeν`.
+No other file referred to it.
+
+**`birkhoffAverage_comp_apply` (`UniqueErgodicity/CompactTool.lean:69`) deleted.**  Same name and
+statement as Mathlib's root lemma (`Dynamics/BirkhoffSum/Average.lean:91`) at `R := M := ℝ`; the
+copy lived in `namespace IETFree.UniqueErgodicity`, so opening that namespace silently shadowed the
+generic one.  The one difference is the spelling: Mathlib states it with `g ∘ f`, the tree's proof
+goal has `fun y => g (f y)`, and a bare `rw [_root_.birkhoffAverage_comp_apply]` does **not** match
+(verified: "Did not find an occurrence of the pattern `birkhoffAverage ?R ?f (?g ∘ ?f) ?n ?x`").  So
+the proof of the local `hdiff` opens with the named fact
+
+```lean
+    have hcomp : birkhoffAverage ℝ f (fun y => g (f y)) n x
+        = birkhoffAverage ℝ f g n (f x) :=
+      _root_.birkhoffAverage_comp_apply ℝ f g n x
+```
+
+and then rewrites with it and with `birkhoffAverage_apply_sub_birkhoffAverage` as before.  That
+keeps the composition spelled as a lambda at the use site without a second proof.
+
+**Checked.**  `lake build` green, 9 167 jobs, no warnings, no errors; `#print axioms main` unchanged
+(`[propext, Classical.choice, Quot.sound]`); the linter driver 0 findings; 0 lines over 100
+characters in the three files; `rg` finds no occurrence of the three deleted names anywhere in
+`IETFree/`; the README anchors still resolve (`anchors2.py`: 0 of 128 stale).  Net: three public
+declarations fewer, no statement changed.  As instructed, the comparator was not run.
+
+
+
+
+
+
+### Addendum 209: the empirical-measure layer now *is* Mathlib's; its re-derivation deleted
+
+Owner's instruction, on §2 F2–F4 of `results/review-IET2-v2.md`: *"Go ahead with the
+empirical-measure layer: replace `birkhoffMeasure` with Mathlib's `EmpiricalMeasure` and delete the
+re-derivation."*
+
+`UniqueErgodicity/CompactTool.lean` had its own empirical measure — a hand-rolled `(n : ℝ≥0∞)⁻¹ • ∑
+i ∈ range n, dirac (f^[i] x)` — plus two lemmas about it.  Mathlib has the same object at
+`MeasureTheory.empiricalMeasure` (`Dynamics/Ergodic/EmpiricalMeasure.lean:58`, `birkhoffAverage
+NNReal f Measure.dirac (n + 1) x`, with an `IsProbabilityMeasure` instance), and the tree was not
+using it.
+
+**`birkhoffMeasure` redefined.**  It is now
+
+```lean
+noncomputable def birkhoffMeasure (f : X → X) (x : X) (n : ℕ) : ProbabilityMeasure X :=
+  ⟨empiricalMeasure f x (n - 1), inferInstance⟩
+```
+
+— Mathlib's measure, at the tree's index convention (`n` atoms where `empiricalMeasure f x m`
+carries `m + 1`), bundled as a `ProbabilityMeasure` because the compactness step
+(`IsCompact.ultrafilter_le_nhds'` on `ProbabilityMeasure X`) needs the bundle.  The `(hn : n ≠ 0)`
+argument is gone: it existed only to make the hand-rolled sum a probability measure, and Mathlib's
+instance makes it unused.  Twenty-one call sites drop the argument; the *lemmas* keep their own
+`hn`, where it is used for the index shift.
+
+**`integral_finset_sum_dirac` deleted** (its only consumer was the next item).
+
+**`integral_birkhoffMeasure` re-derived in one line** from
+`MeasureTheory.integral_empiricalMeasure_eq_birkhoffaverage`, `Nat.sub_add_cancel` and
+`birkhoffAverage_apply_congr_ring (R := NNReal) (S := ℝ)` — the ring conversion Mathlib itself uses
+for this step.
+
+**`birkhoffMeasure_apply_of_forall_mem` deleted, and this one is worth recording.**  It said that if
+the first `n` orbit points lie in a measurable `C` then the empirical measure gives `C` mass `1`,
+and it was proved by unfolding the sum of Diracs.  That proof is no longer available: Mathlib's
+`empiricalMeasure` body is **not exposed** to clients (`simp only [empiricalMeasure]` fails with
+"Expected a definition with an exposed body"), so the sum cannot be recovered, and the only public
+handle is the integral lemma for test functions.  The lemma had one use — the estimate `1 ≤ ∫ gb
+∂(birkhoffMeasure f (x k) (n k))` in the Krylov–Bogolyubov argument — and that estimate is now
+derived directly from the integral lemma, which is shorter and more honest: the Birkhoff average of
+`gb` over the first `n k` orbit points is `1` because every one of those points lies in `C` and `gb
+= 1` there.  The trade is one lemma fewer and a proof that no longer reasons about the measure's
+representation.
+
+**Checked.**  `lake build` green, 9 167 jobs, no warnings, no errors; `#print axioms main` still
+`[propext, Classical.choice, Quot.sound]`; the linter driver 0 findings; the file is 368 lines (was
+413) with no line over 100 characters; no occurrence of the two deleted names and no reference to
+`birkhoffMeasure`'s old arity anywhere in `IETFree/`; the README anchors still resolve.  Net: two
+declarations fewer, one argument fewer on the measure, no statement of any *theorem* weakened or
+strengthened.  As instructed, the comparator was not run.
+
+
+
+
+
+
+### Addendum 210: `birkhoffMeasure` removed entirely; the empirical measure is Mathlib's everywhere
+
+Owner's instruction, on Addendum 209: *"I'd rather remove `birkhoffMeasure` everywhere, and use
+instead `empiricalMeasure`."*
+
+Addendum 209 had kept a one-line wrapper; it is gone.  In `UniqueErgodicity/CompactTool.lean`:
+
+* the definition `birkhoffMeasure` is deleted;
+* `integral_birkhoffMeasure` is deleted, and its four uses are Mathlib's
+  `MeasureTheory.integral_empiricalMeasure_eq_birkhoffaverage` followed by
+  `Nat.sub_add_cancel` and `birkhoffAverage_apply_congr_ring (R := NNReal) (S := ℝ)`;
+* every site writes `empiricalMeasure f x (n - 1)` — or `(empiricalMeasure f x (n - 1)).toProbabilityMeasure`
+  where a `ProbabilityMeasure X` is needed (the weak-convergence hypothesis of
+  `integral_map_eq_of_tendsto_empiricalMeasure`, the compactness step
+  `IsCompact.ultrafilter_le_nhds'`, and `hνt`);
+* `integral_map_eq_of_tendsto_birkhoffMeasure` is renamed
+  `integral_map_eq_of_tendsto_empiricalMeasure`, its `hν` hypothesis now stated with
+  `(empiricalMeasure …).toProbabilityMeasure`.
+
+**Why `n - 1` and not Mathlib's index.**  The other convention was tried first and fails one step
+later: `tendsto_uniform_birkhoffAverage_aux` argues by contradiction from `ε < |birkhoffAverage ℝ f
+φ (n k) (x k) - c|`, so the empirical measure it feeds to the integral lemma must carry exactly `n
+k` atoms — that is `empiricalMeasure f (x k) (n k - 1)`, since `empiricalMeasure f x m` carries `m +
+1`. With Mathlib's index the average in the estimate is `n k + 1` and the contradiction no longer
+matches.  So the shift stays, at the ~12 sites that count atoms, and the section docstring says why.
+
+**Checked.**  `lake build` green, 9 167 jobs, no warnings, no errors; `#print axioms main`
+unchanged; linter 0 findings; the file is 363 lines (was 368) with no long lines; `rg` finds no
+occurrence of `birkhoffMeasure` or `integral_birkhoffMeasure` anywhere in `IETFree/`; the README
+anchors still resolve.  Net: two declarations fewer, and the empirical measure is Mathlib's at every
+use.
+
+
+
+
+
+
+### Addendum 211: the three unused `hstop` hypotheses deleted
+
+Owner's instruction, on §6 G0 of `results/review-IET2-v2.md`: *"Now do the three unused hstop
+hypotheses in Peel and RigidStep — delete them and update the call sites."*
+
+Three public theorems carried a hypothesis their proofs never read, and kept the unused-variable
+linter quiet with `have _hstop := hstop`:
+
+| theorem | hypothesis removed |
+|---|---|
+| `PosBlock.peel` (`RauzyVeech/Peel.lean`) | `hstop : ∀ k, lam ∉ IETDatum₂.cylStop P (pathWord P lam k)` |
+| `PosBlock.peel_of_contract` (`RauzyVeech/Peel.lean`) | the same |
+| `Rigidity.Internal.rigid_step` (`Rigidity/RigidStep.lean`) | `hstop : ∀ γ : List Bool, lam ∉ IETDatum₂.cylStop P γ` |
+
+Along with each binder went its `have _hstop := hstop`, the comments that explained the silencing,
+and the two docstring sentences that announced it (`rigid_step`'s declaration docstring and the
+module docstring of `RigidStep.lean`).  The three call sites are updated: `peel_of_contract`'s call
+of `peel` (`Peel.lean`), `PosBlocks.lean`'s call of `peel_of_contract` in the ray-criterion
+reduction, and `Rigidity/Veech.lean`'s call of `rigid_step`.  Both callers keep using their own
+`hstop` for other lemmas in the same proof (`rayCondition_of_cols` in `PosBlocks`,
+`IterGlue2.iterOK_pathWord` in `Veech`), so nothing had to be re-derived and no other hypothesis
+moved.
+
+The old claim was that `hstop` was "part of the interface"; the compatibility policy in the review
+rules gives no support for keeping a hypothesis for external callers of an older revision, and the
+library has no external callers.  `NOTES.md`'s bullet recording the `have _hstop` pattern as
+deliberate is replaced by the opposite rule.
+
+**Checked.**  `lake build` green, 9 167 jobs, no warnings, no errors; `#print axioms main` unchanged
+(`[propext, Classical.choice, Quot.sound]`); the linter driver 0 findings — which is the real check
+here, since the point of the change is that the linter now has nothing to complain about without the
+silencing lines; no line over 100 characters in the four touched files; `rg hstop` finds only the
+*hypotheses that are used* (`RayPointwise`, `TowerTiling`, and the two callers above); README
+anchors still resolve.  Net: three hypotheses fewer on public theorems, no statement made weaker.
+
+
+
+
+
+
+### Addendum 212: the six `unitMeas_real_*` restatements deleted
+
+Owner's instruction, on §2 of `results/review-IET2-v2.md`: *"Next, do the six `unitMeas_real_*`
+restatements as one sweep and mark them closed."*
+
+`Pair/MeasureTools.lean` carried six lemmas that were Mathlib's `measureReal_*` API at `μ :=
+unitMeas`, with no hypothesis added:
+
+| deleted | now |
+|---|---|
+| `unitMeas_le_one A` | `prob_le_one` (`Measure/Typeclasses/Probability.lean:39`, via the `IsProbabilityMeasure unitMeas` instance) |
+| `unitMeas_ne_top A` | `measure_ne_top unitMeas A` (`Measure/Typeclasses/Finite.lean:55`) |
+| `unitMeas_real_mono h` | `measureReal_mono h` (`Measure/Real.lean:88`), with the side condition `measure_ne_top unitMeas _` supplied where the default `by finiteness` cannot see it |
+| `unitMeas_real_union_le A B` | `measureReal_union_le (μ := unitMeas) A B` (`Measure/Real.lean:137`) |
+| `unitMeas_real_biUnion_finset_le s F` | `measureReal_biUnion_finset_le (μ := unitMeas) s F` (`Measure/Real.lean:146`) |
+| `unitMeas_real_nonneg A` | `measureReal_nonneg (μ := unitMeas)` (`Measure/Real.lean:53`, a `@[simp]` lemma) |
+
+Their internal uses went with them: `unitMeas_real_compl`'s proof now cites `measure_ne_top
+unitMeas`, and the two `unitMeas_real_union_le` calls at the commutator-estimate site take
+`measureReal_union_le (μ := unitMeas)`.  The eight uses in `Pair/Irreducible.lean` are rewritten the
+same way; two of the `measureReal_mono` calls need the explicit `(measure_ne_top unitMeas _)` side
+condition, because the sets there are not syntactically simple enough for the default `by
+finiteness`.
+
+`unitMeas_real_compl` stays: it is not a restatement of a Mathlib statement but the `1 -` form of
+`measureReal_add_measureReal_compl` plus `linarith`, and it has its own two consumers.
+
+**Checked.**  `lake build` green, 9 167 jobs, no warnings, no errors; `#print axioms main`
+unchanged; linter 0 findings, including the long-line check (one site needed a line break after the
+rewrite); `rg` finds none of the six names anywhere in the tree or in the documentation; both files
+are clean of lines over 100 characters.  Net: six declarations fewer, no statement changed.
+
+
+
+
+
+
+### Addendum 213: the four remaining re-proofs; `stdSimplex` checked and dropped
+
+Owner's instruction, on §2 of `results/review-IET2-v2.md`: *"Now do the four remaining re-proofs and
+the stdSimplex nit."*
+
+**The four re-proofs.**  Each was a result the tree can name, proved from scratch:
+
+* `IET.measurable_pow` (`Pair/MeasureTools.lean`) was a nine-line induction on the group power; it is
+  now `Measurable.iterate` applied to `IET.measurable`, after rewriting the power to the iterate with
+  the library's own `IET.pow_apply_iterate`.
+* `ae_imp_of_ae_restrict` (`Pair/Block/Data.lean`) re-derived the restriction-to-implication transfer
+  with `ae_iff`/`restrict_apply'`; it is deleted, and its one use writes Mathlib's same-named lemma
+  (`MeasureTheory.ae_imp_of_ae_restrict`) composed with `ae_mono` — which also removes the
+  name-shadowing hazard the audit recorded.
+* `ae_forall_countable` (`Pair/Block/Data.lean`) is deleted; its one use writes
+  `MeasureTheory.ae_all_iff` (which the same file already used elsewhere).
+* `unitMeas_real_compl` (`Pair/MeasureTools.lean`) is kept — it is the `1 -` form, not a restatement —
+  but its proof is now `measureReal_add_measureReal_compl` plus `linarith`, not a re-derivation
+  through `toReal_add`.
+
+**The `stdSimplex` nit: checked and dropped.**  The audit proposed bridging the library's `simplex α
+: Set (α → ℝ≥0)` to Mathlib's `stdSimplex ℝ α` so that `isClosed_stdSimplex` and
+`isCompact_stdSimplex` could be reused.  That is no longer possible: in the pinned Mathlib both
+names are **deprecated** — `stdSimplex` in favour of `Convexity.StdSimplex`, a finitely supported
+`Finsupp`-valued structure, and `isClosed_stdSimplex` in favour of
+`Convexity.StdSimplex.isClosedEmbedding_toFun_comp_weights` — and under `warningAsError = true` a
+use of either fails the build (verified: `example : IsClosed (stdSimplex ℝ (Fin 2)) := …` errors
+with "`stdSimplex` has been deprecated: Use `Convexity.StdSimplex` instead").  The carriers differ
+(functions on a finite type versus finitely supported functions), so the bridge would be a transport
+between two different objects with two short proofs as the prize.  The residue is a sentence in
+`simplex`'s docstring recording why the library keeps its own set; there is no code change.
+
+**Checked.**  `lake build` green, 9 167 jobs, no warnings, no errors; `#print axioms main`
+unchanged; linter 0 findings; no long lines in the two touched files; `rg` finds no occurrence of
+the two deleted names.  Net: two declarations fewer and two proofs replaced by named Mathlib
+results.
+
+
+
+
+
+
+### Addendum 214: six `@[ext]` lemmas, and `# Title` in the 28 modules that lacked one
+
+Owner's instruction, on §5 A2 and §9 D1: *"then the `@[ext]` and `# Title` sweeps."*
+
+**`@[ext]`.**  Six data-carrying structures had no extensionality lemma (the tree had exactly one,
+`IET.ext`, for `IET`).  Each of these is now a three-line `cases`/`subst` proof, because every other
+field is a proposition and proof irrelevance finishes the job:
+
+| lemma | hypotheses |
+|---|---|
+| `IETDatum.ext` (`Pair/ReductionData.lean`) | `π`, `v` |
+| `IETDatum₂.ext` (`TopBotFormalism.lean`) | `piTop`, `piBottom` |
+| `BlockIdx.ext` (`IET.lean`) | `k`, `l` |
+| `PosBlock.Blk.ext` (`RauzyVeech/Peel.lean`) | `m`, `w`, `v` |
+| `GoodRegion.Block.ext` (`Pair/GoodRegion.lean`) | `toBlockIdx` |
+| `SingularityShape.ext` (`Pair/GoodRegion.lean`) | `cellIdx`, `posF`, `posG` |
+
+`GoodRegion` itself is the one structure of the eight that does **not** get one, and the reason is
+mathematical rather than stylistic: its field `s : Fin (n + 1) → ParamAffine d e` has a type that
+depends on another field `n`, so a tuple-equality statement is ill-typed (`H.s` has type `Fin (H.n +
+1) → …`, not `Fin (G.n + 1) → …`), and an `HEq`-shaped lemma would be worse than none.
+
+**`# Title`.**  The 29 library modules whose module docstring had no `#` heading now have one:
+either the existing first line promoted to a heading (`# Cut sets and their cells`, `# Interval
+exchanges: the predicate, the explicit construction, and the group`, …) or, where the first
+paragraph was a sentence rather than a title, a short heading inserted above it (`#
+Measure-theoretic tools for Section 2`, `# The reduction data`, …).  `Challenge.lean` is left alone:
+it is the frozen statement file and its docstring is the comparator contract.
+
+**Checked.**  `lake build` green, 9 167 jobs, no warnings, no errors; `#print axioms main`
+unchanged; linter 0 findings (including the unused-section-variable linter, which flagged `[Nonempty
+α]` on `Blk.ext` until it was `omit`ted, and the long-line linter); no line over 100 characters in
+the 30 touched files; no declaration renamed or restated.  As instructed, the comparator was not
+run.
+
+
+
+
+
+
+### Addendum 215: the documentation drift fixed — `formalization.yaml`, `NOTES.md`, `CHANGE-AUDIT.md`, `README.md`
+
+Owner's instruction, on §9 of `results/review-IET2-v2.md`: *"Go ahead with the documentation drift:
+fix `formalization.yaml`, `NOTES.md` and `CHANGE-AUDIT.md`."*
+
+**`formalization.yaml`.** * the Masur source note called `masurVeech` "its Birkhoff-averages form";
+it is the *measure* form   (`∀ᵐ lam, UniqueErgodic (mkIET1 lam π)`), and the note now says so; * the
+`main_results` entry for `masurVeech` said it was "in the Birkhoff-averages form that
+`ChallengeSolved` consumes" — it is the measure form, and the uniform form is the separate
+predicate `UniformBirkhoff`, proved from it and assumed nowhere; * `fidelity.divergences` item (5)
+said `UniqueErgodic` *is* the uniform Birkhoff-average form and is   stronger than the paper's
+Definition 2.1 — backwards; it is Definition 2.1 verbatim, and the item   now says the uniform form
+is derived; * the same block said "Nine departures" and listed ten; it says ten; * item (6) claimed
+almost-everywhere statements carry the simplex membership as a binder — only
+`ae_diophantine_of_mem` and `ae_isRigidByTranslations_mkIET1` do; corrected, and `README.md`'s
+item 7 with it; * `sorry_count: 0` / `sorry_in_definitions: 0` contradicted the file's own prose
+three lines above;   they are `3` and `1`, with a comment saying where; * "rigidity by translations
+in `IETFree/Rigidity/` (`veechRigidity`)" — `veechRigidity` is in   `Pair/Irreducible.lean`; the
+sentence now says so; * the Lemma 3.1 row's `source:` label claimed the paper's "invertible affine
+map" is proved; the tree   proves injectivity plus absolute continuity and never states
+surjectivity, so the label names the   parts used; * "All 114 modules of IETFree/" is 117.
+
+**`NOTES.md`.**  The bullet "`ChallengeSolved.veecheRigidity` — from `Rigidity.veechRigidity`" named
+two declarations that do not exist; it now names `veechRigidity` in `Pair/Irreducible.lean` and says
+its proof is in `Rigidity/`.  The "Status — measured, not remembered" numbers were re-measured on
+the current tree rather than adjusted: 117 modules, 45 307 lines, 4 760 project declarations (3 507
+of them not compiler-generated by name), 3 883 reachable from `main`, 15 declaration linters, and
+the build at 9 167 jobs.
+
+**`CHANGE-AUDIT.md`.**  All 36 `change` sites were recomputed against the tree and the document's
+line numbers rewritten (25 of the 35 old anchors pointed at a line with no `change`), and the one
+unrecorded site — `Pair/LengthMap.lean:488`, `change G.n - 1 < G.n` — has its row, including the
+verified note that a *named* replacement (`Nat.sub_lt …`) exists even though deleting the `change`
+outright does not work.  The header now says 36, and that the line numbers were recomputed here.
+Checked mechanically: every row's `file:line` is at a real `change`, and no `change` lacks a row.
+
+**`README.md`.**  Two stale counts: "114 modules, 45 739 lines" → 117 / 45 307, and "2 613
+declarations (plus 2 055 generated), 14 linters" → 4 760 declarations, 15 linters.  The Lemma 3.1
+row got the same label correction as its `formalization.yaml` twin.
+
+**`Challenge.lean`.**  Its docstring said the declarations mirror `IETFree/IET.lean`;
+`evalWordEquiv` lives in `ChallengeSolved.lean`, and the sentence now says so.  The file's
+*declarations* are untouched — it is the frozen statement file.
+
+**Checked.**  `lake build` green, 9 167 jobs, no warnings, no errors (the `Challenge.lean` docstring
+made it rebuild); `#print axioms main` unchanged; linter 0 findings; `formalization.yaml` parses as
+YAML; `CHANGE-AUDIT.md`'s rows verified against the tree as described; the README anchors still
+resolve.  No `.lean` declaration was added, removed or restated — only the one docstring.
+
+
+
+
+
+
+### Addendum 216: the flat sibling groups become directories (`Pair/Block/`, `RauzyVeech/Tower/`, …)
+
+Owner's instruction, on §7 P1 of `results/review-IET2-v2.md`: *"Go for P1."*
+
+Eight sibling groups became directories: 31 files moved, no declaration renamed.  The rule applied
+is the one the review rubrics state — two files in one directory sharing a leading component that
+names their common subject belong in `Foo/`, with a bare `Foo.lean` becoming `Foo/Basic.lean`.
+
+| directory | moves |
+|---|---|
+| `CutSet/` | `CutSet.lean` → `CutSet/Basic.lean`, `CutSetMeasure.lean` → `CutSet/Measure.lean` |
+| `Pair/Block/` | `BlockAETransfer`, `BlockAssembly`, `BlockData`, `BlockDatum`, `BlockDiophantine`, `BlockEndpoints`, `BlockIrreducibility`, `BlockLemma`, `BlockRescaling` → `AETransfer`, `Assembly`, `Data`, `Datum`, `Diophantine`, `Endpoints`, `Irreducibility`, `Lemma`, `Rescaling` |
+| `Pair/Singularity/` | `SingularityBound` → `Bound`, `SingularityList` → `List` |
+| `RauzyVeech/Tower/` | `TowerCells`, `TowerGlue`, `TowerInjectivity`, `TowerLevel`, `TowerLevelN`, `TowerLevelOne`, `TowerNode`, `TowerTiling` → `Cells`, `Glue`, `Injectivity`, `Level`, `LevelN`, `LevelOne`, `Node`, `Tiling` |
+| `RauzyVeech/Cylinder/` | `CylinderGrowth`, `CylinderRecurrence`, `CylinderVolume` → `Growth`, `Recurrence`, `Volume` |
+| `RauzyVeech/Ray/` | `RayCriterion`, `RayPath`, `RayPointwise` → `Criterion`, `Path`, `Pointwise` |
+| `UniqueErgodicity/Germ/` | `Germ.lean` → `Germ/Basic.lean`, `GermIterate.lean` → `Germ/Iterate.lean` |
+| `UniqueErgodicity/Transfer/` | `Transfer.lean` → `Transfer/Basic.lean`, `TransferConv.lean` → `Transfer/Conv.lean` |
+
+Not moved, and why: `RauzyPath`/`RauzyReach` share a mathematician's name across two subjects and
+`Main`/`MainTheorem` a generic adjective (both are the exceptions the rubric itself names);
+`Rigidity/RigidSet`/`RigidStep` and the `Mass*`/`Level*`/`Minimal*` pairs inside `RichPath/` name
+the subject of their own directory already; `Iter*` and `Pos*` share a generic adjective.
+Declarations keep their names, including the namespaces named after files (`BlockData`,
+`TowerInjectivity`, `TowerNode`, `RayCriterion`): renaming those is a declaration rename, which the
+move is not.
+
+**What the move touched.**  Every `import` (the umbrella `IETFree.lean` was regenerated: 117 sorted
+`public import` lines, docstring preserved), every in-code path mention (`IETFree/Pair/BlockData` →
+`IETFree/Pair/Block/Data`, `Pair/BlockData.lean` → `Pair/Block/Data.lean`, …) in 47 files, the
+README's links and layout table, `formalization.yaml`'s `module:` fields, `NOTES.md`'s layout
+section, and `CHANGE-AUDIT.md`'s paths.
+
+**Housekeeping found on the way.**  `IETFree/` held **114 stray `.olean` files** (71 MB), left by
+`SlowBuild.sh`'s in-place compiles — the trap `NOTES.md` already warns about, since an in-tree olean
+shadows a moved module.  They are deleted (the build directory is untouched, per the owner's rule).
+Three docstrings went over 100 characters because the new paths are longer and were re-wrapped, and
+two over-applied path substitutions in `HISTORY.md` (`Germ/Basic/Basic/Basic.lean`) were repaired to
+the single new path.
+
+**Checked.**  `lake build` green, 9 167 jobs, no warnings, no errors; `#print axioms main` unchanged
+(`[propext, Classical.choice, Quot.sound]`); the linter driver 0 findings; no line over 100
+characters in the tree; 117 modules; the README anchors still resolve (0 of 128 stale) after their
+paths were rewritten.  No declaration was renamed, added or removed by the move.  As instructed, the
+comparator was not run.
+
+
+
+
+
+
+### Addendum 217: the six small edits — Q1, Q9, P3, A3, N3, G1
+
+Owner's instruction, on the open nits of §10, §7 and §5 of `results/review-IET2-v2.md`: *"Now do the
+six small edits: Q1, Q9, P3, A3, N3 and G1, without touching any statement."*
+
+* **Q1** — the last `change` of the tree that a named step replaces:
+  `Fin.lt_def.mpr (by change G.n - 1 < G.n; omega)` in `Pair/LengthMap.lean` is now
+  `Fin.lt_def.mpr (Nat.sub_lt (by omega : 0 < G.n) Nat.zero_lt_one)`.  The `change` count goes 36 → 35
+  and `CHANGE-AUDIT.md` loses that row (its header says 35 and points at this addendum).
+* **Q9** — the comment "recovering the pieces of `f⁻¹` from those of `f` needs more than the default
+  200000 heartbeats" is deleted from `Pair/Singularity/Bound.lean`: the tree has no `set_option` and no
+  `maxHeartbeats`, so the comment described a state that no longer exists.
+* **P3** — the import lists of `Rigidity/Defs.lean` and `Rigidity/RigidSet.lean` are sorted, like the
+  other 115 modules.
+* **A3** — the `abbrev co` of `RauzyVeech/Cylinder/Volume.lean` (a one-letter name for the coordinatewise
+  coercion `ℝ≥0 → ℝ`) is `lengthsToReal`, and its four lemmas follow (`range_lengthsToReal`,
+  `measurableSet_range_lengthsToReal`, `lengthsToReal_preimage_simplex`, `lengthsToReal_sum_eq_one`,
+  `simplexVolume_lengthsToReal_preimage`).  Five lines crossed 100 characters under the longer name and
+  were wrapped.
+* **N3** — `Stopping.card_ge_oneR` is `Stopping.one_le_card_cast`: the `R` suffix said nothing, and the
+  statement is `(1 : ℝ) ≤ (Fintype.card α : ℝ)`.
+* **G1** — `BoundedLag.nonempty_alpha` is deleted; its two uses write
+  `Fintype.card_pos_iff.mp P.card_pos`, since `IETDatum₂.card_pos` was already the source of the fact.
+
+No statement, definition body or hypothesis was changed: this round renames or removes, and the only
+proof that changed is Q1's, from a `change` to a named lemma with the same conclusion.
+
+**Checked.**  `lake build` green, 9 167 jobs, no warnings, no errors; `#print axioms main`
+unchanged; linter 0 findings (the long-line linter caught five lines the longer names pushed over
+100 characters, all wrapped); the `change` count is 35 and every `CHANGE-AUDIT.md` row sits on a
+real `change` again (one anchor moved by the wrapping and was re-pointed); the README anchors still
+resolve; `rg` finds no occurrence of the six old names outside this file.  As instructed, the
+comparator was not run.
+### Addendum 218: the namespacing — everything under `IET`, by subject
+
+Owner's instruction: *"Now let's do the namespacing. I would like essentially everything to be in the
+namespace IET except the things that are not about IETs. What is specifically about RauzyVeech
+induction should be in IET.RauzyVeech, and what is specifically about pairs of IETs should be in
+IET.Pair. No namespacing based on file name."*
+
+**The scheme that landed.**  The namespace of a module is decided by its **directory**, never by its
+file name:
+
+| module | namespace |
+|---|---|
+| `IETFree/IET.lean`, `TopBotFormalism.lean`, `CutSet/**` | `IET` |
+| `IETFree/Pair/**` (25 modules, `Block/` and `Singularity/` included) | `IET.Pair` |
+| `IETFree/RauzyVeech/**` (61 modules, `Tower/`, `Cylinder/`, `Ray/` included) | `IET.RauzyVeech` |
+| `IETFree/RauzyVeech/RichPath/**` (18 modules) | `IET.RauzyVeech.RichPath` |
+| `IETFree/Rigidity/**` (10 modules) | `IET.Rigidity` |
+| `IETFree/UniqueErgodicity/**` (13 modules, `Germ/` and `Transfer/` included) | `IET.UniqueErgodicity` |
+
+**One namespace per directory, and no namespace per file.**  The second half of the instruction cost a
+second pass: the 43 namespaces that were named after the file that held them — `Potential`,
+`NodeHeight`, `LevelWords`, `CylinderMass`, `ColShrink`, `CylRec`, `RauzyReach`, `RayPointwise`,
+`RefiningPartition`, `BoundedLag`, `LargeLetter`, `LevelMass`, `MassGrowth`, `MinimalExit`,
+`MinimalExitMass`, `Stopping`, `Induction`, `HeightDichotomy`, `Assemble`, `NodeHeight`, `MeshShrink`,
+`PosBlock`, `Tower`, `TowerTrue`, `TowerNode`, `TowerInjectivity`, `TowerCells`, `TowerGlue`, `TowerN`,
+`AffineVolume`, `BalancedCylinders`, `BoundedSimplex`, `InvariantMeasure`, `IterGlue`, `IterGlue2`,
+`LengthInjective`, `LevyRecurrence`, `PrefixWord`, `RegionVolume`, `BlockData`, `CutBound`,
+`RescaleBlock`, `RestrictIET` — were dissolved: 144 `namespace`/`end` delimiter lines and 2 674
+qualified references removed, so that their declarations sit directly in their directory's namespace
+(`pot_nonneg`, `mmin`, `thr`, `cover_step_false`, `blockLam`, …).  What remains below a subject
+namespace is only what a **declaration** gives it — `IET.IETDatum₂`, `IET.IsCutSet`, `IET.BlockIdx`,
+`IET.Pair.GoodRegion`, `IET.Pair.IETDatum`, `IET.RauzyVeech.TowerStep`, `IET.UniqueErgodicity.SplitI`,
+and the ~200 projections and instances Lean puts in the namespace of the object they are about — plus
+two subject exceptions: `IET.RauzyVeech.RichPath` (the subject of its directory) and
+`IET.Rigidity.Internal` (two implementation lemmas).
+
+The dissolution was checked for collisions before it was made: merging the 43 namespaces into their
+wrapper produces exactly three duplicate names, all of them real pairs — `cover_step_false` and
+`cover_step_true` (the node form in `Tower/Node.lean` and the derivation along a tower sequence in
+`Tower/Tiling.lean`) and `idx_mkIETFun_of_idx_topCell` (`Tower/FirstReturn.lean`, type-`false` step,
+and `TrueStep.lean`, which needs `splitT π lam ≤ y`).  The stronger/first of each pair keeps the plain
+name; the other is now `cover_step_false_of_tower`, `cover_step_true_of_tower` and
+`idx_mkIETFun_of_idx_topCell_high`, names taken from the vocabulary the files already used
+(`iterOK_pathWord`, `_of_top_high`).  Three further names were repaired on the way:
+`BalancedSet.lean`'s `theorem one_le_diag_Path.Q` was a dotted name that opened a bogus namespace (now
+`one_le_diag_Path_Q`), and the two local instances of `RauzyReach.lean` were named
+`IETDatum₂.instFintype`/`IETDatum₂.instDecidableEq`, which after the dissolve would have created an
+`IET.RauzyVeech.IETDatum₂` shadowing the real datum namespace (now `instFintypeIETDatum₂`,
+`instDecidableEqIETDatum₂`).
+
+Also dissolved: `RichPath` (the wrapper now carries the name), `ChallengeSolved`, and the two
+pre-existing `IETFree.UniqueErgodicity` / `IETFree.Rigidity`, which became `IET.UniqueErgodicity` and
+`IET.Rigidity`.  Three declarations whose name said `Equiv.IsIET` while their hypothesis was a cut set
+were renamed `IsCutSet.*` (`symm_mapsTo`, `image_cells_union`, `measure_preimage`), which is also what
+makes `hS.measure_preimage` work.
+
+Distribution of the 4 755 declarations (1 446 of them compiler-generated, `_private.…`): 941 under
+`IET.RauzyVeech`, 956 under `IET.Pair`, 667 in `IET` itself, 329 under `IET.RauzyVeech.RichPath`, 235
+under `IET.UniqueErgodicity`, 26 under `IET.Rigidity`, 55 in the two Mathlib namespaces the library
+extends (`FreeGroup` 34, `List` 21), and **27 at the root** — the number is the point of the next
+paragraph; the rest are equation lemmas that Lean names after a Mathlib declaration (`Int.*`,
+`Finset.*`, `CauSeq.*`, …) or after one of the root ones (`mkIETFun.eq_1`).
+
+**What stays at the root, and why.**
+
+* **The fifteen names of the challenge.**  `leftEnd`, `imageLeft`, `translationVector`, `idxSet`,
+  `idxSet_nonempty`, `idx`, `mkIETFun`, `mkIETEquiv`, `coe_mkIETEquiv`, `simplexRegion`,
+  `simplexMap_val_lt`, `simplexMap`, `simplexVolume` (in `IET.lean`), `evalWordEquiv` and `main` (in
+  `ChallengeSolved.lean`).  `lake comparator` compares the challenge with the solution *by name*: for
+  `main` and `coe_mkIETEquiv` it requires the two constants to be equal, so every constant occurring in
+  their statements must have the same name in both modules, and for a constant of the statement's cone
+  that is not a compared target (`simplexVolume`, `mkIETFun`, …) it requires the *whole* `ConstantInfo`
+  — value included — to be equal.  Renaming any of them would break the gate; the bodies are untouched.
+  The ten lemmas that state their elementary properties (`upperEnd`, `imageLengths`, `idx_mem`,
+  `le_idx`, `lt_upperEnd_idx`, `idx_eq`, `image_point_mem`, `mkIETFun_of_mem`, `mkIETFun_of_notMem`,
+  `mkIETFun_inv_left`; `mkIETFun_eq_shift` is private) stay with them, because a root-level declaration cannot name
+  an `IET`-namespaced one in its own statement without a forward reference to the namespace it opens.
+* **The type `IET a b`** (with its fields `IET.toEquiv`, `IET.isIET`).  Lean rejects a declaration whose
+  name repeats its namespace — `IET.IET` is an error ("The namespace `IET` is duplicated in the
+  declaration") — so a `structure IET` cannot live inside `namespace IET`.  Its **lemmas** are in the
+  namespace (`IET.ext`, `IET.mul_apply`, `IET.coeHom`, `IET.measurable`, …), so dot notation is
+  unchanged.
+* **`FreeGroup.*` and `List.*`**: free-group and list lemmas that say nothing about interval
+  exchanges, kept in the Mathlib namespace they extend.  (`Equiv.IsIET` is likewise still
+  `Equiv.IsIET`, dot notation on `Equiv ℝ ℝ`.)
+* **`AffineMap.sum_apply`**, a missing Mathlib lemma used by the pair files, also at the root, for the
+  same reason.
+
+**How it was done, and what it cost.**  A script wrapped each module body in its namespace and dropped
+the delimiters of the four redundant blocks, single-pass with longest-first matching; the `open`s and
+`variable`s were then hoisted **outside** the wrapper, because `open` is *scoped to its namespace block*
+in Lean 4 (`end IET` silently disables the `open MeasureTheory` that preceded it — this was the first
+build's whole error list).  What broke, and the fix, in the order the build found them:
+
+* five declarations written `TypeName.foo` in a file wrapped in another namespace become
+  `WrapperNS.TypeName.foo` and lose dot notation (`theorem IET.measurable_pow` → `IET.Pair.IET.…`,
+  `IsCutSet.sum_cellLen_filter` in `Pair/Block/`): moved into `IET.lean`, whose API they are, renamed
+  `IsCutSet.*`, or given a `end IET.Pair … namespace IET` island;
+* `_root_.blockLam`, `_root_.leftEnd_blockLam`, `_root_.irreduciblePerm_blockPerm` (written to escape a
+  file-local namespace) no longer resolve: the prefix is dropped and the name qualified where a
+  same-named `GoodRegion.blockLam` shadows it;
+* `def id (a b : ℝ) : IET a b` shadows `_root_.id` for every module below `IET` — `Affine.lean` and
+  `MeasPrep.lean` both wanted `id` the function.  The definition is inlined into its `One` instance
+  and `IET.id` is gone;
+* six modules declare `noncomputable section` inside `namespace Tower`, which the wrapper script's
+  parser did not know; the `end`s landed in the wrong order in `FirstReturn`, `TrueStep`,
+  `Tower/Level`, `Tower/Cells`, `Tower/LevelN` and `LevelN` and were repaired by hand;
+* `open IETDatum₂` / `open Tower` / … do not resolve from another branch of the tree: all `open`
+  arguments naming a project namespace are written out in full (`open IET.IETDatum₂`,
+  `open IET.RauzyVeech.TowerNode`, …);
+* a file whose wrapper is `IET` but which uses `IET.RauzyVeech` material (`Nesting`, `PairReach`,
+  `RauzyPath`, `UniqueErgodicity/IET`, and `LevelN` once its `Tower` block had been dissolved) takes an
+  `open IET.RauzyVeech`, and the `Pair`, `Rigidity` and `UniqueErgodicity` files that reach into
+  `IET.RauzyVeech` take `open IET.RauzyVeech` as well.
+
+The dissolve itself was one pass with three rules — delete the `namespace X`/`end X` delimiter lines of
+a dissolved namespace (found by a stack walk, so the 14 `namespace TowerInjectivity` blocks of
+`Tower/Tiling.lean` all go), drop the `open` arguments that name a dissolved namespace (they would
+otherwise point at nothing), and rewrite `X.foo` to `foo` — with the replacement guarded so that
+`X.lean` (a path) and `IET.…X` (a qualified one) are not mangled.
+
+**Checked.**  `lake build` green, 9 167 jobs, no warnings, no errors (Lean 4.35.0 / Mathlib
+`v4.35.0`); `#print axioms main` = `[propext, Classical.choice, Quot.sound]`; `runLinter` on `IETFree`
+clean; the `change` count is 35, and the 35 `CHANGE-AUDIT.md` rows were re-pointed at the shifted
+lines; no line exceeds 100 characters, no trailing whitespace, no double blank line; 117 modules,
+45 417 lines; the README's 159 `#L` anchors were recomputed (81 moved, 2 more after the dissolve) and
+now check clean.  The declarations are the same 4 755
+(4 759 before: `IET.id` removed, `measurable_pow`, `coeHom` and `coeHom_apply` moved from the pair
+files to `IET.lean`, and the generated `congr_simp` companions of the moved definitions moved with
+them).  `#print main` shows the statement in the challenge's own vocabulary — `simplexVolume`,
+`evalWordEquiv`, `mkIETEquiv` unqualified — with the `IET.*` names appearing only in the proof term.
+As instructed, the comparator was not run.
+
+**Not done.**  `ChallengeSolved.lean` keeps its two root names and the `IET` island that holds the
+transfer lemmas; the `open IET …` line at its top is the only place where a module opens five project
+namespaces at once, and it is deliberate: `main`'s proof is the one place that uses all of them.
+
+### Addendum 219: the namespace is `IntervalExchange`, and everything is in it
+
+Owner's instruction: *"Instead of IET, let the namespace be IntervalExchange. Then
+IntervalExchange.IET should be fine. Put also the Challenge file in the namespace, as well as the
+corresponding lemmas in the library."*
+
+Three things, in one pass.
+
+**1. `IET` → `IntervalExchange`.**  110 modules carried an `IET.` prefix (431 occurrences), 36 carried
+`namespace IET`/`end IET`; a single guarded substitution (`IET.` not followed by `Free` — the module
+prefix `IETFree` — or by `lean`, the file name) renamed the namespace and every qualified reference,
+docstrings included.  Two casualties of the guard, both caught by the build and repaired: `IsIET.` ends
+in `IET.`, so `IsIET.id` became `IsIntervalExchange.id` (33 occurrences reverted), and the field
+`f.isIET` became `f.isIntervalExchange` (reverted).  `IntervalExchange.Pair`, `.RauzyVeech`,
+`.RauzyVeech.RichPath`, `.Rigidity`, `.UniqueErgodicity` follow from the same substitution.
+
+**2. `IntervalExchange.IET` — so nothing is left at the root.**  Addendum 218 had to leave the type
+`IET a b`, the fifteen challenge names and the ten lemmas of their elementary API at the root: Lean
+rejects `IET.IET` ("The namespace `IET` is duplicated in the declaration"), and the comparator matched
+the challenge by those root names.  Both objections disappear with the longer name.  So:
+
+* `structure IET` and its API moved **into** the namespace, in `namespace IET` inside
+  `namespace IntervalExchange` — `IntervalExchange.IET`, `IntervalExchange.IET.mul_apply`,
+  `IntervalExchange.IET.measurable`, `IntervalExchange.IET.coeHom`, … — which keeps dot notation
+  (`f.mul_apply`, `T.measurable`) working;
+* the four `end IntervalExchange … namespace IntervalExchange` flips around the comparator block of
+  `IET.lean` are gone, and the block that explained them with it;
+* the **forty-one declarations that were at the root are now in `IntervalExchange`**: the type and its
+  API, the fifteen challenge names and the ten lemmas.  A dump of the environment reports **zero
+  project declarations at the root**; what is left there is `FreeGroup.*` (34), `List.*` (21),
+  `Equiv.IsIET` and `AffineMap.sum_apply` — Mathlib namespaces the library extends — plus Lean's own
+  equation lemmas (`Int.*`, `Finset.*`, `CauSeq.*`, …).
+
+**3. `Challenge.lean` in the namespace.**  The statement file's fifteen declarations are now in
+`namespace IntervalExchange`, and `comparator.json` names them in full:
+
+```json
+"theorem_names": ["IntervalExchange.coe_mkIETEquiv", "IntervalExchange.main"],
+"definition_names": ["IntervalExchange.mkIETEquiv"],
+```
+
+`IETFree/ChallengeSolved.lean` follows: `evalWordEquiv` and `main` are in `IntervalExchange`, its two
+`end`/`namespace` flips are gone, and it opens only the four subject namespaces its proof reaches into.
+`IntervalExchange.main` is what `#print axioms` reports.
+
+The mathematical statements are untouched: `Challenge.lean`'s bodies and its `sorry`-hole are
+character for character what they were, only the enclosing namespace is new.
+
+**Checked.**  `lake build` green, 9 167 jobs, no warnings, no errors; `#print axioms
+IntervalExchange.main` = `[propext, Classical.choice, Quot.sound]`; `runLinter` clean on **both**
+`IETFree` and `Challenge`; 4 755 declarations (unchanged), 117 modules, 45 426 lines; the `change`
+count is 35; no line over 100 characters (eleven lines crossed the limit under the longer name and
+were wrapped, and one `open` line was split in two); README anchors 159, 0 stale after 66 were
+re-pointed; `formalization.yaml`'s `alignment.namespace` is `IntervalExchange` and all 23 `lean:`
+names resolve against the new tree.
+
+**The gate, without running it.**  `comparator.json` changed, so the check matters.  What the
+comparator does, from `lake/Lake/Check/Compare.lean`: for each theorem target it requires the two
+`ConstantVal`s to be equal (name, level parameters, type); for the definition target it compares
+`toConstantVal` and `safety` only (the value is a hole); for every other constant of the statement's
+cone it requires the whole `ConstantInfo`, value and proof included, to be equal.  Checked here by
+importing the two modules in separate environments and diffing what Lean prints for the fifteen names:
+`#check @IntervalExchange.…` — **identical for all fifteen**; `#print` of the twelve non-target
+constants — **identical, values included**; the only difference is `mkIETEquiv`'s value (`sorry`
+against the construction), which is exactly the one name the comparator treats as a definition hole.
+As instructed, `lake comparator` itself was not run.
+
+**Not done.**  `Equiv.IsIET` stays in the `Equiv` namespace (it is dot notation on `Equiv ℝ ℝ`), and
+`FreeGroup.*`/`List.*`/`AffineMap.sum_apply` stay where they are: they are lemmas about free groups,
+lists and affine maps, not about exchanges.  The `.scratch/ns-backup-IETFree` and
+`.scratch/ns/postwrap-IETFree` snapshots are still there; say the word and they go.
+
+### Addendum 220: N2 — the four acronym theorems are renamed
+
+Owner's instruction: *"Now do N2: rename the four acronym theorems SH_all, TL, LVL1 and CV_all to
+readable names."*
+
+These are the four main results of `RauzyVeech/Tower/Tiling.lean` (what the review's §8 N2 called
+"named by acronyms of their section headings"):
+
+| was | is | statement |
+|---|---|---|
+| `SH_all` | `exists_iterate_eq_add_on_cell` | for `j ≤ HH k b`, `T^[j]` is a translation on the level-`k` cell of `b` |
+| `TL` | `sum_height_mul_len_eq_one` | `∑ b, HH k b * LL k b = 1` — the tower's total mass |
+| `LVL1` | `iUnion_iterate_image_cell_eq_Ico` | `Ico 0 (∑ b, LL k b) = ⋃ b ⋃ i < h_{k+1}(b), KK^[i] '' CC (k+1) b` |
+| `CV_all` | `Ico_subset_iUnion_iterate_image_cell` | every `x ∈ Ico 0 1` lies on the `j`-th floor of the tower over some `b` |
+
+The review suggested `iterate_eq_add_on_cell`, `sum_height_mul_len_eq_one`, `iUnion_cellAt` and
+`iUnion_cellAt_eq_Ico`; the last two were adapted, because `cellAt` is a *different* definition in the
+tree (`IntervalExchange.RauzyVeech.cellAt`, from `FirstReturn`), so naming these two after it would
+have been a false friend.  "iterate image cell" says what the union is: the iterates `KK^[i]` of the
+exchange applied to the level-`(k+1)` cell `CC (k+1) b`.
+
+Each of the four also gets a one-paragraph docstring stating the conclusion in words, since they are
+the theorems a reader of the file comes for.  Nothing else changed: same statements, same proofs, and
+the section headings stay as they were (they now duplicate the docstrings a little, but they are the
+file's table of contents).
+
+**Eight occurrences** were rewritten: the four declaration names and the four uses (`SH_all` at
+`:586`, `TL` at `:929`, `CV_all` at `:938` and `:1037`; `LVL1` has none — see below).  Four lines
+crossed 100 characters under the longer names and were wrapped.
+
+**A finding on the way.**  `LVL1` is *not reachable* from `IntervalExchange.main`: the dependency walk
+over the environment reports it dead, and `rg` finds no use anywhere in the tree.  It is the only
+declaration in the library in that position — the seventeen `rfl` lemmas that the graph calls dead are
+applied by `simp` and so are live in fact.  So the theorem is stated, proved and unused.  It is renamed
+rather than deleted, because the owner asked for a rename and the statement is part of what the file is
+about; `NOTES.md` now records the fact, and deleting it is a one-line decision for the owner.
+
+**Checked.**  `lake build` green, 9 167 jobs, no warnings, no errors; `#print axioms
+IntervalExchange.main` unchanged; `runLinter` clean; the `change` count is 35; no line over 100
+characters; README anchors 0 of 159 stale; 4 755 declarations (unchanged); `rg` finds none of the four
+old names outside `HISTORY.md` and the review.
+
+### Addendum 221: the unused lemma is deleted, and a correction
+
+Owner's instruction: *"Delete the lemma that is not used."*  That is
+`iUnion_iterate_image_cell_eq_Ico` — `LVL1` until Addendum 220 — the level-`k` base written as the
+union of the level-`(k+1)` cells, in `RauzyVeech/Tower/Tiling.lean`.
+
+**Deleted**: the theorem, its docstring and the section heading above it (§13, 40 lines), and the
+sections that followed were renumbered 14–19 → 13–18 so that the file's table of contents has no hole.
+Nothing else in the tree named it (`rg` found no use, and the dependency walk from
+`IntervalExchange.main` never reached it), so the build is unaffected beyond the deletion itself.
+
+**A correction, and a wider finding.**  Addendum 220 said that this was "the only declaration in that
+position".  That was wrong: it was the only one *among the four N2 names I had checked*, and I then
+generalised.  A walk over the whole environment — `getUsedConstants` from `IntervalExchange.main`,
+restricted to the declarations the library owns — reports **72** hand-written-looking names that no
+proof term mentions:
+
+* 25 are `@[simp]`, `@[ext]` or `:= rfl` lemmas.  They are applied definitionally, leave no trace in
+  the proof term, and are load-bearing: deleting one breaks the build.  (This is the phenomenon that
+  `HISTORY.md` Addendum 152 called "the seventeen rfl lemmas"; the count differs because that was a
+  different tree.)
+* 47 are none of those.  Some are auto-generated field projections of a structure that is only ever
+  used as a type — `IsSmallRelation.a_bound`, `.b_bound`, `.k_bound`, `.nontrivial`, `.vanishes`, all
+  of which follow from the structure being *stated* in `ReductionData.lean` and never destructured.
+  The rest are unused in fact, and they come in three clusters:
+  * `UniqueErgodicity/MeasPrep.lean`: `germSection`, `germSectionVal`, `measurable_germSection`,
+    `measurable_germSectionVal`, `proj_germSection`, `map_germSectionIco_invariant`,
+    `iterate_leftGerm`, `iterate_rightGerm`, `iterate_germMapOf_rightGerm`, `proj_iterate_leftGerm`,
+    `proj_iterate_germMapOf_rightGerm`, `germMap_leftGerm`, `germMap_leftGerm_zero`,
+    `germMap_orbit_infinite`, `proj_germMapOf_leftGerm`, `image_splitSet`, `apply_iterate_mem_Ico`, …
+    — superseded by the `germSectionIco` API the transfer actually uses;
+  * `RichPath/HeightDichotomy.lean` + `RichPath/BadFirstStop.lean`: `kerckhoff`, `kerckhoff_aux`,
+    `kerckhoff_letter`, `noWin_of_last_ne`, `exists_noWin_crossing_singleton`, `singleton_mass`,
+    `card_one_mass`, `card_ge_two`, `sum_bad_singleton_le`, `sum_cond_kerckhoff_singleton`,
+    `exitArrow_singleton_iff`, `sum_cond_mul_cs`, `pairwiseDisjoint_levelWords`, `bad_first_stop` —
+    the `NoWin`/singleton refinement of the dichotomy, which the current richness argument does not
+    use;
+  * singletons elsewhere: `mkIET1_of_notMem`, `isClosed_simplex`, `GoodRegion.subset_good`,
+    `IsCompPresentation.g_transl`, `IET.instCoeFunForallReal`, `BlockIdx.ext`, …
+
+That is a real pruning candidate, but it is **not** done here: the instruction named one lemma, and
+several of the 47 are statements of a hypothesis rather than steps of a proof (`g_transl`,
+`subset_good`), whose removal changes what a reader sees rather than what the proof needs.  The list
+is in `NOTES.md` and the per-item test is cheap (delete, `lake build`; a lemma that `simp` uses
+definitionally fails the build and stays).
+
+**Checked.**  `lake build` green, 9 167 jobs, no warnings, no errors; `#print axioms
+IntervalExchange.main` unchanged; `runLinter` clean; `change` count 35; no line over 100 characters;
+README anchors 0 of 159 stale; **4 753 declarations** — 4 755 minus the theorem *and* the one
+generated companion its proof caused Lean to emit (`TowerStep.CC.congr_simp`, which no other proof in
+the module asks for; measured by restoring the block and diffing the two environment dumps); `rg`
+finds `iUnion_iterate_image_cell_eq_Ico` only in this file and the review.
+
+### Addendum 222: the prune — 43 declarations and one module
+
+Owner's instruction: *"Prune the 47 unused declarations and report what survives."*
+
+**Method, because the number in Addendum 221 was a guess.**  The set was recomputed from the
+environment (`getUsedConstants` from `IntervalExchange.main`, restricted to declarations the library
+owns, with generated names and structure projections filtered out): **69** names, not 47 — the earlier
+47 was a static classification.  Each candidate was then *tested*: delete it, `lake build`, and if the
+build fails put it back.  The loop is automated (`.scratch/ns/prune4.py`): reset the library from a
+snapshot, delete the whole candidate set, build, restore every name the errors point at, repeat.  When
+a proof stops closing without naming anything (a `simp` that used a `@[simp]` lemma), the fallback
+restores the candidates mentioned in the failing file.  A second walk after the first green build
+found no *newly* dead declaration, so the fixed point was reached in one pass.
+
+**Deleted: 43 declarations.**
+
+| file | deleted |
+|---|---|
+| `UniqueErgodicity/MeasPrep.lean` | `germSection`, `germSectionVal`, `measurable_germSection`, `measurable_germSectionVal`, `proj_germSection`, `measurableSpace_eq_borel`, `measurable_side`, `measurable_of_measurableSet_eq_true` |
+| `UniqueErgodicity/Germ/Iterate.lean` | `iterate_leftGerm`, `iterate_rightGerm`, `iterate_germMapOf_rightGerm`, `proj_iterate_leftGerm`, `proj_iterate_germMapOf_rightGerm`, `proj_germMapOf_leftGerm`, `apply_iterate_mem_Ico` |
+| `UniqueErgodicity/Germ/Basic.lean` | `image_splitSet` |
+| `UniqueErgodicity/IET.lean` | `map_germSectionIco_invariant` |
+| `RichPath/HeightDichotomy.lean` | `kerckhoff_letter`, `exists_noWin_crossing_singleton`, `sum_cond_kerckhoff_singleton`, `sum_bad_singleton_le`, `singleton_mass`, `card_one_mass`, `card_ge_two`, `noWin_of_last_ne`, `exitArrow_singleton_iff`, `getD_take_take` |
+| `RichPath/CylinderMass.lean` | `kerckhoff`, `kerckhoff_aux`, `sum_cond_mul_cs`, `eq_cons_tail_of_head?`, `NoWin` |
+| `RichPath/BadFirstStop.lean` | `bad_first_stop` |
+| `RichPath/LevelWords.lean` | `pairwiseDisjoint_levelWords`, `eq_of_append_singleton_eq` |
+| `RauzyVeech/Tower/Tiling.lean` | `CC_disjoint`, `CC_eq_of_mem`, `HH_succ_ge` |
+| `Pair/Diophantine.lean` | `isClosed_simplex` |
+| `IET.lean` | `mkIET1_of_notMem` |
+
+`RichPath/BadFirstStop.lean` was left with nothing but its header, its import and a module docstring
+describing the deleted theorem; it is **deleted**, with its import in `HeightDichotomy.lean` and in the
+umbrella `IETFree.lean`.  The library goes 117 → 116 modules.
+
+**Surviving: 26 declarations that the walk calls dead but the build will not let go of.**
+
+* six `@[ext]` lemmas — `BlockIdx.ext`, `IETDatum₂.ext`, `Pair.IETDatum.ext`, `GoodRegion.Block.ext`,
+  `SingularityShape.ext`, `Rkz.Blk.ext`: the extensionality API of the structures, used by the `ext`
+  tactic, which leaves the lemma out of the term;
+* the `CoeFun (IET a b)` instance (`instCoeFunForallReal`): coercions are inserted by typeclass
+  search, never named;
+* nineteen `@[simp]` or `:= rfl` lemmas — `IET.coeHom_apply`, `IETDatum₂.inv_inv`, `inv_last_true`,
+  `inv_piBottom`, `inv_piTop`, `ofPerm_piBottom`, `ofPerm_piTop`, `pivot_false`, `pivot_true`,
+  `vertex_nil`, `vertex_singleton`, `Pair.scalePerm_apply`, `scalePerm_symm_apply`,
+  `RichPath.levelWords_zero`, `RauzyVeech.lamAfter_nil`, `lvl_coe`, `ofPerm_last_false`,
+  `ofPerm_last_true`, `push_coe` — each of which a `simp`/`rw` in a live proof applies
+  definitionally.
+
+Each was verified the hard way: deleting it fails the build.  Three of them had been deleted by the
+automated pass first (`IETDatum₂.ext`, `Pair.IETDatum.ext`, `Rkz.Blk.ext`, whose `@[ext]` attribute my
+classifier missed because it sits on the declaration line below the docstring); they are restored.
+
+### The cost of the prune, beyond the deletions
+
+* **18 section headings** were left with nothing under them and are gone, and the numbered ones
+  renumbered (`Tiling.lean`'s, `BoundedSimplex`, `LevelN`, `Tower/LevelN`, `Stopping`, `Veech`, `Hit`,
+  `InductionAssembly`, `GradedInduction`, `MinimalExitMass`, `CylinderMass`, `BoundedLag`, `AETransfer`,
+  `Affine` (three), `SimplexAe`, `BadFirstStop`).  Two `variable`-only sections went the same way.
+* **Seven module docstrings** described declarations that no longer exist.  They were rewritten, not
+  trimmed: `CylinderMass.lean` loses its "Kerckhoff's lemma in cylinder-mass form" heading (the
+  packaged `kerckhoff` is gone), `HeightDichotomy.lean`'s docstring now describes `dichotomy` alone
+  (its `Γ₃`-mass and singleton sections are gone), `LevelWords.lean` and `Stopping.lean` drop
+  `pairwiseDisjoint_levelWords`, `Germ/Iterate.lean` drops `germMap_orbit_infinite`, `MeasPrep.lean`
+  names `germSectionIco` instead of `germSection`, and `UniqueErgodicity/IET.lean`'s uniqueness
+  theorem no longer refers to the deleted existence half.  `rg` now finds none of the 43 names.
+
+### Verified
+
+`lake build` green, 9 166 jobs (one module fewer), zero warnings, zero errors; `#print axioms
+IntervalExchange.main` unchanged; `runLinter` clean; 116 modules, 44 407 lines, **4 676 declarations**
+(from 4 753: the 43, the 34 generated companions of the deleted definitions, and the module's); 3 438
+of them not generated by name pattern; 3 881 reachable from `IntervalExchange.main`, so the 26 above
+are the only ones the walk calls dead; `change` count 35; no line over 100 characters, no double blank
+line; README anchors 159, 0 stale.  The pre-prune library is in `.scratch/ns/prune-snapshot/`.
+
+### Addendum 223: P2 — the nine `import Mathlib` files import what they use
+
+The owner's instruction: *"Now do P2: replace the nine `import Mathlib` library files with the
+specific modules they actually use. #min_imports might help for that."*  The nine were
+`CutSet/Basic`, `ListPeriodicity`, `RauzyVeech/LevyRecurrence`, `RauzyVeech/PrefixWord`,
+`RauzyVeech/RefiningPartition`, `UniqueErgodicity/CompactTool`, `UniqueErgodicity/MeasPrep`,
+`UniqueErgodicity/Split`, `UniqueErgodicity/Transfer/Basic`.
+
+### Why 101 modules changed and not nine
+
+An `import` is transitive, and the nine were where every module's Mathlib material came from: before
+this pass **107 of the 116 modules named no Mathlib module at all**, and the other nine named exactly
+`import Mathlib`.  Removing it from the nine therefore *de-privileges* the whole tree: a module that
+had been getting `MeasureTheory` through `CutSet/Basic` gets nothing once `CutSet/Basic` lists only
+what `CutSet/Basic` uses.  Every module had to name its own dependencies, so the pass touched 101
+modules — 15 were already exact — and the import lines went from 256 to 901 (mean 7.8 per module, at
+most 32, in `Pair/Diophantine`).  The line count went 44 407 → 45 049, which is those 645 import lines
+less 3 in `PrefixWord` (see below).
+
+The nine, after the pass:
+
+| module | imports | of which Mathlib | of which project |
+|---|---|---|---|
+| `CutSet/Basic` | 16 | 16 | 0 |
+| `ListPeriodicity` | 4 | 4 | 0 |
+| `RauzyVeech/LevyRecurrence` | 17 | 17 | 0 |
+| `RauzyVeech/PrefixWord` | 2 | 2 | 0 |
+| `RauzyVeech/RefiningPartition` | 5 | 5 | 0 |
+| `UniqueErgodicity/CompactTool` | 10 | 10 | 0 |
+| `UniqueErgodicity/MeasPrep` | 9 | 6 | 3 |
+| `UniqueErgodicity/Split` | 11 | 9 | 2 |
+| `UniqueErgodicity/Transfer/Basic` | 5 | 5 | 0 |
+
+`Challenge.lean` keeps its `import Mathlib` — the statement file is meant to be read on its own — and
+`grep -rn '^\(public \)\?import Mathlib$' IETFree` now finds nothing.
+
+### Method
+
+`.scratch/ns/minimp.py` writes a scratch copy of a module with `#min_imports in` above every
+declaration of it, and `minimp_all.py` ran that over all 116 modules as a background job, leaving
+`minimp/done.json` and `minimp/minimp.log`.  `rewrite_imports.py` then replaced each module's import
+block by the sorted union of the project imports it already had with the modules `#min_imports`
+reported, every line `public import` to match the convention of Addendum 172.  Two placement traps:
+`#min_imports in` must stand **above** the docstring and the attribute block of the declaration it
+governs (below them: `unexpected token '#min_imports'; expected 'lemma'`), and `#find_home` — the
+other tool that looks useful here — needs `import Mathlib` to work at all, at 49–110 s per query.
+
+**`#min_imports` answers relative to the list the file has at the time**, and `minimp_all.py` was
+run a second time afterwards (exit 0, 30 min, log written 17:57), on the tree the rewrite had
+already produced; that run **overwrote `minimp/done.json`**.  Its answers are therefore much
+smaller than the ones the rewrite used — `UniqueErgodicity/Basic` "needs" 1 of its 4 imports
+(`IETFree.IET`, which now carries the rest) and `RichPath/RichGreedyPath` 1 of its 5 — and they
+are not a better list: the defining module is what documents a dependency, which is the whole
+point of the pass.  Re-running `rewrite_imports.py` today would shrink the tree against that
+stale-looking file; do not.  The `LevyRecurrence` row of that second run reproduces the
+`_private.…_simp_1_6` error of the first.
+
+### The eight modules `#min_imports` could not report
+
+The tool removes one import at a time from a list in which the others are still present, so a
+dependency that another import also supplies is invisible to it — and so is anything the elaborator
+needs for the `open`s and the tactics rather than for the declarations.  `lake build` found each of
+these; all eight are now imported:
+
+* `open MeasureTheory` (resp. `ENNReal`) with no import of it — `LevyRecurrence`.  `PrefixWord` had
+  two `open`s that nothing used; they were deleted, which is the only non-import edit of the whole
+  pass (`-open MeasureTheory Set Filter`, `-open scoped BigOperators ENNReal NNReal Topology`).
+* the `ProbabilityMeasure` instances, in `UniqueErgodicity/Limits` and `IET`:
+  `Mathlib.MeasureTheory.Measure.Typeclasses.Probability` and `…Measure.ProbabilityMeasure`.
+* `Measure.addHaar_image_linearMap` — `RauzyVeech/Affine`:
+  `Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar`.
+* `birkhoffAverage` — `UniqueErgodicity/Basic`: `Mathlib.Dynamics.BirkhoffSum.Average`.
+* `CompactSpace (ProbabilityMeasure X)` — `UniqueErgodicity/CompactTool`:
+  `Mathlib.MeasureTheory.Measure.Prokhorov`.
+* `positivity` on `∑ i, (lam i : ℝ)` — `RauzyVeech/FirstReturn`: `Mathlib.Tactic.Positivity.Finset`.
+* `linarith` across the `ℝ≥0 → ℝ` coercions — `RauzyVeech/TrueStep`, `NameInfinite`,
+  `InvariantMeasure`: `Mathlib.Tactic.Linarith.NNRealPreprocessor`.  Two proofs had been hand-patched
+  for this first; importing the module let **both patches be reverted**, so this pass changed no proof
+  text.
+
+### `lake shake` was tried and is not to be tried again
+
+`lake shake IETFree --fix` reports 117 suggestions and exits 0; what it wrote is garbage.  It added the
+same ~40 irrelevant Mathlib leaves to every file (`NumberTheory.SelbergSieve`,
+`Combinatorics.SimpleGraph.Triangle.Removal`, `Analysis.Complex.UpperHalfPlane.Basic`,
+`Tactic.NormNum.LegendreSymbol`, …) and removed project imports it judged unused — including
+`public import IETFree.CutSet.Basic` from `IET.lean` — and the tree stopped building.  It was restored
+from `.scratch/pre-shake`.  The cause is the two decisions in force: with `public import` everywhere
+and `@[expose] public section` on every module, every downstream module counts as a user of
+everything, so shake's reverse-use analysis degenerates.  The umbrella `IETFree.lean` had been edited
+too — 34 Mathlib leaves appended after its 116 project imports — and was not part of that restore;
+they were removed this session, and the umbrella verified against the module list on disk as its 116
+sorted `public import IETFree.…` lines plus the module docstring.
+
+### `LevyRecurrence`: why "delete one import and compile" cannot shrink its list
+
+`#min_imports` errored on this one file (`_private.Mathlib.Analysis.Normed.Operator.Basic.0.…_simp_1_6`),
+so its 17 imports were chosen by hand: the module that *defines* each name the file uses, which is
+Mathlib's convention.  Deleting them one at a time was then tried on all 17 — `.scratch/tmp/trimtest.py`,
+results in `.scratch/tmp/levy-trim.json` — and **16 of the 17 compile away**.  That is not a redundancy
+result: `Mathlib.Probability.Martingale.Convergence`, which is the file's subject (Lévy's upward
+theorem), supplies the other sixteen transitively, so removing any *one* of them changes nothing.  A
+greedy pass would leave `Martingale.Convergence` and a couple of others and would document less, which
+is the opposite of naming the defining module.  The list stays, and the same caveat applies to every
+"one-out" test of an import list, `#min_imports` included.
+
+### Verified
+
+`lake build` green, **9 166 jobs**, zero warnings, zero errors; `#print axioms IntervalExchange.main`
+unchanged, `[propext, Classical.choice, Quot.sound]`; **4 676 declarations**, unchanged, 3 438 of them
+not generated by name pattern; 116 modules, **45 049 lines**, 901 of them imports; `change` count 35 at
+35 sites, all re-pointed in `CHANGE-AUDIT.md` (the rewrite moved every line below the headers); README
+anchors re-pointed with `anchors.py --write` (63 lines changed, 159 anchors, then `--check` reports 0);
+every import block sorted, the umbrella's 116 lines included; no `import Mathlib` under `IETFree/`; no
+line over 100 characters, no trailing whitespace, no double blank line (one left in `LevyRecurrence` by
+a hand patch was removed); `runLinter` clean; the only `#` command in the library is the deliberate
+`#print axioms main` in `ChallengeSolved.lean`; `IET2.zip` rebuilt from the tree — 129 files,
+`unzip -t` clean, and a `diff -r` round trip against the working copy identical (`.lake`,
+`.scratch` and the oleans excluded).  **The comparator was not run** — the owner's standing
+instruction is that it runs only on request.  `.scratch/pre-minimp/` keeps the pre-pass tree.
+
+### Addendum 224: P2b — every import line is necessary
+
+The owner's instruction, after reading Addendum 223: *"When 16 out of 17 can be removed, just remove
+them. The goal is that all the imports lines are necessary: removing one should break the build."*
+That supersedes the convention of Addendum 223 — import the module that *defines* each name used —
+under which 901 lines were kept, many of them documentation rather than compilation needs.  The
+criterion is now operational and testable: a line stays if and only if deleting it breaks the build.
+
+#### Why a single one-out test decides nothing, and what replaced it
+
+Addendum 223 established the trap: `LevyRecurrence`'s 17 imports are removable one at a time, because
+`Mathlib.Probability.Martingale.Convergence` supplies the other sixteen.  The conclusion there was to
+keep the defining modules; the owner's ruling is the opposite, and it is the fixpoint of the test
+that has to be computed, not one application of it.  Per module, in topological order (imports before
+importers): delete a line, `lake build IETFree.<Module>`, keep the deletion when it still builds,
+repeat until a whole pass changes nothing.  That last clean pass *is* the verification: every
+survivor was tested and broke the build.
+
+#### Result
+
+901 → **224** import lines over the 116 modules (−677 lines: 45 049 → 44 372), and a fresh pass of
+the verifier over the final tree removed nothing more (`224 removals tested, 0 extra removed`).
+Distribution: 51 modules with one import, 39 with two, 19 with three, 2 with four, 1 with five, 3
+with six, 1 with seven.
+
+| module | before | after |
+|---|---|---|
+| `RauzyVeech/LevyRecurrence` | 17 | 1 — `Mathlib.Probability.Martingale.Convergence` |
+| `CutSet/Basic` | 16 | 1 — `Mathlib.MeasureTheory.Measure.Lebesgue.Basic` |
+| `IET` | 24 | 2 |
+| `TopBotFormalism` | 10 | 1 |
+| `Pair/Diophantine` | 32 | 2 |
+| `Pair/ReductionData` | 25 | 1 |
+| `Pair/Presentation` | 18 | 1 |
+| `ChallengeSolved` | 7 | 1 |
+| `Pair/Irreducible`, the largest now | 11 | 7 |
+
+The cost is the point of the change and is recorded rather than argued: a header no longer says what
+a file uses.  `LevyRecurrence` proves Lévy's upward theorem on a filtration and names one module;
+`Pair/Irreducible` is the only file that has to name seven.  What a module uses stays recoverable
+from the environment; what a reader loses is the summary.  `Challenge.lean` (`import Mathlib`) and
+the umbrella `IETFree.lean` (116 project imports, present for coverage, not for necessity) are
+untouched.
+
+#### The cascade, and the eleven repairs
+
+Minimising a module strips material its *importers* were taking through it, and a later module then
+fails with `Unknown constant`.  The error names the declaration, `rg` names its home, the import goes
+back in — and the module is minimised again, so the restored line ends up necessary like any other.
+Seven modules needed it, eleven imports in all: `IterGlue` (`Nesting`), `Cylinder/Recurrence`
+(`BalancedSet`), `RichPath/LargeLetter` (`ChildVolume`), `RichPath/RichPathAssembly` (`Peel`,
+`ChildVolume`, and on a second occasion `LevyRecurrence`), `Tower/Tiling` (`Tower.LevelN`),
+`UniqueErgodicity/IET` (`Transfer.Basic`), `RichPath/MassFunction` (`HeightDichotomy`) and
+`RichPath/InductionAssembly` (`GradedInduction`).  Two of them broke twice, which is why the last
+sweep repairs inline instead of in a pass afterwards: no module was skipped, so all 116 reach their
+fixpoint.
+
+#### Verified
+
+`lake build` green, **9 166 jobs**, zero warnings, zero errors; `#print axioms IntervalExchange.main`
+unchanged, `[propext, Classical.choice, Quot.sound]`; **4 675 declarations**, one fewer than Addendum
+223's 4 676 and for a reason that is not a deletion — `GradedStep.congr_simp`, an auxiliary that
+`simp` had been generating, is no longer generated once the imports changed — with 3 438 still not
+generated by name pattern and 3 881 still reachable from `main`; 116 modules, **44 372 lines**, 224 of
+them import lines; `change` count 35 at the same 35 sites, whose rows in `CHANGE-AUDIT.md` were
+re-pointed again; README anchors re-pointed with `anchors.py --write` (80 lines changed, 159 anchors,
+then `--check` reports 0); every import block sorted, no `import Mathlib` under `IETFree/`, no line
+over 100 characters, no trailing whitespace, no double blank line; `runLinter` clean for `IETFree` and
+`Challenge`, the only `#` command being the deliberate `#print axioms main`; `IET2.zip` rebuilt and
+round-trip verified.  **The comparator was not run** (the owner's standing instruction).  The tools
+are `.scratch/tmp/sweep2.py` (sweep with inline repair), `repair_imports.py`, `verify_necessity.py`,
+with logs `sweep2.log`, `repair.log`, `verify.log`; the pre-sweep tree is the `IET2.zip` of Addendum
+223.
+
+### Addendum 225: the review's Q, P and N rows — what was done, and what was not
+
+The owner's instruction: *"Do all the Q, then P, then N."*  The ids are the ones of
+`results/review-IET2-v2.md` §10 (Q), §7 (P) and §8 (N).  This addendum records the outcome item by
+item; the review's own §31 carries the same table.
+
+#### Q — proof quality
+
+| id | verdict | what was done |
+|---|---|---|
+| Q3 | **closed** | all 14 `beta_reduce` replaced by the skill's spelling `simp only []` (7 files), no proof restructured |
+| Q5 | **closed, nothing removed** | all 31 standalone `classical` lines were deleted one at a time and the module rebuilt: **every one fails** with *failed to synthesize instance of type class* (`.scratch/tmp/classical.log`). The audit's guess that most would go is wrong on this tree; the 31 are load-bearing |
+| Q7 | **closed except two sites** | 15 of the 17 `rw [show … from rfl]` named: `ofPerm_last_true`/`ofPerm_last_false` (4), `← one_add_one_eq_two` (2), `perm_apply`, `compLen_coe`, `baseLen_def`, `← coe_mkIETEquiv`, `FreeGroup.norm`, `← Set.compl`, `AffineMap.coe_sub`+`Pi.sub_apply`, and the `Pair/Diophantine` chain (Q8).  Three lemmas are new public API: `compLen_coe`, `baseLen_def`, and `IET.coe_toEquiv` **was added and then removed** — `runLinter` rejects a lemma whose two sides are syntactically equal (*LHS equals RHS syntactically*), so that one site keeps its `show … from rfl`.  The two `Fin.castSucc` sites in `Pair/Presentation.lean` keep theirs too: the step needs `Fin.castSucc_zero` (which wants `[NeZero n]`, unavailable there) or `Fin.castSucc_mk` plus a `Fin`-extensionality step, and the skill's §2 lists `Fin`-cast statements among the four worth leaving alone |
+| Q8 | **closed** | the 13-name `rw` chain in `Pair/Diophantine.lean` is now `simp only [Finset.card_univ, Fintype.card_prod, Fintype.card_fun, Fintype.card_fin]`, `rw [pow_add, pow_add, pow_one]`, `exact le_of_eq (by ring)`, with a comment saying what is being counted; the `show p + q + 1 = (p + q) + 1 from rfl` went with it |
+| Q4 | **closed** | the nine long proofs with no comment inside now carry one: `IsDiophantine.of_int_combination`, `inv_translate_aux`, `sigma_disjoint`, `cover_step_true`, `append_comm_of_flatten_replicate_eq`, `exists_prefixFree_mass`, `commute_of_pow_eq`, `refine_step_false`, `letter_lat`.  Re-measured with the same script: theorems over 50 lines with no comment inside **9 → 0** (154 declarations over 50 lines) |
+| Q6 | **closed** | the eight-fold restatement in `Tower/LevelOne.lean` is two public lemmas (`lengthsInBottom_topCell`, `lengthsInBottom_botCell`) and eight proofs now call them; `(0 : ℝ) < (Fintype.card α : ℝ)` is `IETDatum₂.card_pos_cast`, used at 6 sites; the *private* `sumA_eq_one` of `Rigidity/RigidSet.lean` is deleted and replaced by the public `IETDatum₂.sum_coe_eq_one` next to `simplex`, and **all 37** `rw [← NNReal.coe_sum, …]` sites now call it — the coercion dance is gone from the library (`rg '← NNReal.coe_sum'` is empty, and `sum_coe_eq_one` has 41 uses).  The ten remaining `NNReal.coe_sum` mentions go the other way (proving an `ℝ≥0` equation through `ℝ`), which `sum_coe_eq_one` does not cover |
+| Q2 | **62 of 75 sites closed, 13 kept with a reason** | 91 term-position `show … from` at the audit, 75 at the start of this round, **13 now**.  The fixes name what the `show` was doing: `add_sub_cancel_left`/`add_sub_cancel`/`neg_mul` (arithmetic), `← List.append_assoc`/`← List.singleton_append` (list regrouping), `Fintype.sum_bool` (which also deleted the local `sum_bool_eq` — a Mathlib duplicate), `Fin.eta`, `Fin.castSucc_zero`, `Set.ofPred_forall`, `Finset.filter_true_of_mem`, `Set.mem_Ico.mpr`, `congrFun hwx a`, `tot` + `cut_eq_sum_lamHat`, `← MeasureTheory.integral_map`, `congrArg Fin.val`, `NeZero.pos`; where the `show` carried a *proof* of a named lemma (`ofPerm_last_*`, `integral_map`, `← hwx`) the lemma is now used directly.  The 13 kept fall in five classes and each is recorded where it stands: a `Fin`-constructor equality up to proof irrelevance (6 sites — Presentation 160/170, Block/Lemma 304/307, Rescaling 507, LengthMap 450 — no `castSucc_mk`/`castLE_zero` shape matches the `⟨k, by omega⟩` form), a `Fin`-order versus `ℕ`-order bridge (Step 329/348, FirstReturn 788, where the `show` also tells `ite_eq_*` which `if` to rewrite), the `⇑f = ⇑f.toEquiv` coercion (UniqueErgodicity/IET, whose lemma `runLinter` rejects), a hypothesis presented in the shape `rw` matches (ReductionData 764 — the permitted "restating" use), and two where the named chain is longer than the statement (`List.take` truncation, Potential 475; a three-factor arithmetic rearrangement closed by `field_simp`, ChildVolume 91) |
+
+#### P — placement
+
+| id | verdict | what was done |
+|---|---|---|
+| P4 | **closed by the note the review allows** | `IETFree/ListPeriodicity.lean` stays at the root, and its module docstring now says why: the declarations are in `List`'s namespace (they extend Mathlib's `List.HasPeriod`) and a `Library/` directory with one file, no declarations of its own and a namespace that is not its subject would add a path without adding a subject |
+
+#### N — naming
+
+| id | verdict | what was done |
+|---|---|---|
+| N5 | **closed** | `stopPred` → `StopPred` (a `Prop`-valued def, so `UpperCamelCase` like the other 66) |
+| N6 | **closed** | `HNext` → `HNextStep`, `HType` → `HTypeRule`, in the two files that use them |
+| N4 | **not done** | `Mk` and `mmin` keep their names.  This is not a rename but two decisions: `Mk` has 210 occurrences (prose included) and is the source's `m_k(q)`, and `mmin` (69) is `Finset.inf'` restated — the audit's suggestion is to delete it in favour of `Finset.inf'`, which moves the `mmin_*` API rather than renaming it.  Both want a pass of their own |
+
+#### Verified
+
+`lake build` green, **9 166 jobs**, zero warnings, zero errors; `#print axioms IntervalExchange.main`
+unchanged, `[propext, Classical.choice, Quot.sound]`; **4 677 declarations**, **3 884** reachable from
+`main`; 116 modules, **44 351 lines**; `change` count 35, the two rows that moved re-pointed in
+`CHANGE-AUDIT.md`; README anchors re-pointed (4 lines, 159 anchors, then 0 stale); `runLinter` clean
+for `IETFree` and `Challenge` — after it rejected `IET.coe_toEquiv`, which is why that lemma is not in
+the tree; every import block still necessary (unchanged 224 lines); no line over 100 characters, no
+trailing whitespace, no double blank line.  The comparator was not run.
+
+### Addendum 226: N4 — `Mk` is now `mkMass`; `mmin` stays, and why
+
+The owner's instruction: *"deal with `Mk` and `mmin` as the audit suggests"*.  The audit's N4 is two
+findings in one row.
+
+#### `Mk` → `mkMass` (done)
+
+`Mk k q` is the source's `m_k(q)`, a data-valued function, so `lowerCamelCase`: **`mkMass`**, with
+its API — `mkMass_eq`, `mkMass_pos`, `mkMass_st_pos`, `mkMass_card`, `le_mkMass_one` and
+`mmin_le_mkMass` — and the prose in six docstrings that quote it (`RichPathAssembly`'s `𝔐 = mkMass
+1` …).  **246 occurrences in 12 files**, no statement changed.  Three
+lines went over 100 characters with the longer name and were re-wrapped (`NodeHeight`'s
+`gradedStep_text` calc, `LargeLetter`'s `hlast'` binder and its `Γ₄` docstring, `HeightDichotomy`'s
+`dichotomy` docstring).
+
+#### `mmin` (kept, with the reason recorded)
+
+The audit says `mmin` "reads like a typo of `min`; `Finset.inf'` is what it wraps", and the obvious
+conclusion is to delete the wrapper.  It was started and abandoned, because deleting it is not a
+rename but a **change of four statement shapes**:
+
+* `mmin` is `Finset.inf'` made total with the junk value `0` on the empty set, and the totality is
+  load-bearing exactly where the audit did not look — in statements.  `GradedStepMin` is
+  `∀ w, ∃ A' : Finset α, A'.card = k ∧ … min (mmin A' (st P …)) …`: the minimum is written in the
+  *same proposition* that introduces `A'` and gives only `A'.card = k`, with no positivity of `k`,
+  so there is no `Nonempty` proof to hand to `Finset.inf'` at that point.  Replacing it means
+  either adding `A'.Nonempty` (which changes the statement: at `k = 0` the junk value is what makes
+  it well-formed) or adding `1 ≤ k` to the definition — and either ripples through `gradedStep_min`,
+  `gradedStep_succ` and `InductionAssembly`.
+* `mkMass_card` (`mkMass (#α) = mmin univ`) would need `[Nonempty α]`, `mmin_mono` a `Nonempty`
+  hypothesis, and the internal `hchoice` in `HeightDichotomy` the same.
+
+That is a statement-level refactor for a nit, and the house rule is that statements are
+transcriptions and do not move to please a convention.  So `mmin` stays, and its docstring now says
+what it is and why it is total ("the graded induction quantifies over `k`-subsets without a
+positivity hypothesis on `k`, so at the place where the minimum is written there is no `Nonempty`
+proof to give `Finset.inf'`").  What the audit was right about — that the wrapper should not be
+*used* where `Finset.inf'` is available — is met by `mmin_eq`, which every nonempty use site already
+goes through.
+
+#### Verified
+
+`lake build` green, 9 166 jobs, zero warnings, zero errors; `#print axioms IntervalExchange.main`
+unchanged; `runLinter` clean for `IETFree`; 4 677 declarations and 3 884 reachable from `main`, both
+unchanged; 116 modules, **44 360 lines**; no line over 100 characters; README anchors 159, 0 stale;
+the 224 necessary import lines and the 13 surviving `show … from` sites untouched.
+
+### Addendum 227: A1 and A2 — the sources are credited and the docstrings name them
+
+The owner's instruction: *"do A1 and A2: add the sources entries, a Sources paragraph, and rename
+the ambiguous 'the paper' references."*  A1 was the review's only remaining attribution finding, and
+the one it called "the only finding a referee of the *paper* would care about": the two documents
+the induction follows were visible only in `HISTORY.md`, and the code called both "the source".
+
+#### The eight `sources:` entries
+
+`formalization.yaml` had four entries (the paper, Masur, Veech 1982, Veech 1984).  Four were added,
+each with `location:` naming the directories that use it and a note giving the short form the Lean
+docstrings use for it:
+
+| entry | relationship | location |
+|---|---|---|
+| J.-C. Yoccoz, *Continued fraction algorithms for interval exchange maps: an introduction*, in *Frontiers in Number Theory, Physics, and Geometry I* (Springer, 2006, 401–435) | `adapts` | §2–§4.4, pp. 3–20: the induction, the towers, the ray criterion — `IETFree/RauzyVeech/` |
+| A. Avila, S. Gouëzel, J.-C. Yoccoz, *Exponential mixing for the Teichmüller flow*, *Publ. Math. IHÉS* 104 (2006), 143–211 | `adapts` | Appendix A: the graded induction behind the rich path — `IETFree/RauzyVeech/RichPath/` |
+| S. P. Kerckhoff, *Simplicial systems for interval exchange maps and measured foliations*, *Ergodic Theory Dynam. Systems* 5 (1985), 257–271 | `adapts` | the criterion behind `RayCondition` |
+| S. Marmi, P. Moussa, J.-C. Yoccoz, *The cohomological equation for Roth type interval exchange maps*, *J. Amer. Math. Soc.* 18 (2005), 823–872 | `background` | the top/bottom (`π₀`, `π₁`) presentation of `IETDatum₂` |
+
+Bibliographic data was checked against the publisher records (the DOIs and the JAMS/ETDS
+references), and the file validates against the `formalization.yaml` v0.4 schema — checked with
+`jsonschema` against the schema the file's own header points at.
+
+#### The short forms, stated once and used everywhere
+
+- **the paper** — Gouëzel, arXiv:2610.29993 (it was already unambiguous in 19 files);
+- **Yoccoz** — the survey;
+- **AGY** — the appendix of Avila–Gouëzel–Yoccoz.
+
+They are defined in the umbrella docstring (`IETFree.lean`, which is also **A2**: the paper is named
+in a Lean file for the first time, with its arXiv id) and in the README's new **Sources**
+paragraph, which lists the three with their full references and says which directory follows which.
+
+#### The 66 "the source" and the 5 "the paper" that meant AGY
+
+Replaced, by directory, with the name of the document the pointer resolves in:
+
+* `IETFree/RauzyVeech/` (excluding `RichPath/`), `TopBotFormalism.lean`, `IET.lean` — **Yoccoz**:
+  "Corollary 4 of Yoccoz, p. 14", "Lemma 1 of Yoccoz (p. 16)", "Proposition 4.3 of Yoccoz (p. 13)",
+  "Yoccoz's induction", "Yoccoz's `λ^{(n)}`", "Yoccoz's admissibility, 2.5", "(Tool 1 of Yoccoz,
+  p. 55)", "`π₁` of Yoccoz".  All of these carry page numbers or `§`/result numbers of the survey;
+* `IETFree/RauzyVeech/RichPath/` — **AGY**: 44 occurrences, "AGY's `Γ₁`", "the graded induction of
+  AGY", "AGY's `P_q(Γ₄ | …)`", "in AGY";
+* `UniqueErgodicity/MainTheorem.lean` — "the graded induction of AGY";
+* `Rigidity/Transport.lean`, `Rigidity/Defs.lean` — **the paper**: "the paper's single-permutation
+  form", and Defs' "Nothing here is a source statement" rephrased to "a statement of the paper".
+
+**Not touched**, because they are not pointers to a document: `Pair/Diophantine.lean`'s "the source
+is `(Fin (2 * N + 1))^p × …`" (the source set of an image) and `Pair/ReductionData.lean`'s "in the
+source order … in the target order" (the two orders of a permutation).  The 48 "the paper" of
+`Pair/`, `IET.lean`, `ChallengeSolved.lean` and the rest are unchanged and now unambiguous, since
+`RichPath/` no longer uses that phrase.
+
+**One stale path fixed on the way**: six module docstrings of `RichPath/` cited
+`` `IETFree/RauzyVeech/RichPath/lean` ``, a leftover of the campaign-era layout with no such file;
+they now say the directory.
+
+#### Verified
+
+`lake build` green, 9 166 jobs, zero warnings, zero errors; `#print axioms IntervalExchange.main`
+unchanged; `runLinter` clean for `IETFree`; 116 modules, **44 360 lines** (unchanged: the edits are
+inside docstrings and comments, and the three lines the longer first draft pushed over 100
+characters were re-wrapped by using the short forms — which are shorter than "the source"); 4 677
+declarations and 3 884 reachable from `main`, unchanged; README anchors 159, 0 stale;
+`formalization.yaml` valid
+against v0.4.  The comparator was not run.
+
+### Addendum 228: the last 13 `show … from` sites are gone
+
+The owner's instruction: *"Now delete the remaining 13 show-from sites that you judged acceptable,
+or explain why not."*  They were deleted — **`rg 'show .* from' IETFree` is empty** — and none of
+them needed a statement change; what they needed was a second look at *why* the `show` was there.
+
+| site | what it was doing | what replaced it |
+|---|---|---|
+| `UniqueErgodicity/IET.lean:503` | the coercion `⇑f = ⇑f.toEquiv` | nothing: the `rw` became `(congrArg (fun e : Equiv ℝ ℝ => ⇑e) he).trans (coe_mkIETEquiv lam π 0)`, so the coercion step disappears instead of being named |
+| `RauzyVeech/Step.lean:329, 348` | a `Fin` `≤` presented at the `ℕ` level, because the `if` being rewritten has its condition at the val level | a named `have h1' : (P.piBottom a).val ≤ … := h1` (resp. its negation) in the branch where the val-level form is needed; the case split stays at the `Fin` level for the outer `if` |
+| `RauzyVeech/FirstReturn.lean:788` | nothing — `hj1` was already `(j : ℕ) = 1` | `rw [hj1, Function.iterate_one]` |
+| `Pair/Presentation.lean:160` | a `castSucc` of `⟨0, hn⟩` against `s 0` | a named `have hcast : … := rfl` (the skill's sanctioned "`:= rfl` names the equation a later `rw` needs") |
+| `Pair/Presentation.lean:170` | nothing — the goal is `s (S.max' hne).succ ≤ x` definitionally | `exact hcon` |
+| `Pair/Block/Lemma.lean:304, 307` | nothing — `iso (Fin.castLE _ 0)` *is* `iso ⟨0, hcard⟩` definitionally | `:= ht0` and `:= htlast`, the two facts already in context |
+| `RauzyVeech/ChildVolume.lean:91` | an arithmetic rearrangement closed by `field_simp` | named `have harith : … := by rw [div_eq_mul_inv, div_eq_mul_inv, _root_.mul_inv_rev]`, then `rw [harith, div_lt_one …]` |
+| `Pair/ReductionData.lean:758` | presenting `hrel'` in the shape `rw` matches | a named `have hrel'' := hrel'` |
+| `RauzyVeech/RichPath/Potential.lean:475` | a `List.take` truncation closed by `simp` | the named chain `List.take_append`, `Nat.add_sub_cancel_left`, `List.take_of_length_le`, `List.take_one`, `List.head?_cons`, `Option.toList_some` |
+| `Pair/Block/Rescaling.lean:506` | a computed `Fin` equality | a named `have hm : … := Fin.ext (by simp only []; omega)` |
+| `Pair/LengthMap.lean:450` | `P.zero` at a `Fin` constructor form | a named `have hzero : … := P.zero` |
+
+Four of the thirteen turned out to be **redundant** rather than merely anonymous (the two in
+`Block/Lemma`, `Presentation:170`, `FirstReturn:788`): the goal and the hypothesis were already
+definitionally equal, so deleting the `show` and writing the hypothesis closed the step.  Three more
+were one `rw` away from a Mathlib lemma.  The rest are now named `have`s, which is what the rule
+asks for — the fact has a name, and the `rw` list says which fact it uses.
+
+**Measured**: `show … from` sites **13 → 0**; `change` count unchanged at 35; **4 670 declarations**
+(4 677 before: seven `simp`/`omega`/`field_simp` calls that generated auxiliary declarations are
+gone with the `show`s), 3 884 reachable from `main`, 116 modules, **44 355 lines**; `lake build`
+green at 9 166 jobs, `runLinter` clean for `IETFree` and `Challenge`; README anchors 159, 0 stale.
+The comparator was not run.
+
+### Addendum 229: the survey's "gaps" are not gaps — the claim is removed from every document
+
+The owner's instruction: *"drop the claims of gaps in Yoccoz: these are not genuine gaps."*
+
+The claim came from the audit of the survey this repository commissioned (`blueprint.md` Part I,
+Addendum 69) and spread from there: one "non-local gap" G1 at the last paragraph of §4.4, five local
+ones G2–G6, three "proof slips" S1–S3.  The author, who wrote the survey, has ruled that they are
+not gaps, and every document that asserted them has been changed:
+
+| document | what changed |
+|---|---|
+| `IET2/README.md` | the AGY bullet no longer says "closes the one non-local gap of the survey" |
+| `IET2/formalization.yaml` | the same clause removed from the AGY `note:`; the file still validates against the v0.4 schema |
+| `IET2/HISTORY.md`, Addendum 77 | the bullet now says the survey *compresses* six steps that a formalisation writes out, and records the ruling; the labels G1–G6, S1–S3 stay as names for those places |
+| `blueprint.md` §1 | the verdict no longer says the proof "is not correct verbatim" or that "five places do not close"; it says the proof is complete, records the ruling, and defines the labels as the auditor's names for the places where the tree writes a compressed step out.  The status table's error words (`**gap**`, `**wrong matrix order**`, `**printed reason false**`, `**not proved in the source**`) are replaced by what the tree does there |
+| `blueprint.md` §3 | "Blocking gaps (must be repaired before formalisation)" → "Places where the printed proof compresses a step"; "Proof slips a formalisation must not transcribe" → "Points of notation and of constant-tracking the formalisation pins down"; the G1 paragraph's "neither is valid as written" → "the tree separates them, and each needs a line the survey does not write"; "*Repair*" → "*The tree's form*" |
+| `blueprint.md` §10 | "The five technical cruxes" → "The five technical points"; §10.5 no longer says it "replaces" the last paragraph of §4.4 but gives "the tree's form" of it |
+| `results/elementary-steps.md` | §1 retitled and its table re-columned ("what the printed proof compresses" / "how the tree states it"); the "one non-local gap and five local ones, plus three proof slips" and "G1 is the only place where the printed argument does not close" sentences are gone; §2 is about the tree's own interface defect, which it always was |
+| `results/review-IET2-v2.md` | §4's A3 finding and §35's A3 row say the claim was withdrawn by the author's ruling, and §36 records it |
+| this file, Part II | **left verbatim**: Part II reproduces the campaigns' own documents unedited, so their wording stands there as an archive; the ruling in this addendum governs.  The "explicit source gaps" sections of Part II are about blueprint precision points (`bp.delta_M_witness`), not about the survey |
+
+What is **kept**, because it is about this tree and not about the survey: the interface defect of
+Addendum 77 (`Provider`'s refuted length bound), the tree's own arguments in `blueprint.md` §10, and
+the fact that the AGY graded induction is where the rich-path step is proved — a dependency of the
+formalisation, not a repair.
+
+**Verified.** No Lean file changed, so the tree is where Addendum 228 left it: `lake build` green at
+9 166 jobs, `runLinter` clean, 116 modules, 44 355 lines, 4 670 declarations; `formalization.yaml`
+valid against the v0.4 schema; `IET2.zip` rebuilt and round-trip verified.  The comparator was not
+run.
+
+### Addendum 230: `mmin` is `sInf` of the image — the survey of Mathlib's `Finset` minima
+
+The owner's question: *"What about `mmin`? Can you check the different options for the minimum of a
+`Finset` in Mathlib?"*  The audit (N4) had wanted `mmin` deleted in favour of `Finset.inf'`; the
+blocker found in Addendum 226 was that the graded induction writes the minimum in the same
+proposition that introduces a `k`-subset, so there is no `Nonempty` proof to give `Finset.inf'` at
+that point.  The survey shows a better answer than either: Mathlib's own **total** infimum on `ℝ`.
+
+#### What Mathlib offers (checked in this Mathlib, `#check` at `lean-toolchain` 4.35.0)
+
+| option | signature | empty set | for `ℝ`? |
+|---|---|---|---|
+| `Finset.inf'` | `s.inf' (h : s.Nonempty) f`, `[SemilatticeInf α]` | — (needs the proof) | yes, but needs `Nonempty` in the statement |
+| `Finset.min'` | `s.min' (h : s.Nonempty)`, `[LinearOrder α]` | — | same, linear order only |
+| `Finset.inf` | `s.inf f`, `[SemilatticeInf α] [OrderTop α]` | `⊤` | `ℝ` has no `⊤`: would need `WithTop ℝ` and an `untop` |
+| `Finset.min` | `s.min : WithTop α`, `[LinearOrder α]` | `⊤` | total, but `WithTop`-valued |
+| `Finset.min?` / `max?` | — | — | **absent from this Mathlib** (`unknown constant`) |
+| `sInf (q '' s)` | `[ConditionallyCompleteLinearOrder α]`, `sInf : Set α → α` | `Real.sInf_empty : sInf ∅ = 0` | **total, `ℝ`-valued, junk `0`** |
+| `⨅ a ∈ s, q a` | indexed `iInf` (notation) | `sSup ∅ = 0` on `ℝ` | total, but the API (`ciInf_le`, `le_ciInf`) carries boundedness side goals and the binder is a `Prop`-subtype |
+
+The API that comes with `sInf` and is used here: `csInf_le` (`BddBelow s → a ∈ s → sInf s ≤ a`),
+`le_csInf` (`s.Nonempty → (∀ b ∈ s, a ≤ b) → a ≤ sInf s`), `Set.Finite.bddBelow`,
+`Real.sInf_empty`, `Real.sInf_of_not_bddBelow`, and the bridge to Mathlib's own `Finset` API
+`Finset.Nonempty.csInf_eq_min'` (`sInf ↑s = s.min' h`, from
+`Mathlib/Order/ConditionallyCompleteLattice/Finset.lean`, a file the library already imports
+transitively).
+
+#### What changed
+
+`mmin` is no longer a hand-made totalisation:
+
+```lean
+noncomputable def mmin (s : Finset α) (q : α → ℝ) : ℝ :=
+  sInf (q '' (s : Set α))
+```
+
+instead of `if h : s.Nonempty then s.inf' h q else 0`.  The junk value is no longer invented — it is
+`ℝ`'s own, `sInf ∅ = 0` — which is exactly the value the `k = 0` case of `mkMass` reads.  **No
+statement changed**: `GradedStepMin`, `mkMass`, `mkMass_card`, `mmin_mono` and the rest keep their
+text, so the Addendum 226 blocker does not arise.  The four API lemmas keep their names and
+statements, with new proofs:
+
+* `mmin_eq (h : s.Nonempty) : mmin s q = s.inf' h q` — by `le_antisymm` with `csInf_le` (the infimum
+  is attained, `Finset.exists_mem_eq_inf'`) and `le_csInf` (`Finset.inf'_le`);
+* `mmin_le (hb : b ∈ s) : mmin s q ≤ q b` — `csInf_le` with `Set.Finite.bddBelow`;
+* `le_mmin (hs : s.Nonempty) (h : ∀ b ∈ s, c ≤ q b) : c ≤ mmin s q` — `le_csInf`;
+* `mmin_pos`, `mmin_singleton` — unchanged, through `mmin_eq`.
+
+#### Why this is the right option
+
+* it is **Mathlib's**, not ours: the audit's complaint ("`mmin` reads like a typo of `min`;
+  `Finset.inf'` is what it wraps") is answered by the definition being an existing operator;
+* it is **total without a junk value of our choosing** — the empty case is `ℝ`'s `sInf ∅ = 0`;
+* it keeps every statement, including the one that blocked the `Finset.inf'` route;
+* `mmin_eq` still hands every nonempty use site `Finset.inf'`, so nothing is lost to readers who
+  want the `Finset` API, and `Finset.Nonempty.csInf_eq_min'` bridges to `min'` as well.
+
+#### Verified
+
+`lake build` green, 9 166 jobs, zero warnings, zero errors; `#print axioms IntervalExchange.main`
+unchanged; `runLinter` clean for `IETFree` and `Challenge` — it caught one thing on the way: the new
+slice had swallowed `mkMass`'s docstring, which the docstring linter reported and which is restored
+with a sentence about the `k = 0` case; 116 modules, **44 361 lines**, 4 670 declarations
+(unchanged), 3 884 reachable from `main`; `show … from` still 0, `change` still 35, import lines
+still 224; README anchors 159, 0 stale.  The comparator was not run.
+
+### Addendum 231: `mkIETFun`'s formula is not a `simp` lemma (owner's ruling on A4)
+
+The owner's instruction: *"Don't make it simp. The formula is a detail, it should not be unfolded by
+default."*
+
+That closes the review's last open row (§5 A4), and it closes it against the audit's suggestion: the
+audit proposed annotating `mkIETFun_of_mem` and `mkIETFun_of_notMem` — the two evaluation lemmas of
+the library's central definition — with `@[simp]`.  They stay unannotated, for the reason the owner
+gives: the `if` in `mkIETFun`'s body is an implementation detail, and a `simp` lemma would unfold it
+by default, at every occurrence, in every proof of the tree and of every downstream user.
+
+Recorded in three places:
+
+* the two lemmas now carry docstrings saying so — "the formula is an implementation detail of
+  `mkIETFun` and is **deliberately not a `simp` lemma** (owner's ruling, History Addendum 231):
+  it is unfolded by naming it, at the places where the formula is what one wants";
+* `NOTES.md`, under "Decisions in force", states the same and adds the consequence worth knowing:
+  `simp` treats `mkIETFun lam π a x` as an atom everywhere;
+* the review's §35 row for A4 and §38 record it.
+
+The library was already written that way: all 27 uses of the two lemmas are explicit
+`rw`/`exact`, and the only `simp only` that mentions the definition goes through
+`mkIET1_eq_mkIETFun`, so nothing else had to change.
+
+**Verified.** `lake build` green, 9 166 jobs, zero warnings, zero errors; `#print axioms
+IntervalExchange.main` unchanged; `runLinter` clean (the new docstrings satisfy the docstring
+linter); 116 modules, 44 367 lines, 4 670 declarations, 3 884 reachable from `main`; `show … from`
+0, `change` 35, imports 224; README anchors re-pointed if the new lines moved one, 0 stale.  The
+comparator was not run.
+
+### Addendum 232: the v3 review applied — reuse, dead hypotheses, `change`s, names, credit surface
+
+The v3 review (`../results/review-IET2-v3.md`) was a report; this addendum records the round that
+applied its findings.  Everything below is in the tree and compiled.
+
+**The reuse block.**  `RauzyVeech/Affine.lean` no longer defines its own permutation matrix: `def
+permMat` is gone and the file uses Mathlib's `Equiv.Perm.permMatrix ℝ` (new import
+`Mathlib.LinearAlgebra.Matrix.Permutation`, the only import added in this round).  Ten lemmas
+became five: `permMatrix_apply`, `permMatrix_nonneg`, `permMatrix_col_sum` (the column sums are what
+`inducedMap_mem_region` asks for) and `permMatrix_det_ne_zero`/`permMatrix_abs_det` (one line each
+from `Matrix.det_permutation` and `IETDatum₂`-free); `permMat_eq_one`, `_eq_zero`, `_mul_symm`,
+`_transpose_mul` and `_det_mul_self` are gone with the Mathlib lemmas that replace them
+(`Matrix.permMatrix_mul`, `permMatrix_one`, `det_permutation`).  The four theorems that mentioned the
+definition are renamed `inducedMap_permMatrix_comp`, `chart_inducedMap_permMatrix`,
+`inducedMap_permMatrix_image_region`, `map_restrict_permMatrix`.
+`IETDatum₂.coe_mkIET1'` (verbatim `IntervalExchange.coe_mkIET1'`) is deleted and its three `rw` sites
+point at the root lemma; `leftEnd_le` and `Pair/Block/leftEnd_le_leftEnd` are deleted as copies of
+`leftEnd_mono`; `eq_of_orders` is deleted in favour of the registered `IETDatum₂.ext` (which the two
+injectivity proofs now name, so it left the unreached list).
+
+**The dead hypotheses.**  `Path.PairReach` had a phantom parameter — its body quantifies over a fresh
+vertex and never mentions the datum — so it is now `Path.PairReach : Prop`; `exists_pos_row`,
+`exists_pos_word` and `exists_uniform_bound` take it without a datum,
+`pairReach`/`pairReach_all` lost their arguments, and `exists_uniform_bound'` and
+`exists_pos_cycle` lost the hypothesis `2 ≤ n`, which only `pairReach` had needed (the `hn` of
+`hasPositiveBlocks_ae` and `exists_good_node_uniform` remains, used by `richGreedyPath` and
+`exists_vertex_last_true_piBottom_zero`).  The two call sites of `pairReach_all` each lost a
+duplicated `(P hP)` pair, which is the measure of the defect.
+
+**Six `change`s named.**  `RauzyReach.lean`'s two now read
+`simpa only [IETDatum₂.rvStep_piTop_true] using congrArg IETDatum₂.piTop hPQ` (and the `piBottom`
+mirror); `Step.lean` gains the two `rfl` lemmas `rvStep_perm_true`/`rvStep_perm_false` that the four
+`perm` sites needed, and those sites rewrite instead of `change` (`TrueStep.lean`'s
+`piBottom_rvStep_true` uses the existing pointwise `rvStep_apply_true`).  The count is **29**, and
+`CHANGE-AUDIT.md` has 29 rows, re-pointed.
+
+**Three duplicated proofs.**  `iterOK_pathWord` in `IterGlue2.lean` is generalised to the along-path
+stopping hypothesis and `Ray/Pointwise.lean`'s 49-line copy is deleted (the strong form is a
+one-liner); `image_iterate_eq_preimage_symm` is stated once in `FirstReturn.lean` and `Tower/LevelN`'s
+copy is deleted; `filter_perm_le_eq_insert` is stated once in `IET.lean` and `Pair/ReductionData`'s
+copy is deleted.
+
+**Names.**  `botCell_ne_lastPos_iff_pi` → `botCell_ne_lastPos_of_lt` (it proves a `≠`, not an `↔`);
+`_aux` dropped from `ncol_nonneg`, `ncol_le_one`, `spread_le_one`, `cond_blocked_ge`,
+`inv_translate`.  `README.md` and `NOTES.md` no longer claim that every sub-namespace is given by a
+declaration: `IETDatum₂.Path` and `RauzyVeech.TowerStep` are named as the two bare subject namespaces,
+and the reason dot notation does not reach `Path.Q` is stated.
+
+**The credit surface.**  Kerckhoff's criterion is named where it is used (`RayCondition` in
+`MainComponents.lean`, `positiveBlocksRay` in `PosBlocks.lean`); the two "the source" survivors are
+replaced by their documents (`IETFree.lean`, `RichPath/NodeHeight.lean` — AGY's `m_k(q)`); the
+`Ray/Criterion.lean` blueprint pointers now say which document (§10.4, §10.5 of the Masur–Veech
+blueprint, reproduced in `HISTORY.md` Part II); `formalization.yaml` drops the Keane clause (the tree
+never uses Keane), records that Veech 1984's argument *is* followed by `Rigidity/` (its (3.1)–(3.8)),
+and loses the spliced sentence and the two "frozen interfaces".  The paper's rotation lemma is Lemma
+**1.3**, not 1.2 — one counter per section in `paper.tex`, so Remark 1.2 is the remark and `lem:rot`
+at `:331` is 1.3 — and the five sites that said 1.2 are corrected.  Two proof-status claims are
+removed (`ChallengeSolved.lean`, `Affine.lean`).
+
+**The three name merges** (the owner's instruction: pick the surviving name and report the count).
+Four notions carried two names each; three of them are now one:
+
+* `tot` (`FirstReturn`, `Fin n`) and `Lam` (`MeshShrink`, general `α`), the same formula in two
+  modules that do not import each other, became **`totalLength`** — general in the alphabet, and
+  placed in `IET.lean` because that is the lowest module both can see.  Sixty-six term uses and
+  fourteen lemma names moved (`single_le_totalLength`, `cut_le_totalLength`, `image_Ico_totalLength`,
+  `mkIETFun_mem_Ico_cut_totalLength`, `tot_lengthsInBottom` → `totalLength_lengthsInBottom`, …);
+  `Lam_eq`, `Lam_pos`, `Cs_mul_le_Lam` became `totalLength_eq`, `totalLength_pos`,
+  `colSumInt_mul_le_totalLength`.
+* `mn`/`sc` (`NameInfinite`, `vertexNat`) and `nm`/`scd` (`MeshShrink`, `vertex`) are the same two
+  letters, equal by `vertexNat_eq_vertex_ofFn`.  The `MeshShrink` pair and its two bridge lemmas are
+  deleted; **`mainLetter`/`secondLetter`** (in `NameInfinite`) are the survivors, and `MeshShrink`
+  keeps the two conversion lemmas it needs (`mainLetter_eq_last`, `secondLetter_eq_last`) plus
+  `Vs_succ`'s recursion where it used `V_succ` (which is deleted: nothing names it now).
+* `cs` (ℝ) and `Cs` (ℤ), column sums of the same matrix differing only in case and codomain, became
+  **`colSum`/`colSumInt`**, with the missing relation added as
+  `colSumInt_cast : (colSumInt P p k b : ℝ) = colSum P (pfx p k) b`; the integer form stays because
+  the growth argument needs `1 ≤ colSumInt` and an exact integer recursion, so this pair is one
+  notion with **two** declarations by design (`NOTES.md` says so).
+* Counts: the ten old identifiers (`cs`, `Cs`, `nm`, `scd`, `mn`, `sc`, `tot`, `Lam`, `nm_eq_mn`,
+  `scd_eq_sc`) occur nowhere in `IETFree/`; the only remaining `tot` hits are the local hypothesis
+  `hx'tot` of `Pair/Block/Rescaling.lean`, which is not the function.  Declarations
+  4 651 → **4 644**, reachable 3 867 → **3 863**, lines 44 239 → **44 245**, imports
+  225 → **226** (the bridge needs `ColDiam` in `MeshShrink`); the unreached list goes 28 → **29**,
+  the newcomer being `colSumInt_cast` itself.
+
+**The remaining unused hypotheses** (twenty in the review's list, plus nine the removal made dead).
+Each was deleted from the statement, not renamed to `_`; the statements are stronger and no proof had
+to change, only the calls, which pass one argument fewer:
+
+* `totalLength_pos` `_hP`; `tower_formula_level_pathQ_any` `_hP`, `_hn`;
+  `exists_uniform_minimal_exit` `_hn`; `iterate_word` `_hε`, `_hsmall`; `defect_identity_meas`
+  `_hGinj`; `sign_congr_on_ball` `_hε`; `card_filter_gt` `_hk`; `descent_subclaim` `_hA`;
+  `exists_stopfam_of_good` `_hN`; `exists_markedList` `_hq₀`, `_hr₀`, `_hineq₁`;
+  `translationVector_lamHat_of_ne` `_hib`; `removeFun`'s parameter `_h`.
+* The four `_hlt` of `mkIETFun_mem_cut_of_ne`, `mkIETFun_mem_Ico_cut_totalLength`,
+  `filter_eT_lt_of_le` and `filter_eT_lt_of_gt` were only ever forwarded, so their removal made six
+  more `hlt` dead in `TrueStep.lean` (`leftEnd_lamT_of_le`, `upperEnd_lamT_of_lt`,
+  `translationVector_piHatT_of_lt`, `translationVector_piHatT_top`, `cellHatT_of_lt`,
+  `cellHatL_of_lt`); those six are gone too, while the lemmas whose statements still need `hlt`
+  (`leftEnd_lamT_of_gt`, `cellHatT_top`, `cellHatT_succ`, `cellHatT_of_gt`, …) keep it.
+  `map_map_eq_self` `hGinj`, `lt_iff_lt_of_ne_on_ball` `hε` and `removeFun_of_le` `h` are the other
+  three of the nine.  The sweep also found two the review's meta-program had missed
+  (`image_truncation_subset`'s `_huv`, `_hv1`; it checked 2 612 of 2 953 declarations), and those are
+  gone as well.  Total: **31 binders in 26 declarations** (26 edited, one deleted:
+  `translationVector_lamHat_botCell`, now a special case of the general lemma, with the `by_cases` it
+  fed in `exchHat_eq_mkIETFun`).
+
+**The `IETDatum₂` namespace moves.**  Sixteen declarations whose statements mention no `IETDatum₂`
+left `IntervalExchange.IETDatum₂` for `IntervalExchange`: `qMat`, `qApply`, `qApply_apply`,
+`qApply_eq`, `qApply_mul`, `cone`, `cone_eq`, `cone_mul`, `sum_add_single_mul`,
+`volume_linear_eq_zero` (`Nesting.lean`), `cone` itself, `det_one_add_single_of_ne` and `colsum_one`
+(`Step.lean`, `Cylinder/Volume.lean`), `card_filter_lt`/`le`/`gt` (`PairReach.lean`) and
+`mem_cone_one_iff` (`RauzyPath.lean`).  The move costs nothing at the use sites — Lean resolves a
+short name in the parent namespace, so only the qualified `IETDatum₂.qApply`-style spellings had to be
+shortened (13 files, and the two datum-carrying lemmas `qApply_rvMatInv*` that a first pass had
+stripped were put back).  What remains under `IETDatum₂` takes a datum, except `fin_add_one_val` and
+the `hallLin`/`glin`/`delta` family, which sit inside `section Step` / `section Null` /
+`section NullVolume` interleaved with datum-carrying declarations, and `pairReach`,
+`pairReach_all`, `exists_uniform_bound'`, whose names still refer to the diagram of a datum.
+
+**The `deltaOf` API (§3.8, first half).**  The five bounds of `deltaOf` were `private` in
+`Rigidity/RigidStep.lean` while `deltaOf` and `deltaOf_pos` were public in `Rigidity/Defs.lean`, so a
+caller of `exists_rigid_set` — whose hypotheses are exactly `0 < δ` and `δ ≤ 1/4` — could prove only
+one of the two.  `deltaOf_le_quarter`, `deltaOf_le_div`, `deltaOf_mul_le`, `deltaOf_mul_succ_le` and
+`deltaOf_mul_add_three_le` are public now (out of the `Internal` namespace), and
+`deltaOf_pos_and_le_quarter` packages `0 < deltaOf ε M ∧ deltaOf ε M ≤ 1/4`; the rigid step's call of
+`exists_rigid_set` goes through the package, so the lemma is exercised rather than decorative.
+
+**The `EquivLike` instance (§3.8, second half) is not done.**  `IET a b` registers a `CoeFun`
+instance and proves `ext` and `injective` by hand; `EquivLike (IET a b) ℝ ℝ` would give both.  An
+attempt was made and reverted: `EquivLike` carries a function-level inverse, and `IET a b` is a group
+whose `Inv` is the group inverse, so `f⁻¹ (f x)` — used throughout `FirstReturn`, `LevelN` and the
+tower files — becomes ambiguous between them; the structure's `isIET : IsIET toEquiv a b` field also
+needs the injectivity proof of the instance restructured (the `obtain`/`cases` script of `IET.ext`
+does not elaborate there).  Doing it means deciding what `f⁻¹` means for an exchange and reworking
+the `Inv`/`Group` API in the same commit; it is not the local addition the review assumed.
+
+**Two module moves of §3.7.**  `UniqueErgodicity/Main.lean` — a module with no subject, whose
+docstring advertised `MainTheorem.lean`'s theorem and whose only importer was
+`UniqueErgodicity/IET.lean` — is deleted; its two lemmas (`unitMeas_Ico`, `unitMeas_singleton`, both
+used by `IET.lean` itself) moved there, and `Pair/Irreducible.lean` gained the direct
+`UniqueErgodicity.MainTheorem` import that `Main.lean` had been supplying transitively (the review
+called that import unused; it was load-bearing through the graph, which the move exposed).
+`RauzyVeech/Tower/Cells.lean` — 51 lines, one theorem (`cellHat_subset_dom`) whose ingredients are all
+`FirstReturn`'s — is deleted and the theorem moved to `FirstReturn.lean`; `Tower/LevelOne.lean` now
+imports `FirstReturn` directly.  Two modules gone: 116 → 114 modules, 118 → 116 `.lean` files.
+
+Left from §3.7, with the reason: the four copies of `unitMeas (Ico 0 1) = 1` (the measure form in
+`InvariantMeasure` and the `.real` form in `DimOne` are different statements, so consolidating them is
+a choice about which is canonical), the 725 lines of free-group theory in `Pair/` (a new directory,
+which renames module paths, the umbrella, `Build.sh`'s per-module lists and the README/NOTES layouts),
+and the `LengthInjective.lean` wrapper (a rename-or-delete decision).
+
+**Two more §3.7 moves.**  `IETFree/Pair/Commensurable.lean` and `IETFree/Pair/Centralizer.lean` — 725
+lines of `FreeGroup` theory over an arbitrary alphabet, with no exchange in them — moved to a new
+`IETFree/FreeGroup/` directory; their namespaces were already `FreeGroup`, so only the three import
+paths, the umbrella and the layouts changed.  `RauzyVeech/LengthInjective.lean` is deleted: its single
+theorem `measure_eq_of_floors` was `measure_restrict_eq_of_refining_partitions` at `Ico 0 1` with the
+two `restrict_eq_self_of_ae_mem` rewrites, so the body is inlined at its only call site
+(`Tower/Injectivity.lean`, which now imports `RefiningPartition` directly and no longer has a wrapper
+named against `Tower/Injectivity`).  Modules 114 → 113, `.lean` files 116 → 115.
+
+**The four copies of `unitMeas (Ico 0 1) = 1` are one.**  The family is `ℝ≥0∞`-valued at six of its
+seven sites (`lebesgue_Ico`, itself, three uses, and eight same-shaped hypotheses), and `ℝ`-valued at
+one (`DimOne`'s `.real`), so the canonical statement is the `ℝ≥0∞` one and it now lives next to the
+definition it is about: `IntervalExchange.unitMeas_Ico` in `IET.lean`.  `lebesgue_Ico`
+(`RauzyVeech/InvariantMeasure.lean`) is one line through `coe_lebesgue`; the inline proof in
+`Rigidity/Sequences.lean` is `:= unitMeas_Ico`; and `DimOne`'s real form is derived in one line,
+`rw [Measure.real, unitMeas_Ico, ENNReal.toReal_one]`.  Four proofs → one, plus two one-line
+derivations and a reference.
+
+**Stage comments in the long proofs (§3.2, item 5 — partial).**  Two of the twenty-two proofs of more
+than 60 lines that carried at most one `--` comment now have them: `gradedStep_succ`
+(`RichPath/NodeHeight.lean`, 154 lines of body) gets five — the balance bound inherited by each
+child, the `BalanceStep` families, the choice of `T δ` with the three properties it gives, the glued
+family, and the two goals (witness, mass); `isDiophC_of_goodFree` (`Pair/Diophantine.lean`, 134
+lines) gets four — the splitting of the common last coordinate, the rewritten linear form, `1 ≤ N`,
+and `M ≤ 2N`.  The other twenty are uncommented: each is a 60–108-line proof whose stages have to be
+read before they can be named, and naming them wrongly is worse than leaving them bare.
+
+**Stage comments in the long proofs, finished (a follow-up pass, later in this round).**  All twenty
+now carry five `--` comments each, inserted one proof at a time and each followed by
+`lake build IETFree.<Module>`: `sigma_disjoint_node` and `SH_list` (`Rigidity/RigidSet.lean`),
+`transl_of_locally_le` (`CutSet/Measure.lean`), `exists_iterate_eq_add_on_cell` and `FR_all`
+(`Tower/Tiling.lean`), `FR_list` (`Tower/Node.lean`), `continuous_germCoordOf`,
+`germProjOf_eventually_affine` and `image_cell_right_end` (`Germ/Basic.lean`),
+`irreduciblePerm_blockPerm` and `rho_lt_iff` (`Block/Datum.lean`), `GoodRegion.surj`
+(`Block/Endpoints.lean`), `volume_prod_ubox_affine` and `volume_ubox_affine` (`Pair/Diophantine.lean`),
+`restrict_cut_invariant_true` (`TrueStep.lean`), `restrict_cut_invariant` (`LevelN.lean`),
+`defect_identity_meas` (`Transfer/Basic.lean`), `newLetter_words` (`LargeLetter.lean`),
+`abs_sum_sub_mul_le` (`PosBlock.lean`) and `gradedStep_min` (`NodeHeight.lean`).  None was left bare.
+Each comment names a stage in the vocabulary of the statement — the object the proof sets up, the
+split it makes, the estimate, the assembly — and none restates the tactic that follows it.  Two
+corrections to the list of Appendix A.  It names `cellAt_nil_Ico` (`Rigidity/RigidSet.lean`, 91
+lines) for a proof that is `:= rfl`: the scanner had attributed to that declaration the body of the
+theorem following it, which is `SH_list`, and `SH_list` is the proof commented.  And three of the
+twenty already carried one comment (`irreduciblePerm_blockPerm`, `GoodRegion.surj`,
+`restrict_cut_invariant`), so they end at five rather than receiving five new ones.  Re-measured with
+the Appendix A scanner (body over 60 lines, at most one comment): of the eighty-four proofs of more
+than 60 lines, **none** now carries fewer than two.  Verified:
+`lake build` green, 9 163 jobs, exit 0, zero warnings (`warningAsError` on);
+`runLinter --no-build IETFree` passed; the README anchors re-pointed by `.scratch/tmp/anchors.py`
+(`ae_diophantine` 964 → 974, `exists_countable_goodRegion_cover` 318 → 322; 0 stale, 159 anchors);
+`IET2.zip` rebuilt and round-tripped.  The comparator was not run (the owner's standing rule).
+
+**Counters, re-measured, not carried over.**  113 modules, 44 182 lines, 223 import lines, umbrella
+191 lines, 118 `.lean` files; 4 643 declarations, 3 862 reachable from `main`, **29** unreached (five
+`@[ext]`, five `IsSmallRelation` projections, the `CoeFun` instance, seventeen `rfl`/`@[simp]`
+lemmas, and `colSumInt_cast`); `RauzyVeech/` 62 modules; `lakefile.toml` 118 modules;
+`formalization.yaml` 118; `ListPeriodicity` added to the README and NOTES layouts; 29 `change`s; 232
+addenda.
+
+**Verified.**  `lake build` green, 9 166 jobs, exit 0, zero warnings (`warningAsError` on);
+`runLinter` clean for `IETFree` and `Challenge`; `#print axioms IntervalExchange.main` unchanged
+(`[propext, Classical.choice, Quot.sound]`); README anchors re-pointed by `.scratch/tmp/anchors.py`
+after each round (22 then 19 moved, 0 stale, 159 anchors); declarations re-dumped with `.scratch/ns/Dump.lean` and the
+reachability walk re-run with `.scratch/ns/ReachCount.lean` / `Dead.lean`.  The comparator was not
+run (the owner's standing rule).
+
+**Not done, and why.**  The `IETDatum₂`-less statements (`qMat`, `qApply`, `cone`,
+`det_one_add_single_of_ne`, `colsum_one`, `card_filter_*`, …) still sit under `IETDatum₂`: moving them
+renames fully-qualified names used across `RauzyVeech/`, and nothing is wrong with them beyond the
+namespace.  The module moves of §3.7 (`UniqueErgodicity/Main.lean`, the four copies of
+`unitMeas (Ico 0 1) = 1`, `Pair/Commensurable`+`Centralizer`, `Tower/Cells.lean`,
+`LengthInjective.lean`) and the `deltaOf` / `EquivLike` API of §3.8 are untouched.
+
+**Six duplications of Mathlib material deleted (the v4 review's blocking findings).**  The v4 review
+(`../results/review-IET2-v4.md`) found four declarations that located Mathlib lemmas directly replace,
+one predicate defined twice, and a second `Fintype` instance on a type Mathlib already gives one for.
+All six are gone:
+
+* `Word k` (`RauzyVeech/Cylinder/Recurrence.lean`) is now `abbrev Word (k : ℕ) := List.Vector Bool k`;
+  `word_injective` and `noncomputable instance (k) : Fintype (Word k)` are deleted, so `Fintype` and
+  `Finite` come from `List.Vector.instFintype`/`instFinite`.  Evidence: `#synth Fintype (Word 3)` now
+  prints `List.Vector.instFintype`, and `Fintype.card (Word 3) = 8 := by decide` reduces, which the
+  shadowing noncomputable instance had blocked.  The `MeasurableSpace`/`MeasurableSingletonClass`
+  instances are unchanged and still resolve.
+* `pow_le_pow_of_le_one` (`RichPath/MinimalExitMass.lean`), `int_abs_sub_le`
+  (`Pair/Singularity/Bound.lean`, its two uses now `abs_sub`), `append_left_inj`
+  (`RichPath/NodeHeight.lean`, now `List.append_right_injective δ`) and `iUnion_comp_equiv`
+  (`RauzyVeech/Tower/LevelOne.lean`, now `Function.Surjective.iUnion_comp … .surjective`) are
+  deleted; the other call sites are textually unchanged and resolve to the Mathlib lemma.
+* `Graded` (`RichPath/GradedInduction.lean`) is now `GradedStep P k C C`, so the two definitions can no
+  longer drift; `graded_iff_gradedStep` is `Iff.rfl`, and `graded_one`'s two subgoals are swapped to
+  `GradedStep`'s conjunct order (pointwise before mass).
+
+Declarations 2 296 → 2 291 (the sixth deletion is the anonymous instance).  Verified: `lake build`
+green, 9 163 jobs, exit 0, zero warnings (`warningAsError` on); `#print axioms IntervalExchange.main`
+unchanged, `[propext, Classical.choice, Quot.sound]`; `runLinter --no-build IETFree` clean; README
+anchors unchanged (0 stale, 159).  The comparator was not run.
+
+**Five more duplications deleted (C7–C10 of the v4 review).**  The weaker half of the reuse findings:
+
+* `mem_powersetCard_univ` and `powersetCard_univ_nonempty` (`RichPath/NodeHeight.lean`) were the `.mpr`
+  directions of Mathlib's `Finset.mem_powersetCard_univ` and `Finset.powersetCard_nonempty`; their four
+  uses now name those.  `powersetCard_univ_card_pos` stays — it is the `ℝ`-valued count the pigeonhole
+  consumes — and is proved directly from Mathlib's lemma.
+* `sum_rvMat_mul` (`RauzyVeech/Step.lean`) was `sum_add_single_mul` at `t = 1`; the use in
+  `Nesting.lean` is rewritten at `t = 1` (with `one_mul`), and `sum_add_single_mul` itself moved from
+  `Nesting.lean` into `Step.lean` as its §7 — which is also where the `rvMat` API lives, and what makes
+  the earlier use resolve, since `Nesting` imports `Step`.
+* `card_fin_lt` and `card_rho_lt` (`Pair/Block/Rescaling.lean`) were `card_filter_lt`
+  (`RauzyVeech/PairReach.lean`) at `e = Equiv.refl` and `e = ρ`; their two uses in `Pair/Block/Datum.lean`
+  now name `card_filter_lt`, after `simp only [Fin.lt_def]` brings the filter predicate to the form the
+  lemma states (`rw` cannot rewrite under the `Finset.filter` binder).
+* `length_flatten_replicate` (`FreeGroup/Centralizer.lean`) is now `by simp [List.length_flatten]`; the
+  lemma stays and its two uses are unchanged.
+
+Declarations 2 291 → 2 286 (2 296 → 2 286 over the two rounds).  Verified: `lake build` green,
+9 163 jobs, exit 0, zero warnings (`warningAsError` on); `#print axioms IntervalExchange.main`
+unchanged, `[propext, Classical.choice, Quot.sound]`; `runLinter --no-build IETFree` clean; README
+anchors 0 stale (159).  The comparator was not run.
+
+**The attribution and documentation pass (C11–C20 of the v4 review).**  Comments only; no declaration,
+proof or import changed, and the declaration count stays at 2 286.
+
+* **The paper is now named in the code.**  `IETFree/IET.lean` gains a `## Sources` section of its module
+  docstring — Gouëzel, *Almost every pair of interval exchange transformations does not generate a free
+  group* (arXiv:2610.29993), with Yoccoz's survey and Veech 1984 for the two literature inputs and the
+  expansion of "AGY" (Avila–Gouëzel–Yoccoz, *Exponential mixing for the Teichmüller flow*) — and
+  `IETFree/ChallengeSolved.lean`'s docstring names it where it states Theorem 1.1.  `AGY` is expanded
+  again at its first use in `UniqueErgodicity/MainTheorem.lean`.  `README.md`'s Sources sentence now says
+  where the short forms are expanded.  The arXiv identifier occurs twice in `IETFree/`; it occurred
+  nowhere before.
+* **Nineteen dead module paths** in twelve files (the pre-`Pair/` spelling `IETFree.BlockData`,
+  `IETFree.BlockEndpoints`, `IETFree.BlockLemma`, `IETFree.BlockAssembly`, `IETFree.BlockDatum`,
+  `IETFree.BlockDiophantine`, `IETFree.Presentation`, `IETFree.FirstReturn`, `IETFree.GoodRegion`,
+  `IETFree.LengthMap`, `IETFree.MeasureTools`, `IETFree.Potential`, `IETFree.ReductionData`) now give the
+  module that holds the declaration, and the four dead *file* paths (`IETFree/RauzyVeech/lean` in
+  `PosBlocks.lean`, `IETFree/Pair/Commensurable.lean` in `ListPeriodicity.lean` and twice in
+  `FreeGroup/Centralizer.lean`) are corrected.
+* **Eight identifiers that named nothing**: `measure_eq_of_floors` → the refining-partition lemma that
+  consumes `hmesh`; `piN`/`lamN` → the renormalised lengths (`hatLam`, `lamHat`), with `LevelN.lean`'s
+  §-list renumbered to the file's four sections; `returnBound` → `lagBound`; `Zlev` → the level atoms;
+  `RayCriterion` → the ray criterion of `Ray/Criterion.lean`; `AffineVolume` → the two lemmas the proof
+  actually uses; `BalancedCylinders` → deleted.
+* **Thirteen docstrings that opened "The same …"** now state their conclusion in a bold first line, and
+  the two in `Transfer/Conv.lean` that were byte-identical on an iterate identity and on a Birkhoff
+  average are told apart.  The pasted docstring at `NodeHeight.lean:296` (the `δ ++ η` sentence on
+  `prefix_append_left_cancel`) is replaced by what the lemma says.
+* **Module docstrings that did not describe their file**: `PairReach.lean` now names `Path.PairReach`,
+  `pairReach_all`, the two descent steps and the three counting bounds, and `CutSet/Basic.lean` no longer
+  says "nothing here is measure-theoretic" (it has `IsCutSet.sum_cellLen_image`).
+* **Eight references to the campaign ledger** are gone: the six to `HISTORY.md` (`UniqueErgodicity/Basic`,
+  `Pair/ReductionData` ×3, `Pair/Block/Irreducibility`, `Ray/Criterion`) and the two "owner's ruling,
+  History Addendum 231" in `IET.lean`'s `mkIETFun_of_mem`/`_of_notMem`.  The mathematics each sentence
+  carried is kept.
+* **Two wrong sentences**: `IET.lean`'s `IsRigidByTranslations` docstring ("… is Veech's rigidity
+  theorem, `veechRigidity` …, is proved in …") and `Pair/Irreducible.lean`'s claim that Definition 2.2 is
+  in `TopBotFormalism.lean` (it is in `IET.lean`, with `Invariant`).
+
+`grep -rn HISTORY IETFree/` now returns nothing.  Verified: `lake build` green, 9 163 jobs, exit 0, zero
+warnings; `#print axioms IntervalExchange.main` unchanged, `[propext, Classical.choice, Quot.sound]`;
+`runLinter --no-build IETFree` clean; README anchors re-pointed (`anchors.py`: 61 lines, 0 stale, 159
+anchors).  The comparator was not run.
+
+**The module renames and moves (C21–C26 of the v4 review).**  Nine modules renamed, two moved to a new
+directory, one declaration block moved between modules, and the plumbing re-measured.
+
+* **Five parent/child basename collisions** (C21): `UniqueErgodicity/IET.lean` → `Theorem2.lean`,
+  `RauzyVeech/LevelN.lean` → `RenormData.lean`, `RauzyVeech/Volume.lean` → `SimplexVolume.lean`,
+  `RauzyVeech/Ray/Path.lean` → `PathHypotheses.lean`, `Pair/Block/Diophantine.lean` →
+  `DiophantineTransfer.lean`.
+* **The one-letter siblings** (C22): `Pair/Block/Data.lean` → `AeBlockGood.lean` (its subject: the a.e.
+  block goodness) and `Pair/Block/Datum.lean` → `BlockDatum.lean`.
+* **The `Foo`/`FooBar` pairs** (C23): `PosBlocks.lean` → `PositiveBlocksRay.lean` and
+  `IterGlue2.lean` → `IterOKPath.lean`, whose docstring no longer says "part 2".
+* **The cylinder file** (C24): `Cylinder/Volume.lean` → `CocycleVolume.lean` at the parent level, and
+  its two general matrix facts — `det_one_add_single_of_ne` and `colsum_one` — moved to
+  `RauzyVeech/Affine.lean` at `IntervalExchange` scope (so their names are unchanged), carrying
+  `Mathlib.LinearAlgebra.Matrix.SchurComplement` from `CocycleVolume` to `Affine`, where it is now the
+  necessary import.
+* **The `Fin n` insert/remove API** (C25): `lastPos`, `insertFun`, `removeFun`, `insertEquiv` and their
+  eleven lemmas moved from `RauzyVeech/Step.lean`/`namespace IETDatum₂` to `TopBotFormalism.lean` at
+  `IntervalExchange` scope, under a `## The `Fin n` insert-remove API` section; 32 qualified uses lost
+  their `IETDatum₂.` prefix and 42 unqualified ones were unaffected.
+* **The two general measure-theory modules** (C26): `RefiningPartition.lean` and `LevyRecurrence.lean`
+  moved from `RauzyVeech/` to a new `IETFree/Measure/` directory with namespace
+  `IntervalExchange.Measure`; their two call sites (`Tower/Injectivity.lean`,
+  `RichPath/RichPathAssembly.lean`) gained `open IntervalExchange.Measure`.
+
+Plumbing: the umbrella `IETFree.lean` was re-sorted (its import list is still `mk_all`-shaped, 113
+lines); `formalization.yaml`'s module paths follow; the README's layout table gains a `Measure/` row and
+its counters are re-measured — **113 modules** under `IETFree/` (115 `.lean` files with the umbrella and
+`Challenge.lean`), **44 249 lines**, **223 import lines** over at most 8 in a file; the stale link to
+`IETFree/Pair/Commensurable.lean` in the README (dead since that module moved to `FreeGroup/`) is fixed,
+and every path the README links to now exists.  Anchors re-pointed (3 lines, 0 stale, 159).
+
+Verified: `lake build` green, 9 163 jobs, exit 0, zero warnings (`warningAsError` on); `#print axioms
+IntervalExchange.main` unchanged, `[propext, Classical.choice, Quot.sound]`; `runLinter --no-build
+IETFree` clean.  The comparator was not run.
+
+**The `∀`-after-the-colon sweep (C27).**  F-4 of the v4 review counted 48 conclusions beginning with a
+plain `∀`; that count was a lower bound, because its scanner stopped at the *last* depth-0 colon of a
+declaration (so every `∃ x : T, …` truncated it) and at a `:=` (so every equation-compiler declaration
+was skipped).  The worklist the passes accumulated has **79** entries, and all 79 are converted: after
+this round no declaration in `IETFree/` states a `∀` after its statement colon.  The 39 `∀ᵐ`/`∀ᶠ` that
+remain there are the conclusion itself — the body of an almost-everywhere or eventually quantifier is a
+proposition, so its telescope cannot move left — and the same holds for the one hypothesis
+`(hG : ∀ (Cb : ℝ), …)` in `RichPath/MassFunction.lean`.
+
+*What this round did.*  The tree came in red: `RichPath/{StraddleMass,GradedInduction,LevelMass}` did
+not compile, because `bal_of_growth`, `graded_exists` and `heights_bound_of_end` had been left
+half-converted (a `:` with the binders on the lines below it, a form Lean rejects).  They are repaired:
+`graded_exists` needs `omega` in its `zero` branch now that `1 ≤ k` is a binder, and
+`heights_bound_of_end` keeps `hi : i ≤ η.length` — `dichotomy` applies it — so the proof opens with
+`have _hi := hi`.  Then the 16 sites the previous pass had parked, and one more the old scanner never
+listed (`mem_pathWord_of_notMem_cylStop`), are converted: 20 statements in 14 files.
+
+*The equation-compiler declarations.*  Six theorems were written `theorem foo : ∀ k, P k | 0 => … | k +
+1 => …`.  The rows become `induction k with | zero => … | succ k ih => …`, and the recursive call inside
+a row — legal in an equation, not in a tactic proof, where the theorem is not yet defined — becomes the
+induction hypothesis: `pathWord_length` and `pfx_pathStep` (`rw […, ih]`),
+`mem_pathWord_of_notMem_cylStop` (which already had a local `have ih := …` self-call to delete),
+`eventually_eq_of_monotone_bdd`, `iterate_section_on` and `not_blocked_of_noExit`.
+`iterate_section_on` and `tower_formula_level_pathQ_mkIETFun` needed `generalizing`: the former because
+its `y` is an implicit binder of the conclusion, the latter because its recursive call changes `P` and
+`lam`.
+
+*The traps, for the next sweep.*
+
+- `induction x generalizing y` reverts the hypotheses that mention the generalized variables and
+  reintroduces them in the branches; the induction hypothesis takes them in *revert* order, which is
+  not the declaration's order — `cond_blocked_ge`'s IH lost `L`, `M` and `hM0`, which it does not need.
+- A generalized *implicit* binder must be passed by name: in `not_blocked_of_noExit` the IH starts with
+  `{w : List Bool}`, so the recursive step is `ih (w := w ++ [e]) h1 ht`.
+- A nested `induction` on a variable that an earlier hypothesis mentions reverts *that hypothesis* into
+  the inner IH; `clear ih` before the inner induction in `iterate_section_on` keeps it out.
+- Two hypotheses of `straddleMassCard_of_goodMass_straddle` are used by no proof but are applied by
+  `dichotomy` and passed through by `straddleMassCard_of_unclean`; they stay, as `(_ : …)` binders, so
+  that the types line up and the linter is quiet.
+
+*The conversions are type-preserving, and that was checked, not assumed.*  A probe file prints
+`#check @name` for the 16 declarations of this round that it covers; its output is byte-identical
+before and after, so binder order, implicitness and hypothesis names are unchanged and no call site
+moves.  The 63 conversions of the earlier passes were checked the same way one level up: `IET2.zip` is
+the pre-round tree, and `diff -r` of it against `IETFree/` (889 lines) contains nothing but binder moves
+and the `intro`/`generalizing` adjustments they force.
+
+*The arrow class of F-4.*  Of the theorems whose conclusion has a top-level arrow and no `∀`, 32 put
+that arrow inside an `∃` binder, a `↔`, a `∧` or a function type (`Continuous fun x : … => …`), so none
+of them states a hypothesis of the declaration.  One did — `not_blocked_of_noExit` — and it is now
+`(hδ : NoExit P A' w δ) : ¬ Blocked P (w ++ δ) A'`.  Addendum 191's "no theorem or lemma states its
+hypotheses as an arrow" was a statement about *telescopes* and never looked at conclusions; the
+conclusions are covered now.  Four `have`s that the same addendum's sweep had missed (`hconv` in
+`Theorem2.lean`, `hk0`/`hk1` in `GoodRegion.lean`, `hF_data` in `MassFunction.lean`) carry their
+telescope as binders too.
+
+Verified: `lake build` green, 9 163 jobs, exit 0, zero warnings; `#print axioms
+IntervalExchange.main` unchanged, `[propext, Classical.choice, Quot.sound]`; `runLinter --no-build
+IETFree` clean; README anchors re-pointed (34 lines, 0 stale, 159) and the line count re-measured —
+113 modules, **44 154 lines**; no declaration was added, removed or renamed, so the count stays at
+2 286.  The comparator was not run.
+
+**The `:= rfl` → `:= (rfl)` sweep (C28).**  F-11 of the v4 review: the house convention is `:= (rfl)`,
+the tree was at 177 `:= rfl` and 0 `:= (rfl)`.  **175 converted, 2 left** — `coeHom`'s `map_one'` and
+`map_mul'`, which the review exempts as structure fields.  The diff is 175 line pairs, each one a pure
+substitution (checked mechanically); no line moved, and the longest of them is exactly 100 characters,
+so nothing needed rewrapping.
+
+*What the parentheses do, which F-11 did not say.*  `:= rfl` does more than prove the goal: Lean tags
+the theorem `@[defeq]`.  The attribute's own docstring (`Lean/DefEqAttrib.lean`) says so — "A theorem
+with a definition that is (syntactically) `:= rfl` is implicitly marked `@[defeq]` (and also
+`@[backward_defeq]` …); write `:= (rfl)` instead to suppress this" — and `@[defeq]` is what lets `dsimp`,
+and `simp` with `implicitDefEqProofs`, use the lemma as a *definitional* rewrite.  The sweep therefore
+removes 175 implicit `@[defeq]` tags.  That is the point of the convention rather than a side effect:
+the tag demands that every definition the proof unfolds be exported and exposed under the module system,
+and a `rfl`-theorem carries it invisibly.  Two otherwise identical probe lemmas, one written each way,
+print as `@[defeq] theorem … := rfl` and `theorem … := rfl`.
+
+*The one thing it broke.*  With the tag, the `simpNF` linter checks a lemma with `dsimp`; without it,
+with `simp` (`Batteries/Tactic/Lint/Simp.lean` branches on `isRflTheorem`).  One of the 175 is then not
+in simp-normal form: `IETDatum₂.vertex_singleton`, `vertex P [e] = P.rvStep e`, follows from
+`vertex_cons` at `es = []` and then `vertex_nil`.  It was a redundant `simp` lemma that only passed
+because `dsimp` does not chain simp lemmas.  It keeps its statement and its one `simp only` use site and
+loses its `@[simp]`, with a docstring saying why; `simp` reaches the same normal form through the other
+two, so no proof changed.  That is the whole of the sweep's effect on the library: a linter that had
+been blind to 175 lemmas now looks at them and finds one duplication.
+
+Verified: `lake build` green, 9 163 jobs, exit 0, zero warnings; `#print axioms
+IntervalExchange.main` unchanged, `[propext, Classical.choice, Quot.sound]`; `runLinter --no-build
+IETFree` clean; README anchors 0 stale (159); 113 modules, **44 155 lines** (+1: the new docstring); no
+declaration was added, removed or renamed.  The comparator was not run.
+
+**The `CutSep` alias deleted (C30).**  F-13(a).  `Pair/Singularity/Bound.lean` carried
+
+```lean
+abbrev CutSep (S : Finset ℝ) (x y : ℝ) : Prop := Separated S x y
+lemma cutSep_comm … := Separated.comm
+lemma cutSep_mono … := Separated.mono h hST
+```
+
+— a compatibility alias for `CutSet/Basic.lean`'s `Separated`, with two corollaries whose bodies are the
+names of the originals, used 42 times and never outside that one file, which the same Tau Ceti rule
+forbids ("do not add or retain anything whose purpose is only compatibility: aliases, wrapper
+declarations").  All three are deleted; the file now writes `Separated` directly and calls
+`Separated.comm`/`Separated.mono`, whose arguments come the other way round (`h` before the subset)
+than the wrapper's.  One long line resulted and is wrapped.
+
+Two lemmas that had taken a fragment of the alias's name are renamed with it, since after the deletion
+`cutSep` names nothing: `cutSep_mono_ioc` → `separated_mono_ioc` and `cutSep_of_idx_lt` →
+`separated_of_idx_lt`.  Both are used only in the same file.
+
+**The census was re-run, not carried over.**  `.scratch/ns/Dump.lean` and `.scratch/ns/ReachCount.lean`
+give **4 603** project constants (4 606 before: the alias and its two lemmas), **3 840** reachable from
+`main`, **3 223** without `_private` — so README's and NOTES's 4 643 / 3 862 / 3 241 were stale as well
+as counting the three deletions; they are updated, and the name diff of the two renamed lemmas is in the
+`.scratch/ns/decls-new.tsv` comparison.  Lines 44 145.
+
+**Not applied, and by whom.**  The owner ruled out `@[grind]` annotations ("No grind annotation planned
+in this project"), so C29 is withdrawn rather than left open.  The rest of F-13 is untouched:
+`leftEnd_add_le_total` public in `IET.lean` (C31), `@[ext]` on `SplitI.ext` (C32), and the two rename
+theorems `isClosed_rightPart`/`lvl_eq_iff` (with C42–C45).
+
+Verified: `lake build` green, 9 163 jobs, exit 0, zero warnings; `#print axioms
+IntervalExchange.main` unchanged, `[propext, Classical.choice, Quot.sound]`; `runLinter --no-build
+IETFree` clean; README anchors 0 stale (159).  The comparator was not run.
+
+**`leftEnd_add_le_total` published, `SplitI.ext` gets `@[ext]` (C31, C32).**  The two remaining holes of
+F-13 that do not wait on a naming decision.
+
+*C31.*  `Rigidity/RigidSet.lean` carried `private theorem leftEnd_add_le_total`, the `leftEnd` form of
+the public `upperEnd_le_total` through the public `upperEnd_eq` — a general fact about the bottom order,
+private in the one directory that happened to need it.  It is now public in `IET.lean` next to
+`upperEnd_le_total`, with a docstring, proved by the two-line route the review names
+(`rw [← upperEnd_eq]; exact upperEnd_le_total lam i`) rather than by the private copy's subset-sum
+argument; the private copy is deleted and `RigidSet`'s one use (`abs_translationVector_le`) resolves to
+the public lemma.  The review's other half — that `Pair/ReductionData.lean`'s
+`rw [← upperEnd_eq]; exact hiy` was a workaround for the private-ness — is not so: that line turns
+`y < upperEnd i` into `y < leftEnd i + lam i`, a rewriting step that no inequality replaces, and it
+stays.  The defect was the private-ness, and that is what is fixed.
+
+*C32.*  `SplitI.ext` was the tree's only `ext` theorem without the attribute, so `ext` could not frame a
+goal on the split interval and the single consumer had to write `refine SplitI.ext ?_ ?_`.  It now
+carries `@[ext]`; the consumer is left alone, since naming an `ext` lemma is not wrong.  Lean generates
+the companion `SplitI.ext_iff`, which is why the environment count moves by two rather than one.  A
+probe in `.scratch/tmp/extprobe.lean` closes `z = z'` from the two projections by `ext : 1`, and names
+`leftEnd_add_le_total` from a `Pair` module.
+
+Verified: `lake build` green, 9 163 jobs, exit 0, zero warnings; `#print axioms
+IntervalExchange.main` unchanged, `[propext, Classical.choice, Quot.sound]`; `runLinter --no-build
+IETFree` clean; README anchors re-pointed (18 lines, 0 stale, 159).  Census re-run: **4 604** project
+constants (one public lemma and its generated `ext_iff` in, the private copy out), **3 840** reachable
+from `main`, **3 225** without `_private`; 113 modules, **44 140 lines**.  README and NOTES counters
+follow.  The comparator was not run.
+
+**The mechanical API fixes (C34–C37).**  F-13(e) and F-15.
+
+*C34 — the two junk-branch lemmas.*  `mkIET1` (`IET.lean`) and `toIET` (`TopBotFormalism.lean`) are
+`if … then … else 1`, and their docstrings advertise the `else` branch ("off the simplex it is the
+identity"), but no lemma delivered it, so a client holding `h : lam ∉ simplex α` had to unfold the
+definition.  The review offers a choice — add the two lemmas or delete the two sentences — and adding
+them is what completes the family the definitions wrap: `mkIETFun_of_mem` and `mkIETFun_of_notMem`
+already exist and are used.  `mkIET1_of_notMem` takes `¬ (∑ i, lam i) = 1` (the form `mkIET1_of_mem`
+takes, `simplex` not being in scope in `IET.lean`), `toIET_of_notMem` takes `lam ∉ simplex α`; both are
+`rw […, dite_eq_right h]`.
+
+*C35 — `det_Path.Q` → `Path.Q_det`.*  The declaration used a dotted name, so Lean put it in a namespace
+`det_Path` containing a single `Q`: the full name was `IETDatum₂.det_Path.Q`, dot notation could not
+reach it, and it sat outside the `Path.Q_nil`/`Q_cons`/`Q_nonneg` family it belongs to.  Renamed in
+place (`theorem Path.Q_det`, extending the existing `Path` namespace); the two mentions follow, the use
+in `CocycleVolume.lean` and the pointer in `Tower/Injectivity.lean`'s docstring.
+
+*C36 — `upSet_subset`/`downSet_subset`.*  Both prove a pointwise comparison (`x ≤ proj z` from
+`z ∈ upSet x hx`), not a subset relation; they are now `le_proj_of_mem_upSet` and
+`proj_le_of_mem_downSet`, after the neighbouring `eq_rightGerm_of_mem_upSet`/`eq_leftGerm_of_mem_downSet`.
+Seven uses, in `Germ/Basic.lean` and `Theorem2.lean`.
+
+*C37 — the five `_aux`/`_helper` names.*  Each now states what it proves:
+
+- `Q_replicate_true_aux` (private) → `Q_replicate_true_eq_one_add_Emat`, the form
+  `Q(true^K) = 1 + E_{b, lfCount K}`;
+- `tendsto_uniform_birkhoffAverage_aux` → `tendsto_uniform_birkhoffAverage_on` — the same convergence
+  restricted to a set `S`, the headline theorem being the case `S = univ`;
+- `imageLeft_blockPerm_aux` → `imageLeft_blockPerm` and `idx_rescaleMap_aux` → `idx_rescaleMap`, with
+  the docstrings' "(Auxiliary form without the unused ambient hypothesis `hl`)" cut to "No ambient
+  hypothesis `hl` is needed", since after the rename there is no auxiliary and no principal form;
+- `ite_mul_helper` → `ite_mul_eq_add_of_iff`, the identity it states (a product of if-then-elses is a
+  sum, given the iff hypotheses).
+
+Two of the renamed declarations then overran the 100-character limit and are rewrapped
+(`Combinatorics.lean`, `Tower/Level.lean`, `Rescaling.lean`'s docstring).
+
+*Not done.*  `ite_mul_eq_add_of_iff` stays in `Tower/Level.lean`, where it is used once.  The review
+calls it misplaced, and it is — but a general `ℝ≥0∞` identity has no home among the current base
+modules (the `RauzyVeech` ones are about exchanges and matrices), and moving it would put an `ℝ≥0∞`
+import into whichever file received it.  Open, for a decision about where general `ℝ≥0∞` arithmetic
+should live.
+
+Verified: `lake build` green, 9 163 jobs, exit 0, zero warnings; `#print axioms
+IntervalExchange.main` unchanged, `[propext, Classical.choice, Quot.sound]`; `runLinter --no-build
+IETFree` clean; README anchors re-pointed (10 lines, 0 stale, 159).  Census re-run: **4 606** project
+constants (+2: the two `_of_notMem` lemmas, the rest renames), **3 840** reachable from `main`,
+**3 227** without `_private`; 113 modules, **44 152 lines**; the declaration-name diff of the round is
+the eight renames and the two additions, nothing else.  README and NOTES counters follow.  The
+comparator was not run.
+
+**The proof-quality items (C42–C46).**  F-5 and F-10.
+
+*C42 — the `change`/`show` sites are now explained in the code.*  There are 24 `change` and 9 `show`
+sites; one of the 24 is a docstring line beginning "change the simplex measure" and not a site at all.
+Each of the 23 real `change`s and the 9 `show`s carries a one-line comment above it saying what the goal
+is restated as and which step needs that shape — the content of `CHANGE-AUDIT.md`, brought into the
+proof instead of living in a file outside the code.  The four `rw [show 2 * M = M + M by ring, …]` in
+`ListPeriodicity.lean` are gone: `two_mul` rewrites the equation directly, and the file's three
+`replicate` computations go through it.
+
+*C43 — two of the four duplicated blocks lifted into lemmas.*  `FreeGroup/Centralizer.lean`'s two copies
+of the nine-line `hcyc` block are one lemma, `reduceCyclically_ne_nil` (a nontrivial element has a
+nonempty cyclic reduction), used by `le_norm_of_pow_eq` and `natAbs_eq_of_conj_zpow`.
+`Pair/Block/Irreducibility.lean`'s two copies of the eleven-line `set m := …`/`hcmem`/`hDc` block are one
+lemma, `IETDatum.exists_cell_of_toFun_eq_mark`, used by the two preimage cases of Lemma 3.2.
+
+The other two blocks are *not* lifted, and this is why: they are the `toFun`/`invFun` and
+`left_inv`/`right_inv` fields of `blockPerm` (`Pair/Block/Rescaling.lean`), where the shared four and
+twelve lines are not a `have` inside a proof but the side conditions of a `Fin (l - k)` construction,
+each proved by `by omega` over `⟨k + j.val, by omega⟩`.  A lemma stating them would hand the final
+`omega` the same `Fin` value under a different proof term, which `omega` treats as a different atom
+(`Fin` constructors are opaque to it); de-duplicating them therefore means restructuring the definition
+— a `blockFun` helper that the four fields call — not moving a `have` above two proofs.  Reported for a
+decision rather than forced.
+
+*C44 — one rename theorem deleted, one kept with its reason in the code.*  `SplitI.isClosed_rightPart`
+is deleted (`rightPart` *is* `closure _` by definition); its two uses now read `isClosed_closure` and
+`isClosed_closure.isCompact`.  `lvl_eq_iff` is **kept**: the review's deletion was tried and fails —
+`Subtype.ext_iff` proves the statement as a term, but `rw` cannot match it through the `Word` abbrev
+(`List.Vector Bool k`), so `RichPathAssembly.lean`'s `rw [lvl_eq_iff]` would have to become a local
+`have`, which is worse than the lemma.  The lemma now says so in its docstring.
+
+*C45 — the two shadowing `have`s* renamed: `hM` → `hMk_pos` in `RichPath/MassFunction.lean` (the
+theorem's `hM` is `∀ Cb, 1 ≤ Cb → 0 < M Cb`) and `hzero` → `hvolzero` in `Tower/Tiling.lean` (the
+theorem's `hzero` is `γ 0 = []`).
+
+*C46 — `simplexVolume_ne_zero`.*  `simplexVolume d ≠ 0` for `[NeZero d]`: the free region is open and
+non-empty, so it has positive Lebesgue measure, and `Measure.map` of a nonzero measure is nonzero
+(`Measure.map_eq_zero_iff` plus `Measure.restrict_apply_univ`).  It sits in `Pair/Presentation.lean`
+next to `isOpen_simplexRegion` rather than next to `instFiniteSimplexVolume` in
+`Pair/Diophantine.lean`, because `Diophantine` is *below* `Presentation` in the import order and cannot
+see the openness lemma the proof needs.  It is cited in `main`'s docstring, which is the point of the
+finding: `main` is no longer possibly vacuous.
+
+Verified: `lake build` green, 9 163 jobs, exit 0, zero warnings; `#print axioms
+IntervalExchange.main` unchanged, `[propext, Classical.choice, Quot.sound]`; `runLinter --no-build
+IETFree` clean; README anchors re-pointed (30 lines, 0 stale, 159).  Census re-run: **4 608** project
+constants (three lemmas in, `isClosed_rightPart` out, `lvl_eq_iff` kept), **3 841** reachable from
+`main`, **3 229** without `_private`; 113 modules, **44 212 lines**.  README and NOTES counters follow.
+The comparator was not run.
+
+**The naming judgement calls (C39–C41).**  F-15's three, swept through the tree.
+
+*C39 — `IterOK`/`StepOK` → `IsRauzyPath`/`IsRauzyStep`.*  "OK" said nothing about what the predicate
+means: the word is a legal itinerary of the Rauzy–Veech induction — `IsRauzyStep` at every vertex, with
+the lengths renormalised as it goes.  The names now say that, and the derived ones follow
+(`isRauzyPath_append_singleton`, `isRauzyPath_of_append_left`, `isRauzyStep_at`,
+`lamAfter_pos_of_isRauzyPath`); the local hypothesis `hstepOK` became `hRVstep`.  The module
+`RauzyVeech/IterOKPath.lean` keeps its file name — a module rename is an import-graph pass of its own,
+not part of a declaration rename — so the old word survives only there.
+
+*C40 — the tower's two-letter names.*  `TowerStep.VV`, `LL`, `CC`, `HH`, `KK` are now `datumAt`,
+`lamAt`, `levelCell`, `heightAt`, `exchangeAt` (418 occurrences), with their derived lemmas
+(`heightAt_succ`, `levelCell_sub_true`, `exchangeAt_image_false_scd`, `datumAt_last_ne`, …).
+`LVL1_node` is `levelOne_decomposition`, and the module docstring of `Tower/Node.lean`, whose bullet
+list still advertised the pre-rename `cc_sub_*`/`kk_image_*`, now names the lemmas that exist.
+`MeshShrink.V` is `pathVertex`: the review calls it a duplicate of the tower's `VV`, and it is the same
+construction, but it cannot be deleted — `MeshShrink.lean` sits *below* `Tower/Tiling.lean`, so it
+cannot call `TowerStep.datumAt`; it is the `ℕ → Bool` path encoding, which the name now says.
+
+*C41 — the `.π`/`.perm` split unified, the `₂` documented.*  `Pair.IETDatum.π` is now `.perm`, so the
+two data both expose their permutation as `perm` (101 occurrences; a docstring line in
+`Pair/GoodRegion.lean` was rewrapped).  `IETDatum₂` itself is **kept**, and the judgement is this:
+removing the subscript gives `IETDatum`, which in every file inside `namespace IntervalExchange.Pair`
+would be *captured* by `Pair.IETDatum` — `Pair/Irreducible.lean` uses both — and a non-colliding name
+(`IETDatumPair`) costs 42 rewrapped lines across 1 900 for a cosmetic gain.  What the review actually
+wants — that the subscript not look like one of a family with a missing member — is now in the
+docstring: the `₂` counts the two orderings `π₀`, `π₁`, and the one-permutation datum is
+`Pair.IETDatum`.
+
+Verified: `lake build` green, 9 163 jobs, exit 0, zero warnings; `#print axioms
+IntervalExchange.main` unchanged, `[propext, Classical.choice, Quot.sound]`; `runLinter --no-build
+IETFree` clean; README anchors re-pointed (2 lines, 0 stale, 159).  Census re-run: **4 608** project
+constants (all 139 name changes are renames: nothing added or removed), **3 841** reachable from
+`main`, **3 229** without `_private`; 113 modules, **44 234 lines** (+22: the docstring notes and the
+rewraps the longer names forced — 15 lines in `Tower/Tiling.lean` and six elsewhere).  README and NOTES
+counters follow.  The comparator was not run.
+
+**`IsSmallRelation` deleted (C33, first half).**  F-13(d): the structure carried five named conditions
+(`a_bound`, `b_bound`, `k_bound`, `nontrivial`, `vanishes`) and *no* projection of it was ever used —
+`IsBadParam` was its only consumer, so the fields documented a predicate rather than serving one, while
+the work was done by the second, enumerated encoding (`CoeffData`, `NontrivialCoeff`, `smallCoeffs`,
+`relReal`) that `isClosed_badParam` needs.
+
+The structure and its fifteen generated declarations are gone, `IsBadParam` is now *defined* through
+the enumeration —
+
+```lean
+def IsBadParam {d e : ℕ} (q : PReal d e) : Prop :=
+  ∃ t ∈ smallCoeffs d e, NontrivialCoeff t ∧ relReal t q = 0
+```
+
+— and the bridge `isBadParam_iff` (a real two-direction proof) is replaced by `Iff.rfl` at its uses.
+The `(k, a, b)` form survives as `isBadParam_iff_coeffs`, a genuine equivalence proved once and used by
+`isBadParam_swap`; without it the swap symmetry would have to be reproved at the level of the
+enumeration.  `coeffs_zero_of_good_with_const` now builds its witness with `ofCoeffs`, and
+`isBadParam_mem_badSet` unpacks the coefficient vector into its three parts.  `IsBadParam` and
+`goodParams` moved below `smallCoeffs`, which they now mention.
+
+Verified: `lake build` green, 9 163 jobs, exit 0, zero warnings; `#print axioms
+IntervalExchange.main` unchanged, `[propext, Classical.choice, Quot.sound]`; `runLinter --no-build
+IETFree` clean.  Census re-run: **4 599** project constants (the fifteen `IsSmallRelation` declarations
+out, `isBadParam_iff_coeffs` and `IsBadParam.eq_1` in), **3 841** reachable from `main`; 113 modules,
+**44 247 lines**.  README and NOTES counters follow.
+
+**The bound stays `4`.**  The sharpening to `3` (`results/small-relation-bound3.patch`, verified in
+scratch in the earlier round) is **withdrawn by the owner's ruling**: `4` is the paper's constant and the
+library keeps it.  Nothing in the tree has to change for that — `smallCoeffs`, `isBadParam_iff_coeffs`
+and `coeffs_zero_of_good_with_const` all state `4`, and `relation_of_good` keeps its `≤ 2` hypothesis
+with the `2 + 2 = 4` passage to the free coordinates.  The patch and its write-up stay in `results/` as
+the record of the investigation, not as pending work.
+
+---
+### Addendum 233: the remark after Theorem 1.1 — robustness, and an open set of full measure
+
+The remark that follows the main theorem in the paper is now formalised, in a new directory
+`IETFree/Pair/RobustRelation/` of five modules (2 919 lines, 134 declarations), all registered in the
+umbrella and in `formalization.yaml`.  It was the only part of the library that sat *above*
+`ChallengeSolved.lean`, its a.e. input being `main` consumed as a theorem — the owner later had the
+graph inverted, so this addendum describes the layout before **Addendum 234**, which is the current
+one.
+
+**What the source says, and what is proved.**  The remark has three sentences of mathematics: a
+conull set `Ω'` on which no nontrivial integer relation between the lengths vanishes, the robustness
+of a trivial word at a point of `Ω'`, and — as a consequence — a full-measure *open* set of pairs not
+generating a free group.  In the free coordinates `PReal d e` the relation is `relReal`, so
+`Ω'` is `⋂ N, goodParamsAt N d e`, which `forall_goodParams_iff` puts in the paper's own form
+`∀ t, NontrivialCoeff t → relReal t q ≠ 0`.  The three theorems are
+
+* `evalWord_eventually_eq_one` (Layer4): if `w` is trivial at a point `q₀` of the open region with
+  `q₀ ∈ Ω'`, then `w` is trivial on a neighbourhood of `q₀`;
+* `exists_isOpen_subset_hasRelation` (Layer5): there is an open set of parameters, of null complement
+  for `(volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e))`, every point of
+  which carries a nontrivial trivial word; it is the *interior* of the relation set, which need not
+  be open itself — the owner's construction, a union of chosen neighbourhoods over `Ω ∩ Ω'`;
+* `exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one` (Layer6): the same on the paper's `Δ_π × Δ_σ`, as an open set
+  `O` of the ambient space whose *trace* on the product of the simplices carries the relation.  The
+  trace is forced: `simplex (Fin d) ×ˢ simplex (Fin e)` has empty interior in
+  `(Fin d → ℝ≥0) × (Fin e → ℝ≥0)`, so no nonempty open set of the ambient space is contained in it.
+
+All three are unconditional, and `#print axioms` reports `[propext, Classical.choice, Quot.sound]` for
+each (and for `ae_hasRelation`, `ae_goodParamsAt_all_large`, `forall_goodParams_iff`,
+`exists_wordData_ne_nil`, `exists_wordData_singleton`, `evalWord_eventually_eq_one_of_wordData`,
+`exists_isOpen_subset_hasRelation_of_robust`).
+
+**The constant: `2 * |w|` is not what the argument gives, and the paper's `Ω'` is the statement.**
+The campaign's blueprint claimed the threshold `2 * |w|` (the paper's `4` for the two-letter case).
+That claim is false as an argument: the coarse displacement statement needs the *candidate cuts* to
+be pairwise distinct at `q₀`, because a candidate that coincides with a listed one at `q₀` separates
+from it nearby and then a genuine cut of `w(f_q, g_q)` sits inside a "coarse" piece with different
+displacements on the two sides.  The candidates have free-coordinate bound `2 * |w| + 2`, so their
+differences have bound `4 * |w| + 4`, and the word-by-word induction with a numerical threshold is
+proved at `4 * |w| + 4` (`evalWord_eventually_eq_one_of_goodParams`).  The theorem that the source states has no
+constant at all: `Ω'` makes every coincidence of two distinct candidates a nontrivial relation, hence
+impossible (`IsFreeLat.eq_of_eq_at_omega`), and the same induction goes through with the numerical
+hypothesis replaced by `VanishesAt N₀ q₀` fed from `Ω'`.  Both forms are in the tree; `Ω'` is the
+primary one.  Recorded in `blueprint-remark12.md` §10 (C2) with the refuted step quoted.
+
+The other two corrections recorded there: the identity `⋃ N goodParamsAt N = {q | no relation at q}`
+is **false** (`λ = 3/5` is good at `N = 1`, yet `5λ - 3` vanishes); what holds is the complement
+inclusion into the countable union of hyperplanes, which is all Theorem B consumes (C1).  And the
+module layout is the layered directory above rather than the single file of the plan (C3).
+
+**The five layers.**  Layer1 is the bad set at a threshold: `smallCoeffsAt`, `IsBadParamAt`,
+`goodParamsAt`, their closedness/openness, `IsBadParamAt.mono`/`goodParamsAt_antitone`, the vanishing
+lemma `coeffs_zero_of_good_with_const_at`, the nullity of the zero set of a nontrivial integer form
+(`volume_eq_zero_relReal`), and — through the Diophantine tube estimates of `Pair/Diophantine.lean` —
+`ae_goodParamsAt_all_large`, a.e. good at every sufficiently large threshold.  The `4`-versions of
+`Pair/ReductionData.lean` are untouched: the bridge is by *equations*
+(`smallCoeffs_eq_smallCoeffsAt`, `isBadParam_iff_isBadParamAt`, `goodParams_eq_goodParamsAt_four`), not
+by definitional abbreviations, so no existing proof moved.  Layer3 transports `main` to the free
+coordinates: `prod_simplexVolume_eq_map` for the measure, `coe_mkIET1'`/`mkIET1_eq_mkIETFun` for the
+exchanges, `evalWord_toEquiv` for the words, then `ae_free_of_ae_prod` pulls back without needing
+measurability of the existential.  Layer4 is the symbolic data of an arbitrary word and the
+robustness step, described above.  Layer5 is the owner's open-set construction.  Layer6 is the
+transport to the paper's coordinates, with `simplexMap_toReal` (the projection inverts `simplexMap` on
+the simplex, so no positivity is needed) and `continuous_toReal` for the openness.
+
+**What was not landed: the affine-lattice development.**  An independent formalisation of the affine
+data of a single letter (`IsLatAffine`, with the step bounds `pushBound`, `preimageBound`,
+`compDispBound`, `.sum`, the bridge to the pointwise `IsLat`, and `eq_zero_of_forall_relReal_ne`) was
+written, compiled and reshaped into a library module (737 lines, 46 declarations).  It is **not** in
+the tree: Layer4's proof built its own `IsFullLat`/`IsFreeLat` API (with `toFree`, `tvAff` and the
+four one-letter instances) and does not consume it, and landing both would leave two competing
+lattice-affine predicates in the library.  It remains under `.ultramath/smw7q96mu/m2/`.
+
+**What was not done: R5.**  The owner's ruling was that the generalisation of the Section 3 machinery
+belongs in `Pair/GoodRegion.lean`.  The general machinery is in `Pair/RobustRelation/Layer4.lean`
+instead, built on `Pair/Singularity/Bound.lean`, and `exists_compPresentation_on_ball` keeps its own
+proof.  Two reasons, both measured rather than aesthetic: the machinery is 1 952 lines, so moving it
+into `GoodRegion.lean` (1 209 lines) would make that file about 3 100 lines, twice the largest file in
+the tree (`RauzyVeech/TrueStep.lean`, 1 475); and deriving `exists_compPresentation_on_ball` from the
+general statement would *weaken* it — the existing theorem assumes `q₀ ∈ goodParams d e` (the paper's
+threshold `4`), while the general machinery gives `4 |w| + 4` or `Ω'`, and specialising the general
+*statement* loses the sharper hypothesis of the two-letter argument.  The move is therefore left to
+the owner's decision, recorded here as a deviation.
+
+**Verified.**  `lake build` green, **9 168 jobs, exit 0, no warnings** (`warningAsError` on; the `IETFree` target alone is 3 342 jobs);
+`#print axioms IntervalExchange.main` unchanged, `[propext, Classical.choice, Quot.sound]`; the five
+new modules pass `runLinter` (and the whole library with it); README anchors re-pointed
+(`anchors.py --check`: 0 lines changed, 168 anchors).  The comparator was not run.  The tree is now
+**118 modules** under `IETFree/`, **47 167 lines** over `IETFree/**/*.lean` (231 import lines; the
+umbrella adds 193), and the README's layout table and `formalization.yaml` carry the new directory,
+the remark's three statements and the exception to "every module is used in the proof of `main`".
+**The constant, settled as far as it goes.**  An exact-rational computation mirroring the Lean
+definitions was run on the question left open by C2.  It produced the canonical witness that the
+blueprint's coarse-piece statement is false: `d = e = 2`, the two permutations both the transposition,
+`w = y * x = g ∘ f`, `q₀ = (1/3, 2/3)` (where `g ∘ f` is the identity), the candidate cut
+`-1 + L₀ + M₀` coinciding with the left end `0` while being a different function, and
+`q₁ = (1/3, 2003/3000)` where the single coarse cell `[0,1)` splits into `[0,1/1000)` with
+displacement `999/1000` and `[1/1000,1)` with `-1/1000`.  It also reduced the threshold problem to one
+inequality: a displacement is a sum of `n` letter translations of free bound `≤ 2`, hence `≤ 2n`; a
+level-`k` candidate cut `d - D` has free bound `≤ 1 + 2(n-k-1) ≤ 2n-1`, so at a point good at `2n` no
+candidate is `0` or `1`; and `2n` then follows if distinct candidate cuts differ by a function of free
+bound `≤ 2n`.  The crude estimate of that bound is `4n` — which is what the landed threshold theorem
+uses, at `4 |w| + 4` — while the data give `2n - 1`.  A search over `d, e ≤ 3`, every permutation pair
+and all 48 words of length 2 and 3 (130 510 coincidence hyperplanes excluded, 1 041 trivial points
+verified, 461 good at `2n`, 424 of them re-checked) found no counterexample.  So `2n` is neither proved
+nor refuted, and nothing in the tree depends on it: the theorem is landed in the paper's `Ω'` form.
+
+**The two audits.**  The landing was checked twice, independently and refute-first, by agents that
+did not write it (the source-fidelity report is `.ultramath/smw7qzzvt/m1/AUDIT.md`; the checks of the
+five modules and of Layer4's interface are under `.ultramath/smw7rad2e/`).  The fidelity audit could
+not refute the claim that the remark is formalised: it maps the source's sentences to the
+declarations, identifies
+`Δ_π` with `simplex ∩ Positive = simplexMap '' region`, re-derives the non-vacuity of the measure from
+scratch (mass `1 / m!`), and reports 22 axiom reports all `[propext, Classical.choice, Quot.sound]`.
+Its findings, and their disposition: (i) the source's "sends a singularity to a singularity" has no
+Lean counterpart — the displacement route replaces it, which is the reformulation recorded in §3 of
+`blueprint-remark12.md`, not a gap; (ii) the relation set is larger than the region, because `mkIET1` is the
+identity when the lengths do not sum to `1` — cosmetic, and now said in
+`exists_isOpen_subset_hasRelation`'s docstring; (iii) `Continuous simplexMap` is missing from the
+library (not needed: the transport uses `continuous_toReal`); (iv) Layer6's trace is on the *closed*
+simplex, a strengthening of the paper's `Δ_π`; and (v) a **false docstring outside the campaign**,
+`CocycleVolume.lean`'s "`simplexVolume` is a probability" — the measure of the region is `1 / m!`, so
+it is one only for `m = 1`.  That docstring is fixed.
+
+The acceptance checks (the same report's sibling) measured the five modules against the tree's own
+conventions and the rest of the library.  They found no name clash, no `open` ambiguity, no forbidden
+token, no line over 100 characters, no missing docstring on a `def`/`structure`, and confirmed that the
+umbrella's diff against the pre-landing archive is exactly the five sorted import lines — the rest of
+the library is byte-identical.  Four of their findings were applied: the last campaign residue in a
+docstring (`Layer4`'s "Theorems A"), a double blank line, and the names of the three main theorems —
+`evalWord_eventually_eq_one_of_vanishesAt` (the `VanishesAt`-parameterised assembly),
+`evalWord_eventually_eq_one` (the paper's `Ω'`, which is the theorem of the module and so carries no
+prime) and `evalWord_eventually_eq_one_of_goodParams` (the numerical threshold, formerly `_At`).  Two
+suggestions were declined with the reason: the transitive-only imports stay, because every import in
+this tree is `public` and the deletion test is what "necessary" means here (`Pair/GoodRegion.lean`
+names hundreds of declarations from one import), except in the one case the style keeps — the two
+imports of `Layer5` are the modules its statements name; and `IsFullLat.toFree` stays beside
+`IsFullLat.isFreeLat` because its ∃-form is used before `IsFreeLat` is introduced.
+
+The interface audit of `Layer4` — the one file nobody had read end to end — found no gap, no vacuity
+and no smuggled hypothesis, and its six items are the ones the proof actually turns on: `hpiece`
+covers `[0,1)` including `y = 0`; equality of the exchanges is `IET.ext` with the off-support case
+split, not agreement on a null set; the candidate family is exhaustive and the old piece statement is
+applied at the image point with the last letter acting first; the `4 |L| + 4` arithmetic is exact at
+every site; the four one-letter instances have the right `σ₀`/`ρ` and the `true`/`false` convention of
+`FreeWord.toWord` is respected; `Ω'` is used in full.  It also proved, in a probe, that `VanishesAt N`
+is *equivalent* to `q₀ ∈ goodParamsAt N` — so the consumer's hypothesis is nothing but threshold
+goodness, one direction being `vanishesAt_of_goodParams` and the other the coefficient-extraction
+argument (not added to the file: no proof needs it, and an unused lemma would be dead code).  Its one
+substantive finding was dead code: 17 declarations of `Layer4` (218 lines, 11%) had no consumer.  They
+are gone, `IsFullLat.toFree` is inlined into `IsFullLat.isFreeLat` (after the pruning its only
+consumer), and `Layer4` is **1 734 lines**.  Three of the nineteen are kept on purpose: the numerical
+threshold theorem `evalWord_eventually_eq_one_of_goodParams` and the two lemmas it needs — it is the
+one statement that records the proved constant `4 |w| + 4`.
+
+The statements are not vacuous: both `exists_isOpen_subset_hasRelation` and
+`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one` have been instantiated at `d = e = 2` with the identity
+permutations, next to the positivity of the volume of `simplexRegion 2` (the probe is
+`IET2/.scratch/ax/Instantiate.lean`, exit 0), so the conclusions are about a nonempty open set of a
+measure space of positive mass.
+### Addendum 234: the dependency graph inverted — the machinery below `ChallengeSolved`, the conclusions in it
+
+Addendum 233 recorded the remark as a directory of five modules sitting *above* `ChallengeSolved.lean`,
+because the a.e. statement they consume is `main`.  The owner asked for the opposite graph: the
+machinery **before** the challenge file, and the conclusion of the remark **in** it.  This addendum
+records the inversion.  The mathematics is unchanged; every statement that existed still exists, with
+the two conclusions now in the challenge file.
+
+**Nothing is above `ChallengeSolved.lean` any more.**  The five layers of `Pair/RobustRelation/` and
+the new `Pair/ProductSimplex.lean` are all below it, and `ChallengeSolved` imports them.
+
+**What had to be extracted first.**  The layers could not move down while `ChallengeSolved` held the
+chart they transport along.  The block of `ChallengeSolved.lean` that is *not* the challenge's
+mathematics — `evalWordEquiv`, `evalWord_toEquiv`, `evalWord_toEquiv_eq_one`, `prodSimplexMap`,
+`toReal_prodSimplexMap`, `measurable_prodSimplexMap`, `prod_simplexVolume_eq_map`,
+`ae_toReal_simplexMap`, `ae_prod_of_ae_free` — is now the module `IETFree/Pair/ProductSimplex.lean`
+(170 lines), below everything: "the product of the two simplices, its free-coordinate chart, and the
+`Equiv`-valued word".  The chart is used by the Section 3 machinery and by the remark alike, so it
+belongs there on its own merits.  What remains in `ChallengeSolved.lean` is the a.e. block data
+(`exists_word_ae`) and `main`.
+
+**What each layer became.**
+
+* `Layer3` loses the four theorems that consume `main` and keeps the bridges: `fOf`, `gOf`,
+  `HasRelation`, `fOf_eq_mkIET1'`, `gOf_eq_mkIET1'`, `hasRelation_iff_mkIET1'`,
+  `evalWord_mkIET1'_eq_one_iff`, `evalWord_fOf_eq_one`, and the transport `ae_free_of_ae_prod`.  It
+  now imports `Pair/ProductSimplex` and `Pair/Presentation` instead of `ChallengeSolved`, and its
+  docstring says that the a.e. statement lives above it.  The three other-vocabulary variants of the
+  a.e. statement (`ae_exists_word_mkIET1'`, `ae_exists_word_of_eq_mkIET1'`,
+  `ae_exists_evalWord_mkIET1`) are deleted: they had no consumer and they consumed `main`.
+* `Layer5` and `Layer6` keep their assemblies and take the almost-sure input as a hypothesis:
+  `exists_isOpen_subset_hasRelation_of_robust` and `…_lam_of_robust` take it *and* robustness, and
+  `…_of_ae` and `…_lam_of_ae` take only it, discharging robustness from `Layer4`.
+* `ChallengeSolved` gains a `Pair` section with `ae_hasRelation` (moved from `Layer3`, the transport of
+  `main` through the chart), and the two conclusions `exists_isOpen_subset_hasRelation` and
+  `exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one` with no hypothesis at all, fed with `ae_hasRelation`.  The
+  names are the ones the five-layer version used, so the README's and this record's references to them
+  still name the theorems — in `ChallengeSolved.lean` now.
+
+**What must not move.**  `main`'s declaration is byte-identical to the pre-restructure text (checked
+by extracting the archived file from the previous `IET2.zip` and diffing the block), `Challenge.lean`
+is untouched, and three names the comparator lists — `main`, `mkIETEquiv`, `coe_mkIETEquiv` — all
+remain resolvable from `IETFree.ChallengeSolved` (`mkIETEquiv` and `coe_mkIETEquiv` were always in
+`IET.lean`, below).  The comparator itself was not run: by the owner's standing rule it is a final
+step, run on request.
+
+**Verified.**  `lake build` green, **9 169 jobs, exit 0, no warnings**; `runLinter` clean on
+`ProductSimplex`, `Layer3`, `Layer5`, `Layer6` and `ChallengeSolved` (one at a time — five in one
+process runs out of memory); `#print axioms` on `main`, `exists_isOpen_subset_hasRelation` and
+`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one` all `[propext, Classical.choice, Quot.sound]`; README anchors
+re-pointed (0 stale, 168 — the two conclusions and `evalWordEquiv` moved file).  The tree is
+**119 modules**, **47 200 lines**; `NOTES.md`, `README.md`, `formalization.yaml` and `blueprint-remark12.md`
+§10 C3 now describe the inverted graph.
+
+**The consequence for the duplication recorded in 233.**  The two developments are now on the same side
+of the challenge file, and `Pair/ProductSimplex.lean` is shared by both — which is the part that was
+already shared, now with a home of its own.  The parallel proofs (the piece index, the one-letter data,
+the lattice-affine predicate, and the two-letter presentation) are unchanged: they remain two
+theorems of the same shape at different generality, as 233 says.
+
+---
+### Addendum 235: the campaign's files renamed, split and merged
+
+The files of Addendum 233–234 were named after their *stage* (`Layer1`, `Layer3`, … `Layer6`), which
+the tree's own conventions rule out: a module is named after its subject, and the numbering even had
+a hole where the affine-lattice development would have been.  This addendum records the rename, the
+split of the largest file and the merge of the two smallest.
+
+**The mapping.**  Nothing in the mathematics changed; every declaration kept its name.
+
+| before | after | contents |
+|---|---|---|
+| `Pair/RobustRelation/Layer1.lean` (590) | `Pair/RobustRelation/GoodParams.lean` (590) | the bad set at a threshold and a.e. goodness |
+| `Pair/RobustRelation/Layer3.lean` (165) | `Pair/RobustRelation/FreeParams.lean` (165) | the two exchanges of a parameter pair, and the a.e. transfer |
+| `Pair/RobustRelation/Layer4.lean` (1 735) | `Pair/RobustRelation/WordData.lean` (1 023) | the lattice data, the piece index, `WordData`, the sorting, the one-letter step, the induction, and the step from `VanishesAt` to the identity on a ball |
+| — | `Pair/RobustRelation/LetterData.lean` (711) | the cuts and displacements of a single letter, and the four instances of `WordData` — §9 of the old `Layer4`, split out |
+| — | `Pair/RobustRelation/Robustness.lean` (61) | the theorem: `evalWord_eventually_eq_one`, its threshold form and the `VanishesAt` form |
+| `Pair/RobustRelation/Layer5.lean` (161) + `Layer6.lean` (188) | `Pair/RobustRelation/OpenSet.lean` (305) | the assembly of the open conull set, in the free coordinates and on `Δ_π × Δ_σ` |
+| `Pair/ProductSimplex.lean` (170) | `Pair/ProductSimplex.lean` (134) | the chart of the product of the two simplices and its measure — the `Equiv`-valued word moved out |
+| — | `Pair/MeasureTools.lean` (595, +31) | `evalWordEquiv`, `evalWord_toEquiv`, `evalWord_toEquiv_eq_one`, next to `evalWord` |
+| `blueprint12.md` | `blueprint-remark12.md` | the campaign's plan of record |
+
+Two of these are more than renames.  `Layer4` was the largest file in the tree (1 735 lines, above
+`RauzyVeech/TrueStep.lean`'s 1 475) and its §9 — the one-letter data, 706 lines — was a self-contained
+construction used only by the induction, so it became `LetterData.lean`; the three theorems that
+*discharge* the one-letter hypothesis sit above it in `Robustness.lean`, which is why that module
+exists at all (61 lines, and it is the module the campaign is about).  And `Layer5`/`Layer6` were one
+subject in two coordinate systems, so they are now one file with two sections.
+
+**The `Equiv`-valued word.**  `evalWordEquiv` is the `Equiv ℝ ℝ`-valued analogue of `evalWord`; it
+was in `ProductSimplex` only because the challenge's chart was extracted from `ChallengeSolved` first.
+It is now next to `evalWord` in `Pair/MeasureTools.lean`, in a `namespace IntervalExchange` block at
+the end of the file — so its full name is unchanged (`IntervalExchange.evalWordEquiv`, the name the
+challenge declares), even though the file is in `Pair` scope.  `ProductSimplex` is now exactly what
+its name says.
+
+**Plumbing.**  Imports updated in the umbrella (six `RobustRelation` lines instead of five, plus
+`ProductSimplex`), in `ChallengeSolved` (two instead of three) and inside the directory; `README.md`'s
+layout table and paper table, `NOTES.md`'s layout, `formalization.yaml`'s module path for the
+robustness statement, and the three `blueprint12.md` references in Addenda 233–234 re-pointed.
+`blueprint-remark12.md` §10 C3 now carries the mapping, so a reader of the plan can find the files.
+
+**Verified.**  `lake build` green, **9 170 jobs, exit 0, no warnings**; `runLinter --no-build IETFree`
+clean; `#print axioms` on `main`, `exists_isOpen_subset_hasRelation` and
+`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one` unchanged at `[propext, Classical.choice, Quot.sound]`; README
+anchors re-pointed (1 line moved, 0 stale, 168); `IET2.zip` rebuilt.  The tree is **120 modules** and
+**47 218 lines**; `Layer4.lean` is no longer the largest file in the tree.
+### Addendum 236: the paper-coordinate conclusion stated without a predicate
+
+The owner asked that `exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one` be restated so that its conclusion spells
+the relation out instead of going through the predicate `HasRelationLam`, "for all `p` in `O` inter
+the product of simplices there exists a nontrivial word such that …", so that the theorem names
+nothing but the objects a standalone statement can declare.
+
+**What changed.**  The middle conjunct of the statement was
+`O ∩ (simplex (Fin d) ×ˢ simplex (Fin e)) ⊆ {p | HasRelationLam π σ p}` and is now
+
+```lean
+∀ p ∈ O ∩ (simplex (Fin d) ×ˢ simplex (Fin e)),
+  ∃ w : FreeGroup (Fin 2), w ≠ 1 ∧
+    evalWordEquiv w (mkIETEquiv p.1 π 0) (mkIETEquiv p.2 σ 0) = 1
+```
+
+in the three places that stated it: `OpenSet.exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one_of_robust`,
+`…_lam_of_ae`, and `ChallengeSolved.Pair.exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`.  The proof is
+unchanged — it already produced that witness — and `HasRelationLam` is deleted: the three theorems
+were its only consumers, and a definition kept alive by nothing is what the prune removed elsewhere.
+The proof of the `of_robust` form keeps its subset inclusion on the *free* side
+(`exists_isOpen_subset_hasRelation_of_robust`), which is where the predicate `HasRelation` still lives
+and is still used.
+
+**Why it matters.**  The statement now names only `mkIETEquiv`, `evalWordEquiv`, `FreeGroup (Fin 2)`,
+`simplex`, `simplexVolume`, `IsOpen` and a measure-zero condition — no project predicate.  That is
+exactly the vocabulary `Challenge.lean` declares for itself, so the remark can be stated as a second
+challenge target beside `main`.  One declaration is missing there: `Challenge.lean` has
+`simplexRegion`, `simplexMap` and `simplexVolume` but not the set `simplex α = {lam | ∑ a, lam a = 1}`
+that the statement needs; adding the target would mean adding that one definition (a copy of
+`IET.lean`'s, like the other copies in that file), the theorem with its `sorry` hole, and an entry in
+`comparator.json`'s `theorem_names`.  It would also make the tree's deliberate `sorryAx` count four
+instead of three, and the pairing would want a `lake comparator` run to be verified — which is the
+owner's call, not this round's: `Challenge.lean` is frozen.
+
+**Verified.**  `lake build` green, **9 170 jobs, exit 0, no warnings**; `runLinter --no-build IETFree`
+clean; `#print axioms` on `exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one` unchanged at
+`[propext, Classical.choice, Quot.sound]` (and on `main` and the free-coordinate conclusion); README
+anchors re-pointed (1 line, 0 stale, 168); `IET2.zip` rebuilt.
+
+---
+### Addendum 237: the normalisation as a hypothesis, not a simplex
+
+Addendum 236 spelled the paper-coordinate conclusion out at the cost of `simplex (Fin d) ×ˢ simplex
+(Fin e)` in the statement, and noted that `Challenge.lean` does not declare `simplex` — so stating
+the remark as a challenge target would have needed one more definition in that file.  The owner ruled
+otherwise: no `simplex` for the challenge, and the statement should carry the two normalisations as
+hypotheses.
+
+**What changed.**  The middle conjunct of `exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one` — in
+`OpenSet.lean`'s two forms and in `ChallengeSolved` — was
+
+```lean
+∀ p ∈ O ∩ (simplex (Fin d) ×ˢ simplex (Fin e)),
+  ∃ w : FreeGroup (Fin 2), w ≠ 1 ∧ evalWordEquiv w (mkIETEquiv p.1 π 0) (mkIETEquiv p.2 σ 0) = 1
+```
+
+and is now
+
+```lean
+∀ p ∈ O, (∑ i, p.1 i = 1) → (∑ j, p.2 j = 1) →
+  ∃ w : FreeGroup (Fin 2), w ≠ 1 ∧ evalWordEquiv w (mkIETEquiv p.1 π 0) (mkIETEquiv p.2 σ 0) = 1
+```
+
+The two forms say the same thing, since `p ∈ simplex (Fin d)` *is* `∑ i, p.1 i = 1`; the proof
+changed only in that `mem_simplex.mp` became `mem_simplex.mpr` at the two places where the conversion
+is now needed (`fOf_toReal`, `gOf_toReal`).  `simplex` stays in `OpenSet.lean` — the helper lemmas
+`simplexMap_toReal_fst`/`_snd`, `fOf_toReal`, `gOf_toReal` still state it — it just no longer appears
+in the conclusion.
+
+**The consequence.**  The statement now names exactly `mkIETEquiv`, `evalWordEquiv`,
+`FreeGroup (Fin 2)`, `simplexVolume`, `IsOpen`, `Set` and a null-complement condition, every one of
+which `Challenge.lean` declares already.  Stating the remark there as a second target therefore needs
+**no new definition**: the theorem with its `sorry` hole and an entry in `comparator.json`'s
+`theorem_names`, nothing else.  That is still a change to a frozen file and a fourth deliberate
+`sorryAx`, so it remains the owner's call; `Challenge.lean` is untouched.
+
+**Verified.**  `lake build` green, **9 170 jobs, exit 0, no warnings**; `runLinter --no-build IETFree`
+clean; `#print axioms` on the rephrased theorem unchanged at `[propext, Classical.choice,
+Quot.sound]`; README anchors re-pointed (0 stale, 168); `IET2.zip` rebuilt.  `README.md` and
+`formalization.yaml` describe the hypothesis form.
+
+---
+### Addendum 238: the measure-zero condition first, the content last
+
+A presentation change on the remark's conclusions, at the owner's request: the condition
+`((simplexVolume d).prod (simplexVolume e)) Oᶜ = 0` moves from the end of the statement to just after
+`IsOpen O`, so that the most involved condition is the last thing a reader meets.
+
+```lean
+∃ O, IsOpen O ∧ ((simplexVolume d).prod (simplexVolume e)) Oᶜ = 0 ∧
+  (∀ p ∈ O, (∑ i, p.1 i = 1) → (∑ j, p.2 j = 1) →
+    ∃ w : FreeGroup (Fin 2), w ≠ 1 ∧ evalWordEquiv w (mkIETEquiv p.1 π 0) (mkIETEquiv p.2 σ 0) = 1)
+```
+
+The same reordering is applied to the free-coordinate conclusion, which had the same shape, so that
+the two read alike: `IsOpen U ∧ (the restricted product) Uᶜ = 0 ∧ U ⊆ {q | HasRelation π σ q}`.  Both
+appear in `OpenSet.lean` in their hypothesis-taking forms and in `ChallengeSolved.lean`
+unconditionally.
+
+Only the presentation moved.  The proofs changed in two mechanical places: the anonymous
+constructors list `isOpen_interior, hae, interior_subset` in the new order, and the `obtain` that
+destructures the free-coordinate conclusion in the simplex proof takes its two last names in the new
+order.  No declaration changed its type up to logical equivalence, no name changed, and no
+mathematical content moved.
+
+**Verified.**  `lake build` green, **9 170 jobs, exit 0, no warnings**; `runLinter --no-build IETFree`
+clean; `#print axioms` on the two conclusions unchanged at `[propext, Classical.choice, Quot.sound]`;
+README anchors re-pointed (2 lines, 0 stale, 168); `IET2.zip` rebuilt.
+
+---
+### Addendum 239: the paper-coordinate conclusion renamed after what it says
+
+Addenda 236–238 took `HasRelationLam` out of the paper-coordinate conclusion, first replacing it by a
+spelled-out witness and then reordering the conjuncts.  The owner then pointed out the consequence:
+the *name* still carried `hasRelation`, a predicate the statement no longer mentions, so it named a
+concept that is not in the theorem — and a name states the conclusion.
+
+**The rename.**
+
+| before | after |
+|---|---|
+| `exists_isOpen_subset_hasRelation_lam` | `exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one` |
+| `…_lam_of_robust` | `…_of_robust` |
+| `…_lam_of_ae` | `…_of_ae` |
+
+The new name reads off the statement: there is an open set (`exists_isOpen`), of null complement
+(`ae`), on whose normalised points there is a nontrivial word which the `Equiv`-valued evaluation
+sends to `1` (`exists_nontrivial_evalWordEquiv_eq_one`).  The `_lam` suffix goes with the predicate:
+it said "in the paper's coordinates", which the type — a set of `(Fin d → ℝ≥0) × (Fin e → ℝ≥0)` —
+already says, and which the docstring now says in words.
+
+The free-coordinate conclusion keeps its name: `HasRelation` *is* in its statement
+(`U ⊆ {q | HasRelation π σ q}`), so `exists_isOpen_subset_hasRelation` names what it proves.
+
+**Plumbing.**  Renamed at the four sites in the Lean tree (the two forms in `OpenSet.lean` and the two
+in `ChallengeSolved.lean`, the `#print axioms` line included), and re-pointed in `README.md`,
+`NOTES.md`, `formalization.yaml`, `blueprint-remark12.md` §10 C3 and the citations of Addenda
+233–238.  Four lines of `OpenSet.lean` crossed the 100-character limit when the identifier lengthened
+— the two theorem headers, their docstring cross-reference and the one-line proof of the `of_ae`
+form — and were rewrapped by hand.
+
+**Verified.**  `lake build` green, **9 170 jobs, exit 0, no warnings**; `runLinter --no-build IETFree`
+clean; `#print axioms` on the renamed theorem unchanged at `[propext, Classical.choice, Quot.sound]`;
+README anchors re-pointed (0 stale, 168); `IET2.zip` rebuilt.
+
+---
+### Addendum 240: names audited against their statements
+
+The owner kept `HasRelation` — the free-coordinate statements read better with it — and asked that no
+statement whose name mentions it be one that does not use it.  The audit, over every declaration whose
+name contains `elation` (thirteen of them), found no mismatch:
+
+| declaration | `HasRelation` in the statement? |
+|---|---|
+| `HasRelation` (`FreeParams`) | it *is* the definition |
+| `hasRelation_iff_mkIET1'` | yes, both sides |
+| `ae_hasRelation` (`ChallengeSolved`) | yes, the conclusion |
+| `exists_isOpen_subset_hasRelation` (`ChallengeSolved`) | yes, the inclusion |
+| `evalWord_eq_one_subset_hasRelation` (`OpenSet`) | yes, the inclusion |
+| `mem_interior_hasRelation` (`OpenSet`) | yes, hypothesis and conclusion |
+| `exists_isOpen_subset_hasRelation_of_robust`, `…_of_ae` (`OpenSet`) | yes, hypothesis and conclusion |
+
+The remaining five carry "relation" in the name because their statements are about an integer relation
+between the lengths, not about the predicate: `relation_of_good`, `relation_of_good_at`,
+`relation_of_good_simplexMap_at`, `splitting_of_imageLeft_relation`,
+`splitting_of_imageLeft_relation_add` — the last two in the pre-existing block development, which
+cannot even see `HasRelation` (it is defined far above them).  And the paper-coordinate family no
+longer mentions it in either name or statement (Addendum 239).
+
+**One stale description, fixed.**  `Pair/ProductSimplex.lean`'s module title still read "the product
+of the two simplices, its free-coordinate chart, and the `Equiv`-valued word", and its second
+paragraph still described `evalWordEquiv` — both moved to `Pair/MeasureTools.lean` in Addendum 235.
+The title is now "the product of the two simplices and its free-coordinate chart", the paragraph about
+`evalWordEquiv` is replaced by a pointer to where it lives, and a broken line wrap ("the free
+coordinates") is repaired.  A module docstring that names a declaration its module does not contain is
+the same defect as a name that outlives its statement, and the audit looked for both.
+
+**Verified.**  `lake build` green, **9 170 jobs, exit 0, no warnings**; `runLinter` clean;
+`#print axioms` unchanged on the three theorems; README anchors 0 stale (168); `IET2.zip` rebuilt.
+
+---
+### Addendum 241: the remark's conclusion is a challenge target
+
+The owner asked that `Challenge.lean` also state the open-set version — the conclusion of the remark
+— so that the challenge covers both results of the paper, and that the README say so.  This addendum
+records the addition.  It is the one edit to `Challenge.lean` since the file was frozen, made on an
+explicit ruling.
+
+**The target.**  In `Challenge.lean`, after `main`, in `namespace Pair` — because the library states
+it there — and with the library's full name:
+
+```lean
+theorem exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one {d e : ℕ} [NeZero d] [NeZero e]
+    (π : Equiv.Perm (Fin d)) (σ : Equiv.Perm (Fin e)) :
+    ∃ O : Set ((Fin d → ℝ≥0) × (Fin e → ℝ≥0)), IsOpen O ∧
+      ((simplexVolume d).prod (simplexVolume e)) Oᶜ = 0 ∧
+      ∀ p ∈ O, (∑ i, p.1 i = 1) → (∑ j, p.2 j = 1) →
+        ∃ w : FreeGroup (Fin 2), w ≠ 1 ∧
+          evalWordEquiv w (mkIETEquiv p.1 π 0) (mkIETEquiv p.2 σ 0) = 1 := by
+  sorry
+```
+
+It is the verbatim statement of `ChallengeSolved.Pair.…`, so **no new declaration and no new
+duplication**: the challenge file needed the statement and nothing else — not `simplex` (the two
+normalisations are hypotheses), not a predicate on the relation set (Addenda 236–239).  The name is
+the library's, which is the challenge's rule for every declaration it shares.
+
+**The plumbing.**  `comparator.json`'s `theorem_names` gains
+`IntervalExchange.Pair.exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`, so the challenge now
+has three targets and one definition hole; the deliberate `sorryAx` count of `Challenge.lean` is four.
+The README says so in three places: the sentence that counts the sorries, the introduction of the
+comparator section ("Theorem 1.1 **and** the conclusion of the remark"), the table of files, and a
+sentence in the comparator discussion noting that the new target reaches no declaration the challenge
+did not already carry.  `Challenge.lean` also names `evalWordEquiv`'s new home
+(`IETFree/Pair/MeasureTools.lean`) and describes both targets in its module docstring.
+
+**Checked without the comparator.**  The comparator is not run (the owner's rule).  What was checked
+instead: `Challenge` builds; and the challenge's statement, copied verbatim into a scratch file,
+is *proved by the library theorem* —
+`example : …(the exact text)… := exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one π σ`
+compiles in `IET2/.scratch/ax/ChallengeAgrees.lean`, exit 0 — which is the statement check the
+comparator performs, done locally.  An actual `lake comparator` run remains the gate and needs the
+owner's word.
+
+**Verified.**  `lake build` green, **9 170 jobs, exit 0, no warnings** (and `lake build Challenge`
+green, 9 048 jobs); `runLinter --no-build IETFree` clean; README anchors 171 (three new), 0 stale;
+`IET2.zip` rebuilt.
+
+---
+
+### Addendum 242: the comparator passes on the remark — the failure was a definition body
+
+The owner asked for the gate ("can we now run the comparator?").  The run failed, and the failure was
+not about a statement.  This addendum records the failure, the diagnosis, the fix and the passing
+run, because the trap it exposes — a *definition body* that instance search elaborates differently
+in two modules — is the one the ledger's auxiliary-declaration rule (Addenda 172, 174) did not yet
+cover.
+
+**The failure.**  `lake comparator` after Addendum 241 ended with exit 1 and
+
+```text
+error: Const does not match between challenge and target 'IntervalExchange.evalWordEquiv'
+```
+
+**This is not a statement mismatch**, and the difference matters for what the gate does and does not
+check.  Lean 4.35's `lake/Lake/Check/Compare.lean` (`compareAt` and `Compare.loop`) works in three
+steps:
+
+1. for each *theorem* target it compares the exported `ConstantVal` — name, `levelParams`, type — and
+   a difference there is reported as `Challenge and solution theorem statement do not match`;
+2. for each *definition* target it compares `toConstantVal` and `safety`;
+3. then it walks `getUsedConstants` from the targets' types, and every constant that is not itself a
+   target must satisfy **full `ConstantInfo` equality**.  For a `def` that includes its `value`, i.e.
+   the body; for a theorem, the proof term.
+
+Step 1 did not complain: `main`, `coe_mkIETEquiv` and the remark's conclusion all have the same
+statement in the two modules, and the definition hole `mkIETEquiv` passed step 2.  The failure came
+from step 3, on the body of a definition that both modules declare and that `main`'s statement
+reaches.
+
+**The diagnosis, from the exports themselves.**  Both sides were exported with `lake env leanexport`
+(`.scratch/ax/exp_challenge.txt`, `.scratch/ax/exp_solution.txt`) and compared declaration by
+declaration (`.scratch/ax/cmp_exp.py`, which resolves the format's three id spaces and diffs
+`levelParams`/`type`/`value`/`all`/`hints`/`safety`).  Of the **4 124** declarations in each dump:
+
+* exactly **one** differs — `IntervalExchange.evalWordEquiv`, and only in its `value`;
+* the first difference is a `const` 16 steps into the body: the challenge's body refers to
+  `IntervalExchange.evalWordEquiv._proof_1`, the library's to `IntervalExchange.Pair.genX._proof_1`.
+
+Those are the two files' *own* auxiliary declarations, one in each — the `Decidable` proof that the
+body's `if i = 0 then f else g` needs.  So the copies do not have the same body even though they
+have the same source text: `(FreeGroup.lift (fun i : Fin 2 => if i = 0 then f else g)) w` lets
+instance search produce a proof that is private to whichever module elaborates it.
+
+**Why it appeared now.**  Addendum 235 moved `evalWordEquiv`, `evalWord_toEquiv` and
+`evalWord_toEquiv_eq_one` out of `ChallengeSolved.lean` into `Pair/MeasureTools.lean`; while they sat
+in `ChallengeSolved.lean`, both copies were elaborated in one file and the comparator passed (the
+runs recorded as `Your solution is okay!` in the job log predate the move).  The move itself is not
+reversible: `Pair/RobustRelation/FreeParams.lean` and `Pair/RobustRelation/OpenSet.lean` state the
+remark in terms of `evalWordEquiv` and sit *below* `ChallengeSolved.lean` (Addendum 234), so the
+fallback "move the three declarations back into `ChallengeSolved.lean`" would undo that layout.
+The definition had to become instance-free instead.
+
+**The fix.**  Both copies build the generator map with a recursor rather than a decision:
+
+```lean
+noncomputable def evalWordEquiv (w : FreeGroup (Fin 2)) (f g : Equiv ℝ ℝ) : Equiv ℝ ℝ :=
+  FreeGroup.lift (Fin.cases f fun _ => g) w
+```
+
+`Fin.cases` takes no instance, so the two elaborations are the same term.  The docstrings of both
+copies now say why it is written that way, so that it is not "simplified" back into an `if` — the
+same precaution as `simplexMap_val_lt` (`Challenge.lean`), which avoids `omega` for the same reason.
+The `of` case of `evalWord_toEquiv` became `fin_cases x <;> rfl` (it was
+`by_cases hx : x = 0 <;> simp [hx, evalWordEquiv, evalWord]`); its `inv_of` and `mul` cases are
+untouched and still close with the same `simp only` lists.  Nothing else in the tree mentions the
+body: every other use goes through `evalWord_toEquiv` or `evalWord_toEquiv_eq_one`.
+
+**Verified.**  `lake build`: **9 170 jobs, exit 0, 0 warnings** (the rebuild covers `Challenge`,
+`Pair.MeasureTools` and the whole `Pair.RobustRelation` cone).  `runLinter --no-build IETFree` and
+`--no-build Challenge`: both clean.  `#print axioms` on `main`, `exists_isOpen_subset_hasRelation`
+and `exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`: `[propext, Classical.choice,
+Quot.sound]`.  `lake comparator` (82 s), with the three targets of Addendum 241:
+
+```text
+Running Lean default kernel on solution
+Lean default kernel accepts the solution
+Your solution is okay!
+```
+
+The gate has been run on this tree and passed.  `enable_nanoda` stays `false` for the reason already
+in NOTES: `bwrap` cannot bind `/opt/lean/bin/nanoda_bin` here because `/opt/lean` is a symlink, so
+the run would end with `nanoda exited with 1` after Lean's kernel had accepted.
+
+**The rule this adds.**  A declaration copied into `Challenge.lean` must elaborate to the same
+*term*, and a term can depend on the module through the proofs that instance search supplies — so a
+copied definition must not let a typeclass choose anything.  `simp` and `omega` are the recorded
+sources of auxiliaries in *proofs*; an `if` over a numeral is the same hazard in a *body*.  Write the
+case split with `Fin.cases` and the problem cannot arise.
+
+**Also in this pass, while the files were open.**  Six pieces of prose had been left stale by
+Addenda 233–241, and all are fixed:
+
+* `ChallengeSolved.lean`'s module docstring said `evalWordEquiv` lives in
+  `Pair/ProductSimplex.lean`, and `Pair/Block/Rescaling.lean`'s said it lives in
+  `ChallengeSolved.lean`; Addendum 235 moved it to `Pair/MeasureTools.lean`;
+* README's `comparator.json` block still showed two theorem targets under short names, where the
+  file has three full names, and called the remark's conclusion "the second target";
+* README said 113 modules and 44 247 lines: the size line is re-measured in README and NOTES —
+  120 modules, **47 234** lines, 240 import lines, the umbrella 195 — and NOTES now also says that
+  the import-necessity fixpoint was last recomputed in Addendum 224, not on the final tree;
+* `formalization.yaml` still recorded the remark after Theorem 1.1 as *not* formalized, counted
+  three sorries, gave 113 modules and 115 in its automation note, and did not list the remark's two
+  conclusions among `status.main_results`.  It now says the remark is formalized (in
+  `Pair/RobustRelation/`, conclusions in `ChallengeSolved.lean`), carries `sorry_count: 4` with the
+  remark's statement named, gives 120 modules and 122 built ones, and lists both conclusions — the
+  paper-coordinate one marked `comparator_config: comparator.json`, since it is the third target;
+* `lakefile.toml`'s `warn.sorry` comment likewise counted three sorries.
+
+The README's `#L` anchors were then re-pointed at the declarations they name
+(`.scratch/tmp/anchors.py`): **172 anchors, 0 stale**, the count being one more than Addendum 241's
+because the comparator section now links the third target by name as well.  `lake build` after these
+edits: 9 170 jobs, exit 0, 0 warnings; `lake comparator` was then run again on the final tree and
+printed `Your solution is okay!` (exit 0, 82 s).
+
+---
+
+### Addendum 243: the library audited against the Tau Ceti review rubrics
+
+On the owner's instruction the whole library was audited — not a diff — against the ten angles of
+`TauCetiProject/TauCetiReview` (commit `abb4439`, the shared protocol of `rubrics/_common.md` plus
+one rubric per angle) and against the house style `lean-code-cleanup.md`, by eight independent agents
+whose reports the auditor verified in the tree (four import/namespace/API claims and four replacement
+claims recompiled).  The report is `results/audit-tauceti.md`: a verdict per angle, 59 findings with
+locations and fixes, what was verified clean, and what was not verified.
+
+**Verdict: `block` on the reuse angle only; `request_changes` on api-design, generality, placement,
+naming, documentation and proof-quality; `approve` on correctness, scope and attribution.**  Nothing
+found makes a stated theorem false and nothing requires a statement to change.  The block is
+declaration-level and mechanical: `clampI`/`clipI`/`clamp` are Mathlib's `Set.projIcc` under three
+names, `sum_nonneg'` is `Finset.sum_nonneg`, `sumA`/`st`/`Vs`/`botCell` rename declarations already in
+the tree, and `1 ≤ Path.Q P γ a a` and `simplexCyl P (γ ++ δ) ⊆ simplexCyl P γ` are each proved twice
+in two import cones that cannot see each other.  The two findings with structural consequences are
+imports: `Pair/ReductionData.lean`'s `Pair.Irreducible` and `UniqueErgodicity/Basic.lean`'s
+`RauzyVeech.InvariantMeasure` are both removable (each verified by compiling the module with the
+substitution), which detaches the Section-3 data and the bottom of `UniqueErgodicity/` from the deep
+layers.
+
+**Nothing was changed.**  The audit is read-only: the tree, `Challenge.lean`, `comparator.json` and
+the veneer of the last two rounds are untouched, so `lake build` (9 170 jobs) and `lake comparator`
+remain as Addendum 242 left them.  The findings are for the owner to accept, reject or schedule.
+
+---
+
+### Addendum 244: the aliases, the two useless imports, and the `GoodParams` threshold sentence
+
+The owner's instruction after Addendum 243: *"Fix the declarations that already exist under other
+names, the useless imports, the GoodParams misleading comment."*  This addendum records what went,
+what stayed and why, and the two misnomers the renaming turned up.
+
+**Removed — a declaration that already existed under another name.**  Each was checked against the
+survivor's statement before deletion, and the survivor was moved down when the two copies sat in
+import cones that could not see each other.
+
+| removed | replaced by |
+|---|---|
+| `one_le_diag_Path_Q` (`RauzyVeech/BalancedSet.lean`) | `Path.one_le_Q_diag`, whose proof moved into `RauzyVeech/Path.lean`, the module both cones reach |
+| `simplexCyl_append_left` (`RauzyVeech/Peel.lean`) | `simplexCyl_append_prefix`, moved into `RauzyVeech/Nesting.lean` beside `simplexCyl_append_subset` |
+| `sum_nonneg'` (`RauzyVeech/NameInfinite.lean`) | `Finset.sum_nonneg`, inlined at its single use |
+| `IsCutSet.perm` (`IET.lean`) | `IsCutSet.cellPerm`, four sites |
+| `leftEnd_lt_sum` (`Pair/Block/Irreducibility.lean`) | `leftEnd_lt_total`, which was in `Pair/Block/Rescaling.lean` — that is, *above* its special case — so it moved down into `IET.lean` after `upperEnd_le_total`, with `lam` implicit so its call sites are unchanged |
+| `leftEnd_eq_upperEnd_of_succ` (`Pair/Singularity/List.lean`) | `leftEnd_succ_eq_upperEnd`, four sites, with the index now explicit |
+| `private theorem cellAt_nil_Ico` (`Rigidity/RigidSet.lean`) | the public `cellAt_nil` it shadowed |
+| `IETDatum.ofMem` (`Pair/ReductionData.lean`) | the constructor `IETDatum.mk`, nineteen sites |
+| `sumA` (`RauzyVeech/TrueStep.lean`) | `totalLength`, twenty sites; the derived names are now `totalLength_hatLam_le`, `totalLength_lamAfter_le`, `cellAt_subset_totalLength_le`, `totalLength_hatLam_false`, `totalLength_hatLam_true` |
+| `Vs`, `Vs_succ` (`RauzyVeech/NameInfinite.lean`) | `IETDatum₂.vertexNat`, `vertexNat_succ`, fifty-two sites |
+| `botCell` (`RauzyVeech/FirstReturn.lean`) | `lastPos`, 251 code sites over five modules |
+| `lastIdx`, `lastIdx_val`, `lastIdx_eq_last` (`Pair/ReductionData.lean`) | `lastPos`, `lastPos_val`, and `lastPos_eq_last` (new, beside `lastPos_val` in `TopBotFormalism.lean`) |
+| `st`, `st_pos`, `st_nonneg` (`RichPath/NodeHeight.lean`) | `colSum`, `colSum_pos`, `colSum_nonneg`, 305 code sites over fifteen files; the derived names follow (`mkMass_colSum_pos`, `colSum_le_Mx`, `colSum_le_thr`, `sum_colSum_append_singleton`, `sum_colSum_ge`, `sum_colSum_le`, `colSum_eq_of_exitArrow`, `colSum_le_pot`, `colSum_take_le_end`, `colSum_le_two_pow_mul_Mk`), and the alias `cond_arrow_st` in `RichPath/Potential.lean` is deleted in favour of `cond_arrow` |
+| `clipI` (`UniqueErgodicity/Transfer/Conv.lean`) | `clampI`, whose definition and three lemmas moved down into `UniqueErgodicity/Split.lean` (both cones reach it); `measurable_clampI` stays in `MeasPrep`, where measurability is available |
+
+**Kept, with the reason in the docstring.**
+
+* `pathVertex` (`RauzyVeech/MeshShrink.lean`) is `vertex P (pfx p k)`, only *propositionally* equal to
+  `vertexNat` (`vertexNat_eq_vertex_ofFn`), and the file's recursions (`Qm`, the renorm steps) are
+  stated on the prefix word.  Deleting it forced the bridge at three sites and broke two `rfl`
+  proofs; it stays, now documented as the prefix-word form of `vertexNat`.
+* `clampI` and `clamp` stay as the real-valued coercion wrappers of `Set.projIcc` — their call sites
+  are ordinary reals, and `clamp` is the workhorse of `Pair/InvariantInterval.lean`.  Both docstrings
+  now say which Mathlib function they are; the byte-identical duplicate `clipI` is gone.
+
+**Two misnomers the renaming turned up.**  `sumA_mul_sumB` was never about `sumA`: it is a generic
+regrouping of a double sum, renamed `sum_mul_sum`.  `TrueStep` carried a wrapper
+`topCell_ne_botCell` stating exactly what `topCell_ne_botCell_of_lt` states — deleted.  And
+`FirstReturn`'s filter lemma for `botCell` clashed with the pre-existing `filter_lt_lastPos` once
+renamed; it is now `filter_lt_lastPos_eq_erase`.
+
+**The two useless imports, and the six files that had been relying on them.**
+
+* `Pair/ReductionData.lean`: `Pair.Irreducible` → `Pair.Diophantine`.  The Section-3 *data* no longer
+  depend on the Masur–Veech tower (`lake build IETFree.Pair.ReductionData` went from 3 297 to 2 716
+  jobs).
+* `UniqueErgodicity/Basic.lean`: `RauzyVeech.InvariantMeasure` → `IET`, with the
+  `open IntervalExchange.RauzyVeech` dropped.  `Theorem2.lean`, which does use `lebesgue`, now
+  imports `InvariantMeasure` itself.
+* The removals exposed six files whose imports had been *transitive only*: `Pair/Presentation.lean`,
+  `Pair/Singularity/List.lean`, `Pair/Block/AeBlockGood.lean` and
+  `Pair/RobustRelation/LetterData.lean` gained `import Mathlib.Tactic.Linarith.NNRealPreprocessor`
+  (they run `linarith` on `ℝ≥0` coefficients), `Pair/Block/Assembly.lean` and
+  `Pair/Block/Rescaling.lean` gained `Pair/MeasureTools` (the two-generator word API),
+  `LetterData.lean` gained `Pair/TranslationVector`, and `Assembly.lean` and `AeBlockGood.lean`
+  gained `Pair/Irreducible` for Lemma 2.7 and for `masurVeech`/`veechRigidity`, which they use
+  directly.  These are the tree's first plain `import` lines (proof-only), the rest staying
+  `public import`.
+
+**The `GoodParams` sentence.**  It read: "The paper's Remark 1.2 needs the same construction at the
+threshold `2n` … so it is killed by the good set only at that threshold."  The paper has no
+threshold — its hypothesis is `Ω'` — and `blueprint-remark12.md` §10 C2 records that `2n` is neither
+proved nor refuted.  The docstring now states the displacement bound `2n` (`WordData`'s `hD`), the
+cut bound `2n + 2` (`hsLat`), the numeric corollary at `4 * |w| + 4` (`Robustness.lean`), and that
+the statement of record is at `Ω'` (`forall_goodParams_iff`).
+
+**Verified.**  `lake build`: **9 170 jobs, exit 0, 0 warnings**.  `runLinter --no-build IETFree` and
+`--no-build Challenge`: clean.  `#print axioms` on `main`, `exists_isOpen_subset_hasRelation` and
+`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`: `[propext, Classical.choice,
+Quot.sound]`, unchanged.  README anchors re-pointed (172, 0 stale).  `IET2.zip` rebuilt.  No
+comparator-pinned declaration changed — `coe_mkIETEquiv`, `main`, the remark's conclusion,
+`mkIETEquiv` and the fifteen names `Challenge.lean` mirrors are untouched — and `lake comparator` was
+not run, the owner's rule being that it runs only on request.
+
+---
+
+### Addendum 245: the placement and naming findings of the audit applied
+
+Continuing Addendum 244 on the owner's instruction ("fix the remaining `request_changes` findings,
+starting with placement and naming").  This addendum covers the placement (P) and naming (N) angles;
+the other angles' remaining items are listed at the end.
+
+**Placement.**
+
+* **P4 — `evalWordEquiv` moved home.**  It is a definition about `Equiv ℝ ℝ`, the challenge pins it,
+  and the other fourteen pinned names are in `IETFree/IET.lean`: it now sits after `coe_mkIETEquiv`,
+  with the same body (so the comparator's comparison of the elaborated term is unaffected).  The
+  bridges to `evalWord` — `evalWord_toEquiv`, `evalWord_toEquiv_eq_one` — stay in
+  `Pair/MeasureTools.lean`, which is where `evalWord` is; its section docstring and those of
+  `ProductSimplex.lean`, `Block/Rescaling.lean` and `Challenge.lean` say so.
+* **P3 — the `unitMeas` API moved beside `unitMeas`.**  `unitMeas_real_compl` and
+  `unitMeas_real_Icc_le` left `Pair/MeasureTools.lean` for `IET.lean`, after `unitMeas_Ico`; the file
+  now holds the two-generator word API and the Lemma 2.10 estimates only.  (`evalWord` itself is a
+  *pair* notion — two exchanges as arguments — so `Pair/` is its home, and `Gen`/`genX`/`genY` stay
+  with it rather than moving to `FreeGroup/`.)
+* **P5 — `CompactTool` moved to `IETFree/Measure/`**, namespace `IntervalExchange.Measure`: it is the
+  general topological dynamics of a continuous self-map of a compact space (Tool 1), it mentions no
+  exchange, and it is the third module of the directory whose subject is exactly that.  Its one
+  consumer names it `Measure.tendsto_uniform_birkhoffAverage`, and the umbrella, the README's two
+  directory rows and `UniqueErgodicity/Basic.lean`'s pointer follow.  `Transfer/Basic.lean` and
+  `Split.lean` stay where they are: the first is the base of the `Transfer/` subject, the second
+  defines the split interval, which is a specific object rather than a general tool.
+* **P7** the root module's map now names all seven subject directories and documents `FreeGroup/` and
+  `Measure/`.  **P8** the four proof-only tactic modules are plain `import`s (`RingNF`,
+  `Positivity.Finset`, and two `Linarith.NNRealPreprocessor`), with `TrueStep` and `Tower/LevelOne`
+  gaining their own copy since they had been relying on the re-export.  **P9** the five unsorted
+  import lists are sorted.  **P10** the tree's only `open … in` is gone (`Singularity/Bound.lean`).
+* **P6 — not done, on purpose.**  Four modules are called `Basic.lean` (`CutSet/`,
+  `UniqueErgodicity/`, `UniqueErgodicity/Germ/`, `UniqueErgodicity/Transfer/`).  Mathlib keeps
+  `Foo/Basic.lean` beside `Foo/Bar/Basic.lean` throughout, and no reader or import error in this tree
+  has had to disambiguate them; renaming four modules would churn the umbrella and the README for no
+  gain.
+
+**Naming.**
+
+* **N1 — `prefix_or_prefix_of_append` moved to `namespace List`** in `IETFree/ListPeriodicity.lean`
+  (it is generic in the element type), with `NodeHeight` importing that module; `take_take_eq` is
+  deleted and its two uses are `List.take_take` + `Nat.min_eq_left` (this also closes R16).
+  The other seven lemmas the finding listed are stated for `List Bool` — the path alphabet, which is
+  the subject of the files they sit in — so they are not generic `List` material and stay; the same
+  holds for `getD_take_eq_of_lt`.  The `Matrix` and analysis items of N1 (`colsum_mul_single`,
+  `one_le_mul_of_one_le`, `iterate_two_eq`, `volume_image_add`, …) are still open.
+* **N2 — `KeeGen` renamed `balanceConstant`**, with `one_lt_balanceConstant`,
+  `two_mul_lt_balanceConstant`, `le_balanceConstant`, so the stem states the object; the docstrings
+  and `StraddleMass`'s prose follow.
+* **N3/D5 — `main_theorem_of_blocks` re-documented**: it is Lemma 3.4 assembled over the blocks, one
+  word per block, not Theorem 1.1; the single word on `[0, 1)` is
+  `exists_word_trivial_on_all_of_blocks`, i.e. `exists_word_ae`.  The section heading no longer says
+  "the last open step", and A4 is Lemma 3.4 (it had been called Lemma 3.2 there).
+
+**Verified.**  `lake build`: **9 170 jobs, exit 0, 0 warnings**.  `runLinter --no-build IETFree` and
+`--no-build Challenge`: clean.  `#print axioms` on `main`, `exists_isOpen_subset_hasRelation`,
+`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`: `[propext, Classical.choice, Quot.sound]`.
+README anchors 172, 0 stale.  `IET2.zip` rebuilt.  No comparator-pinned declaration changed and the
+comparator was not run (owner's rule).
+
+**Still open from the audit** (not placement or naming, so not touched here): R14, R15, R17–R24;
+A1–A4; G1–G2; D1–D4, D6, D7, D9–D11; Q1–Q5.
+
+### Addendum 246: the rest of the audit — reuse, API, generality, documentation, proof quality
+
+The owner's instruction (*"continue with R14–R24, then A1–A4, G1–G2, D1–D4/D6/D7/D9–D11, Q1–Q5,
+and the Matrix/analysis items of N1"*) was carried out over two working sessions; the first landed
+A1, A3, D1–D4, D6, D7, D11, Q1, Q3 and R15, and this addendum records the second, which also
+contains the verification of the whole batch.  `results/audit-tauceti.md` §9 is the audit's own
+status table after it.
+
+**Reuse.**
+
+* **R14 + R21 — the paper's threshold `4` is the case `N = 4` of the parametrised construction.**
+  `smallCoeffsAt`, `mem_smallCoeffsAt`, `IsBadParamAt`, `goodParamsAt` and their structural lemmas
+  (`isBadParamAt_iff_coeffs`, `IsBadParamAt.mono`, `isClosed_badParamAt`, `isOpen_goodParamsAt`,
+  `goodParamsAt_antitone`, `coeffs_zero_of_good_with_const_at`, `isBadParamAt_mem_badSet`) moved
+  down from `Pair/RobustRelation/GoodParams.lean` into `Pair/ReductionData.lean`, above the paper's
+  case.  `smallCoeffs`, `IsBadParam` and `goodParams` are now *definitions* in terms of the `At`
+  versions, and `mem_smallCoeffs`, `isBadParam_iff_coeffs`, `isClosed_badParam`,
+  `isOpen_goodParams`, `coeffs_zero_of_good_with_const` and `isBadParam_mem_badSet` are one-line
+  applications of the general lemmas — the 28-line block R21 named was the proof of
+  `isBadParam_mem_badSet`.  The three `rfl` bridges (`smallCoeffs_eq_smallCoeffsAt`,
+  `isBadParam_iff_isBadParamAt`, `goodParams_eq_goodParamsAt_four`) are deleted: there is nothing
+  left to bridge.  `GoodParams.lean` keeps what needs the threshold to vary (a.e. good, the null
+  hyperplanes, the countable union, the `2n` threshold), its module docstring says where the
+  definitions went, and its section numbering is `§1–§4`.
+* **R17** `colsum_mul_single` is `by_cases hb : b = j <;> simp [hb, Finset.sum_mul]`; **R18**
+  `lintegral_le_of_indicator` is `lintegral_mono` composed with `lintegral_indicator_const` (four
+  lines instead of ten); **R19** `toWord_pow_eq_append` is deleted and its four rewrites of
+  `FreeGroup.toWord_pow` are inline at the two use sites, while `toWord_pow_length` stays with a
+  self-contained proof (Mathlib has the word form only, and the length form is what the
+  commutativity argument computes with).
+* **R20 — one definition of the open simplex.**  `simplexRegion d` is `RauzyVeech.region (d - 1)`:
+  the set is defined once, in `RauzyVeech/SimplexVolume.lean`, which imports only Mathlib and so
+  sits below the length vectors; `IET.lean` imports that module, and both docstrings say so.  The
+  bridge `simplexVolume_eq_chartVolume` stays, since it is about the *measure*, not the set.
+* **R23 — `main_of_components` is gone**, its proof moved into the conclusion-named
+  `masurVeech_ae_unique_invariant`.
+* **R24/Q5 — the descent in `Rigidity/RigidSet.lean`'s `SH_list` is written once.**  The last
+  letter of the step decides only the two inclusions (`hsub`, `himg`) and the split of the height;
+  `cases e` supplies those three, and the 21 shared lines follow.  Where the deletion of the second
+  copy leaves `!e` opaque to `omega`, the proof normalises it with `Bool.not_false`/`Bool.not_true`
+  after a `by_cases e = false`.  The same pair in `RauzyVeech/Tower/Tiling.lean` is **not** done:
+  there the split is on `p k` rather than on the last letter of a concrete word, and the same
+  factoring needs the height equation `hHs` rewritten *and* the letter normalised in three places;
+  the attempt broke the proof and was reverted, so that file still has its two branches.
+
+**API design.**
+
+* **A2 — the generic infrastructure is exported.**  `Emat`, `Emat_add`, `Emat_mul`,
+  `Emat_one_add_mul`, `insertEquiv_zero_pow_val`, `card_filter_mod_ge` (`Rigidity/Combinatorics`),
+  `sum_toNat` (`Rigidity/Veech`), `tower_bound`, `rigid_arith` (`Rigidity/RigidStep`) and
+  `BlocksIn` (`Pair/Block/Assembly`) lost their `private`.  They are *not* relocated: the audit's
+  own principle is that a move is better made once and completely, and giving the `Emat` family a
+  generic home means a new module (and a README row, and an umbrella entry) whose place is the
+  owner's call.  Exported, they are usable from anywhere below; the `Matrix` construction keeps its
+  current namespace until that decision is taken.
+* **A4 — the six `Decidable` instances are `local`, not global.**  Deleting them and opening
+  `Classical` (the audit's suggestion) does not work here: Mathlib's linter rejects
+  `open scoped Classical`, and a file-local `open Classical` breaks `mem_stopFam`.  `local
+  instance` achieves what the finding is about — `Decidable (Alive …)` and the rest are no longer
+  synthesizable library-wide, so a computable instance added later is not shadowed — and
+  `RichPath/Potential.lean` gains two `local` copies (`badDecidable'`, `stopEvDecidable'`) for the
+  predicates it uses from `Stopping`.  All eight carry docstrings, which the doc linter requires of
+  instances.
+
+**Generality.**  **G1** `Positive` is stated on an arbitrary alphabet, `abbrev Positive {α : Type*}
+(lam : α → ℝ≥0) := ∀ a, 0 < lam a` (it stays an `abbrev`: two block lemmas need its body visible),
+and the seven `α`-indexed sites use it — `Rigidity/Veech.lean`'s two private lemmas as
+`(hpos : Positive lam)`, `RauzyVeech/NameInfinite.lean`'s five as `(hpos : ∀ k, Positive (lam k))`.
+**G2** `masurVeech_ae_unique_invariant` now takes `{n : ℕ} [NeZero n] (P) (hP) (hn)`, the order of
+its sibling `…_perm`; its one caller is updated.
+
+**Documentation.**  **D9 + D10** — `CHANGE-AUDIT.md` is regenerated from a full re-run of the
+delete-and-compile experiment over every `change` in `IETFree/` (see the file's own header for the
+count and the method; the rows are keyed to the current line numbers, the three dead module paths
+are gone with the modules, and the sites D10 listed — those of `WordData.lean` and
+`LetterData.lean` — now have rows like every other).  Of the thirty-nine sites the re-run found, one
+was removable — `WordData.lean:281`, `change |A (Fin.last m) + B (Fin.last n)| ≤ 2 * K`, whose goal
+`rw [abs_le]` already matched — and is deleted, so the table now has thirty-eight rows.
+
+**Proof quality.**  **Q2** — `vertex_singleton` and the new `lamAfter_singleton`
+(`RauzyVeech/RenormData.lean`, beside `lamAfter_cons`) replace the two `(rfl)` `have`s in
+`cellAt_singleton_false`/`_true`, and `IsIntAffine.add`/`.neg`/`.sub` prove the pointwise identities
+by `AffineMap.coe_add`/`coe_neg`/`coe_sub` with `Pi.*_apply` instead of `(rfl)`.  **Q4** —
+`isCutSet_mkIETCuts` derives the cell bounds once: `have cell_bounds` gives
+`u - a ∈ Ico 0 T`, `leftEnd lam (idx lam (u - a) _) ≤ u - a` and the upper bound, and the three
+places that had derived them separately (the "stays inside" step and the two points of the "constant
+displacement" step) instantiate it.  **`Pair/Block/Lemma.lean`** needed two small repairs after the
+batch: `exists_isIntAffine_truncatedLengths` is applied with its two indices named (`(i₀ := i₀)
+(i₁ := i₁)`), since the metavariables they used to be inferred into were no longer resolved, and the
+`hHeq` identification now reduces the subtype and unfolds `truncatedLengths` and `L` by `simp only`
+rather than relying on the definitional equality of a `rw`'s closing check.
+
+**Not done, and why.**
+
+* **A2's relocation** — see above: a new module is the owner's decision.
+* **R22** — the `hAbound`/`hBbound` pair in `Pair/Diophantine.lean` (and its twins in
+  `Block/Irreducibility.lean` and `WordData.lean`'s `IsFreeLat.add`/`.neg`) still duplicates a
+  17-line proof under the `A`↔`B` substitution.  The factoring needs the two matrices abstracted
+  over a common index type, and in that proof the body of `Acomb` is written as an unparenthesised
+  `∑ i, a i * A i k + ∑ j, b j * A' j k`, whose parse the surrounding `omega`s depend on; the
+  abstraction has to reproduce that parse exactly, and the attempt did not.
+* **R24's second site** — `RauzyVeech/Tower/Tiling.lean`, see above.
+* **N1's `Matrix` and analysis items** — `colsum_mul_single`, `colsum_mul_one_add_single`,
+  `det_one_add_single_of_ne`, `colsum_one_real`, `one_le_mul_of_one_le(_right)`, `iterate_two_eq`,
+  `volume_image_add`, `volume_linear_eq_zero`, `iInter_closure_eq_singleton` still sit in the
+  project namespaces.  Each move is a namespace change plus the call sites in its cone; the batch
+  stopped before them.
 
 ---
 
@@ -16013,7 +19485,7 @@ The library is split into three directories.
 | file | contents |
 |---|---|
 | `Basic.lean` | the datum `IETDatum₂ α n` (two bijections `piTop`, `piBottom : α ≃ Fin n`), `Irreducible`, `toIET` (total), `ofPerm` (the datum of a single permutation), `simplexOn`, `simplexVolumeOn`, `ae_mem_simplexOn`, and `Invariant μ f : μ.map f = μ`, the definition everything is stated with |
-| `IET.lean`, `CutSet.lean`, `CutSetMeasure.lean` | the interval-exchange API of `IET2/IETFree`, copied verbatim except for the import lines |
+| `IET.lean`, `CutSet/Basic.lean`, `CutSet/Measure.lean` | the interval-exchange API of `IET2/IETFree`, copied verbatim except for the import lines |
 | `MainComponents.lean` | the two hypotheses of the proof, `RichGreedyPath` and `UniformPositivity`, the ray statement `PositiveBlocksRay`, and their assembly `main_of_components` |
 | `Assembly.lean` | uniqueness of the invariant probability measure from the ray condition and injectivity of the length map |
 | `MainTheorem.lean` | `masurVeech_ae_unique_invariant`, its single-permutation form `masurVeech_ae_unique_invariant_perm`, and the axiom report (one `#print axioms`, right after the main theorem) |
@@ -16315,7 +19787,7 @@ theorem pathWord_of_mem_simplexCyl
     IETDatum₂.pathWord P lam γ.length = γ
 ```
 
-This is `CylRec.mem_cyl_iff_pathWord` (`RauzyVeech/CylinderRecurrence.lean`), read in the direction
+This is `CylRec.mem_cyl_iff_pathWord` (`RauzyVeech/Cylinder/Recurrence.lean`), read in the direction
 needed. `CylRec.Nbad P` is the union of the stopping sets at all words and is null
 (`CylRec.measure_Nbad`, or `ae_notMem_cylStop_all` plus `ae_all_iff`), so it can be discarded in
 every a.e. statement.
@@ -19626,13 +23098,13 @@ FROZEN_ABI_SHA256: -
 DEPS: -
 ROUTES: -
 ROUTE_FOR: -
-NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L356
+NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L356
 TOPOLOGY_STATUS: REVIEWED
 EXTRACTOR: orchestrator (chat session, 2026-11-02)
 REVIEWER: smvzfix8c/m1
 LEAN_STATUS: EXTERNAL
 LEAN_REF: -
-LEAN_NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L356
+LEAN_NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L356
 
 NODE: bp.s3
 KIND: external
@@ -19652,13 +23124,13 @@ FROZEN_ABI_SHA256: -
 DEPS: -
 ROUTES: -
 ROUTE_FOR: -
-NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L465
+NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L465
 TOPOLOGY_STATUS: REVIEWED
 EXTRACTOR: orchestrator (chat session, 2026-11-02)
 REVIEWER: smvzfix8c/m1
 LEAN_STATUS: EXTERNAL
 LEAN_REF: -
-LEAN_NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L465
+LEAN_NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L465
 
 NODE: ext.richGreedyPath
 KIND: external
@@ -19704,13 +23176,13 @@ FROZEN_ABI_SHA256: -
 DEPS: -
 ROUTES: -
 ROUTE_FOR: -
-NOTE: proved in the library: RauzyVeech/CylinderRecurrence.lean@L193
+NOTE: proved in the library: RauzyVeech/Cylinder/Recurrence.lean@L193
 TOPOLOGY_STATUS: REVIEWED
 EXTRACTOR: orchestrator (chat session, 2026-11-02)
 REVIEWER: smvzfix8c/m1
 LEAN_STATUS: EXTERNAL
 LEAN_REF: -
-LEAN_NOTE: proved in the library: RauzyVeech/CylinderRecurrence.lean@L193
+LEAN_NOTE: proved in the library: RauzyVeech/Cylinder/Recurrence.lean@L193
 
 NODE: ext.lamAfter_append_singleton
 KIND: external
@@ -19886,13 +23358,13 @@ FROZEN_ABI_SHA256: -
 DEPS: -
 ROUTES: -
 ROUTE_FOR: -
-NOTE: proved in the library: RauzyVeech/CylinderGrowth.lean@L334
+NOTE: proved in the library: RauzyVeech/Cylinder/Growth.lean@L334
 TOPOLOGY_STATUS: REVIEWED
 EXTRACTOR: orchestrator (chat session, 2026-11-02)
 REVIEWER: smvzfix8c/m1
 LEAN_STATUS: EXTERNAL
 LEAN_REF: -
-LEAN_NOTE: proved in the library: RauzyVeech/CylinderGrowth.lean@L334
+LEAN_NOTE: proved in the library: RauzyVeech/Cylinder/Growth.lean@L334
 
 NODE: ext.rvStep_piTop_true
 KIND: external
@@ -20120,13 +23592,13 @@ FROZEN_ABI_SHA256: -
 DEPS: -
 ROUTES: -
 ROUTE_FOR: -
-NOTE: proved in the library: RauzyVeech/CylinderGrowth.lean@L80
+NOTE: proved in the library: RauzyVeech/Cylinder/Growth.lean@L80
 TOPOLOGY_STATUS: REVIEWED
 EXTRACTOR: orchestrator (chat session, 2026-11-02)
 REVIEWER: smvzfix8c/m1
 LEAN_STATUS: EXTERNAL
 LEAN_REF: -
-LEAN_NOTE: proved in the library: RauzyVeech/CylinderGrowth.lean@L80
+LEAN_NOTE: proved in the library: RauzyVeech/Cylinder/Growth.lean@L80
 
 NODE: ext.Q_append
 KIND: external
@@ -20302,13 +23774,13 @@ FROZEN_ABI_SHA256: -
 DEPS: -
 ROUTES: -
 ROUTE_FOR: -
-NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L54
+NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L54
 TOPOLOGY_STATUS: REVIEWED
 EXTRACTOR: orchestrator (chat session, 2026-11-02)
 REVIEWER: smvzfix8c/m1
 LEAN_STATUS: EXTERNAL
 LEAN_REF: -
-LEAN_NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L54
+LEAN_NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L54
 
 NODE: ext.floors_disjoint
 KIND: external
@@ -20328,13 +23800,13 @@ FROZEN_ABI_SHA256: -
 DEPS: -
 ROUTES: -
 ROUTE_FOR: -
-NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L1196
+NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L1196
 TOPOLOGY_STATUS: REVIEWED
 EXTRACTOR: orchestrator (chat session, 2026-11-02)
 REVIEWER: smvzfix8c/m1
 LEAN_STATUS: EXTERNAL
 LEAN_REF: -
-LEAN_NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L1196
+LEAN_NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L1196
 
 NODE: ext.floor_Ico
 KIND: external
@@ -20354,13 +23826,13 @@ FROZEN_ABI_SHA256: -
 DEPS: -
 ROUTES: -
 ROUTE_FOR: -
-NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L613
+NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L613
 TOPOLOGY_STATUS: REVIEWED
 EXTRACTOR: orchestrator (chat session, 2026-11-02)
 REVIEWER: smvzfix8c/m1
 LEAN_STATUS: EXTERNAL
 LEAN_REF: -
-LEAN_NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L613
+LEAN_NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L613
 
 NODE: ext.CC_eq_Ico
 KIND: external
@@ -20380,13 +23852,13 @@ FROZEN_ABI_SHA256: -
 DEPS: -
 ROUTES: -
 ROUTE_FOR: -
-NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L582
+NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L582
 TOPOLOGY_STATUS: REVIEWED
 EXTRACTOR: orchestrator (chat session, 2026-11-02)
 REVIEWER: smvzfix8c/m1
 LEAN_STATUS: EXTERNAL
 LEAN_REF: -
-LEAN_NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L582
+LEAN_NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L582
 
 NODE: ext.floor_subset_one
 KIND: external
@@ -20406,13 +23878,13 @@ FROZEN_ABI_SHA256: -
 DEPS: -
 ROUTES: -
 ROUTE_FOR: -
-NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L218
+NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L218
 TOPOLOGY_STATUS: REVIEWED
 EXTRACTOR: orchestrator (chat session, 2026-11-02)
 REVIEWER: smvzfix8c/m1
 LEAN_STATUS: EXTERNAL
 LEAN_REF: -
-LEAN_NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L218
+LEAN_NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L218
 
 NODE: ext.measurableSet_floor
 KIND: external
@@ -20432,13 +23904,13 @@ FROZEN_ABI_SHA256: -
 DEPS: -
 ROUTES: -
 ROUTE_FOR: -
-NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L213
+NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L213
 TOPOLOGY_STATUS: REVIEWED
 EXTRACTOR: orchestrator (chat session, 2026-11-02)
 REVIEWER: smvzfix8c/m1
 LEAN_STATUS: EXTERNAL
 LEAN_REF: -
-LEAN_NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L213
+LEAN_NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L213
 
 NODE: ext.invariant_unitMeas
 KIND: external
@@ -20755,13 +24227,13 @@ FROZEN_ABI_SHA256: -
 DEPS: -
 ROUTES: -
 ROUTE_FOR: -
-NOTE: proved in the library: RauzyVeech/CylinderGrowth.lean@L68
+NOTE: proved in the library: RauzyVeech/Cylinder/Growth.lean@L68
 TOPOLOGY_STATUS: REVIEWED
 EXTRACTOR: orchestrator (chat session, 2026-11-02)
 REVIEWER: smvzfix8c/m1
 LEAN_STATUS: EXTERNAL
 LEAN_REF: -
-LEAN_NOTE: proved in the library: RauzyVeech/CylinderGrowth.lean@L68
+LEAN_NOTE: proved in the library: RauzyVeech/Cylinder/Growth.lean@L68
 
 NODE: ext.vertex_append
 KIND: external
@@ -21093,13 +24565,13 @@ FROZEN_ABI_SHA256: -
 DEPS: -
 ROUTES: -
 ROUTE_FOR: -
-NOTE: proved in the library: RauzyVeech/CylinderRecurrence.lean@L173
+NOTE: proved in the library: RauzyVeech/Cylinder/Recurrence.lean@L173
 TOPOLOGY_STATUS: REVIEWED
 EXTRACTOR: orchestrator (chat session, 2026-11-02)
 REVIEWER: smvzfix8c/m1
 LEAN_STATUS: EXTERNAL
 LEAN_REF: -
-LEAN_NOTE: proved in the library: RauzyVeech/CylinderRecurrence.lean@L173
+LEAN_NOTE: proved in the library: RauzyVeech/Cylinder/Recurrence.lean@L173
 
 NODE: ext.measure_Nbad
 KIND: external
@@ -21119,13 +24591,13 @@ FROZEN_ABI_SHA256: -
 DEPS: -
 ROUTES: -
 ROUTE_FOR: -
-NOTE: proved in the library: RauzyVeech/CylinderRecurrence.lean@L178
+NOTE: proved in the library: RauzyVeech/Cylinder/Recurrence.lean@L178
 TOPOLOGY_STATUS: REVIEWED
 EXTRACTOR: orchestrator (chat session, 2026-11-02)
 REVIEWER: smvzfix8c/m1
 LEAN_STATUS: EXTERNAL
 LEAN_REF: -
-LEAN_NOTE: proved in the library: RauzyVeech/CylinderRecurrence.lean@L178
+LEAN_NOTE: proved in the library: RauzyVeech/Cylinder/Recurrence.lean@L178
 
 NODE: ext.isRenorm_iff
 KIND: external
@@ -21171,13 +24643,13 @@ FROZEN_ABI_SHA256: -
 DEPS: -
 ROUTES: -
 ROUTE_FOR: -
-NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L1076
+NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L1076
 TOPOLOGY_STATUS: REVIEWED
 EXTRACTOR: orchestrator (chat session, 2026-11-02)
 REVIEWER: smvzfix8c/m1
 LEAN_STATUS: EXTERNAL
 LEAN_REF: -
-LEAN_NOTE: proved in the library: RauzyVeech/TowerTiling.lean@L1076
+LEAN_NOTE: proved in the library: RauzyVeech/Tower/Tiling.lean@L1076
 
 NODE: ext.mem_simplexCyl_nil_iff
 KIND: external
@@ -22876,7 +26348,7 @@ Fix reals `a < b`. An **interval exchange on `[a,b)`** is a bijection `T : ℝ �
 
   (I1) `T x = x` for `x ∉ [a,b)`  (in particular `T b = b`);
   (I2) `T '' [a,b) = [a,b)`;
-  (I3) `IsCutSet T a b s` for some finite set `s ⊆ [a,b)` with `a ∈ s` (`CutSet.lean`).
+  (I3) `IsCutSet T a b s` for some finite set `s ⊆ [a,b)` with `a ∈ s` (`CutSet/Basic.lean`).
 
 `IsCutSet` says exactly: `T` is a translation on every cell `[c_i, c_{i+1})` of the partition of
 `[a,b)` by `s = {c_0 = a < c_1 < … < c_{d−1}}`, and the cells tile `[a,b)`
@@ -24027,7 +27499,7 @@ Blueprint 1 and 2 use, and nothing more than,
   `PseudoMetrizableSpace.pi`, `Subtype.borelSpace`, `Prod.borelSpace`, `Pi.borelSpace`
   (the last needs `[Countable D]` and second-countable factors, both available);
 * `birkhoffSum` / `birkhoffAverage` (`Dynamics/BirkhoffSum`), and
-  `IsCutSet`-API from `CutSet.lean`, `CutSetMeasure.lean`, `IET.lean`
+  `IsCutSet`-API from `CutSet/Basic.lean`, `CutSet/Measure.lean`, `IET.lean`
   (`cells_union`, `transl_of_not_separated`, `image_cells_union`, `mkIETFun_inv_left`,
   `isCutSet_mkIETCuts`, `Equiv.IsIET.measure_preimage`, `Assembly.invariant_unitMeas`);
 * for the *appendix only*: a proper affine hyperplane of `ℝ^n` is Lebesgue-null, and Riesz

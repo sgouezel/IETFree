@@ -7,6 +7,7 @@ module
 
 public import IETFree.RauzyVeech.MainComponents
 public import IETFree.RauzyVeech.PosBlock
+public import IETFree.RauzyVeech.RauzyPath
 
 /-!
 # The peeling: bounded positive blocks along a greedy path make the columns coalesce
@@ -15,56 +16,56 @@ Given length vector `lam` whose greedy Rauzy–Veech path runs through entrywise
 matrices with entries in a *fixed* range `[1, M]` at unbounded times, the spread of the
 normalised columns of `Q(pathWord P lam k)` tends to `0`:
 
-  `PosBlock.peel … : ∀ ε > 0, ∀ᶠ k in atTop, ∀ b b' a, |ncol … b a - ncol … b' a| ≤ ε`
+  `peel … : ∀ ε > 0, ∀ᶠ k in atTop, ∀ b b' a, |ncol … b a - ncol … b' a| ≤ ε`
 
 The proof chooses a chain of pairwise disjoint blocks (`Blk`, `exists_chain`) whose words are the
 actual segments of the greedy path (`pathWord_eq_of_mem`: a cylinder determines the greedy word),
-and multiplies the contraction of `PosBlock.spread_append_contract` along the chain
+and multiplies the contraction of `spread_append_contract` along the chain
 (`spread_pow_bound`), using that the spread is antitone under appending letters.  The uniform `M`
 is essential: the factor of a block is `1 - 1/(d·M_block)`, so only a bound common to all the
 blocks makes the product tend to `0`.
 
-No measure theory is involved.  The dictionary to the geometry is `ColShrink.diam_le_of_cols_close`
-read through the spread of `PosBlock.lean`; the passage to the ray condition is
-`IETFree/RauzyVeech/RayPointwise.lean`. -/
+No measure theory is involved.  The dictionary to the geometry is `diam_le_of_cols_close`
+read through the spread of `lean`; the passage to the ray condition is
+`IETFree/RauzyVeech/Ray/Pointwise.lean`. -/
 
-open Filter IETDatum₂
+open Filter IntervalExchange.IETDatum₂
 open scoped NNReal BigOperators
 
 @[expose] public section
 
-namespace PosBlock
+namespace IntervalExchange.RauzyVeech
 
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α] {n : ℕ} [NeZero n]
 
-/-! ## 0. Elementary bounds on the normalised columns -/
+/-! ## 1. Elementary bounds on the normalised columns -/
 
 omit [Nonempty α] in
-theorem ncol_nonneg_aux (P : IETDatum₂ α n) (γ : List Bool) (b a : α) :
-    0 ≤ ColShrink.ncol P γ b a := by
-  simp only [ColShrink.ncol]
+theorem ncol_nonneg (P : IETDatum₂ α n) (γ : List Bool) (b a : α) :
+    0 ≤ ncol P γ b a := by
+  simp only [ncol]
   exact div_nonneg (by exact_mod_cast IETDatum₂.Path.Q_nonneg P γ a b)
-    (le_of_lt (ColShrink.cs_pos P γ b))
+    (le_of_lt (colSum_pos P γ b))
 
 omit [Nonempty α] in
-theorem ncol_le_one_aux (P : IETDatum₂ α n) (γ : List Bool) (b a : α) :
-    ColShrink.ncol P γ b a ≤ 1 := by
-  have hle : (IETDatum₂.Path.Q P γ a b : ℝ) ≤ ColShrink.cs P γ b := by
-    rw [ColShrink.cs]
+theorem ncol_le_one (P : IETDatum₂ α n) (γ : List Bool) (b a : α) :
+    ncol P γ b a ≤ 1 := by
+  have hle : (IETDatum₂.Path.Q P γ a b : ℝ) ≤ colSum P γ b := by
+    rw [colSum]
     refine Finset.single_le_sum (f := fun a' => (IETDatum₂.Path.Q P γ a' b : ℝ)) ?_
       (Finset.mem_univ a)
     intro a' _
     exact_mod_cast IETDatum₂.Path.Q_nonneg P γ a' b
-  simp only [ColShrink.ncol]
-  rw [div_le_one (ColShrink.cs_pos P γ b)]
+  simp only [ncol]
+  rw [div_le_one (colSum_pos P γ b)]
   exact hle
 
 /-- The spread is at most one, at every word. -/
-theorem spread_le_one_aux (P : IETDatum₂ α n) (γ : List Bool) : spread P γ ≤ 1 := by
+theorem spread_le_one (P : IETDatum₂ α n) (γ : List Bool) : spread P γ ≤ 1 := by
   refine Finset.sup'_le _ _ fun p _ => ?_
   refine abs_sub_le_iff.mpr ⟨?_, ?_⟩ <;>
-    linarith [ncol_nonneg_aux P γ p.1 p.2.2, ncol_le_one_aux P γ p.1 p.2.2,
-      ncol_nonneg_aux P γ p.2.1 p.2.2, ncol_le_one_aux P γ p.2.1 p.2.2]
+    linarith [ncol_nonneg P γ p.1 p.2.2, ncol_le_one P γ p.1 p.2.2,
+      ncol_nonneg P γ p.2.1 p.2.2, ncol_le_one P γ p.2.1 p.2.2]
 
 /-! ## 2. Prefixes of the greedy word -/
 
@@ -87,17 +88,6 @@ theorem spread_pathWord_le (P : IETDatum₂ α n) {lam : α → ℝ≥0}
     spread P (IETDatum₂.pathWord P lam l) ≤ spread P (IETDatum₂.pathWord P lam k) := by
   rw [pathWord_eq_append_drop P lam h]
   exact hmono _ _
-
-omit [Nonempty α] in
-/-- A cylinder is contained in the cylinder of any prefix of its word. -/
-theorem simplexCyl_append_left (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
-    (γ δ : List Bool) : IETDatum₂.simplexCyl P (γ ++ δ) ⊆ IETDatum₂.simplexCyl P γ := by
-  induction δ using List.reverseRecOn with
-  | nil => rw [List.append_nil]
-  | append_singleton δ d ih =>
-    intro x hx
-    rw [← List.append_assoc] at hx
-    exact ih (IETDatum₂.simplexCyl_append_subset P hP hn (γ ++ δ) d hx)
 
 omit [Nonempty α] in
 /-- **The greedy word is determined by any cylinder containing the point**: if `x` lies in the
@@ -137,10 +127,18 @@ structure Blk (P : IETDatum₂ α n) (lam : α → ℝ≥0) (M : ℕ) where
   hup : ∀ a b, IETDatum₂.Path.Q (IETDatum₂.vertex P w) v a b ≤ (M : ℤ)
 
 omit [Nonempty α] in
+/-- Two blocks at the same time with the same two words are equal: the membership and the bounds are
+propositions. -/
+@[ext] theorem Blk.ext {P : IETDatum₂ α n} {lam : α → ℝ≥0} {M : ℕ} {A B : Blk P lam M}
+    (hm : A.m = B.m) (hw : A.w = B.w) (hv : A.v = B.v) : A = B := by
+  cases A; cases B
+  simp only at hm hw hv
+  subst hm hw hv
+  rfl
+
+omit [Nonempty α] in
 theorem exists_blk (P : IETDatum₂ α n) (lam : α → ℝ≥0) (M : ℕ)
-    (hbl : HasPositiveBlocks P lam M) :
-    ∀ k : ℕ, ∃ B : Blk P lam M, k ≤ B.m := by
-  intro k
+    (hbl : HasPositiveBlocks P lam M) (k : ℕ) : ∃ B : Blk P lam M, k ≤ B.m := by
   obtain ⟨m, hm, w, v, hlen, hmem, hQ⟩ := hbl k
   exact ⟨⟨m, w, v, hlen, hmem, fun a b => (hQ a b).1, fun a b => (hQ a b).2⟩, hm⟩
 
@@ -157,7 +155,8 @@ omit [Nonempty α] in
 theorem blk_pathWord_start (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     {lam : α → ℝ≥0} {M : ℕ} (B : Blk P lam M) :
     IETDatum₂.pathWord P lam B.m = B.w := by
-  have h := pathWord_eq_of_mem P hP hn B.w (simplexCyl_append_left P hP hn B.w B.v B.hmem)
+  have h := pathWord_eq_of_mem P hP hn B.w
+    (IETDatum₂.simplexCyl_append_prefix P hP hn B.w B.v B.hmem)
   rwa [B.hlen] at h
 
 omit [Nonempty α] in
@@ -213,18 +212,16 @@ theorem spread_pow_bound (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤
       spread P (γ ++ δ) ≤
         (1 - 1 / ((Fintype.card α : ℝ) * (M : ℝ))) * spread P γ)
     (B : ℕ → Blk P lam M) (hB : ∀ j, (B j).m + (B j).v.length ≤ (B (j + 1)).m)
-    (hc0 : 0 ≤ 1 - 1 / ((Fintype.card α : ℝ) * (M : ℝ))) :
-    ∀ (N k : ℕ), (B N).m + (B N).v.length ≤ k →
-      spread P (IETDatum₂.pathWord P lam k) ≤
-        (1 - 1 / ((Fintype.card α : ℝ) * (M : ℝ))) ^ (N + 1) := by
-  intro N
-  induction N with
+    (hc0 : 0 ≤ 1 - 1 / ((Fintype.card α : ℝ) * (M : ℝ)))
+    (N k : ℕ) (hk : (B N).m + (B N).v.length ≤ k) :
+    spread P (IETDatum₂.pathWord P lam k) ≤
+      (1 - 1 / ((Fintype.card α : ℝ) * (M : ℝ))) ^ (N + 1) := by
+  induction N generalizing k with
   | zero =>
-    intro k hk
     have h6 : spread P (IETDatum₂.pathWord P lam 0) ≤ 1 := by
-      have h0 : IETDatum₂.pathWord P lam 0 = ([] : List Bool) := rfl
+      have h0 : IETDatum₂.pathWord P lam 0 = ([] : List Bool) := (rfl)
       rw [h0]
-      exact spread_le_one_aux P []
+      exact spread_le_one P []
     have h5 : spread P (IETDatum₂.pathWord P lam ((B 0).m)) ≤ 1 :=
       le_trans (spread_pathWord_le P hmono (Nat.zero_le _)) h6
     calc spread P (IETDatum₂.pathWord P lam k)
@@ -236,7 +233,6 @@ theorem spread_pow_bound (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤
       _ = (1 - 1 / ((Fintype.card α : ℝ) * (M : ℝ))) ^ (0 + 1) := by
           rw [pow_one, mul_one]
   | succ N ih =>
-    intro k hk
     have hNK : (B N).m + (B N).v.length ≤ (B (N + 1)).m := hB N
     calc spread P (IETDatum₂.pathWord P lam k)
         ≤ (1 - 1 / ((Fintype.card α : ℝ) * (M : ℝ))) *
@@ -257,22 +253,16 @@ theorem spread_pow_bound (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤
 spread tends to `0`.  The two `spread` inequalities are taken as hypotheses. -/
 theorem peel (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) {M : ℕ} (hM : 0 < M)
     {lam : α → ℝ≥0}
-    (hstop : ∀ k, lam ∉ IETDatum₂.cylStop P (IETDatum₂.pathWord P lam k))
     (hbl : HasPositiveBlocks P lam M)
     (hmono : ∀ (γ δ : List Bool), spread P (γ ++ δ) ≤ spread P γ)
     (hcontr : ∀ (γ δ : List Bool),
       (∀ a b, 1 ≤ IETDatum₂.Path.Q (IETDatum₂.vertex P γ) δ a b ∧
         IETDatum₂.Path.Q (IETDatum₂.vertex P γ) δ a b ≤ (M : ℤ)) →
       spread P (γ ++ δ) ≤
-        (1 - 1 / ((Fintype.card α : ℝ) * (M : ℝ))) * spread P γ) :
-    ∀ ε > 0, ∀ᶠ k in atTop, ∀ b b' a,
-      |ColShrink.ncol P (IETDatum₂.pathWord P lam k) b a
-        - ColShrink.ncol P (IETDatum₂.pathWord P lam k) b' a| ≤ ε := by
-  -- `hstop` is not needed by the peelling: by `pathWord_eq_of_mem` membership in a child cylinder
-  -- already determines the branch, and the two children are disjoint.  The `have` is what keeps
-  -- the unused hypothesis mentioned, so that the unused-variable linter stays quiet.
-  have _hstop := hstop
-  intro ε hε
+        (1 - 1 / ((Fintype.card α : ℝ) * (M : ℝ))) * spread P γ)
+    (ε : ℝ) (hε : ε > 0) : ∀ᶠ k in atTop, ∀ b b' a,
+      |ncol P (IETDatum₂.pathWord P lam k) b a
+        - ncol P (IETDatum₂.pathWord P lam k) b' a| ≤ ε := by
   have hcard : (1 : ℝ) ≤ (Fintype.card α : ℝ) := by
     have h : 1 ≤ Fintype.card α := Fintype.card_pos
     exact_mod_cast h
@@ -309,20 +299,19 @@ without further adaptation. -/
 /-- **The peeling, in the shape of the two separate bounds** of the contraction lemma. -/
 theorem peel_of_contract (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) {M : ℕ}
     (hM : 0 < M) {lam : α → ℝ≥0}
-    (hstop : ∀ k, lam ∉ IETDatum₂.cylStop P (IETDatum₂.pathWord P lam k))
     (hbl : HasPositiveBlocks P lam M)
     (hmono : ∀ (γ δ : List Bool), spread P (γ ++ δ) ≤ spread P γ)
     (hcontr : ∀ (γ δ : List Bool),
       (∀ a b, 1 ≤ IETDatum₂.Path.Q (IETDatum₂.vertex P γ) δ a b) →
       (∀ a b, IETDatum₂.Path.Q (IETDatum₂.vertex P γ) δ a b ≤ (M : ℤ)) →
       spread P (γ ++ δ) ≤
-        (1 - 1 / ((Fintype.card α : ℝ) * (M : ℝ))) * spread P γ) :
-    ∀ ε > 0, ∀ᶠ k in atTop, ∀ b b' a,
-      |ColShrink.ncol P (IETDatum₂.pathWord P lam k) b a
-        - ColShrink.ncol P (IETDatum₂.pathWord P lam k) b' a| ≤ ε :=
-  peel P hP hn hM hstop hbl hmono fun γ δ h =>
-    hcontr γ δ (fun a b => (h a b).1) (fun a b => (h a b).2)
+        (1 - 1 / ((Fintype.card α : ℝ) * (M : ℝ))) * spread P γ)
+    (ε : ℝ) (hε : ε > 0) : ∀ᶠ k in atTop, ∀ b b' a,
+      |ncol P (IETDatum₂.pathWord P lam k) b a
+        - ncol P (IETDatum₂.pathWord P lam k) b' a| ≤ ε :=
+  peel P hP hn hM hbl hmono (fun γ δ h =>
+    hcontr γ δ (fun a b => (h a b).1) (fun a b => (h a b).2)) ε hε
 
-end PosBlock
+end IntervalExchange.RauzyVeech
 
 end

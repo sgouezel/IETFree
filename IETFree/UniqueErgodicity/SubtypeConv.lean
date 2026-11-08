@@ -5,8 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.UniqueErgodicity.MeasPrep
-public import IETFree.UniqueErgodicity.TransferConv
+public import IETFree.UniqueErgodicity.Transfer.Conv
 
 /-!
 # Restricting the germ map to its invariant part
@@ -19,7 +18,7 @@ the Birkhoff averages of the restricted map of the subtype, and transfers unifor
 accordingly.
 
 Nothing here is mathematical: it is the `Subtype` bookkeeping that the assembly in
-`UniqueErgodicity.IET` needs, kept separate so that it is proved once.
+`UniqueErgodicity.Theorem2` needs, kept separate so that it is proved once.
 -/
 
 @[expose] public section
@@ -27,7 +26,7 @@ Nothing here is mathematical: it is the `Subtype` bookkeeping that the assembly 
 open MeasureTheory Filter
 open scoped BigOperators
 
-namespace IETFree.UniqueErgodicity
+namespace IntervalExchange.UniqueErgodicity
 
 variable {D : Set ℝ}
 
@@ -67,15 +66,14 @@ the form in which Tool 1's conclusion is consumed by `uniformBirkhoff_of_proj`. 
 theorem forall_mem_rightPart_of_subtype (G : SplitI D → SplitI D)
     (hG : Set.MapsTo G (SplitI.rightPart D) (SplitI.rightPart D)) (ψ : SplitI D → ℝ) {c : ℝ}
     (h : ∀ ε : ℝ, 0 < ε → ∃ N : ℕ, 0 < N ∧ ∀ n ≥ N, ∀ w : ↥(SplitI.rightPart D),
-      |birkhoffAverage ℝ (restrictTo G hG) (fun w => ψ w.1) n w - c| ≤ ε) :
-    ∀ ε : ℝ, 0 < ε → ∃ N : ℕ, 0 < N ∧ ∀ n ≥ N, ∀ z ∈ SplitI.rightPart D,
+      |birkhoffAverage ℝ (restrictTo G hG) (fun w => ψ w.1) n w - c| ≤ ε)
+    (ε : ℝ) (hε : 0 < ε) : ∃ N : ℕ, 0 < N ∧ ∀ n ≥ N, ∀ z ∈ SplitI.rightPart D,
       |birkhoffAverage ℝ G ψ n z - c| ≤ ε := by
-  intro ε hε
   obtain ⟨N, hN, hN'⟩ := h ε hε
   exact ⟨N, hN, fun n hn z hz => by
     rw [birkhoffAverage_restrictTo G hG ψ n z hz]
     exact hN' n hn ⟨z, hz⟩⟩
 
-end IETFree.UniqueErgodicity
+end IntervalExchange.UniqueErgodicity
 
 end

@@ -5,7 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import Mathlib
+public import Mathlib.Data.List.OfFn
 
 /-!
 # The word read by an infinite type sequence
@@ -17,10 +17,7 @@ cylinder arguments use (`simplexCyl P (pfx p k)` is antitone in `k`).
 
 @[expose] public section
 
-open MeasureTheory Set Filter
-open scoped BigOperators ENNReal NNReal Topology
-
-namespace PrefixWord
+namespace IntervalExchange.RauzyVeech
 
 /-- The word read by the infinite type sequence `p` during the first `n` steps. -/
 noncomputable def pfx (p : ℕ → Bool) (n : ℕ) : List Bool :=
@@ -30,6 +27,6 @@ theorem pfx_succ (p : ℕ → Bool) (n : ℕ) : pfx p (n + 1) = pfx p n ++ [p n]
   rw [pfx, List.ofFn_succ', List.concat_eq_append]
   congr 1
 
-end PrefixWord
+end IntervalExchange.RauzyVeech
 
 end

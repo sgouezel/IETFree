@@ -6,8 +6,6 @@ Authors: Sébastien Gouëzel
 module
 
 public import IETFree.RauzyVeech.Affine
-public import IETFree.RauzyVeech.SimplexAe
-public import IETFree.TopBotFormalism
 
 /-!
 # The `d = 1` case of the root theorem
@@ -22,8 +20,10 @@ exchange `mkIET1' lam π h` is the identity on the simplex, so rigidity holds wi
 
 open MeasureTheory Filter
 open scoped NNReal ENNReal BigOperators
+open IntervalExchange.RauzyVeech
+open IntervalExchange.IET
 
-namespace IETFree.Rigidity
+namespace IntervalExchange.Rigidity
 
 /-! ## 1. The one-letter translation vector is zero -/
 
@@ -44,23 +44,21 @@ theorem translationVector_fin_one (π : Equiv.Perm (Fin 1)) (lam : Fin 1 → ℝ
 
 /-! ## 2. The one-letter exchange is the identity on the simplex -/
 
-theorem mkIETFun_fin_one {lam : Fin 1 → ℝ≥0} (h : lam ∈ simplexOn (Fin 1))
+theorem mkIETFun_fin_one {lam : Fin 1 → ℝ≥0} (h : lam ∈ simplex (Fin 1))
     (π : Equiv.Perm (Fin 1)) (x : ℝ) : mkIETFun lam π 0 x = x := by
-  have hsum : ∑ i, (lam i : ℝ) = 1 := by
-    rw [← NNReal.coe_sum, h]
-    simp
+  have hsum : ∑ i, (lam i : ℝ) = 1 := sum_coe_eq_one h
   unfold mkIETFun
   by_cases hx : x ∈ Set.Ico (0 : ℝ) (0 + ∑ i, (lam i : ℝ))
   · rw [dite_eq_left hx, translationVector_fin_one, add_zero]
   · rw [dite_eq_right hx]
 
-theorem mkIETFun_fin_one_eq_id {lam : Fin 1 → ℝ≥0} (h : lam ∈ simplexOn (Fin 1))
+theorem mkIETFun_fin_one_eq_id {lam : Fin 1 → ℝ≥0} (h : lam ∈ simplex (Fin 1))
     (π : Equiv.Perm (Fin 1)) : mkIETFun lam π 0 = id :=
   funext (mkIETFun_fin_one h π)
 
 /-! ## 3. The `d = 1` case of the root, with the witnesses `q n = n`, `t = 0`, `B n = Ico 0 1` -/
 
-theorem isRigidByTranslations_fin_one {lam : Fin 1 → ℝ≥0} (hm : lam ∈ simplex 1)
+theorem isRigidByTranslations_fin_one {lam : Fin 1 → ℝ≥0} (hm : lam ∈ simplex (Fin 1))
     (π : Equiv.Perm (Fin 1)) : IsRigidByTranslations (mkIET1' lam π hm) := by
   have hid := mkIETFun_fin_one_eq_id hm π
   refine ⟨fun n => n, fun _ => (0 : ℝ), fun _ => Set.Ico (0 : ℝ) 1,
@@ -70,26 +68,23 @@ theorem isRigidByTranslations_fin_one {lam : Fin 1 → ℝ≥0} (hm : lam ∈ si
   · intro n
     exact measurableSet_Ico
   · have hval : unitMeas.real (Set.Ico (0 : ℝ) 1) = 1 := by
-      rw [unitMeas, Measure.real,
-        Measure.restrict_apply measurableSet_Ico, Set.inter_self, Real.volume_Ico]
-      norm_num
+      rw [Measure.real, unitMeas_Ico, ENNReal.toReal_one]
     simp only [hval]
     exact tendsto_const_nhds
   · intro n x _
     have hfun : ⇑(mkIET1' lam π hm) = mkIETFun lam π 0 := coe_mkIET1' lam π hm
-    rw [IET.pow_apply_iterate, hfun, hid]
+    rw [pow_apply_iterate, hfun, hid]
     simp
 
 /-! ## 4. The a.e. form over `simplexVolume 1`, i.e. the `d = 1` instance of the root -/
 
 theorem ae_fin_one (π : Equiv.Perm (Fin 1)) :
-    ∀ᵐ lam ∂(simplexVolume 1), ∀ (hm : lam ∈ simplex 1),
+    ∀ᵐ lam ∂(simplexVolume 1), ∀ (hm : lam ∈ simplex (Fin 1)),
       IsRigidByTranslations (mkIET1' lam π hm) := by
   rw [← simplexVolumeOn_fin 1]
-  filter_upwards [ae_mem_simplexOn_of_nonempty (α := Fin 1)] with lam hlam hm
+  filter_upwards [ae_mem_simplex_of_nonempty (α := Fin 1)] with lam hlam hm
   exact isRigidByTranslations_fin_one hm π
 
-
-end IETFree.Rigidity
+end IntervalExchange.Rigidity
 
 end

@@ -1,8 +1,18 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "IETFree.ChallengeSolved",
-  "theorem_names": ["coe_mkIETEquiv", "main"],
-  "definition_names": ["mkIETEquiv"],
-  "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
-  "enable_nanoda": true
+  "theorem_names": [
+    "IntervalExchange.coe_mkIETEquiv",
+    "IntervalExchange.main",
+    "IntervalExchange.Pair.exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one"
+  ],
+  "definition_names": [
+    "IntervalExchange.mkIETEquiv"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": false
 }

@@ -39,20 +39,19 @@ this to the set of vertices reachable *from* `Q` (which is contained in `R` when
 
 @[expose] public section
 
+open IntervalExchange.IETDatum₂
 
 -- `[Fintype α]`/`[DecidableEq α]`/`[NeZero n]` are section variables used in the proofs but not
 -- in every statement below; the convention here silences the unused-hypothesis lints.
 
-open IETDatum₂
-
-namespace RauzyReach
+namespace IntervalExchange.RauzyVeech
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
 /-! ## 1. The vertex type is finite -/
 
 /-- The vertices of the Rauzy diagram, i.e. the combinatorial data, form a finite type. -/
-noncomputable instance IETDatum₂.instFintype : Fintype (IETDatum₂ α n) :=
+noncomputable instance instFintypeIETDatum₂ : Fintype (IETDatum₂ α n) :=
   Fintype.ofEquiv ((α ≃ Fin n) × (α ≃ Fin n))
     { toFun := fun p => ⟨p.1, p.2⟩
       invFun := fun P => (P.piTop, P.piBottom)
@@ -60,7 +59,7 @@ noncomputable instance IETDatum₂.instFintype : Fintype (IETDatum₂ α n) :=
       right_inv := fun _ => rfl }
 
 /-- Vertices are compared classically (they carry two bijections, so no computation is involved). -/
-noncomputable instance IETDatum₂.instDecidableEq : DecidableEq (IETDatum₂ α n) :=
+noncomputable instance instDecidableEqIETDatum₂ : DecidableEq (IETDatum₂ α n) :=
   Classical.decEq _
 
 /-! ## 2. The inverse Rauzy moves -/
@@ -70,31 +69,22 @@ omit [DecidableEq α] in
 theorem pivot_fixed_true (P : IETDatum₂ α n) :
     (P.rvStep true).piBottom (P.last true) = P.piBottom (P.last true) := by
   rw [IETDatum₂.rvStep_piBottom_true]
-  exact IETDatum₂.insertEquiv_apply_le (le_refl _)
+  exact insertEquiv_apply_le (le_refl _)
 
 omit [DecidableEq α] in
 /-- The pivot value of the step of type `false` is fixed by the step. -/
 theorem pivot_fixed_false (P : IETDatum₂ α n) :
     (P.rvStep false).piTop (P.last false) = P.piTop (P.last false) := by
   rw [IETDatum₂.rvStep_piTop_false]
-  exact IETDatum₂.insertEquiv_apply_le (le_refl _)
+  exact insertEquiv_apply_le (le_refl _)
 
 omit [Fintype α] [DecidableEq α] in
 /-- A helper for the cancellation of the insertion in the two injectivity proofs. -/
 theorem cancel_of_trans_insertEquiv {p : Fin n} {e₁ e₂ : α ≃ Fin n}
-    (h : e₁.trans (IETDatum₂.insertEquiv p) = e₂.trans (IETDatum₂.insertEquiv p)) : e₁ = e₂ :=
-  Equiv.ext (fun a => (IETDatum₂.insertEquiv p).injective (by
+    (h : e₁.trans (insertEquiv p) = e₂.trans (insertEquiv p)) : e₁ = e₂ :=
+  Equiv.ext (fun a => (insertEquiv p).injective (by
     have := congrArg (fun (u : α ≃ Fin n) => u a) h
     simpa [Equiv.trans_apply] using this))
-
-omit [DecidableEq α] [NeZero n] in
-/-- The equality of the two vertices, from the equality of their two orders. -/
-theorem eq_of_orders {P Q : IETDatum₂ α n} (htop : P.piTop = Q.piTop)
-    (hbot : P.piBottom = Q.piBottom) : P = Q := by
-  cases P
-  cases Q
-  simp only [IETDatum₂.mk.injEq]
-  exact ⟨htop, hbot⟩
 
 omit [DecidableEq α] in
 /-- **The inverse Rauzy move, type `true`**: the arrow `Q ↦ Q.rvStep true` is injective. -/
@@ -102,8 +92,7 @@ theorem rvStep_true_injective : Function.Injective (fun Q : IETDatum₂ α n => 
   intro P Q hPQ
   simp only [] at hPQ
   have htop : P.piTop = Q.piTop := by
-    change (P.rvStep true).piTop = (Q.rvStep true).piTop
-    rw [hPQ]
+    simpa only [IETDatum₂.rvStep_piTop_true] using congrArg IETDatum₂.piTop hPQ
   have hlast : P.last true = Q.last true := by
     rw [IETDatum₂.last_true, IETDatum₂.last_true]
     rw [htop]
@@ -113,11 +102,11 @@ theorem rvStep_true_injective : Function.Injective (fun Q : IETDatum₂ α n => 
     rw [hPQ] at h1
     rw [← h1, hlast]
     exact h2
-  have hmaineq : P.piBottom.trans (IETDatum₂.insertEquiv (P.piBottom (P.last true))) =
-      Q.piBottom.trans (IETDatum₂.insertEquiv (Q.piBottom (Q.last true))) := by
+  have hmaineq : P.piBottom.trans (insertEquiv (P.piBottom (P.last true))) =
+      Q.piBottom.trans (insertEquiv (Q.piBottom (Q.last true))) := by
     rw [← IETDatum₂.rvStep_piBottom_true, ← IETDatum₂.rvStep_piBottom_true, hPQ]
   rw [hbot] at hmaineq
-  exact eq_of_orders htop (cancel_of_trans_insertEquiv hmaineq)
+  exact IETDatum₂.ext htop (cancel_of_trans_insertEquiv hmaineq)
 
 omit [DecidableEq α] in
 /-- **The inverse Rauzy move, type `false`**: the arrow `Q ↦ Q.rvStep false` is injective. -/
@@ -125,8 +114,7 @@ theorem rvStep_false_injective : Function.Injective (fun Q : IETDatum₂ α n =>
   intro P Q hPQ
   simp only [] at hPQ
   have hbot : P.piBottom = Q.piBottom := by
-    change (P.rvStep false).piBottom = (Q.rvStep false).piBottom
-    rw [hPQ]
+    simpa only [IETDatum₂.rvStep_piBottom_false] using congrArg IETDatum₂.piBottom hPQ
   have hlast : P.last false = Q.last false := by
     rw [IETDatum₂.last_false, IETDatum₂.last_false]
     rw [hbot]
@@ -136,11 +124,11 @@ theorem rvStep_false_injective : Function.Injective (fun Q : IETDatum₂ α n =>
     rw [hPQ] at h1
     rw [← h1, hlast]
     exact h2
-  have hmaineq : P.piTop.trans (IETDatum₂.insertEquiv (P.piTop (P.last false))) =
-      Q.piTop.trans (IETDatum₂.insertEquiv (Q.piTop (Q.last false))) := by
+  have hmaineq : P.piTop.trans (insertEquiv (P.piTop (P.last false))) =
+      Q.piTop.trans (insertEquiv (Q.piTop (Q.last false))) := by
     rw [← IETDatum₂.rvStep_piTop_false, ← IETDatum₂.rvStep_piTop_false, hPQ]
   rw [htop] at hmaineq
-  exact eq_of_orders (cancel_of_trans_insertEquiv hmaineq) hbot
+  exact IETDatum₂.ext (cancel_of_trans_insertEquiv hmaineq) hbot
 
 omit [DecidableEq α] in
 /-- **The inverse Rauzy move**: for each of the two letters, the arrow is injective. -/
@@ -267,7 +255,7 @@ theorem exists_path_between (P : IETDatum₂ α n) :
   exact Finset.le_sup (s := Finset.univ)
     (f := fun p : IETDatum₂ α n × IETDatum₂ α n => (f p.1 p.2).length) (Finset.mem_univ (Q, Q'))
 
-/-! ## 7. A concrete return word, for `BoundedLag.padWord`  The statements above are existential.
+/-! ## 7. A concrete return word, for `padWord`  The statements above are existential.
 For the use in a bounded-lag/composition argument one needs an actual choice of returning word
 together with a bound that holds for all vertices at once; that is `returnWord` below, with the
 vertex `IETDatum₂.vertex P w` in place of `π_w`. -/
@@ -287,6 +275,6 @@ theorem returnWord_spec {P Q : IETDatum₂ α n} (h : Reach P Q) :
   rw [h1]
   exact Classical.choose_spec (reach_back (P := P) h)
 
-end RauzyReach
+end IntervalExchange.RauzyVeech
 
 end

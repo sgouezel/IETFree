@@ -6,7 +6,7 @@
 # current notes are NOTES.md and the full ledger is HISTORY.md; `lake build` builds the tree
 # (incrementally, in parallel);
 # ./SlowBuild.sh is the slow thorough check: the same modules with plain `lean`, in dependency order,
-# plus the axiom report, the sorry count and the comparator stand-in.  Counts and line references were
+# plus the axiom report, the sorry count and the comparator gate.  Counts and line references were
 # checked against the tree at the time of writing.
 
 version: "v0.4"
@@ -25,12 +25,18 @@ project:
     trivial on a block, obtained by rescaling the block and applying Theorem 2.6 to it), and the
     assembly of the per-block words into a single nontrivial word. Masur–Veech unique ergodicity and
     Veech's rigidity are proved as well, by the Rauzy–Veech induction (`IETFree/RauzyVeech/`,
-    `IETFree/Rigidity/`, `IETFree/UniqueErgodicity/`), so the main theorem is unconditional.
+    `IETFree/Rigidity/`, `IETFree/UniqueErgodicity/`), so the main theorem is unconditional. The
+    remark that follows the main theorem — the relation of a trivial word is robust, so the pairs
+    that do not generate a free group contain an open set of full measure — is proved in
+    `IETFree/Pair/RobustRelation/`: the symbolic data of an arbitrary word and the robustness at a
+    point of the conull set `Ω'` (`evalWord_eventually_eq_one`), and the open conull set in the free
+    coordinates (`exists_isOpen_subset_hasRelation`) and on `Δ_π × Δ_σ`
+    (`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`).
   authors:
     - "Sébastien Gouëzel"
   authors_note: >-
-    `authors` lists the human author of the project: the paper, the mathematical statements, the
-    frozen interfaces and the build are theirs. The proof scripts themselves were written by AI agents
+    `authors` lists the human author of the project: the paper, the mathematical statements and the
+    design of the library are theirs. The proof scripts themselves were written by AI agents
     inside SAIR Open Math OS; that is what the `automation` block records. 
   responsible_maintainers:
     - "Sébastien Gouëzel"
@@ -48,11 +54,12 @@ sources:
       Theorem 1.1 is formalized unconditionally: the two results it quotes from the literature
       (a.e. unique ergodicity and a.e. rigidity by translations of an irreducible exchange) are
       proved in the library, by the Rauzy–Veech induction rather than by the arguments of their
-      original papers — see the Masur and Veech entries below and `status.main_results`. Lemma 1.2
+      original papers — see the Masur and Veech entries below and `status.main_results`. Lemma 1.3
       (an irrational rotation and an interval exchange do not generate a free group) is an
-      illustration in the introduction and is not formalized, nor is the remark after Theorem 1.1
-      (that the set of good pairs is open and of full measure). See `fidelity.divergences` for the
-      departures in form.
+      illustration in the introduction and is not formalized; the remark after Theorem 1.1 (that
+      the set of good pairs is open and of full measure) *is* formalized, in
+      `IETFree/Pair/RobustRelation/` with its two conclusions in `IETFree/ChallengeSolved.lean`.
+      See `fidelity.divergences` for the departures in form.
 
   # The results the paper quotes from the literature: their statements are proved here, by the
   # Rauzy–Veech induction (not by these papers' arguments), so `relationship: formalizes` records the
@@ -66,8 +73,8 @@ sources:
     location: "unique ergodicity of almost every interval exchange with an irreducible permutation"
     note: >-
       One of the two original sources of `masurVeech`; its statement is `masurVeech_ae_unique_invariant`
-      (`IETFree/UniqueErgodicity/MainTheorem.lean`), proved by the Rauzy–Veech induction, and `masurVeech`
-      (`IETFree/Pair/Irreducible.lean`) is its Birkhoff-averages form.
+      (`IETFree/UniqueErgodicity/MainTheorem.lean`), proved by the Rauzy–Veech induction, and
+      `masurVeech` (`IETFree/Pair/Irreducible.lean`) states it for the exchange `mkIET1 lam π`.
 
   - title: "Gauss measures for transformations on the space of interval exchange maps"
     authors:
@@ -88,7 +95,69 @@ sources:
     note: >-
       The two theorems the paper cites, in the paragraph after Definition 2.1 and in the proof of
       Proposition 2.4. Their statements are proved here: `masurVeech`
-      (`IETFree/Pair/Irreducible.lean`) and `veechRigidity` (same file).
+      (`IETFree/Pair/Irreducible.lean`) and `veechRigidity` (same file).  The rigidity half is not
+      only the statement: `IETFree/Rigidity/` follows this paper's own argument — its (3.1)–(3.2)
+      in `Rigidity/Matrix.lean` and its (3.3)–(3.8) in `Rigidity/RigidSet.lean` — so the comment
+      above, that the statements are proved by other arguments than their papers', holds for the
+      unique-ergodicity half only.
+
+  # The documents the Rauzy–Veech development *follows*: it is their arguments, in this library's
+  # language, rather than statements of theirs that the tree formalises.  `location:` says which
+  # directories use them, and the note fixes the short form the Lean docstrings use, so that a
+  # pointer in the code names its document.
+  - title: "Continued fraction algorithms for interval exchange maps: an introduction"
+    authors:
+      - "Jean-Christophe Yoccoz"
+    id: "doi:10.1007/3-540-31347-8_12 (Frontiers in Number Theory, Physics, and Geometry I, Springer, 2006, 401–435)"
+    type: "article"
+    relationship: "adapts"
+    location: "§2–§4.4 (pp. 3–20): the Rauzy–Veech induction, the towers and the ray criterion; used by `IETFree/RauzyVeech/`"
+    note: >-
+      The source of the induction the whole of `IETFree/RauzyVeech/` follows, and of the Masur–Veech
+      proof the library gives (`masurVeech_ae_unique_invariant`).  §5–§6 of the survey
+      (suspensions, the Teichmüller flow, Zorich acceleration) are not used, nor is §3.4 (the Denjoy
+      model).  In the Lean
+      docstrings this document is called **"Yoccoz"**, and its page numbers (p. 13, p. 16, …) are the
+      survey's own.
+
+  - title: "Exponential mixing for the Teichmüller flow"
+    authors:
+      - "Artur Avila"
+      - "Sébastien Gouëzel"
+      - "Jean-Christophe Yoccoz"
+    id: "doi:10.1007/s10240-006-0001-5 (Publ. Math. Inst. Hautes Études Sci. 104 (2006), 143–211)"
+    type: "article"
+    relationship: "adapts"
+    location: "Appendix A (the graded induction: the distortion estimate behind the rich path); used by `IETFree/RauzyVeech/RichPath/`"
+    note: >-
+      The graded induction of the appendix is what makes the greedy Rauzy–Veech path *rich*, which
+      is the input the ray criterion needs.  In the Lean docstrings this document is called
+      **"AGY"**; its level statements `Γ₁`, `Γ₂`–`Γ₄` are the appendix's.
+
+  - title: "Simplicial systems for interval exchange maps and measured foliations"
+    authors:
+      - "Steven P. Kerckhoff"
+    id: "Ergodic Theory Dynam. Systems 5 (1985), no. 2, 257–271"
+    type: "article"
+    relationship: "adapts"
+    location: "the criterion behind `RayCondition` (`IETFree/RauzyVeech/`): positive blocks on a nested sequence of simplices imply unique ergodicity"
+    note: >-
+      The ray criterion the library uses is Kerckhoff's, in the form the two documents above state
+      it.  The docstrings name it "Kerckhoff's criterion" where it is used.
+
+  - title: "The cohomological equation for Roth type interval exchange maps"
+    authors:
+      - "Stefano Marmi"
+      - "Pierre Moussa"
+      - "Jean-Christophe Yoccoz"
+    id: "J. Amer. Math. Soc. 18 (2005), 823–872"
+    type: "article"
+    relationship: "background"
+    location: "the top/bottom permutation formalism of `IETDatum₂` (`piBottom = π₀`, `piTop = π₁`)"
+    note: >-
+      The two-permutation presentation the library is built on (`IETFree/TopBotFormalism.lean`) is
+      this paper's (and Yoccoz's, §2); it is cited in the docstrings as the "Marmi–Moussa–Yoccoz
+      formalism".
 
 classification:
   arxiv:
@@ -103,25 +172,30 @@ classification:
 
 status:
   scope: >-
-    The whole of the paper, unconditionally, and with Lemma 1.2 and the remark after Theorem 1.1 as
-    the only omissions.  All 114 modules of IETFree/ are sorry-free, and every one of them is used
-    in the proof of `main` (the library was pruned along the declaration dependency graph); the only
-    three sorries in the
-    tree are the deliberate statements of the comparator challenge `Challenge.lean` (the definition
-    hole `mkIETEquiv`, and the statements `coe_mkIETEquiv` and `main`).  The challenge is one
+    The whole of the paper, unconditionally, Lemma 1.3 excepted.  All 120 modules of `IETFree/` are
+    sorry-free; every one of them is used in the proof of `main` or, for the remark's own modules,
+    proved from it (`ChallengeSolved` imports them and feeds `main` into their assembly), the library
+    having been pruned along the declaration dependency graph.  The only four sorries in the tree are
+    the deliberate statements of the comparator challenge `Challenge.lean` (the definition hole
+    `mkIETEquiv`, and the statements `coe_mkIETEquiv`, `main` and the remark's conclusion
+    `exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`).  The challenge is one
     self-contained file (`import Mathlib` only) which declares, verbatim, the library declarations its
     statement uses.  `IETFree/ChallengeSolved.lean` is the solution: it fills the hole with the
     library's `mkIETEquiv`, and proves `main` — Theorem 1.1 in the challenge's words — from the
     library, with no hypothesis left.  The two results the paper quotes from the literature are
     proved, by the Rauzy–Veech induction: unique ergodicity in `IETFree/RauzyVeech/` and
-    `IETFree/UniqueErgodicity/MainTheorem.lean` (`masurVeech_ae_unique_invariant`), with its strong form (uniform
-    Birkhoff convergence, `uniformBirkhoff_of_uniqueErgodic`) and Lemma 2.9 in
-    `IETFree/UniqueErgodicity/`; rigidity by translations in `IETFree/Rigidity/`
-    (`veechRigidity`).  `Comparator/Check.lean` runs the
-    comparator's comparison locally on the two compiled modules, and `SlowBuild.sh` fails if it does not
-    pass.
-  sorry_count: 0
-  sorry_in_definitions: 0
+    `IETFree/UniqueErgodicity/MainTheorem.lean` (`masurVeech_ae_unique_invariant`), with its strong
+    form (uniform Birkhoff convergence, `uniformBirkhoff_of_uniqueErgodic`) and Lemma 2.9 in
+    `IETFree/UniqueErgodicity/`; rigidity by translations in `IETFree/Rigidity/`, with
+    `veechRigidity` itself in `IETFree/Pair/Irreducible.lean`.  `lake comparator` is the gate: it
+    checks the challenge against the solution declaration by declaration — it has been run on this
+    tree, with the three targets of `comparator.json`, and passes — and `SlowBuild.sh` fails if it
+    does not pass.
+  # The four `sorryAx` of the tree are deliberate and all in `Challenge.lean`: the definition hole
+  # `mkIETEquiv`, and the statements `coe_mkIETEquiv`, `main` and the remark's conclusion
+  # `exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`.  No other module has one.
+  sorry_count: 4
+  sorry_in_definitions: 1
   axioms:
     - "propext"
     - "Classical.choice"
@@ -148,8 +222,11 @@ status:
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
       note: >-
-        The same, in the Birkhoff-averages form that `ChallengeSolved` consumes: uniqueness of the
-        invariant measure on [0, 1) gives uniform convergence of the Birkhoff averages.
+        The same statement in the library's vocabulary, for the exchange `mkIET1 lam π`: almost every
+        length vector gives a uniquely ergodic exchange, in the sense of Definition 2.1 (a unique
+        invariant probability measure carried by `[0, 1)`).  The uniform Birkhoff-average form is a
+        separate predicate, `UniformBirkhoff`, *proved* from this one
+        (`uniformBirkhoff_of_uniqueErgodic`) and assumed nowhere.
     - declaration: "veechRigidity"
       file: "IETFree/Pair/Irreducible.lean"
       sorry_count: 0
@@ -158,7 +235,7 @@ status:
         The literature's a.e. rigidity by translations, proved by the Rauzy–Veech induction (the
         rigid step and the hitting lemma).
     - declaration: "main_theorem_of_blocks"
-      file: "IETFree/Pair/BlockLemma.lean"
+      file: "IETFree/Pair/Block/Lemma.lean"
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
       note: >-
@@ -178,6 +255,25 @@ status:
       note: >-
         Proposition 2.5. Its proof is an elementary Borel–Cantelli argument; no external theorem
         is assumed.
+    - declaration: "Pair.exists_isOpen_subset_hasRelation"
+      file: "IETFree/ChallengeSolved.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      note: >-
+        The remark after Theorem 1.1, in free coordinates: an open set of full measure every point
+        of which carries a nontrivial word trivial for the two exchanges (the interior of the
+        relation set, which itself need not be open).  The machinery is in
+        `IETFree/Pair/RobustRelation/`, below the challenge file, and takes the almost-sure
+        statement as a hypothesis, which `ae_hasRelation` discharges from `main`.
+    - declaration: "Pair.exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one"
+      file: "IETFree/ChallengeSolved.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator.json"
+      note: >-
+        The same statement on the paper's `Δ_π × Δ_σ`, with the two normalisations as hypotheses:
+        this is the challenge's third target, and it reaches no declaration the challenge does not
+        already carry.
 
 automation:
   methods:
@@ -187,10 +283,11 @@ automation:
         An AI agent working in a Linux VM under Open Math OS, writing Lean 4.35.0 against Mathlib
         pinned at the `v4.35.0` tag. The repository is a genuine Lake project — `lakefile.toml`,
         `lake-manifest.json`, `lean-toolchain` — with one Lean library for `IETFree/` and one for each
-        of the two statement files, so `lake build` (after `lake exe cache get`) builds all 114
+        of the two statement files, so `lake build` (after `lake exe cache get`) builds all 122
         modules.
         That build enables the Mathlib linter set and is warning-free: a clean `lake build` reports no
-        linter warning at all, and neither does `SlowBuild.sh`.  The declaration linters, which
+        linter warning at all, and neither does `SlowBuild.sh`; `warningAsError` is set, so a warning
+        introduced later fails the build.  The declaration linters, which
         `lake build` does not run, are clean as well: Mathlib's lint driver (`runLinter`) reports
         0 findings on every declaration of the library.
         In the development VM Mathlib is a root-owned, read-only, prebuilt tree, which Lake cannot use
@@ -201,11 +298,9 @@ automation:
         generated, by `lake exe mk_all --lib IETFree`, and sorted by module name. The library carries
         a single axiom check, `#print axioms main`, registered directly below `main` in
         `IETFree/ChallengeSolved.lean`, and `SlowBuild.sh` fails with `--strict` if `sorryAx` is
-        reachable from it. The comparator pair is checked on every build, by `Comparator/Check.lean`
-        (the
-        comparator's own algorithm on the two compiled modules), and the genuine comparator is
-        reproduced by one command, `Comparator/run.sh`. The agent kept the ledger (now `HISTORY.md`,
-        formerly `NOTES.md`), which
+        reachable from it. The comparator pair is checked by the compiler's own tool, `lake comparator`,
+        which reads the root `comparator.json`; it is a separate command, not part of `lake build`.
+        The agent kept the ledger (now `HISTORY.md`, formerly `NOTES.md`), which
         records every statement that had to be restated and why.
       prompting_notes: >-
         Work proceeded one declaration at a time from the earliest module in the build order, with a
@@ -231,15 +326,16 @@ automation:
         ledger (`HISTORY.md`), including the run stopped unsolved (`nontrivial-commutator`) and the one
         whose statement is not in the library (`continuous-domination`).
   notes: >-
-    The human author set the task, the paper's statements, the frozen interfaces and the build, and
-    reviewed the outcome; the proof scripts were produced by the agents above. Spend is not recorded
+    The human author set the task, the paper's statements, the design of the library and the build,
+    and reviewed the outcome; the proof scripts were produced by the agents above. Spend is not recorded
     by the harness, so `spend_usd` is omitted rather than guessed. The development ledger
     (`HISTORY.md`, formerly `NOTES.md`, an append-only log) is the primary record of the process; the
     trimmed current notes are `NOTES.md`.
 
 fidelity:
   divergences: >-
-    Nine departures in form, none of which changes a statement of the paper. (1) The paper works in a
+    Thirteen departures in form, none of which changes a statement of the paper. (1) The paper works
+    in a
     connected component of the complement of finitely many hyperplanes; the formalization uses an open
     ball on which one fixed list, one fixed permutation and one fixed combinatorial type present the
     composition, and covers the almost-everywhere statement by a countable family of such balls. As a
@@ -252,11 +348,15 @@ fidelity:
     `SingularityShape`, and the block permutation as an explicit `Equiv.Perm (Fin (l - k))`), so the
     two literature inputs, which quantify over permutations, apply to a block directly. (4) Lemma 3.2
     is stated intrinsically on the two data (`IsCompIrreducibleOn`: no invariant initial sub-block),
-    rather than through the restriction of `ρ`. (5) `UniqueErgodic` is the uniform Birkhoff-average
-    form of Definition 2.1, which is stronger than "Lebesgue is the only invariant probability
-    measure" and is what Lemmas 2.9 and 2.10 use. (6) Almost-everywhere statements carry the simplex
-    membership as a binder (`∀ᵐ λ ∂(simplexVolume d), ∀ (h : λ ∈ simplex d), …`) rather than
-    restricting the measure to a full-measure subset. (7) `simplexVolume d` is the pushforward of
+    rather than through the restriction of `ρ`. (5) `UniqueErgodic` is Definition 2.1 verbatim (a
+    unique invariant probability measure carried by `[0, 1)`); the uniform Birkhoff-average form that
+    Lemmas 2.9 and 2.10 use is a *separate* predicate, `UniformBirkhoff`, proved from it
+    (`uniformBirkhoff_of_uniqueErgodic`) and assumed nowhere. (6) Where an almost-everywhere
+    statement needs the simplex membership, it is carried as a binder
+    (`∀ᵐ λ ∂(simplexVolume d), ∀ (h : λ ∈ simplex d), …`) rather than by restricting the measure to a
+    full-measure subset — the shape of `ae_diophantine_of_mem` and
+    `ae_isRigidByTranslations_mkIET1`; the headline statements (`main`, `ae_diophantine`,
+    `masurVeech`) need no such binder. (7) `simplexVolume d` is the pushforward of
     Lebesgue measure on the free coordinates rather than Lebesgue measure on the simplex, so
     "maximal rank" appears as an absolute-continuity statement and no Jacobian is computed. (8) Lemma
     3.1's "invertible affine map" is split into injectivity (`compLen_injective`) and absolute
@@ -269,7 +369,14 @@ fidelity:
     evaluation of a commutator, the assembly); the support estimate of Lemmas 2.8–2.10, where the
     `ψ⁻¹` term is measured by the unique ergodicity of `f`, is stated for `⁅φ⁻¹, ψ⁻¹⁆`, which is the
     paper's commutator, so its proof is unchanged. The two conventions vanish together
-    (`commutatorElement_inv_inv_eq_one_iff`).
+    (`commutatorElement_inv_inv_eq_one_iff`). (11) `IsRigidByTranslations` asks in addition that the
+    sets `B n` lie in `[0, 1)`, which Definition 2.2 does not require: the formal predicate is
+    therefore strictly stronger, and the conjunct is what `exists_word_small_support` uses to place a
+    point in `[0, 1)`. (12) `simplex α` is `{∑ lam = 1}` without the positivity of the coordinates, so
+    the statements on it (`masurVeech`, `irreducible_case`) cover degenerate length vectors as well as
+    the paper's open simplex; nothing is assumed about them. (13) `IsDiophantine` is total on
+    `(Fin d → ℝ≥0) × (Fin e → ℝ≥0)` and holds vacuously at `lam = mu = 0`, whereas Definition 2.3 is
+    stated on `Δ_π × Δ_σ`; every consumer is at a simplex point.
 
 review:
   status: "agent-reviewed"
@@ -284,21 +391,21 @@ review:
     development went through the audits recorded in the ledger (`HISTORY.md`) — two refutations of
     mis-formalized statements, an audit of the hypotheses of every declaration (the derivable ones
     removed), a dead-code scan of the whole library, a docstring pass, and an
-    elaboration-performance pass. The comparator pair is checked on every build by
-    `Comparator/Check.lean`, which runs the comparator's own comparison on the two compiled modules
-    (31 547 declarations, no difference), and the genuine tool has been run on it as well — comparator
-    at `865edc1` (its revision on Lean 4.35.0) with the `lean4export` it pins, both built with the
-    installed Lean 4.35.0, with `landrun` replaced by the repository's
-    `fake-landrun` shim (`landrun` is not installed there).  On the final tree it prints `Lean default
-    kernel accepts the solution.  Your solution is okay!` and `== accepted`, and two mutations of the
-    challenge are rejected by `Check.lean` (`the statement differs: main` for `w ≠ 1` → `w = 1`,
-    `differs: simplexRegion` for `0 < v i` → `0 ≤ v i`).  The whole run is reproducible with one command,
-    `Comparator/run.sh` (add `MATHLIB=…` when `lake` cannot resolve Mathlib itself), and the root
-    module's import list is regenerated by `lake exe mk_all --lib IETFree`. Review by a mathematician
-    other than the author would be the natural next step.
+    elaboration-performance pass. The comparator pair is checked by the compiler's own tool,
+    `lake comparator`, which reads the root `comparator.json`, builds and exports both modules inside
+    its `bwrap` sandbox, compares them declaration by declaration and replays the solution into Lean's
+    kernel.  On the final tree it prints `Lean default kernel accepts the solution` and
+    `Your solution is okay!` and exits 0; `enable_nanoda` is off because the sandbox cannot bind
+    `/opt/lean/bin/nanoda_bin` through this VM's `/opt/lean` symlink.  The gate is a separate command,
+    not part of `lake build`; `SlowBuild.sh` runs it at the end.  The root module's import list is
+    regenerated by `lake exe mk_all --lib IETFree`. Review by a mathematician other than the author
+    would be the natural next step.
 
 alignment:
-  namespace: "IETFree"
+  # every library declaration is in `IntervalExchange` or one of its subjects (`Pair`,
+  # `RauzyVeech`, `RauzyVeech.RichPath`, `Rigidity`, `UniqueErgodicity`), and the challenge file
+  # states Theorem 1.1 in the same namespace; the `lean:` names below are relative to this one
+  namespace: "IntervalExchange"
   # status: "proved" for a theorem or lemma, "implemented" for a definition, "not-formalized" for an
   # item of the paper that is not in the tree.
   statements:
@@ -308,17 +415,49 @@ alignment:
       status: "proved"
       note: >-
         Unconditional: no hypothesis on `d`, `e`, `π` or `σ`.  This is `Challenge.main` in its words,
-        and `#print axioms main` reports `[propext, Classical.choice, Quot.sound]`.  It is
-        The proof applies `masurVeech` and `veechRigidity` (the two inputs below) to discharge
-        every hypothesis, and derives the statement from the a.e. block data.
-    - source: "Remark after Theorem 1.1 (the set of pairs is open and of full measure)"
-      lean: "—"
-      module: "—"
-      status: "not-formalized"
+        and `#print axioms main` reports `[propext, Classical.choice, Quot.sound]`.  The proof
+        applies `masurVeech` and `veechRigidity` (the two inputs below) to discharge every
+        hypothesis, and derives the statement from the a.e. block data.
+    - source: "Remark after Theorem 1.1 (robustness of the relation)"
+      lean: "Pair.evalWord_eventually_eq_one"
+      module: "IETFree/Pair/RobustRelation/Robustness.lean"
+      status: "proved"
       note: >-
-        Not formalized; the paper's own remark argues it from Theorem 1.1 plus robustness of the
-        relation.
-    - source: "Lemma 1.2 (an irrational rotation and an interval exchange do not generate a free group)"
+        A word which is trivial at a parameter pair on which no nontrivial integer relation between
+        the free lengths vanishes (`∀ N, q₀ ∈ Pair.goodParamsAt N d e`, which
+        `Pair.forall_goodParams_iff` identifies with the paper's set `Ω'`) stays trivial on a
+        neighbourhood of that pair.  The threshold form with `4 * |w| + 4` in place of `Ω'` is
+        `Pair.evalWord_eventually_eq_one_of_goodParams`.  The candidate cuts of the word and its displacements
+        on the resulting pieces are affine functions of the parameter (`Pair.WordData`), built letter
+        by letter (`Pair.exists_wordData_singleton`, `Pair.wordData_append_singleton`); at a point of
+        `Ω'` two distinct candidates never coincide, so the pieces are the genuine ones.
+    - source: "Remark after Theorem 1.1 (a full measure open set of pairs not generating a free group), free coordinates"
+      lean: "Pair.exists_isOpen_subset_hasRelation"
+      module: "IETFree/ChallengeSolved.lean"
+      status: "proved"
+      note: >-
+        There is an open set of parameter pairs, of full measure for the product of the two
+        restricted Lebesgue measures on the free regions, every point of which carries a nontrivial
+        word which is trivial (`Pair.HasRelation`).  It is the interior of the relation set — which
+        itself need not be open — and it is conull because almost every pair carries a relation
+        (`Pair.ae_hasRelation`, from `main`) and is good at every threshold
+        (`Pair.ae_goodParamsAt_all_thresholds`), and at such a pair the relation is robust
+        (`Pair.evalWord_eventually_eq_one`).  The hypothesis-taking form is
+        `Pair.exists_isOpen_subset_hasRelation_of_robust`.
+    - source: "Remark after Theorem 1.1 (a full measure open set of pairs not generating a free group), the paper's coordinates"
+      lean: "Pair.exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one"
+      module: "IETFree/ChallengeSolved.lean"
+      status: "proved"
+      note: >-
+        The same statement on the paper's `Δ_π × Δ_σ`: an open set `O` of the ambient space
+        `(Fin d → ℝ≥0) × (Fin e → ℝ≥0)`, of null complement for `simplexVolume d × simplexVolume e`,
+        such that every `p ∈ O` whose two vectors have total mass `1` carries a nontrivial word
+        trivial for `mkIETEquiv p.1 π 0` and `mkIETEquiv p.2 σ 0`.  The two normalisation
+        conditions are hypotheses rather than an intersection with `simplex (Fin d) ×ˢ simplex
+        (Fin e)`, because the product of the simplices has empty interior in the ambient space, so
+        the open set can only be an open set of the ambient space; writing them as hypotheses keeps
+        the statement free of any project definition.
+    - source: "Lemma 1.3 (an irrational rotation and an interval exchange do not generate a free group)"
       lean: "—"
       module: "—"
       status: "not-formalized"
@@ -332,9 +471,9 @@ alignment:
         The weak form: a unique invariant probability measure carried by `[0, 1)`.  The strong form,
         uniform convergence of the Birkhoff averages of every continuous test function, is the
         predicate `UniformBirkhoff` (`IETFree/UniqueErgodicity/Basic.lean`), proved from this one by
-        `uniformBirkhoff_of_uniqueErgodic` (`IETFree/UniqueErgodicity/IET.lean`).
+        `uniformBirkhoff_of_uniqueErgodic` (`IETFree/UniqueErgodicity/Theorem2.lean`).
     - source: "a.e. interval exchange is uniquely ergodic (Masur; Veech)"
-      lean: "masurVeech"
+      lean: "Pair.masurVeech"
       module: "IETFree/Pair/Irreducible.lean"
       status: "proved"
       note: >-
@@ -346,85 +485,86 @@ alignment:
       module: "IETFree/IET.lean"
       status: "implemented"
     - source: "Proposition 2.4 (a.e. exchange is rigid by translations)"
-      lean: "veechRigidity"
+      lean: "Pair.veechRigidity"
       module: "IETFree/Pair/Irreducible.lean"
       status: "proved"
       note: >-
         From `Rigidity.ae_isRigidByTranslations` and `Rigidity.ae_fin_one`, by the Rauzy–Veech
         induction (Veech, Metric theory I, Theorem 1.4).
     - source: "Definition 2.3 (Diophantine pair)"
-      lean: "IsDiophantine"
+      lean: "Pair.IsDiophantine"
       module: "IETFree/Pair/Diophantine.lean"
       status: "implemented"
       note: "With `coeffMax` for the maximum of the coefficients."
     - source: "Proposition 2.5 (almost every pair is Diophantine)"
-      lean: "ae_diophantine"
+      lean: "Pair.ae_diophantine"
       module: "IETFree/Pair/Diophantine.lean"
       status: "proved"
     - source: "Theorem 2.6 (the irreducible case)"
-      lean: "irreducible_case"
+      lean: "Pair.irreducible_case"
       module: "IETFree/Pair/Irreducible.lean"
       status: "proved"
     - source: "Lemma 2.7 (one of three commutators of two nontrivial words is nontrivial)"
-      lean: "exists_nontrivial_commutator"
+      lean: "Pair.exists_nontrivial_commutator"
       module: "IETFree/Pair/Irreducible.lean"
       status: "proved"
       note: "With `commWord_eq_one_iff` for the cancellation."
     - source: "Lemma 2.8 (a word with support of measure at most ε)"
-      lean: "exists_word_small_support"
+      lean: "Pair.exists_word_small_support"
       module: "IETFree/Pair/Irreducible.lean"
       status: "proved"
     - source: "Lemma 2.9, display (2.2) (uniform Birkhoff bound)"
-      lean: "exists_uniform_birkhoff"
-      module: "IETFree/UniqueErgodicity/IET.lean"
+      lean: "UniqueErgodicity.exists_uniform_birkhoff"
+      module: "IETFree/UniqueErgodicity/Theorem2.lean"
       status: "proved"
     - source: "Lemma 2.10 (one commutator step: the support shrinks by a factor 18ε)"
-      lean: "iterate_word"
+      lean: "Pair.iterate_word"
       module: "IETFree/Pair/Irreducible.lean"
       status: "proved"
       note: >-
         `N`, `w₀` and the uniform bound are parameters, since the iteration reuses them at every
         step.
-    - source: "Lemma 3.1 (the length map of gf is an invertible affine map)"
-      lean: "compLen_injective, compLen_absolutelyContinuousAt, absolutelyContinuous_map_blockFree"
-      module: "IETFree/Pair/LengthMap.lean, IETFree/Pair/BlockData.lean, IETFree/Pair/BlockAETransfer.lean"
+    - source: "Lemma 3.1 (the length map of gf is an invertible affine map), the parts used: injectivity and the absolute continuity of the pushforward"
+      lean: "Pair.compLen_injective, Pair.compLen_absolutelyContinuousAt, Pair.absolutelyContinuous_map_blockFree"
+      module: "IETFree/Pair/LengthMap.lean, IETFree/Pair/Block/AeBlockGood.lean, IETFree/Pair/Block/AETransfer.lean"
       status: "proved"
       note: >-
         Split into injectivity of the affine map and absolute continuity of what it pushes
-        forward, including for the rescaled block.
+        forward, including for the rescaled block.  Surjectivity onto `Δ_ρ` is not stated: the
+        reduction only uses injectivity plus the open-image/absolute-continuity consequence.
     - source: "splitting singularity / fixed interval / pair-splitting singularity (Section 3)"
-      lean: "IETDatum.IsSplitting, IETDatum.InFixedCell, IsPairSplitting"
+      lean: "Pair.IETDatum.IsSplitting, Pair.IETDatum.InFixedCell, Pair.IsPairSplitting"
       module: "IETFree/Pair/ReductionData.lean"
       status: "implemented"
     - source: "Lemma 3.2 (between consecutive pair-splitting singularities the permutation is irreducible)"
-      lean: "block_irreducible_on_good, irreduciblePerm_blockPerm"
-      module: "IETFree/Pair/BlockIrreducibility.lean, IETFree/Pair/BlockDatum.lean"
+      lean: "Pair.block_irreducible_on_good, Pair.irreduciblePerm_blockPerm"
+      module: "IETFree/Pair/Block/Irreducibility.lean, IETFree/Pair/Block/BlockDatum.lean"
       status: "proved"
       note: >-
         Intrinsic form `IsCompIrreducibleOn` on the two data, then transported to `IsIrreduciblePerm`
         of the explicit `blockPerm`.
     - source: "Lemma 3.3 (a permutation fixing an initial segment of the image order)"
-      lean: "perm_eq_of_preimage"
+      lean: "Pair.perm_eq_of_preimage"
       module: "IETFree/Pair/ReductionData.lean"
       status: "proved"
     - source: "Lemma 3.4 (a.e. a nontrivial word is trivial on a given block)"
-      lean: "exists_word_trivial_on_block"
-      module: "IETFree/Pair/BlockLemma.lean"
+      lean: "Pair.exists_word_trivial_on_block"
+      module: "IETFree/Pair/Block/Lemma.lean"
       status: "proved"
       note: >-
         The block is rescaled to [0,1) and Theorem 2.6 applied to the rescaled pair (ẼD̃, Ẽ); the
         one-cell block is a separate case.
     - source: "Theorem 1.1 in block form, and the assembly of the per-block words"
-      lean: "main_theorem_of_blocks, exists_word_trivial_on_all_of_blocks"
-      module: "IETFree/Pair/BlockLemma.lean, IETFree/Pair/BlockAssembly.lean"
+      lean: "Pair.main_theorem_of_blocks, Pair.exists_word_trivial_on_all_of_blocks"
+      module: "IETFree/Pair/Block/Lemma.lean, IETFree/Pair/Block/Assembly.lean"
       status: "proved"
       note: >-
         The a.e. statement for the data of the composition, with the blocks and their words as
         witnesses; blocks are invariant under both generators, so a nontrivial word trivial on each
         block is trivial on all of [0,1).
     - source: "the open regions of Section 3, and their countable cover"
-      lean: "GoodRegion, exists_goodRegion, exists_countable_goodRegion_cover"
-      module: "IETFree/Pair/GoodRegion.lean, IETFree/Pair/BlockEndpoints.lean"
+      lean: "Pair.GoodRegion, Pair.exists_goodRegion, Pair.exists_countable_goodRegion_cover"
+      module: "IETFree/Pair/GoodRegion.lean, IETFree/Pair/Block/Endpoints.lean"
       status: "proved"
       note: >-
         An open ball around a good parameter, carrying the list s, the permutation ρ, the cut and

@@ -5,11 +5,14 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.FreeGroup.Commensurable
 public import IETFree.IET
 
 /-!
-Measure-theoretic tools for Section 2: Lebesgue measure on `[0, 1)`, its behaviour under exchanges,
-the words in two generators used to build small supports, and the toolbox for Lemma 2.10.
+# Measure-theoretic tools for Section 2
+
+Lebesgue measure on `[0, 1)`, its behaviour under exchanges, the words in two generators used to
+build small supports, and the toolbox for Lemma 2.10.
 
 It is imported by `Irreducible.lean`, where it keeps that file to a readable length (the definitions
 and lemmas that the statements and proofs there use, including `unitMeas` and its API,
@@ -22,81 +25,9 @@ and lemmas that the statements and proofs there use, including `unitMeas` and it
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal commutatorElement
+open IntervalExchange.IET
 
-/-- The measure of any set is at most `1`. -/
-theorem unitMeas_le_one (A : Set ℝ) : unitMeas A ≤ 1 := by
-  rw [unitMeas]
-  calc volume.restrict (Set.Ico (0 : ℝ) 1) A ≤ volume.restrict (Set.Ico (0 : ℝ) 1) Set.univ :=
-        measure_mono (Set.subset_univ _)
-    _ = volume (Set.Ico (0 : ℝ) 1) := Measure.restrict_apply_univ _
-    _ = 1 := by rw [Real.volume_Ico]; norm_num
-
-/-- Iterates of an exchange are measurable. -/
-theorem IET.measurable_pow {a b : ℝ} (f : IET a b) (n : ℕ) : Measurable ⇑(f ^ n) := by
-  induction n with
-  | zero => exact measurable_id
-  | succ k ih =>
-    have h : ⇑(f ^ (k + 1)) = ⇑(f ^ k) ∘ ⇑f := by
-      funext x
-      rw [pow_succ]
-      rfl
-    rw [h]
-    exact ih.comp (IET.measurable f)
-
-/-- `unitMeas` gives finite measure to every set. -/
-theorem unitMeas_ne_top (A : Set ℝ) : unitMeas A ≠ ⊤ :=
-  ne_top_of_le_ne_top (by simp) (unitMeas_le_one A)
-
-/-- Monotonicity of `unitMeas.real`. -/
-theorem unitMeas_real_mono {A B : Set ℝ} (h : A ⊆ B) : unitMeas.real A ≤ unitMeas.real B :=
-  ENNReal.toReal_mono (unitMeas_ne_top B) (measure_mono h)
-
-/-- Subadditivity of `unitMeas.real` for two sets. -/
-theorem unitMeas_real_union_le (A B : Set ℝ) :
-    unitMeas.real (A ∪ B) ≤ unitMeas.real A + unitMeas.real B := by
-  have htop : unitMeas A + unitMeas B ≠ ⊤ := by
-    have h : unitMeas A + unitMeas B ≤ (2 : ℝ≥0∞) := by
-      calc unitMeas A + unitMeas B ≤ 1 + 1 := add_le_add (unitMeas_le_one A) (unitMeas_le_one B)
-        _ = 2 := by norm_num
-    exact ne_top_of_le_ne_top (by norm_num) h
-  calc unitMeas.real (A ∪ B) ≤ (unitMeas A + unitMeas B).toReal :=
-        ENNReal.toReal_mono htop (measure_union_le A B)
-    _ = unitMeas.real A + unitMeas.real B :=
-        ENNReal.toReal_add (unitMeas_ne_top A) (unitMeas_ne_top B)
-
-/-- Subadditivity of `unitMeas.real` for a finite union. -/
-theorem unitMeas_real_biUnion_finset_le {ι : Type*} (s : Finset ι) (F : ι → Set ℝ) :
-    unitMeas.real (⋃ i ∈ s, F i) ≤ ∑ i ∈ s, unitMeas.real (F i) := by
-  have hbound : (∑ i ∈ s, unitMeas (F i)) ≤ (s.card : ℝ≥0∞) := by
-    calc (∑ i ∈ s, unitMeas (F i)) ≤ ∑ i ∈ s, (1 : ℝ≥0∞) :=
-          Finset.sum_le_sum (fun i _ => unitMeas_le_one (F i))
-      _ = (s.card : ℝ≥0∞) := by simp
-  have htop : (∑ i ∈ s, unitMeas (F i)) ≠ ⊤ :=
-    ne_top_of_le_ne_top (ENNReal.natCast_ne_top s.card) hbound
-  calc unitMeas.real (⋃ i ∈ s, F i) ≤ (∑ i ∈ s, unitMeas (F i)).toReal :=
-        ENNReal.toReal_mono htop (measure_biUnion_finset_le s F)
-    _ = ∑ i ∈ s, unitMeas.real (F i) := ENNReal.toReal_sum (fun i _ => unitMeas_ne_top (F i))
-
-/-- The measure of a complement, for `unitMeas.real`. -/
-theorem unitMeas_real_compl (A : Set ℝ) (hA : MeasurableSet A) :
-    unitMeas.real Aᶜ = 1 - unitMeas.real A := by
-  have h : unitMeas A + unitMeas Aᶜ = 1 := by
-    rw [measure_add_measure_compl hA, measure_univ]
-  have h' : unitMeas.real A + unitMeas.real Aᶜ = 1 := by
-    rw [Measure.real, Measure.real,
-      ← ENNReal.toReal_add (unitMeas_ne_top A) (unitMeas_ne_top Aᶜ), h, ENNReal.toReal_one]
-  linarith
-
-/-- A closed interval has `unitMeas.real`-measure at most its length. -/
-theorem unitMeas_real_Icc_le (a b : ℝ) : unitMeas.real (Set.Icc a b) ≤ max (b - a) 0 := by
-  have h1 : unitMeas (Set.Icc a b) ≤ volume (Set.Icc a b) := by
-    rw [unitMeas, Measure.restrict_apply measurableSet_Icc]
-    exact measure_mono Set.inter_subset_left
-  have h2 : volume (Set.Icc a b) = ENNReal.ofReal (b - a) := Real.volume_Icc
-  calc unitMeas.real (Set.Icc a b) = (unitMeas (Set.Icc a b)).toReal := rfl
-    _ ≤ (volume (Set.Icc a b)).toReal :=
-        ENNReal.toReal_mono (by rw [h2]; exact ENNReal.ofReal_ne_top) h1
-    _ = max (b - a) 0 := by rw [h2, ENNReal.toReal_ofReal']
+namespace IntervalExchange.Pair
 
 /-! ## Words in two generators -/
 
@@ -118,7 +49,7 @@ def evalWord (w : FreeGroup Gen) (f g : IET 0 1) : IET 0 1 :=
   (FreeGroup.lift (fun i : Gen => if i = 0 then f else g)) w
 
 /-- **The evaluation is a homomorphism** in the word. -/
-@[simp] theorem evalWord_one (f g : IET 0 1) : evalWord 1 f g = 1 := rfl
+@[simp] theorem evalWord_one (f g : IET 0 1) : evalWord 1 f g = 1 := (rfl)
 
 @[simp] theorem evalWord_mul (u v : FreeGroup Gen) (f g : IET 0 1) :
     evalWord (u * v) f g = evalWord u f g * evalWord v f g :=
@@ -133,9 +64,9 @@ def evalWord (w : FreeGroup Gen) (f g : IET 0 1) : IET 0 1 :=
   map_pow _ u n
 
 /-- **The two generators evaluate to the two exchanges.** -/
-@[simp] theorem evalWord_genX (f g : IET 0 1) : evalWord genX f g = f := rfl
+@[simp] theorem evalWord_genX (f g : IET 0 1) : evalWord genX f g = f := (rfl)
 
-@[simp] theorem evalWord_genY (f g : IET 0 1) : evalWord genY f g = g := rfl
+@[simp] theorem evalWord_genY (f g : IET 0 1) : evalWord genY f g = g := (rfl)
 
 /-- The evaluation of a conjugate by `f`. -/
 theorem evalWord_conjX (u : FreeGroup Gen) (f g : IET 0 1) :
@@ -150,12 +81,6 @@ theorem evalWord_conjY (u : FreeGroup Gen) (f g : IET 0 1) :
 /-- **The support of `w(f,g)`, as a subset of `ℝ`.** -/
 def wordSupp (w : FreeGroup Gen) (f g : IET 0 1) : Set ℝ := {x : ℝ | (evalWord w f g) x ≠ x}
 
-/-- The length of a word. -/
-def wordLength (w : FreeGroup Gen) : ℕ := (FreeGroup.toWord w).length
-
-/-- **`wordLength` is `FreeGroup.norm`**: the computation form proofs rewriting with it need. -/
-theorem wordLength_eq_norm (w : FreeGroup Gen) : wordLength w = FreeGroup.norm w := rfl
-
 /-! ## Nontriviality of `[y, x^q]`
 
 The word `[y, x^q]` is nontrivial for `q ≠ 0`.  This is not the centralizer theorem behind Lemma
@@ -163,25 +88,21 @@ The word `[y, x^q]` is nontrivial for `q ≠ 0`.  This is not the centralizer th
 a single representation of `F_2` suffices, namely `x ↦ (t ↦ t + 1)` and `y ↦ (t ↦ 2t)` on `ℝ`,
 under which `[y, x^q]` acts as the translation `t ↦ t + q/2`. -/
 
-/-- The translation `x ↦ x + 1` of `ℝ`. -/
-def shiftPerm : Equiv.Perm ℝ where
-  toFun x := x + 1
-  invFun x := x - 1
-  left_inv x := by ring
-  right_inv x := by ring
+/-- The translation `x ↦ x + 1` of `ℝ`, Mathlib's `Equiv.addRight`. -/
+def shiftPerm : Equiv.Perm ℝ := Equiv.addRight 1
 
-/-- The dilation `x ↦ 2 * x` of `ℝ`. -/
-noncomputable def scalePerm : Equiv.Perm ℝ where
-  toFun x := 2 * x
-  invFun x := x / 2
-  left_inv x := by ring
-  right_inv x := by ring
+/-- The dilation `x ↦ 2 * x` of `ℝ`, Mathlib's `Equiv.mulLeft₀`. -/
+noncomputable def scalePerm : Equiv.Perm ℝ := Equiv.mulLeft₀ 2 (by norm_num)
 
-theorem shiftPerm_apply (x : ℝ) : shiftPerm x = x + 1 := rfl
+theorem shiftPerm_apply (x : ℝ) : shiftPerm x = x + 1 := by
+  rw [shiftPerm, Equiv.coe_addRight]
 
-theorem scalePerm_apply (x : ℝ) : scalePerm x = 2 * x := rfl
+theorem scalePerm_apply (x : ℝ) : scalePerm x = 2 * x := by
+  rw [scalePerm, Equiv.mulLeft₀_apply]
 
-theorem scalePerm_symm_apply (x : ℝ) : scalePerm⁻¹ x = x / 2 := rfl
+theorem scalePerm_symm_apply (x : ℝ) : scalePerm⁻¹ x = x / 2 := by
+  simp [scalePerm]
+  ring
 
 theorem shiftPerm_pow (k : ℕ) (x : ℝ) : ((shiftPerm ^ k : Equiv.Perm ℝ)) x = x + k := by
   induction k generalizing x with
@@ -336,72 +257,61 @@ theorem measurableSet_ne_id {f : ℝ → ℝ} (hf : Measurable f) : MeasurableSe
 /-- The support of a word is measurable. -/
 theorem measurableSet_wordSupp (u : FreeGroup Gen) (f g : IET 0 1) :
     MeasurableSet (wordSupp u f g) :=
-  measurableSet_ne_id (IET.measurable (evalWord u f g))
+  measurableSet_ne_id (measurable (evalWord u f g))
 
-/-- `genX` has length one. -/
-theorem wordLength_genX : wordLength genX = 1 :=
-  FreeGroup.norm_of 0
+end IntervalExchange.Pair
 
-/-- `genX ^ q` has length `q`. -/
-theorem wordLength_genX_pow (q : ℕ) : wordLength (genX ^ q) = q :=
-  FreeGroup.norm_of_pow 0 q
+-- the free-group lemmas below are outside `IntervalExchange.Pair` but use its two generators
+open IntervalExchange.Pair
+
+namespace FreeGroup
 
 /-- The length of a commutator is at most twice the sum of the lengths. -/
-theorem wordLength_commutatorElement_le (a b : FreeGroup Gen) :
-    wordLength ⁅a, b⁆ ≤ 2 * wordLength a + 2 * wordLength b := by
+theorem norm_commutatorElement_le (a b : FreeGroup Gen) :
+    norm ⁅a, b⁆ ≤ 2 * norm a + 2 * norm b := by
   rw [commutatorElement_def]
-  simp only [wordLength_eq_norm]
-  have h1 : FreeGroup.norm (a * b * a⁻¹ * b⁻¹)
-      ≤ FreeGroup.norm (a * b * a⁻¹) + FreeGroup.norm b⁻¹ :=
-    FreeGroup.norm_mul_le _ _
-  have h2 : FreeGroup.norm (a * b * a⁻¹)
-      ≤ FreeGroup.norm (a * b) + FreeGroup.norm a⁻¹ :=
-    FreeGroup.norm_mul_le _ _
-  have h3 : FreeGroup.norm (a * b) ≤ FreeGroup.norm a + FreeGroup.norm b :=
-    FreeGroup.norm_mul_le _ _
-  simp only [FreeGroup.norm_inv_eq] at h1 h2
+  have h1 : norm (a * b * a⁻¹ * b⁻¹) ≤ norm (a * b * a⁻¹) + norm b⁻¹ :=
+    norm_mul_le _ _
+  have h2 : norm (a * b * a⁻¹) ≤ norm (a * b) + norm a⁻¹ :=
+    norm_mul_le _ _
+  have h3 : norm (a * b) ≤ norm a + norm b :=
+    norm_mul_le _ _
+  simp only [norm_inv_eq] at h1 h2
   omega
 
-/-- Inverting a word does not change its length. -/
-theorem wordLength_inv (w : FreeGroup Gen) : wordLength w⁻¹ = wordLength w := by
-  exact FreeGroup.norm_inv_eq
+/-- The length of a conjugate `x⁻¹ * u * x` by `genX` is at most `norm u + 2`. -/
+theorem norm_conjX_le (u : FreeGroup Gen) :
+    norm (genX⁻¹ * u * genX) ≤ norm u + 2 := by
+  have h := norm_conj_le (g := genX⁻¹) u
+  have hx : norm genX⁻¹ = 1 := by
+    rw [norm_inv_eq]
+    exact norm_of 0
+  rw [inv_inv, hx] at h
+  simpa using h
 
-/-- `genY` has length one. -/
-theorem wordLength_genY : wordLength genY = 1 :=
-  FreeGroup.norm_of 1
+/-- The length of a conjugate `y⁻¹ * u * y` by `genY` is at most `norm u + 2`. -/
+theorem norm_conjY_le (u : FreeGroup Gen) :
+    norm (genY⁻¹ * u * genY) ≤ norm u + 2 := by
+  have h := norm_conj_le (g := genY⁻¹) u
+  have hy : norm genY⁻¹ = 1 := by
+    rw [norm_inv_eq]
+    exact norm_of 1
+  rw [inv_inv, hy] at h
+  simpa using h
 
-/-- The length of a conjugate `a⁻¹ u a` by a letter `a` is at most `wordLength u + 2`. -/
-theorem wordLength_conj_le_of (a : FreeGroup Gen) (ha : wordLength a = 1) (u : FreeGroup Gen) :
-    wordLength (a⁻¹ * u * a) ≤ wordLength u + 2 := by
-  simp only [wordLength_eq_norm]
-  simp only [wordLength_eq_norm] at ha
-  have h1 : FreeGroup.norm (a⁻¹ * u * a) ≤ FreeGroup.norm (a⁻¹ * u) + FreeGroup.norm a :=
-    FreeGroup.norm_mul_le _ _
-  have h2 : FreeGroup.norm (a⁻¹ * u) ≤ FreeGroup.norm a⁻¹ + FreeGroup.norm u :=
-    FreeGroup.norm_mul_le _ _
-  have h3 : FreeGroup.norm a⁻¹ = 1 := by
-    rw [FreeGroup.norm_inv_eq]; exact ha
-  omega
+/-- The length of a conjugate of `u` by a power of `genX`. -/
+theorem norm_conjX_pow_le (u : FreeGroup Gen) (i : ℕ) :
+    norm ((genX ^ i)⁻¹ * u * (genX ^ i)) ≤ norm u + 2 * i := by
+  have h := norm_conj_le (g := (genX ^ i)⁻¹) u
+  have hx : norm (genX ^ i)⁻¹ = i := by
+    rw [norm_inv_eq]
+    exact norm_of_pow 0 i
+  rw [inv_inv, hx] at h
+  simpa using h
 
-/-- The length of a conjugate `x⁻¹ u x` is at most `wordLength u + 2`. -/
-theorem wordLength_conj_le (u : FreeGroup Gen) :
-    wordLength (genX⁻¹ * u * genX) ≤ wordLength u + 2 :=
-  wordLength_conj_le_of genX wordLength_genX u
+end FreeGroup
 
-/-- The length of a conjugate of `u` by a power of `x`. -/
-theorem wordLength_conj_pow_le (u : FreeGroup Gen) (i : ℕ) :
-    wordLength ((genX ^ i)⁻¹ * u * (genX ^ i)) ≤ wordLength u + 2 * i := by
-  simp only [wordLength_eq_norm]
-  have h1 : FreeGroup.norm ((genX ^ i)⁻¹ * u * (genX ^ i))
-      ≤ FreeGroup.norm ((genX ^ i)⁻¹ * u) + FreeGroup.norm (genX ^ i) :=
-    FreeGroup.norm_mul_le _ _
-  have h2 : FreeGroup.norm ((genX ^ i)⁻¹ * u) ≤ FreeGroup.norm (genX ^ i)⁻¹ + FreeGroup.norm u :=
-    FreeGroup.norm_mul_le _ _
-  have h3 : FreeGroup.norm ((genX ^ i)⁻¹) = i := by
-    rw [FreeGroup.norm_inv_eq]
-    exact wordLength_genX_pow i
-  have h4 : FreeGroup.norm (genX ^ i) = i := wordLength_genX_pow i
-  omega
+namespace IntervalExchange.Pair
 
 /-- A conjugate of a nontrivial word is nontrivial. -/
 theorem conj_ne_one {u : FreeGroup Gen} (hu : u ≠ 1) (a : FreeGroup Gen) : a⁻¹ * u * a ≠ 1 := by
@@ -422,10 +332,10 @@ theorem evalWord_conj_pow (u : FreeGroup Gen) (i : ℕ) (f g : IET 0 1) :
 theorem wordSupp_conj_pow (u : FreeGroup Gen) (i : ℕ) (f g : IET 0 1) :
     wordSupp ((genX ^ i)⁻¹ * u * (genX ^ i)) f g = ⇑(f ^ i) ⁻¹' wordSupp u f g := by
   ext x
-  simp only [wordSupp, Set.mem_ofPred_eq, Set.mem_preimage, evalWord_conj_pow, IET.mul_apply]
+  simp only [wordSupp, Set.mem_ofPred_eq, Set.mem_preimage, evalWord_conj_pow, mul_apply]
   constructor
   · intro h hx
-    exact h (by rw [hx, IET.symm_apply_apply])
+    exact h (by rw [hx, symm_apply_apply])
   · intro h hx
     exact h (by simpa using congrArg (⇑(f ^ i)) hx)
 
@@ -435,13 +345,13 @@ theorem commutator_inv_apply_eq (φ ψ : IET 0 1) {x : ℝ}
     (h₁ : φ x = x ∨ ψ x = x) (h₂ : φ (φ x) = φ x ∨ ψ (φ x) = φ x)
     (h₃ : φ (ψ x) = ψ x ∨ ψ (ψ x) = ψ x) : (⁅φ⁻¹, ψ⁻¹⁆) x = x := by
   have key (θ : IET 0 1) (z : ℝ) (h : θ z = z) : θ⁻¹ z = z := by
-    have h1 : θ⁻¹ (θ z) = z := IET.symm_apply_apply θ z
+    have h1 : θ⁻¹ (θ z) = z := symm_apply_apply θ z
     rwa [h] at h1
-  simp only [commutatorElement_def, inv_inv, IET.mul_apply]
+  simp only [commutatorElement_def, inv_inv, mul_apply]
   rcases h₁ with hφ | hψ
   · rcases h₃ with h | h
     · calc φ⁻¹ (ψ⁻¹ (φ (ψ x))) = φ⁻¹ (ψ⁻¹ (ψ x)) := by rw [h]
-        _ = φ⁻¹ x := by rw [IET.symm_apply_apply]
+        _ = φ⁻¹ x := by rw [symm_apply_apply]
         _ = x := key φ x hφ
     · have hψx : ψ x = x := ψ.injective h
       calc φ⁻¹ (ψ⁻¹ (φ (ψ x))) = φ⁻¹ (ψ⁻¹ (φ x)) := by rw [hψx]
@@ -456,7 +366,7 @@ theorem commutator_inv_apply_eq (φ ψ : IET 0 1) {x : ℝ}
         _ = x := key φ x hφx
     · calc φ⁻¹ (ψ⁻¹ (φ (ψ x))) = φ⁻¹ (ψ⁻¹ (φ x)) := by rw [hψ]
         _ = φ⁻¹ (φ x) := by rw [key ψ (φ x) h]
-        _ = x := IET.symm_apply_apply φ x
+        _ = x := symm_apply_apply φ x
 
 /-- **The support of `[φ, ψ] = ⁅φ⁻¹, ψ⁻¹⁆` is contained in `A ∪ φ⁻¹A ∪ ψ⁻¹A`**, where `A` is the
 intersection of the two supports. -/
@@ -488,17 +398,14 @@ theorem commutator_inv_supp_subset (φ ψ : IET 0 1) :
 
 /-! ## The averaged Birkhoff estimate -/
 
-/-- `unitMeas.real` is nonnegative. -/
-theorem unitMeas_real_nonneg (A : Set ℝ) : 0 ≤ unitMeas.real A := ENNReal.toReal_nonneg
-
 /-- The support of a conjugate `θ⁻¹ h θ` is the preimage of the support of `h`. -/
 theorem supp_conj (θ h : IET 0 1) :
     {x : ℝ | (θ⁻¹ * h * θ) x ≠ x} = ⇑θ ⁻¹' {x : ℝ | h x ≠ x} := by
   ext x
-  simp only [Set.mem_ofPred_eq, Set.mem_preimage, IET.mul_apply]
+  simp only [Set.mem_ofPred_eq, Set.mem_preimage, mul_apply]
   constructor
   · intro hx hc
-    exact hx (by rw [hc, IET.symm_apply_apply])
+    exact hx (by rw [hc, symm_apply_apply])
   · intro hx hc
     exact hx (by simpa using congrArg (⇑θ) hc)
 
@@ -509,17 +416,17 @@ theorem unitMeas_real_supp_commutator_inv_le (φ ψ : IET 0 1) :
       ≤ 3 * unitMeas.real ({x | φ x ≠ x} ∩ {x | ψ x ≠ x}) := by
   set A : Set ℝ := {x | φ x ≠ x} ∩ {x | ψ x ≠ x} with hAdef
   have hA : MeasurableSet A :=
-    (measurableSet_ne_id (IET.measurable φ)).inter (measurableSet_ne_id (IET.measurable ψ))
+    (measurableSet_ne_id (measurable φ)).inter (measurableSet_ne_id (measurable ψ))
   have h1 : unitMeas.real {x : ℝ | (⁅φ⁻¹, ψ⁻¹⁆) x ≠ x}
       ≤ unitMeas.real (A ∪ ⇑φ ⁻¹' A ∪ ⇑ψ ⁻¹' A) :=
-    unitMeas_real_mono (commutator_inv_supp_subset φ ψ)
+    measureReal_mono (commutator_inv_supp_subset φ ψ)
   have h2 : unitMeas.real (A ∪ ⇑φ ⁻¹' A ∪ ⇑ψ ⁻¹' A)
       ≤ unitMeas.real A + unitMeas.real (⇑φ ⁻¹' A) + unitMeas.real (⇑ψ ⁻¹' A) := by
-    have h := unitMeas_real_union_le (A ∪ ⇑φ ⁻¹' A) (⇑ψ ⁻¹' A)
-    have h' := unitMeas_real_union_le A (⇑φ ⁻¹' A)
+    have h := measureReal_union_le (μ := unitMeas) (A ∪ ⇑φ ⁻¹' A) (⇑ψ ⁻¹' A)
+    have h' := measureReal_union_le (μ := unitMeas) A (⇑φ ⁻¹' A)
     linarith
-  have h3 : unitMeas.real (⇑φ ⁻¹' A) = unitMeas.real A := IET.unitMeas_real_preimage φ hA
-  have h4 : unitMeas.real (⇑ψ ⁻¹' A) = unitMeas.real A := IET.unitMeas_real_preimage ψ hA
+  have h3 : unitMeas.real (⇑φ ⁻¹' A) = unitMeas.real A := unitMeas_real_preimage φ hA
+  have h4 : unitMeas.real (⇑ψ ⁻¹' A) = unitMeas.real A := unitMeas_real_preimage ψ hA
   linarith
 
 /-- **The averaged Birkhoff estimate**: the sum over `i < N` of the measures of `A ∩ f^{-i} S₀`
@@ -543,17 +450,17 @@ theorem sum_inter_le (f : IET 0 1) {A S₀ : Set ℝ} (hA : MeasurableSet A) (hS
     rw [hempty, measure_empty]
   have hAe : ∀ᵐ x ∂ν, x ∈ Set.Ico (0 : ℝ) 1 := by
     rw [MeasureTheory.ae_iff]
-    rwa [show {x : ℝ | x ∉ Set.Ico (0 : ℝ) 1} = (Set.Ico (0 : ℝ) 1)ᶜ from rfl]
+    rwa [← Set.compl]
   have hterm (i) (_ : i ∈ Finset.range N) :
       unitMeas.real (A ∩ ⇑(f ^ i) ⁻¹' S₀)
         = ∫ x, (⇑(f ^ i) ⁻¹' S₀).indicator (fun _ => (1 : ℝ)) x ∂ν := by
-    have hm : MeasurableSet (⇑(f ^ i) ⁻¹' S₀) := hS₀.preimage (IET.measurable_pow f i)
+    have hm : MeasurableSet (⇑(f ^ i) ⁻¹' S₀) := hS₀.preimage (measurable_pow f i)
     have hone : (⇑(f ^ i) ⁻¹' S₀).indicator (fun _ => (1 : ℝ)) = (⇑(f ^ i) ⁻¹' S₀).indicator 1 :=
       rfl
     rw [hone, integral_indicator_one hm, hνreal _ hm, Set.inter_comm]
   have hInt (i) (hi : i ∈ Finset.range N) :
       Integrable (fun x => (⇑(f ^ i) ⁻¹' S₀).indicator (fun _ => (1 : ℝ)) x) ν :=
-          Integrable.indicator (integrable_const 1) (hS₀.preimage (IET.measurable_pow f i))
+          Integrable.indicator (integrable_const 1) (hS₀.preimage (measurable_pow f i))
   calc ∑ i ∈ Finset.range N, unitMeas.real (A ∩ ⇑(f ^ i) ⁻¹' S₀)
       = ∑ i ∈ Finset.range N, ∫ x, (⇑(f ^ i) ⁻¹' S₀).indicator (fun _ => (1 : ℝ)) x ∂ν :=
         Finset.sum_congr rfl hterm
@@ -594,10 +501,10 @@ theorem exists_small_intersection (f g : IET 0 1) {S S₀ : Set ℝ} (hS : Measu
   by_contra hcon
   push Not at hcon
   have b1 := sum_inter_le f hS hS₀ hN hbirk
-  have b2 := sum_inter_le f (hS.preimage (IET.measurable f)) hS₀ hN hbirk
-  have b3 := sum_inter_le f (hS.preimage (IET.measurable g)) hS₀ hN hbirk
-  have hf : unitMeas.real (⇑f ⁻¹' S) = unitMeas.real S := IET.unitMeas_real_preimage f hS
-  have hg : unitMeas.real (⇑g ⁻¹' S) = unitMeas.real S := IET.unitMeas_real_preimage g hS
+  have b2 := sum_inter_le f (hS.preimage (measurable f)) hS₀ hN hbirk
+  have b3 := sum_inter_le f (hS.preimage (measurable g)) hS₀ hN hbirk
+  have hf : unitMeas.real (⇑f ⁻¹' S) = unitMeas.real S := unitMeas_real_preimage f hS
+  have hg : unitMeas.real (⇑g ⁻¹' S) = unitMeas.real S := unitMeas_real_preimage g hS
   have hlow : 6 * ε * N * unitMeas.real S < ∑ i ∈ Finset.range N,
       (unitMeas.real (S ∩ ⇑(f ^ i) ⁻¹' S₀) + unitMeas.real (⇑f ⁻¹' S ∩ ⇑(f ^ i) ⁻¹' S₀)
         + unitMeas.real (⇑g ⁻¹' S ∩ ⇑(f ^ i) ⁻¹' S₀)) := by
@@ -620,5 +527,43 @@ theorem exists_small_intersection (f g : IET 0 1) {S S₀ : Set ℝ} (hS : Measu
     rw [Finset.sum_add_distrib, Finset.sum_add_distrib]
     linarith
   linarith
+
+end IntervalExchange.Pair
+
+namespace IntervalExchange
+
+/-! ## The bridges between `evalWord` and `evalWordEquiv`
+
+`evalWord` evaluates a word in two *exchanges* (`IET 0 1`), which is what the Section 3 development
+uses, while `evalWordEquiv` — the `Equiv`-valued evaluation the challenge speaks of — is stated for
+the underlying permutations of `ℝ` and lives in `IETFree/IET.lean`, beside `mkIETEquiv`.  The two
+bridges are here, because they are about `evalWord`: `evalWord_toEquiv` says the evaluations agree,
+and `evalWord_toEquiv_eq_one` passes a trivial word from one to the other. -/
+
+/-- `evalWord` of `IET`s is `evalWordEquiv` of the underlying equivs: the two evaluations agree. -/
+theorem evalWord_toEquiv (F G : IET 0 1) (w : FreeGroup (Fin 2)) :
+    (evalWord w F G).toEquiv = evalWordEquiv w F.toEquiv G.toEquiv := by
+  induction w using FreeGroup.induction_on with
+  | one => rfl
+  | of x => fin_cases x <;> rfl
+  | inv_of x ih =>
+      have h1 : ((evalWord (FreeGroup.of x) F G)⁻¹).toEquiv
+          = ((evalWord (FreeGroup.of x) F G).toEquiv)⁻¹ := (rfl)
+      simp only [evalWord_inv, map_inv, evalWordEquiv, h1, ih]
+  | mul x y ihx ihy =>
+      have h1 : (evalWord x F G * evalWord y F G).toEquiv
+          = (evalWord x F G).toEquiv * (evalWord y F G).toEquiv := (rfl)
+      simp only [evalWord_mul, map_mul, evalWordEquiv, h1, ihx, ihy]
+
+/-! ## A word trivial for an exchange is trivial for the permutation -/
+
+/-- A word which is trivial for the library's exchanges is trivial for their permutations of `ℝ`. -/
+theorem evalWord_toEquiv_eq_one {w : FreeGroup (Fin 2)} {F G : IET 0 1}
+    (h : evalWord w F G = 1) : evalWordEquiv w F.toEquiv G.toEquiv = 1 := by
+  have hone : (1 : IET 0 1).toEquiv = (1 : Equiv ℝ ℝ) := (rfl)
+  have h1 : (evalWord w F G).toEquiv = (1 : Equiv ℝ ℝ) := by rw [h, hone]
+  rwa [evalWord_toEquiv] at h1
+
+end IntervalExchange
 
 end

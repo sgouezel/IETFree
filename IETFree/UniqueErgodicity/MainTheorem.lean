@@ -5,9 +5,9 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.PosBlocks
+public import IETFree.RauzyVeech.PositiveBlocksRay
 public import IETFree.RauzyVeech.RichPath.RichGreedyPath
-public import IETFree.RauzyVeech.TowerTiling
+public import IETFree.RauzyVeech.Tower.Tiling
 
 /-!
 # Masur–Veech: a.e. unique ergodicity of interval exchange maps
@@ -17,17 +17,20 @@ invariant probability measure carried by `[0, 1)`.  The two inputs of the proof 
 modules below this one:
 
 * richness of the greedy path with the vertices pinned — `RichPath.richGreedyPath`, in
-  `IETFree/RauzyVeech/RichPath/RichGreedyPath.lean`, by the graded induction of the source;
+  `IETFree/RauzyVeech/RichPath/RichGreedyPath.lean`, by the graded induction of AGY (Appendix A of
+  Avila–Gouëzel–Yoccoz, *Exponential mixing for the Teichmüller flow*);
 * the ray criterion from positive blocks — `positiveBlocksRay`, in
-  `IETFree/RauzyVeech/PosBlocks.lean`.
+  `IETFree/RauzyVeech/PositiveBlocksRay.lean`.
 
-Neither is a hypothesis of anything: the three steps of the assembly below take no arguments
-beyond `P`, `hP` and `2 ≤ n`:
+Neither is a hypothesis of anything: the two steps of the assembly below, and the theorem itself,
+take no arguments beyond `P`, `hP` and `2 ≤ n`:
 
 * `hasPositiveBlocks_ae` — richness, and the uniform bound on the entries, give positive blocks a.e.
-  with one bound `M` (`IETDatum₂.exists_uniform_bound'`, where `2 ≤ n` enters);
+  with one bound `M` (`IETDatum₂.exists_uniform_bound'`, one constant for all the vertices);
 * `rayCondition_of_components` — those blocks, and the ray criterion, give the ray condition a.e.;
-* `main_of_components` — the ray condition and the injectivity of the length map give the theorem.
+
+and `masurVeech_ae_unique_invariant`, the theorem, closes the argument: the ray condition and the
+injectivity of the length map give uniqueness a.e.
 
 The measure is required to live on `[0, 1)`: without `μ (Ico 0 1) = 1` the statement is false, as
 the exchange is the identity off `[0,1)` and the Dirac mass at `2` is invariant too.
@@ -38,10 +41,12 @@ below. -/
 
 @[expose] public section
 
-
 open MeasureTheory
+open IntervalExchange.RauzyVeech IntervalExchange.RauzyVeech.RichPath
 
 /-! ## The assembly: the two inputs, one a.e. step each, and the length map -/
+
+namespace IntervalExchange.UniqueErgodicity
 
 section AssemblySteps
 
@@ -50,11 +55,11 @@ variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 /-- **Richness gives the hypothesis of the ray criterion a.e., with one bound `M` for all the
 blocks**: richness returns to the base vertex `P` at unbounded times and then follows a strictly
 positive word `v`, whose entries are bounded by one constant for every irreducible vertex
-(`IETDatum₂.exists_uniform_bound'`, which is where `2 ≤ n` enters).  This is where the pinned vertex
+(`IETDatum₂.exists_uniform_bound'`).  This is where the pinned vertex
 of `RichPath.richGreedyPath` is used, and where the bound comes from. -/
 theorem hasPositiveBlocks_ae (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) :
     ∀ᵐ lam ∂(simplexVolumeOn α), ∃ M : ℕ, HasPositiveBlocks P lam M := by
-  obtain ⟨C₁, -, hword⟩ := IETDatum₂.exists_uniform_bound' (α := α) (n := n) hn
+  obtain ⟨C₁, -, hword⟩ := IETDatum₂.exists_uniform_bound' (α := α) (n := n)
   obtain ⟨M, hM⟩ := exists_nat_ge C₁
   obtain ⟨v, hv⟩ := hword P hP
   filter_upwards [RichPath.richGreedyPath P hP hn P [] rfl v] with lam hl
@@ -80,39 +85,24 @@ theorem rayCondition_of_components (P : IETDatum₂ α n) (hP : P.Irreducible) (
   obtain ⟨M, hM⟩ := hbl
   exact positiveBlocksRay P hP hn M lam (fun k => hstop _) hM
 
-omit [DecidableEq α] in
-/-- **The assembly: the two inputs give the main theorem.**  `hasPositiveBlocks_ae` turns richness,
-and the uniform bound on the entries of a positive Rauzy matrix, into the hypothesis of the ray
-criterion; `positiveBlocksRay` then gives the ray condition a.e.;
-`InvariantMeasure.masurVeech_of_components` closes the argument with the unconditional injectivity
-`TowerInjectivity.length_injective_of_tower`. -/
-theorem main_of_components (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) :
+end AssemblySteps
+
+/-- **Masur–Veech, measure form.** For irreducible combinatorial data on at least two letters,
+almost every length vector gives an exchange with exactly one invariant probability measure carried
+by `[0, 1)`.  `hasPositiveBlocks_ae` turns richness, and the uniform bound on the entries of a
+positive Rauzy matrix, into the hypothesis of the ray criterion; `positiveBlocksRay` then gives the
+ray condition a.e. (`rayCondition_of_components`); `masurVeech_of_components` closes the argument
+with the unconditional injectivity `length_injective_of_tower`.  `Fintype.card α = n` is the
+nonempty alphabet the last step needs. -/
+theorem masurVeech_ae_unique_invariant {α : Type*} [Fintype α] {n : ℕ} [NeZero n]
+    (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) :
     ∀ᵐ lam ∂(simplexVolumeOn α), ∃! μ : ProbabilityMeasure ℝ,
       Invariant μ (P.toIET lam) ∧ (μ : Measure ℝ) (Set.Ico (0 : ℝ) 1) = 1 := by
   have hcard : Fintype.card α = n := by
     rw [Fintype.card_congr P.piTop, Fintype.card_fin]
   have : Nonempty α := Fintype.card_pos_iff.mp (by omega)
-  exact InvariantMeasure.masurVeech_of_components P (rayCondition_of_components P hP hn)
-    (TowerInjectivity.length_injective_of_tower P hP hn)
-
-end AssemblySteps
-
-/-- **Masur–Veech, measure form.** For irreducible combinatorial data on at least two letters,
-almost every length vector gives an exchange with exactly one invariant probability measure carried
-by `[0, 1)`. -/
-theorem masurVeech_ae_unique_invariant {α : Type*} [Fintype α]
-    (n : ℕ) (hn : 2 ≤ n) [NeZero n] (P : IETDatum₂ α n) (hP : P.Irreducible) :
-    ∀ᵐ lam ∂(simplexVolumeOn α), ∃! μ : ProbabilityMeasure ℝ,
-      Invariant μ (P.toIET lam) ∧ (μ : Measure ℝ) (Set.Ico (0 : ℝ) 1) = 1 := by
-  exact main_of_components P hP hn
-
-/-! ### Axiom report
-
-Every declaration of the Rauzy–Veech development is used in the proof of
-`masurVeech_ae_unique_invariant`, and the report of its axioms is `[propext, Classical.choice,
-Quot.sound]`, with no `sorryAx` and no custom axiom.  The library's single axiom report is the one
-printed in `IETFree/ChallengeSolved.lean`, for the main theorem, whose proof reaches this one. -/
-
+  exact masurVeech_of_components P (rayCondition_of_components P hP hn)
+    (length_injective_of_tower P hP hn)
 
 /-- **Masur–Veech, single-permutation form.**  For an irreducible permutation of `n ≥ 2` letters,
 almost every length vector of the simplex gives the exchange `mkIET1 lam π` a unique invariant
@@ -127,11 +117,13 @@ theorem masurVeech_ae_unique_invariant_perm {n : ℕ} (hn : 2 ≤ n) [NeZero n]
     (π : Equiv.Perm (Fin n)) (hπ : IsIrreduciblePerm π) :
     ∀ᵐ lam ∂(simplexVolume n), ∃! μ : ProbabilityMeasure ℝ,
       Invariant μ (mkIET1 lam π) ∧ (μ : Measure ℝ) (Set.Ico (0 : ℝ) 1) = 1 := by
-  have hmain := masurVeech_ae_unique_invariant (α := Fin n) n hn (IETDatum₂.ofPerm π)
-    ((IETDatum₂.ofPerm_irreducible_iff π).mpr hπ)
+  have hmain := masurVeech_ae_unique_invariant (α := Fin n) (IETDatum₂.ofPerm π)
+    ((IETDatum₂.ofPerm_irreducible_iff π).mpr hπ) hn
   rw [simplexVolumeOn_fin n] at hmain
-  filter_upwards [hmain, ae_mem_simplexOn_fin (Nat.pos_iff_ne_zero.mp (by omega))]
+  filter_upwards [hmain, ae_mem_simplex_fin (Nat.pos_iff_ne_zero.mp (by omega))]
     with lam hl h
   rwa [IETDatum₂.ofPerm_toIET π h, ← mkIET1_of_mem h] at hl
+
+end IntervalExchange.UniqueErgodicity
 
 end

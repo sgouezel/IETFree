@@ -5,25 +5,24 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.UniqueErgodicity.Limits
 public import IETFree.UniqueErgodicity.Split
-public import IETFree.UniqueErgodicity.Transfer
-public import Mathlib
+public import Mathlib.MeasureTheory.Constructions.Polish.Basic
+public import Mathlib.MeasureTheory.Measure.Typeclasses.Probability
 
 /-!
 # Measurability preparation for the split interval
 
 This file collects the measure-theoretic facts that the germ-map construction (`IET.lean`) needs
 from the
-split interval, and none of which is in `Split.lean`, `Limits.lean` or `Transfer.lean`:
+split interval, and none of which is in `Split.lean`, `Limits.lean` or `Transfer/Basic.lean`:
 
 * `splitSet_countable`: the split set is countable (the `hD` hypothesis of the lift lemma);
 * the `BorelSpace` instances on `SplitI D` and on the right part `[0⁺, 1⁻]`, which instance
   search supplies only under `[Countable D]` (a countable product of second countable spaces is
   second countable), together with the compactness of the right part;
 * `measurable_proj`: the projection of the split interval is measurable;
-* `germSection`, a *total* measurable section of the projection on `[0, 1)`, obtained by clamping
-  the real line into `[0, 1]` and taking the right germ;
+* `germSectionIco`, a *total* measurable section of the projection on `[0, 1)`, obtained by
+  clamping the real line into `[0, 1]` and taking the right germ;
 * `lift_unique_on_Ico`: the corrected lift lemma.  The blueprint's Lemma 4.1 asks for a section
   `s : ℝ → X` with `p (s x) = x` for *every* `x : ℝ`, which cannot hold as soon as `p` has
   bounded image (the split interval is the case at hand: `proj` maps onto `[0, 1]`).  The version
@@ -36,9 +35,9 @@ split interval, and none of which is in `Split.lean`, `Limits.lean` or `Transfer
 open MeasureTheory Filter Set Topology
 open scoped ENNReal NNReal BigOperators
 
-namespace IETFree.UniqueErgodicity
-
 /-! ## The split set -/
+
+namespace IntervalExchange.UniqueErgodicity
 
 section SplitSet
 
@@ -47,7 +46,7 @@ variable {T : ℝ ≃ ℝ} {s : Finset ℝ}
 /-- **The split set is countable**: a countable union over `ℤ` of images of the finite set
 `s ∪ {1}`. -/
 theorem splitSet_countable (T : ℝ ≃ ℝ) (s : Finset ℝ) : (splitSet T s).Countable := by
-  have hunion : splitSet T s = ⋃ k : ℤ, ⇑(T ^ k) '' ((s : Set ℝ) ∪ {1}) := rfl
+  have hunion : splitSet T s = ⋃ k : ℤ, ⇑(T ^ k) '' ((s : Set ℝ) ∪ {1}) := (rfl)
   rw [hunion]
   exact Set.countable_iUnion fun k =>
     ((s.finite_toSet.union (Set.finite_singleton 1)).image (⇑(T ^ k))).countable
@@ -66,12 +65,6 @@ variable {D : Set ℝ}
 not removable: it is what makes `D → Bool` second countable. -/
 instance instBorelSpace [Countable D] : BorelSpace (SplitI D) := inferInstance
 
-/-- With a countable split set, the measurable space of the split interval (the one induced by its
-embedding into `ℝ × (D → Bool)`) is the Borel `σ`-algebra of its topology. -/
-theorem measurableSpace_eq_borel [Countable D] :
-    (inferInstance : MeasurableSpace (SplitI D)) = borel (SplitI D) :=
-  BorelSpace.measurable_eq
-
 /-- The right part `[0⁺, 1⁻]` of the split interval, a closed subset of a compact space, is a
 Borel space for a countable split set. -/
 instance instBorelSpaceRightPart [Countable D] : BorelSpace (rightPart D) := inferInstance
@@ -80,100 +73,11 @@ instance instBorelSpaceRightPart [Countable D] : BorelSpace (rightPart D) := inf
 instance instCompactSpaceRightPart : CompactSpace (rightPart D) :=
   isCompact_iff_compactSpace.mp (isCompact_rightPart D)
 
-/-- **The fibre of the projection over a point outside the split set is a single point.**  This is
-the injectivity hypothesis `hinj` of the (corrected) lift lemma, for the split interval and for
-every split set: two points with the same projection outside `D` have the same side choices. -/
-theorem eq_of_proj_eq_of_notMem {z z' : SplitI D} (h : proj z = proj z')
-    (hz : proj z ∉ D) : z = z' := by
-  refine ext h (funext fun d => ?_)
-  rcases lt_trichotomy (d : ℝ) (proj z) with hlt | heq | hgt
-  · rw [coord_of_lt hlt, coord_of_lt (h ▸ hlt)]
-  · exact absurd (heq ▸ d.2) hz
-  · rw [coord_of_lt' hgt, coord_of_lt' (h ▸ hgt)]
-
 end SplitI
 
 /-- **The projection of the split interval is measurable** (it is even continuous). -/
 theorem measurable_proj {D : Set ℝ} : Measurable (SplitI.proj (D := D)) :=
   measurable_fst.comp measurable_subtype_coe
-
-/-- A `Bool`-valued function is measurable as soon as the preimage of `true` is measurable (the
-measurable space of `Bool` is discrete). -/
-theorem measurable_of_measurableSet_eq_true {α : Type*} [MeasurableSpace α] {f : α → Bool}
-    (h : MeasurableSet {a | f a = true}) : Measurable f := by
-  intro s _
-  by_cases ht : true ∈ s
-  · by_cases hf : false ∈ s
-    · have hsu : s = Set.univ := by
-        ext b
-        cases b <;> simp [ht, hf]
-      rw [hsu, Set.preimage_univ]
-      exact MeasurableSet.univ
-    · have hs : s = {true} := by
-        ext b
-        cases b <;> simp [ht, hf]
-      rw [hs]
-      exact h
-  · by_cases hf : false ∈ s
-    · have hs : s = {false} := by
-        ext b
-        cases b <;> simp [ht, hf]
-      have hpre : f ⁻¹' ({false} : Set Bool) = {a | f a = true}ᶜ := by
-        ext a
-        cases hfa : f a <;> simp [hfa]
-      rw [hs, hpre]
-      exact h.compl
-    · have hs : s = ∅ := by
-        ext b
-        cases b <;> simp [ht, hf]
-      rw [hs, Set.preimage_empty]
-      exact MeasurableSet.empty
-
-/-- **The side choice of the split interval is measurable** for a countable split set: the set of
-points whose side choice is `true` is the union of the points projecting outside `D` and, for each
-`d : D`, of the points projecting to `d` with `d`-th coordinate `true` (a countable union, which is
-where the countability of `D` is used). -/
-theorem SplitI.measurable_side {D : Set ℝ} [Countable D] :
-    Measurable (SplitI.side (D := D)) := by
-  have hD : MeasurableSet D :=
-    (Set.countable_coe_iff.mp (inferInstance : Countable ↥D)).measurableSet
-  have hset : {z : SplitI D | SplitI.side z = true}
-      = {z : SplitI D | SplitI.proj z ∉ D} ∪ ⋃ d : D,
-          ({z : SplitI D | SplitI.proj z = (d : ℝ)} ∩ {z : SplitI D | z.1.2 d = true}) := by
-    ext z
-    simp only [Set.mem_ofPred_eq, Set.mem_union, Set.mem_iUnion, Set.mem_inter_iff]
-    constructor
-    · intro hz
-      by_cases hzD : SplitI.proj z ∈ D
-      · refine Or.inr ⟨⟨SplitI.proj z, hzD⟩, rfl, ?_⟩
-        rwa [SplitI.side, dite_eq_left hzD] at hz
-      · exact Or.inl hzD
-    · rintro (hz | ⟨d, hzd, hzcoord⟩)
-      · rw [SplitI.side, dite_eq_right hz]
-      · have hzdD : SplitI.proj z ∈ D := hzd ▸ d.2
-        rw [SplitI.side, dite_eq_left hzdD,
-          show (⟨SplitI.proj z, hzdD⟩ : D) = d from Subtype.ext hzd]
-        exact hzcoord
-  have hmeas : MeasurableSet {z : SplitI D | SplitI.side z = true} := by
-    rw [hset]
-    refine MeasurableSet.union (hD.compl.preimage measurable_proj) (MeasurableSet.iUnion ?_)
-    intro d
-    have hcoord : MeasurableSet {z : SplitI D | z.1.2 d = true} :=
-      (measurableSet_singleton (true : Bool)).preimage (SplitI.continuous_coord d).measurable
-    exact ((measurableSet_singleton (d : ℝ)).preimage measurable_proj).inter hcoord
-  have hfun : SplitI.side (D := D)
-      = fun z : SplitI D =>
-          if z ∈ {z : SplitI D | SplitI.side z = true} then true else false := by
-    funext z
-    by_cases hz : z ∈ {z : SplitI D | SplitI.side z = true}
-    · rw [ite_eq_left hz]
-      exact hz
-    · rw [ite_eq_right hz]
-      cases hsz : SplitI.side z with
-      | false => rfl
-      | true => exact absurd hsz hz
-  rw [hfun]
-  exact Measurable.ite hmeas measurable_const measurable_const
 
 end MeasurableStructure
 
@@ -183,54 +87,8 @@ section GermSection
 
 variable {D : Set ℝ}
 
-/-- The clamp of a real number into `[0, 1]`, used to make the germ section total. -/
-noncomputable def clampI (x : ℝ) : ℝ := min (max x 0) 1
-
-theorem continuous_clampI : Continuous clampI :=
-  (continuous_id.max continuous_const).min continuous_const
-
+/-- `clampI` is measurable: it is continuous (`continuous_clampI`, in `Split.lean`). -/
 theorem measurable_clampI : Measurable clampI := continuous_clampI.measurable
-
-theorem clampI_mem (x : ℝ) : clampI x ∈ Set.Icc (0 : ℝ) 1 :=
-  ⟨le_min (le_max_right x 0) zero_le_one, min_le_right _ _⟩
-
-theorem clampI_eq_self {x : ℝ} (hx : x ∈ Set.Icc (0 : ℝ) 1) : clampI x = x := by
-  unfold clampI
-  rw [max_eq_left hx.1, min_eq_left hx.2]
-
-/-- **The germ section** of the split interval: the right germ of the clamp of `x` into `[0, 1]`.
-It is a total function `ℝ → SplitI D`, a measurable section of the projection on `[0, 1)`. -/
-noncomputable def germSection (x : ℝ) : SplitI D :=
-  SplitI.rightGerm (clampI x) (clampI_mem x)
-
-/-- **The germ section is a section of the projection on `[0, 1)`.** -/
-theorem proj_germSection {x : ℝ} (hx : x ∈ Set.Ico (0 : ℝ) 1) :
-    SplitI.proj (germSection (D := D) x) = x := by
-  have h : clampI x = x := clampI_eq_self ⟨hx.1, le_of_lt hx.2⟩
-  simp only [germSection, h, SplitI.proj_rightGerm]
-
-/-- The value of the germ section, as a point of the ambient product `ℝ × (D → Bool)`.  This is
-the function whose measurability gives that of the germ section. -/
-noncomputable def germSectionVal (x : ℝ) : ℝ × (D → Bool) :=
-  (clampI x, fun d : D => decide ((d : ℝ) ≤ clampI x))
-
-theorem measurable_germSectionVal : Measurable (germSectionVal (D := D)) := by
-  refine Measurable.prodMk measurable_clampI ?_
-  rw [measurable_pi_iff]
-  intro d
-  have hif : (fun x : ℝ => decide ((d : ℝ) ≤ clampI x))
-      = fun x : ℝ => if (d : ℝ) ≤ clampI x then true else false := by
-    funext x
-    by_cases h : (d : ℝ) ≤ clampI x <;> simp [h]
-  rw [hif]
-  exact Measurable.ite (measurableSet_Ici.preimage measurable_clampI) measurable_const
-    measurable_const
-
-/-- **The germ section is measurable**, for the measurable space of the split interval induced by
-its embedding into `ℝ × (D → Bool)`. -/
-theorem measurable_germSection : Measurable (germSection (D := D)) := by
-  unfold germSection
-  exact Measurable.subtype_mk measurable_germSectionVal
 
 end GermSection
 
@@ -284,6 +142,6 @@ theorem lift_unique_on_Ico {X : Type*} [MeasurableSpace X]
 
 end LiftUnique
 
-end IETFree.UniqueErgodicity
+end IntervalExchange.UniqueErgodicity
 
 end

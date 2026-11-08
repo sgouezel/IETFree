@@ -5,12 +5,17 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.Pair.BlockLemma
-public import IETFree.UniqueErgodicity.IET
+public import IETFree.Pair.Block.Lemma
+public import IETFree.Pair.ProductSimplex
+public import IETFree.Pair.RobustRelation.FreeParams
+public import IETFree.Pair.RobustRelation.OpenSet
 
 /-!
-The **solution of the challenge**: `Challenge.main`, the unconditional form of Theorem 1.1, proved
-with no `sorry` and no axiom.
+# The solution of the challenge
+
+`Challenge.main`, the unconditional form of Theorem 1.1 of Sébastien Gouëzel, *Almost every pair
+of interval exchange transformations does not generate a free group* (arXiv:2610.29993), in the
+words of the challenge.
 
 `Challenge.lean`, one directory above `IETFree/`, states Theorem 1.1 in Mathlib-only language:
 
@@ -36,154 +41,35 @@ hypothesis here either.
 
 From there, the mathematical content is Lemma 3.4 for almost every length vector
 (`exists_word_ae`, from `main_theorem_of_blocks` — the a.e. block data of
-`BlockData.exists_ae_block_good` plus the assembly `exists_word_trivial_on_all_of_blocks`),
+`exists_ae_block_good` plus the assembly `exists_word_trivial_on_all_of_blocks`),
 repackaged into the permutations `mkIETEquiv p_i π 0` by `evalWord_toEquiv_eq_one`, with
 `simplexMap d (toReal p).1 = p.1` almost everywhere (`ae_toReal_simplexMap`).
 
-The root theorem `main` is `Challenge.main` in its words, and carries the proof above; it is the
-only place in the library that mentions the challenge's vocabulary (`evalWordEquiv`), and it
-carries the single `#print axioms` of the tree.
+The root theorem `main` is `Challenge.main` in its words, and carries the proof above.
+
+The remark that follows the main theorem is proved here as well, in the `Pair` namespace: the
+almost-sure statement transported to the free parameters (`ae_hasRelation`), and the two
+conclusions — an open set of full measure in the free coordinates
+(`exists_isOpen_subset_hasRelation`) and on the paper's `Δ_π × Δ_σ`
+(`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`).  The machinery behind them is in
+`IETFree/Pair/RobustRelation/`, which sits *below* this file: its assembly takes the almost-sure
+statement as a hypothesis precisely so that it can, and the file feeds it `main` through the chart
+of `Pair/ProductSimplex.lean`.  The challenge's vocabulary (`evalWordEquiv`) lives in
+`Pair/MeasureTools.lean` and that chart in `Pair/ProductSimplex.lean`, both below, where the
+Section 3 machinery uses them too.
+
+The file ends with the `#print axioms` reports of the tree: the main theorem and the two
+conclusions of the remark.
 -/
 
 @[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
+open IntervalExchange.Pair IntervalExchange.RauzyVeech IntervalExchange.Rigidity
+open IntervalExchange.UniqueErgodicity
 
-/-! ## The `Equiv`-valued evaluation of a word
-
-`evalWord` evaluates a word in two *exchanges* (`IET 0 1`), which is what the whole Section 3
-development uses.  The statement of the challenge, on the other hand, speaks of the underlying
-permutations of `ℝ` — `mkIETEquiv p π 0 : Equiv ℝ ℝ` — where no `IsIET` datum is available, so the
-evaluation has to be defined there directly.  That is the only role of `evalWordEquiv`. -/
-
-/-- **The evaluation of a word in two equivs**: the `Equiv`-valued analogue of `evalWord`, for a
-pair of permutations of `ℝ`. -/
-noncomputable def evalWordEquiv (w : FreeGroup (Fin 2)) (f g : Equiv ℝ ℝ) : Equiv ℝ ℝ :=
-  FreeGroup.lift (fun i : Fin 2 => if i = 0 then f else g) w
-
-/-- `evalWord` of `IET`s is `evalWordEquiv` of the underlying equivs: the two evaluations agree. -/
-theorem evalWord_toEquiv (F G : IET 0 1) (w : FreeGroup (Fin 2)) :
-    (evalWord w F G).toEquiv = evalWordEquiv w F.toEquiv G.toEquiv := by
-  induction w using FreeGroup.induction_on with
-  | one => rfl
-  | of x => by_cases hx : x = 0 <;> simp [hx, evalWordEquiv, evalWord]
-  | inv_of x ih =>
-      have h1 : ((evalWord (FreeGroup.of x) F G)⁻¹).toEquiv
-          = ((evalWord (FreeGroup.of x) F G).toEquiv)⁻¹ := rfl
-      simp only [evalWord_inv, map_inv, evalWordEquiv, h1, ih]
-  | mul x y ihx ihy =>
-      have h1 : (evalWord x F G * evalWord y F G).toEquiv
-          = (evalWord x F G).toEquiv * (evalWord y F G).toEquiv := rfl
-      simp only [evalWord_mul, map_mul, evalWordEquiv, h1, ihx, ihy]
-
-namespace ChallengeSolved
-
-/-! ## A word trivial for an exchange is trivial for the permutation -/
-
-/-- A word which is trivial for the library's exchanges is trivial for their permutations of `ℝ`. -/
-theorem evalWord_toEquiv_eq_one {w : FreeGroup (Fin 2)} {F G : IET 0 1}
-    (h : evalWord w F G = 1) : evalWordEquiv w F.toEquiv G.toEquiv = 1 := by
-  have hone : (1 : IET 0 1).toEquiv = (1 : Equiv ℝ ℝ) := rfl
-  have h1 : (evalWord w F G).toEquiv = (1 : Equiv ℝ ℝ) := by rw [h, hone]
-  rwa [evalWord_toEquiv] at h1
-
-/-! ## From the free coordinates to the length vectors
-
-`simplexVolume d` is the pushforward of Lebesgue measure on the free region `simplexRegion d` under
-`simplexMap d`, so `(simplexVolume d).prod (simplexVolume e)` is the pushforward under
-`prodSimplexMap d e`.
-
-Pushing an almost-sure statement *forward* along a map normally needs measurability of the
-predicate, which the conclusion of Lemma 3.4 (an existential over words, with equality of functions)
-does not have.  The `toReal` projection avoids it: a statement for almost every length vector `p` is
-a statement for almost every `toReal p`, which is a *pullback*, and `toReal` inverts `simplexMap` on
-the region. -/
-
-/-- The product of the two parametrisations of the simplices.  (`Prod.map` is
-`implicit_reducible` in the core library, so it is not unfolded by `rw`; a plain lambda is easier to
-work with.) -/
-noncomputable def prodSimplexMap (d e : ℕ) :
-    PReal d e → (Fin d → ℝ≥0) × (Fin e → ℝ≥0) :=
-  fun z => (simplexMap d z.1, simplexMap e z.2)
-
-/-- **`toReal` inverts the parametrisation of the product of the two simplices**, at a point of
-the product of the two regions: the counterpart of `toReal_simplexMap` for `prodSimplexMap`. -/
-theorem toReal_prodSimplexMap {d e : ℕ} [NeZero d] [NeZero e] {z : PReal d e}
-    (h1 : z.1 ∈ simplexRegion d) (h2 : z.2 ∈ simplexRegion e) :
-    toReal (prodSimplexMap d e z) = z := by
-  obtain ⟨v, w⟩ := z
-  exact toReal_simplexMap h1.1 h2.1
-
-theorem measurable_prodSimplexMap (d e : ℕ) : Measurable (prodSimplexMap d e) := by
-  unfold prodSimplexMap
-  exact ((measurable_simplexMap d).comp measurable_fst).prodMk
-    ((measurable_simplexMap e).comp measurable_snd)
-
-/-- The product of the two simplex measures is the pushforward of Lebesgue measure on the product of
-the two free regions under `simplexMap d × simplexMap e`. -/
-theorem prod_simplexVolume_eq_map (d e : ℕ) :
-    (simplexVolume d).prod (simplexVolume e)
-      = (((volume : Measure (Fin (d - 1) → ℝ)).restrict (simplexRegion d)).prod
-          (volume.restrict (simplexRegion e))).map (prodSimplexMap d e) := by
-  have h := MeasureTheory.Measure.map_prod_map
-    ((volume : Measure (Fin (d - 1) → ℝ)).restrict (simplexRegion d))
-    (volume.restrict (simplexRegion e)) (measurable_simplexMap d) (measurable_simplexMap e)
-  rw [simplexVolume, simplexVolume, h]
-  congr 1
-
-/-- **On the support of the simplex measure, the free coordinates invert `simplexMap`.** -/
-theorem ae_toReal_simplexMap {d e : ℕ} [NeZero d] [NeZero e] :
-    ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)), prodSimplexMap d e (toReal p) = p := by
-  have hregion : ((volume.restrict (simplexRegion d)).prod
-      (volume.restrict (simplexRegion e)))
-      ((simplexRegion d ×ˢ simplexRegion e)ᶜ) = 0 := by
-    rw [Measure.prod_restrict,
-      Measure.restrict_apply
-        ((measurableSet_simplexRegion d).prod (measurableSet_simplexRegion e)).compl,
-      Set.compl_inter_self, measure_empty]
-  have hS : MeasurableSet {p : (Fin d → ℝ≥0) × (Fin e → ℝ≥0) |
-      prodSimplexMap d e (toReal p) = p} :=
-    measurableSet_eq_fun ((measurable_prodSimplexMap d e).comp continuous_toReal.measurable)
-      measurable_id
-  -- in the region, `toReal` inverts `simplexMap`
-  have hfixpoint (z) (hz : z ∈ (simplexRegion d ×ˢ simplexRegion e)) :
-      prodSimplexMap d e (toReal (prodSimplexMap d e z)) = prodSimplexMap d e z := by
-    obtain ⟨v, w⟩ := z
-    obtain ⟨hv, hw⟩ := hz
-    rw [toReal_prodSimplexMap hv hw]
-  rw [prod_simplexVolume_eq_map, ae_iff, ← Set.compl_ofPred,
-    Measure.map_apply (measurable_prodSimplexMap d e) hS.compl]
-  refine measure_mono_null (fun z hz => ?_) hregion
-  simp only [Set.mem_preimage, Set.mem_compl_iff] at hz ⊢
-  by_contra hmem
-  exact hz (hfixpoint z hmem)
-
-/-- **The transfer of an almost-sure statement from the free coordinates to the length vectors.** -/
-theorem ae_prod_of_ae_free {d e : ℕ} [NeZero d] [NeZero e]
-    {P : (Fin d → ℝ≥0) × (Fin e → ℝ≥0) → Prop}
-    (h : ∀ᵐ z ∂((volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e))),
-      P (prodSimplexMap d e z)) :
-    ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)), P p := by
-  -- `toReal` inverts `simplexMap` almost everywhere
-  have hcongr : ((((volume : Measure (Fin (d - 1) → ℝ)).restrict (simplexRegion d)).prod
-      (volume.restrict (simplexRegion e))).map (prodSimplexMap d e)).map (toReal (d := d) (e := e))
-      = ((volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e))) := by
-    rw [Measure.map_map continuous_toReal.measurable (measurable_prodSimplexMap d e),
-      Measure.map_congr ?_, Measure.map_id]
-    filter_upwards [ae_mem_simplexRegion_prod (d := d) (e := e)] with z hz
-    exact toReal_prodSimplexMap hz.1 hz.2
-  -- the statement for almost every length vector, read through `toReal`
-  have hA : ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)),
-      P (prodSimplexMap d e (toReal p)) := by
-    rw [prod_simplexVolume_eq_map]
-    refine ae_of_ae_map (f := toReal (d := d) (e := e))
-      (p := fun q => P (prodSimplexMap d e q)) continuous_toReal.aemeasurable ?_
-    rw [hcongr]
-    exact h
-  filter_upwards [hA, ae_toReal_simplexMap (d := d) (e := e)] with p hp hfix
-  rw [hfix] at hp
-  exact hp
+namespace IntervalExchange
 
 /-! ## The mathematical content of the theorem, in the library's language -/
 
@@ -193,11 +79,11 @@ the exchanges of the library. -/
 theorem exists_word_ae {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
     (σ : Equiv.Perm (Fin e)) :
     ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)),
-      ∀ (D : IETDatum d) (E : IETDatum e), D.π = π → E.π = σ →
+      ∀ (D : IETDatum d) (E : IETDatum e), D.perm = π → E.perm = σ →
         D.v = (toReal p).1 → E.v = (toReal p).2 →
           ∃ w : FreeGroup (Fin 2), w ≠ 1 ∧ evalWord w D.toIET E.toIET = 1 := by
   refine ae_prod_of_ae_free (P := fun p => ∀ (D : IETDatum d) (E : IETDatum e),
-    D.π = π → E.π = σ → D.v = (toReal p).1 → E.v = (toReal p).2 →
+    D.perm = π → E.perm = σ → D.v = (toReal p).1 → E.v = (toReal p).2 →
       ∃ w : FreeGroup (Fin 2), w ≠ 1 ∧ evalWord w D.toIET E.toIET = 1) ?_
   filter_upwards [main_theorem_of_blocks π σ,
     ae_mem_simplexRegion_prod (d := d) (e := e)] with z hz hzmem
@@ -211,22 +97,19 @@ theorem exists_word_ae {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d
 
 /-! ## The theorem of the challenge file -/
 
-
-end ChallengeSolved
-
-/-! ## The theorem of the challenge file -/
-
 /-- **Theorem 1.1 of the paper**: for almost every pair of length vectors of total mass `1`, the two
 exchanges satisfy a nontrivial relation in the group of permutations of `ℝ`.  This is
 `Challenge.main`, in its words, with nothing left as a hypothesis: Masur–Veech's theorem and
-Veech's rigidity are applied inside the proof. -/
+Veech's rigidity are applied inside the proof.  The a.e. statement is not vacuous: the measure it is
+taken with, `simplexVolume d × simplexVolume e`, is nonzero (`simplexVolume_ne_zero`), so "almost
+every pair" is a set of positive measure. -/
 theorem main {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
     (σ : Equiv.Perm (Fin e)) :
     ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)),
       ∃ w : FreeGroup (Fin 2), w ≠ 1 ∧
         evalWordEquiv w (mkIETEquiv p.1 π 0) (mkIETEquiv p.2 σ 0) = 1 := by
   -- Lemma 3.4 in the library's language
-  have hQ := ChallengeSolved.exists_word_ae π σ
+  have hQ := exists_word_ae π σ
   -- the free coordinates of almost every length vector lie in the region
   have hregmeas : MeasurableSet {p : (Fin d → ℝ≥0) × (Fin e → ℝ≥0) |
       toReal p ∈ simplexRegion d ×ˢ simplexRegion e} :=
@@ -234,14 +117,14 @@ theorem main {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
       continuous_toReal.measurable
   have hreg : ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)),
       toReal p ∈ simplexRegion d ×ˢ simplexRegion e := by
-    rw [ChallengeSolved.prod_simplexVolume_eq_map,
-      MeasureTheory.ae_map_iff (ChallengeSolved.measurable_prodSimplexMap d e).aemeasurable
+    rw [prod_simplexVolume_eq_map,
+      MeasureTheory.ae_map_iff (measurable_prodSimplexMap d e).aemeasurable
         hregmeas]
     filter_upwards [ae_mem_simplexRegion_prod (d := d) (e := e)] with z hz
     obtain ⟨v, w⟩ := z
-    rw [ChallengeSolved.toReal_prodSimplexMap hz.1 hz.2]
+    rw [toReal_prodSimplexMap hz.1 hz.2]
     exact hz
-  filter_upwards [hQ, hreg, ChallengeSolved.ae_toReal_simplexMap (d := d) (e := e)]
+  filter_upwards [hQ, hreg, ae_toReal_simplexMap (d := d) (e := e)]
     with p hp hpmem hfix
   -- the data with lengths `p`
   obtain ⟨w, hw1, hw2⟩ := hp ⟨π, (toReal p).1, hpmem.1⟩ ⟨σ, (toReal p).2, hpmem.2⟩ rfl rfl rfl rfl
@@ -249,13 +132,87 @@ theorem main {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
   -- the same word, in the permutations of `ℝ`
   have hw3 : evalWordEquiv w (mkIETEquiv (simplexMap d (toReal p).1) π 0)
       (mkIETEquiv (simplexMap e (toReal p).2) σ 0) = 1 :=
-    ChallengeSolved.evalWord_toEquiv_eq_one hw2
+    evalWord_toEquiv_eq_one hw2
   -- and the length vectors are those of `p`
   have hp1 : p.1 = simplexMap d (toReal p).1 := (congrArg Prod.fst hfix).symm
   have hp2 : p.2 = simplexMap e (toReal p).2 := (congrArg Prod.snd hfix).symm
   rwa [hp1, hp2]
 
--- The axiom check of the library: the single `#print axioms` of the tree, for the main theorem.
+
+/-! ## The remark after the main theorem
+
+The remark that follows Theorem 1.1 states that the relation of a trivial word is robust, and that
+therefore the pairs not generating a free group contain an open set of full measure.  The machinery
+is in `IETFree/Pair/RobustRelation/` — the parametrised bad set, the symbolic data of an arbitrary
+word with the robustness of a trivial word, and the assembly of the open set from an almost-sure
+input.  That assembly takes the a.e. statement as a hypothesis, precisely so that it can sit below
+this file; what is proved here is the two conclusions, in the free coordinates and on `Δ_π × Δ_σ`,
+by feeding it `main` through the chart of `Pair/ProductSimplex.lean`. -/
+
+namespace Pair
+
+/-- **Theorem 1.1 in the free coordinates: almost every parameter pair carries a nontrivial
+relation.**
+
+This is `main`, above, read on the free coordinates `PReal d e`.  The measure is the product of the
+restrictions of Lebesgue measure to the two open regions.
+
+`main` is a statement for the pushforward under `prodSimplexMap d e`; `ae_free_of_ae_prod`
+pulls it back to the free coordinates.  Almost everywhere the parameter pair is in the open
+region (`ae_mem_simplexRegion_prod`), where `fOf`/`gOf` are the exchanges `main` speaks of
+(`evalWord_fOf_eq_one`). -/
+theorem ae_hasRelation {d e : ℕ} [NeZero d] [NeZero e]
+    (π : Equiv.Perm (Fin d)) (σ : Equiv.Perm (Fin e)) :
+    ∀ᵐ q ∂((volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e))),
+      HasRelation π σ q := by
+  -- Theorem 1.1, pulled back along the parametrisation of the two simplices
+  have hpull : ∀ᵐ q ∂((volume.restrict (simplexRegion d)).prod
+      (volume.restrict (simplexRegion e))),
+      ∃ w : FreeGroup Gen, w ≠ 1 ∧
+        evalWordEquiv w (mkIETEquiv (simplexMap d q.1) π 0)
+          (mkIETEquiv (simplexMap e q.2) σ 0) = 1 :=
+    ae_free_of_ae_prod (main π σ)
+  filter_upwards [hpull, ae_mem_simplexRegion_prod (d := d) (e := e)] with q hq hreg
+  obtain ⟨w, hw_ne, hw⟩ := hq
+  exact ⟨w, hw_ne, evalWord_fOf_eq_one hreg.1 hreg.2 hw⟩
+
+/-- **The remark after the main theorem, in the free coordinates**: some nontrivial word is trivial
+on an open set of parameter pairs of full measure. -/
+theorem exists_isOpen_subset_hasRelation {d e : ℕ} [NeZero d] [NeZero e]
+    (π : Equiv.Perm (Fin d)) (σ : Equiv.Perm (Fin e)) :
+    ∃ U : Set (PReal d e), IsOpen U ∧
+      ((volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e))) Uᶜ = 0 ∧
+      U ⊆ {q | HasRelation π σ q} :=
+  exists_isOpen_subset_hasRelation_of_ae π σ (ae_hasRelation π σ)
+
+/-- **The remark after the main theorem, on `Δ_π × Δ_σ`**: the pairs of length vectors not
+generating a free group contain an open set of full measure, in the paper's coordinates.
+
+The conclusion is written out — at every `p ∈ O` whose two vectors have total mass `1` there is a
+nontrivial word `w` with `evalWordEquiv w (mkIETEquiv p.1 π 0) (mkIETEquiv p.2 σ 0) = 1` — rather
+than through a predicate on the relation set, and the two normalisation conditions are hypotheses
+rather
+than an intersection with `simplex (Fin d) ×ˢ simplex (Fin e)`.  The statement therefore names only
+`mkIETEquiv`, `evalWordEquiv`, `FreeGroup (Fin 2)`, `simplexVolume` and the measure — every one of
+them declared by `Challenge.lean` — so it can be used as a standalone target without adding any
+definition. -/
+theorem exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one {d e : ℕ} [NeZero d] [NeZero e]
+    (π : Equiv.Perm (Fin d)) (σ : Equiv.Perm (Fin e)) :
+    ∃ O : Set ((Fin d → ℝ≥0) × (Fin e → ℝ≥0)), IsOpen O ∧
+      ((simplexVolume d).prod (simplexVolume e)) Oᶜ = 0 ∧
+      (∀ p ∈ O, (∑ i, p.1 i = 1) → (∑ j, p.2 j = 1) →
+        ∃ w : FreeGroup (Fin 2), w ≠ 1 ∧
+          evalWordEquiv w (mkIETEquiv p.1 π 0) (mkIETEquiv p.2 σ 0) = 1) :=
+  exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one_of_ae π σ (ae_hasRelation π σ)
+
+end Pair
+
+-- The axiom check of the library: the `#print axioms` reports of the tree, for the main theorem and
+-- for the two conclusions of the remark after it.
 #print axioms main
+#print axioms IntervalExchange.Pair.exists_isOpen_subset_hasRelation
+#print axioms IntervalExchange.Pair.exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one
+
+end IntervalExchange
 
 end

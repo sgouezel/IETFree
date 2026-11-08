@@ -21,7 +21,7 @@ This module proves the two lemmas on nonnegative integer matrices behind Veech's
 
 The second proof composes the uniform positive word of `IETDatum₂.exists_uniform_bound'` with a
 return word given by the strong connectivity of the Rauzy diagram
-(`RauzyReach.exists_path_between`, which supplies both the return word and a uniform bound on its
+(`exists_path_between`, which supplies both the return word and a uniform bound on its
 length), and bounds the entries of the resulting cycle by a maximum over the finitely many words of
 bounded length. No length vector enters the constant.
 -/
@@ -29,13 +29,14 @@ bounded length. No length vector enters the constant.
 @[expose] public section
 
 open scoped BigOperators
+open IntervalExchange.RauzyVeech
 
-namespace IETFree.Rigidity
+namespace IntervalExchange.Rigidity
 
 /-- A positive right factor makes the column sums of a nonnegative integer matrix comparable. -/
 theorem colsum_le_of_one_le {α : Type*} [Fintype α] (A B : Matrix α α ℤ) (M : ℤ)
-    (hA : ∀ a c, 0 ≤ A a c) (h1 : ∀ a c, 1 ≤ B a c) (hM : ∀ a c, B a c ≤ M) :
-    ∀ j j', ∑ a, (A * B) a j ≤ M * ∑ a, (A * B) a j' := by
+    (hA : ∀ a c, 0 ≤ A a c) (h1 : ∀ a c, 1 ≤ B a c) (hM : ∀ a c, B a c ≤ M)
+    (j j' : α) : ∑ a, (A * B) a j ≤ M * ∑ a, (A * B) a j' := by
   -- column sums of a product: `∑ a, (A * B) a j = ∑ i, (∑ a, A a i) * B i j`
   have key (j : α) : ∑ a, (A * B) a j = ∑ i, (∑ a, A a i) * B i j := by
     simp only [Matrix.mul_apply]
@@ -47,7 +48,6 @@ theorem colsum_le_of_one_le {α : Type*} [Fintype α] (A B : Matrix α α ℤ) (
     have hM0 : 0 ≤ M := by
       have h : (1 : ℤ) ≤ M := le_trans (h1 a₀ a₀) (hM a₀ a₀)
       linarith
-    intro j j'
     rw [key j, key j']
     have hstep (i : α) : (∑ a, A a i) * B i j ≤ M * ((∑ a, A a i) * B i j') := by
       have hS : 0 ≤ ∑ a, A a i := Finset.sum_nonneg (fun a _ => hA a i)
@@ -64,7 +64,6 @@ theorem colsum_le_of_one_le {α : Type*} [Fintype α] (A B : Matrix α α ℤ) (
   · -- nothing to prove when there are no letters
     have hempty : (Finset.univ : Finset α) = ∅ :=
       Finset.univ_eq_empty_iff.mpr (not_nonempty_iff.mp hne)
-    intro j j'
     simp [hempty]
 
 /-- The largest entry of `Path.Q Q (v ++ w)` in coordinates `a c`, over all words `w` of length at
@@ -81,16 +80,16 @@ private noncomputable def cycleCap {α : Type*} [Fintype α] [DecidableEq α] {n
 
 /-- From every irreducible vertex there is a positive cycle, with bounded entries. -/
 theorem exists_pos_cycle {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
-    (Q : IETDatum₂ α n) (hQ : Q.Irreducible) (hn : 2 ≤ n) :
+    (Q : IETDatum₂ α n) (hQ : Q.Irreducible) :
     ∃ (Bw : List Bool) (M : ℤ), 1 < M ∧ IETDatum₂.vertex Q Bw = Q ∧
       ∀ a c, 1 ≤ IETDatum₂.Path.Q Q Bw a c ∧ IETDatum₂.Path.Q Q Bw a c ≤ M := by
   -- a word from `Q` with all entries `≥ 1`
-  obtain ⟨_, _, hposw⟩ := IETDatum₂.exists_uniform_bound' (α := α) (n := n) hn
+  obtain ⟨_, _, hposw⟩ := IETDatum₂.exists_uniform_bound' (α := α) (n := n)
   obtain ⟨v, hv⟩ := hposw Q hQ
   -- a bounded return word from the vertex reached by `v`
-  obtain ⟨L, hL⟩ := RauzyReach.exists_path_between (α := α) (n := n) Q
+  obtain ⟨L, hL⟩ := exists_path_between (α := α) (n := n) Q
   obtain ⟨ρ, hρL, hρ⟩ :=
-    hL (IETDatum₂.vertex Q v) Q ⟨v, rfl⟩ (RauzyReach.reach_refl Q)
+    hL (IETDatum₂.vertex Q v) Q ⟨v, rfl⟩ (reach_refl Q)
   refine ⟨v ++ ρ, ((cycleCap Q v L : ℕ) : ℤ) + 2, ?_, ?_, ?_⟩
   · -- the bound is at least `2`
     have h : (0 : ℤ) ≤ ((cycleCap Q v L : ℕ) : ℤ) := Int.natCast_nonneg _
@@ -135,6 +134,6 @@ theorem exists_pos_cycle {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [N
         _ ≤ ((cycleCap Q v L : ℕ) : ℤ) := by exact_mod_cast le_trans hstep1 hstep2
         _ ≤ ((cycleCap Q v L : ℕ) : ℤ) + 2 := by linarith
 
-end IETFree.Rigidity
+end IntervalExchange.Rigidity
 
 end

@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.RauzyVeech.Nesting
 public import IETFree.RauzyVeech.PairReach
-public import IETFree.Rigidity.Defs
 
 /-!
 # An extreme vertex, runs of `true` steps, and the big cell
@@ -34,8 +34,9 @@ all the letters other than `b`, one per step.
 @[expose] public section
 
 open scoped BigOperators
+open IntervalExchange.RauzyVeech
 
-namespace IETFree.Rigidity
+namespace IntervalExchange.Rigidity
 
 /-- **An extreme vertex is reachable**: a letter that is last in the top order and first in the
 bottom order. -/
@@ -47,24 +48,26 @@ theorem exists_vertex_last_true_eq_piBottom_zero {α : Type*} [Fintype α]
   exact ⟨IETDatum₂.vertex P w, w, rfl,
     by rw [IETDatum₂.piBottom_zero_letter P w]; exact hw⟩
 
-end IETFree.Rigidity
+end IntervalExchange.Rigidity
+
+namespace IntervalExchange
 
 namespace IETDatum₂.Path
 
 /-! ## The matrix `1 + E_{b,v}` and its multiplicative structure -/
 
 /-- The matrix whose row `b` is the vector `v` (read in `ℤ`) and whose other rows vanish. -/
-private def Emat {α : Type*} [DecidableEq α] (b : α) (v : α → ℕ) :
+def Emat {α : Type*} [DecidableEq α] (b : α) (v : α → ℕ) :
     Matrix α α ℤ :=
   Matrix.of (fun a c => if a = b then (v c : ℤ) else 0)
 
-private lemma Emat_add {α : Type*} [DecidableEq α] (b : α) (v w : α → ℕ) :
+lemma Emat_add {α : Type*} [DecidableEq α] (b : α) (v w : α → ℕ) :
     Emat b v + Emat b w = Emat b (fun c => v c + w c) := by
   ext a c
   simp only [Emat, Matrix.add_apply, Matrix.of_apply]
   by_cases h : a = b <;> simp [h]
 
-private lemma Emat_mul {α : Type*} [Fintype α] [DecidableEq α] (b : α) (v w : α → ℕ) :
+lemma Emat_mul {α : Type*} [Fintype α] [DecidableEq α] (b : α) (v w : α → ℕ) :
     Emat b v * Emat b w = Emat b (fun c => v b * w c) := by
   ext a c
   rw [Matrix.mul_apply]
@@ -98,7 +101,7 @@ private lemma rvMat_true_eq {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
 
 /-- Multiplying `1 + E_{b,v}` on the right by the elementary matrix of a step whose `last false`
 letter is `c₀`: the rows add when `v b = 0`. -/
-private lemma Emat_one_add_mul {α : Type*} [Fintype α] [DecidableEq α] (b c₀ : α)
+lemma Emat_one_add_mul {α : Type*} [Fintype α] [DecidableEq α] (b c₀ : α)
     (v : α → ℕ) (hv : v b = 0) :
     (1 + Emat b v) * (1 + Emat b (fun c => if c₀ = c then 1 else 0))
       = 1 + Emat b (fun c => v c + (if c₀ = c then 1 else 0)) := by
@@ -153,8 +156,8 @@ private lemma lfCount_last_true {α : Type*} [Fintype α] [DecidableEq α] {n : 
 
 /-- **A run of `true` steps is a rank-one perturbation of the identity, in the form needed for the
 induction**: `Q(true^K) = 1 + E_{b, lfCount K}`. -/
-private theorem Q_replicate_true_aux {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
-    (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) (K : ℕ) :
+private theorem Q_replicate_true_eq_one_add_Emat {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
+    [NeZero n] (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) (K : ℕ) :
     IETDatum₂.Path.Q P (List.replicate K true)
       = 1 + Emat (P.last true) (lfCount P K) := by
   induction K with
@@ -180,9 +183,9 @@ private theorem Q_replicate_true_aux {α : Type*} [Fintype α] [DecidableEq α] 
 
 /-- **The orbit of a position under one `true` step at an extreme vertex**: the insertion of the
 last position just after position `0` fixes `0` and rotates the other `n - 1` positions by one. -/
-private lemma insertEquiv_zero_pow_val {n : ℕ} [NeZero n] (hn : 2 ≤ n) (i : Fin n)
+lemma insertEquiv_zero_pow_val {n : ℕ} [NeZero n] (hn : 2 ≤ n) (i : Fin n)
     (hi : i ≠ 0) (j : ℕ) :
-    (((IETDatum₂.insertEquiv (0 : Fin n)) ^ j) i).val = 1 + ((i.val - 1 + j) % (n - 1)) := by
+    (((insertEquiv (0 : Fin n)) ^ j) i).val = 1 + ((i.val - 1 + j) % (n - 1)) := by
   induction j with
   | zero =>
     rw [pow_zero, Equiv.Perm.one_apply, Nat.add_zero]
@@ -191,7 +194,7 @@ private lemma insertEquiv_zero_pow_val {n : ℕ} [NeZero n] (hn : 2 ≤ n) (i : 
     omega
   | succ j ih =>
     set s : ℕ := (i.val - 1 + j) % (n - 1) with hs
-    set p : Fin n := ((IETDatum₂.insertEquiv (0 : Fin n)) ^ j) i with hp
+    set p : Fin n := ((insertEquiv (0 : Fin n)) ^ j) i with hp
     have hn2 : ((0 : Fin n)).val + 1 < n := by simp only [Fin.val_zero]; omega
     rw [pow_succ', Equiv.Perm.mul_apply, ← hp]
     have hmod : (i.val - 1 + (j + 1)) % (n - 1) = (s + 1) % (n - 1) := by
@@ -201,19 +204,19 @@ private lemma insertEquiv_zero_pow_val {n : ℕ} [NeZero n] (hn : 2 ≤ n) (i : 
     rw [hmod]
     have hsm : s < n - 1 := Nat.mod_lt _ (by omega)
     by_cases hcase : s + 1 = n - 1
-    · have hpl : p = IETDatum₂.lastPos n := by
+    · have hpl : p = lastPos n := by
         apply Fin.ext
-        rw [IETDatum₂.lastPos_val]
+        rw [lastPos_val]
         omega
-      rw [hpl, IETDatum₂.insertEquiv_lastPos hn2, hcase, Nat.mod_self]
+      rw [hpl, insertEquiv_lastPos hn2, hcase, Nat.mod_self]
       simp
     · have hlt : s + 1 < n - 1 := by omega
       have hgt : ((0 : Fin n)).val < p.val := by rw [ih]; simp
-      have hne : p ≠ IETDatum₂.lastPos n := by
+      have hne : p ≠ lastPos n := by
         intro h
-        rw [h, IETDatum₂.lastPos_val] at ih
+        rw [h, lastPos_val] at ih
         omega
-      rw [IETDatum₂.insertEquiv_apply_gt (p := (0 : Fin n)) (k := p) hn2 hgt hne,
+      rw [insertEquiv_apply_gt (p := (0 : Fin n)) (k := p) hn2 hgt hne,
         Nat.mod_eq_of_lt hlt]
       omega
 
@@ -221,7 +224,7 @@ private lemma insertEquiv_zero_pow_val {n : ℕ} [NeZero n] (hn : 2 ≤ n) (i : 
 private lemma piBottom_replicate_true_apply {α : Type*} [Fintype α] {n : ℕ}
     [NeZero n] (P : IETDatum₂ α n) (hx : P.piBottom (P.last true) = 0) (j : ℕ) (a : α) :
     (IETDatum₂.vertex P (List.replicate j true)).piBottom a
-      = ((IETDatum₂.insertEquiv (0 : Fin n)) ^ j) (P.piBottom a) := by
+      = ((insertEquiv (0 : Fin n)) ^ j) (P.piBottom a) := by
   induction j with
   | zero => simp
   | succ j ih =>
@@ -242,7 +245,7 @@ private lemma last_false_replicate_of_mod {α : Type*} [Fintype α] {n : ℕ}
     exact hc (P.piBottom.injective (by rw [h, hx]))
   have hv1 : 1 ≤ (P.piBottom c).val := Fin.pos_iff_ne_zero.mpr hne
   have hvle : (P.piBottom c).val ≤ n - 1 := by have := (P.piBottom c).isLt; omega
-  have key : (IETDatum₂.vertex P (List.replicate j true)).piBottom c = IETDatum₂.lastPos n := by
+  have key : (IETDatum₂.vertex P (List.replicate j true)).piBottom c = lastPos n := by
     rw [piBottom_replicate_true_apply P hx j c]
     apply Fin.ext
     rw [insertEquiv_zero_pow_val hn _ hne j]
@@ -252,15 +255,15 @@ private lemma last_false_replicate_of_mod {α : Type*} [Fintype α] {n : ℕ}
         Nat.mod_eq_of_lt (show (P.piBottom c).val - 1 < n - 1 by omega)]
     rw [hstep, hj, Nat.mod_eq_of_lt (by omega)]
     have : (P.piBottom c).val - 1 + (n - 1 - (P.piBottom c).val) = n - 1 - 1 := by omega
-    rw [this, IETDatum₂.lastPos_val]
+    rw [this, lastPos_val]
     omega
   have h1 : (IETDatum₂.vertex P (List.replicate j true)).last false
-      = (IETDatum₂.vertex P (List.replicate j true)).piBottom.symm (IETDatum₂.lastPos n) := rfl
+      = (IETDatum₂.vertex P (List.replicate j true)).piBottom.symm (lastPos n) := (rfl)
   rw [h1, ← key, Equiv.symm_apply_apply]
 
 /-- **The counting bound**: the number of multiples of `m` in a residue class below `K` is at
 least `K / m`. -/
-private lemma card_filter_mod_ge (m K r : ℕ) (hm : 1 ≤ m) (hr : r < m) :
+lemma card_filter_mod_ge (m K r : ℕ) (hm : 1 ≤ m) (hr : r < m) :
     K / m ≤ ((Finset.range K).filter (fun j => j % m = r)).card := by
   have hinj : Function.Injective (fun i => i * m + r) := by
     intro i₁ i₂ h
@@ -295,7 +298,7 @@ theorem Q_replicate_true {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [N
     rw [← Fintype.card_fin n]
     exact Fintype.card_congr Q.piBottom
   refine ⟨lfCount Q K, lfCount_last_true Q hQ hn K, ?_, ?_⟩
-  · rw [Q_replicate_true_aux Q hQ hn K]
+  · rw [Q_replicate_true_eq_one_add_Emat Q hQ hn K]
     rfl
   · intro c hc
     have hne : Q.piBottom c ≠ 0 := by
@@ -316,7 +319,9 @@ theorem Q_replicate_true {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [N
 
 end IETDatum₂.Path
 
-namespace IETFree.Rigidity
+end IntervalExchange
+
+namespace IntervalExchange.Rigidity
 
 /-- **Big cell from a run**: at the beginning of the run the extreme letter's cell occupies at least
 `1 - δ` of the base. -/
@@ -325,7 +330,7 @@ theorem bigCell_of_mem_cone {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
     (hx : Q.last true = Q.piBottom.symm 0) {K : ℕ} {δ : ℝ} (hδ : 0 < δ) (hδ1 : δ ≤ 1)
     (hK : (1 - δ) / δ ≤ (K / (Fintype.card α - 1) : ℕ))
     {σ σ' : α → ℝ} (hpos : ∀ c, 0 < σ' c)
-    (hσ : σ = IETDatum₂.qApply (IETDatum₂.Path.Q Q (List.replicate K true)) σ') :
+    (hσ : σ = qApply (IETDatum₂.Path.Q Q (List.replicate K true)) σ') :
     (1 - δ) * ∑ c, σ c ≤ σ (Q.last true) := by
   set b : α := Q.last true with hb
   obtain ⟨v, hv0, hmat, hbound⟩ := IETDatum₂.Path.Q_replicate_true Q hQ hn hx K
@@ -340,9 +345,9 @@ theorem bigCell_of_mem_cone {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
     rw [hentry a c]
     by_cases h1 : a = c <;> by_cases h2 : a = b <;> simp [h1, h2]
   -- the action of `M` on a vector
-  have happly (a) : IETDatum₂.qApply M σ' a
+  have happly (a) : qApply M σ' a
       = σ' a + (if a = b then ∑ c, (v c : ℝ) * σ' c else 0) := by
-    rw [IETDatum₂.qApply_apply]
+    rw [qApply_apply]
     have hterm (c) : (M a c : ℝ) * σ' c = (if a = c then (1 : ℝ) else 0) * σ' c
         + (if a = b then (v c : ℝ) * σ' c else 0) := by
       rw [hentry' a c, add_mul]
@@ -357,13 +362,13 @@ theorem bigCell_of_mem_cone {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
       simp
     rw [h1]
     by_cases h : a = b <;> simp [h]
-  have hσb : IETDatum₂.qApply M σ' b = σ' b + ∑ c, (v c : ℝ) * σ' c := by
+  have hσb : qApply M σ' b = σ' b + ∑ c, (v c : ℝ) * σ' c := by
     rw [happly b, ite_eq_left rfl]
-  have hσc (c) (hc : c ≠ b) : IETDatum₂.qApply M σ' c = σ' c := by
+  have hσc (c) (hc : c ≠ b) : qApply M σ' c = σ' c := by
     rw [happly c, ite_eq_right hc, add_zero]
   -- split the total mass at the letter `b`
   set S : ℝ := ∑ c ∈ Finset.univ.erase b, σ' c with hS
-  have hsum : ∑ c, IETDatum₂.qApply M σ' c = IETDatum₂.qApply M σ' b + S := by
+  have hsum : ∑ c, qApply M σ' c = qApply M σ' b + S := by
     rw [← Finset.sum_erase_add _ _ (Finset.mem_univ b), add_comm]
     congr 1
     rw [hS]
@@ -374,7 +379,7 @@ theorem bigCell_of_mem_cone {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
     rw [div_le_iff₀ hδ] at hK
     linarith
   -- the `b`-coordinate dominates `S` with the factor `K / (card α - 1)`
-  have hlow : ((K / (Fintype.card α - 1) : ℕ) : ℝ) * S ≤ IETDatum₂.qApply M σ' b := by
+  have hlow : ((K / (Fintype.card α - 1) : ℕ) : ℝ) * S ≤ qApply M σ' b := by
     have hsplit : ∑ c, (v c : ℝ) * σ' c
         = ∑ c ∈ Finset.univ.erase b, (v c : ℝ) * σ' c := by
       rw [← Finset.sum_erase_add _ _ (Finset.mem_univ b)]
@@ -389,17 +394,17 @@ theorem bigCell_of_mem_cone {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
       exact_mod_cast hbound c hc.1
     rw [hσb, hsplit]
     linarith [hpos b]
-  calc (1 - δ) * ∑ c, IETDatum₂.qApply M σ' c
-      = (1 - δ) * (IETDatum₂.qApply M σ' b + S) := by rw [hsum]
-    _ ≤ IETDatum₂.qApply M σ' b := by
-        have h1 : (1 - δ) * S ≤ δ * IETDatum₂.qApply M σ' b := by
+  calc (1 - δ) * ∑ c, qApply M σ' c
+      = (1 - δ) * (qApply M σ' b + S) := by rw [hsum]
+    _ ≤ qApply M σ' b := by
+        have h1 : (1 - δ) * S ≤ δ * qApply M σ' b := by
           calc (1 - δ) * S ≤ (δ * ((K / (Fintype.card α - 1) : ℕ) : ℝ)) * S :=
                 mul_le_mul_of_nonneg_right hVd hS0
             _ = δ * (((K / (Fintype.card α - 1) : ℕ) : ℝ) * S) := by ring
-            _ ≤ δ * IETDatum₂.qApply M σ' b :=
+            _ ≤ δ * qApply M σ' b :=
                 mul_le_mul_of_nonneg_left hlow (le_of_lt hδ)
         nlinarith [hδ0]
 
-end IETFree.Rigidity
+end IntervalExchange.Rigidity
 
 end

@@ -5,7 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.CutSetMeasure
+public import IETFree.CutSet.Measure
+public import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 
 /-!
 # The one-sided limits of an interval exchange
@@ -27,6 +28,8 @@ unique ergodicity forbids periodic left limits.
 
 open MeasureTheory Filter
 open scoped Topology BigOperators ENNReal NNReal
+
+namespace IntervalExchange.UniqueErgodicity
 
 variable {f : ℝ → ℝ} {a b : ℝ} {s : Finset ℝ}
 
@@ -283,7 +286,7 @@ theorem exists_invariant_ne_of_periodic_leftLimit (h : IsCutSet f a b s)
       (ν : Measure ℝ) ≠ volume.restrict (Set.Ico a b) := by
   obtain ⟨x₀, hx₀, k, hk, hperk⟩ := hper
   set c : ℕ → ℝ := fun i => (leftLimit h)^[i] x₀ with hc
-  have hc_zero : c 0 = x₀ := rfl
+  have hc_zero : c 0 = x₀ := (rfl)
   have hc_succ (i) : c (i + 1) = leftLimit h (c i) := by
     rw [hc]
     exact Function.iterate_succ_apply' _ _ _
@@ -444,5 +447,7 @@ theorem noPeriodicLeftLimit_of_unique (h : IsCutSet f a b s)
   obtain ⟨ν, hν, hνIco, hνne⟩ :=
     exists_invariant_ne_of_periodic_leftLimit h ⟨x, hx, k, hk, hper⟩
   exact hνne (hH1 ν hν hνIco)
+
+end IntervalExchange.UniqueErgodicity
 
 end

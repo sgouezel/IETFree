@@ -6,9 +6,11 @@ Authors: Sébastien Gouëzel
 module
 
 public import IETFree.Pair.GoodRegion
+public import Mathlib.MeasureTheory.Measure.Haar.NormedSpace
+public import Mathlib.MeasureTheory.Measure.Haar.Unique
 
 /-!
-Lemma 3.1: the length vector of `g ∘ f` determines the parameters; the affine length map.
+# Lemma 3.1: the length vector of `g ∘ f` determines the parameters
 
 The paper's Lemma 3.1 says that the map `L_O` associating to `(λ, μ)` the interval lengths of
 `g ∘ f` is an invertible affine map from `O` to `Δ_ρ`.  Here `O` is a set of free parameters and
@@ -25,7 +27,8 @@ lengths as functions of the parameters — is affine as a whole.  The file split
 The length vector is only ever used at a single point (`compLenVec s q (monoAt G hq)`, abbreviated
 `G.cellLen hq`), because a global monotonicity hypothesis on the list is not derivable from the data
 of a `GoodRegion`; the absolute continuity of the pushforward is therefore proved pointwise, in
-`compLenAffine_absolutelyContinuousAt`/`compLen_absolutelyContinuousAt`, in `IETFree.BlockData`.
+`compLenAffine_absolutelyContinuousAt`/`compLen_absolutelyContinuousAt`, in
+`IETFree.Pair.Block.AeBlockGood`.
 -/
 
 @[expose] public section
@@ -33,7 +36,9 @@ of a `GoodRegion`; the absolute continuity of the pushforward is therefore prove
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
 
-/-! ## 3. Lemma 3.1, reshaped
+namespace IntervalExchange.Pair
+
+/-! ## 1. Lemma 3.1, reshaped
 
 The paper's Lemma 3.1 is "the map `L_O` associating to `(λ, μ)` the interval lengths of `gf` is an
 invertible affine map" from `O` to `Δ_ρ`.  Here `O` is a set of **free parameters**
@@ -43,21 +48,13 @@ invertible affine map" from `O` to `Δ_ρ`.  Here `O` is a set of **free paramet
 in three separable parts:
 
 * affineness of each `ν i` — true by construction once the presentation is fixed on a region, so
-  its content sits in `exists_compPresentation_on_ball` (in `IETFree.GoodRegion`);
+  its content sits in `exists_compPresentation_on_ball` (in `IETFree.Pair.GoodRegion`);
 * injectivity — `ν` determines `(λ, μ)` on the region (each `λᵢ` and each `μⱼ` is a sum of lengths
   of cells of `g ∘ f`): `compLen_injective`;
 * absolute continuity of the pushforward — injectivity together with
   `injective_linear_of_injOn`; the pointwise forms
   `compLenAffine_absolutelyContinuousAt`/`compLen_absolutelyContinuousAt` are what the reduction
-  consumes, and they live in `IETFree.BlockData`. -/
-
-
-/-- **Telescoping along consecutive indices.** -/
-theorem sum_Ico_succ_sub (S : ℕ → ℝ) {A B : ℕ} (hAB : A ≤ B) :
-    ∑ k ∈ Finset.Ico A B, (S (k + 1) - S k) = S B - S A := by
-  rw [Finset.sum_Ico_eq_sub (fun k => S (k + 1) - S k) hAB,
-    Finset.sum_range_sub S B, Finset.sum_range_sub S A]
-  ring
+  consumes, and they live in `IETFree.Pair.Block.AeBlockGood`. -/
 
 /-- The `ℕ`-indexed extension of a list on `Fin (n+1)`, constant above `n`. -/
 noncomputable def markExt {n : ℕ} (s : Fin (n + 1) → ℝ) (m : ℕ) : ℝ :=
@@ -66,7 +63,6 @@ noncomputable def markExt {n : ℕ} (s : Fin (n + 1) → ℝ) (m : ℕ) : ℝ :=
 theorem markExt_of_le {n : ℕ} (s : Fin (n + 1) → ℝ) {m : ℕ} (hm : m ≤ n) :
     markExt s m = s ⟨m, by omega⟩ := by
   simp only [markExt, Nat.min_eq_left hm]
-
 
 /-- **A strictly increasing list is determined by its increments and its first term.**  Two lists
 `s, t : Fin (n+1) → ℝ` with `s 0 = t 0` and equal increments `s (i+1) - s i = t (i+1) - t i` are
@@ -143,9 +139,9 @@ theorem IsCompPresentation.lam_eq_sum {d e n : ℕ} [NeZero d] [NeZero e]
   have hsucc : s (a i.succ) = upperEnd lam i := by
     rcases lt_or_eq_of_le (Nat.succ_le_of_lt i.isLt) with hlt | heq
     · have hcast : i.succ = (⟨i.val + 1, hlt⟩ : Fin d).castSucc := Fin.ext rfl
-      rw [hcast, T.cut ⟨i.val + 1, hlt⟩, leftEnd_eq_upperEnd_of_succ lam hlt]
+      rw [hcast, T.cut ⟨i.val + 1, hlt⟩, leftEnd_succ_eq_upperEnd lam i hlt]
     · have hlast : i.succ = Fin.last d := Fin.ext heq
-      have h1 : (∑ j, (lam j : ℝ)) = 1 := by rw [← NNReal.coe_sum, hl]; norm_num
+      have h1 : (∑ j, (lam j : ℝ)) = 1 := sum_coe_eq_one hl
       rw [hlast, T.top, P.top, upperEnd_of_max lam (fun j => by
         rw [Fin.le_def]
         have := j.isLt
@@ -156,13 +152,13 @@ theorem IsCompPresentation.lam_eq_sum {d e n : ℕ} [NeZero d] [NeZero e]
       rw [hleft, hsucc, upperEnd_eq]
       linarith [(lam i).coe_nonneg]
     exact Fin.le_def.mp (P.mono.le_iff_le.mp hle)
-  rw [sum_Ico_succ_sub (markExt s) hAB, markExt_of_le s (Nat.lt_succ_iff.mp (a i.succ).isLt),
+  rw [Finset.sum_Ico_sub (markExt s) hAB, markExt_of_le s (Nat.lt_succ_iff.mp (a i.succ).isLt),
     markExt_of_le s (Nat.lt_succ_iff.mp (a i.castSucc).isLt)]
   have e1 : s ⟨(a i.succ).val, by omega⟩ = upperEnd lam i := by
-    rw [show (⟨(a i.succ).val, by omega⟩ : Fin (n + 1)) = a i.succ from Fin.ext rfl]
+    rw [Fin.eta]
     exact hsucc
   have e2 : s ⟨(a i.castSucc).val, by omega⟩ = leftEnd lam i := by
-    rw [show (⟨(a i.castSucc).val, by omega⟩ : Fin (n + 1)) = a i.castSucc from Fin.ext rfl]
+    rw [Fin.eta]
     exact hleft
   rw [e1, e2, upperEnd_eq]
   ring
@@ -183,7 +179,7 @@ theorem IsCompPresentation.mu_eq_sum {d e n : ℕ} [NeZero d] [NeZero e]
     (T : IsCompType lam π hl mu s a B) (j : Fin e) :
     (mu j : ℝ) = ∑ k ∈ Finset.univ.filter (fun k : Fin n => B k = j),
       (s k.succ - s k.castSucc) := by
-  have hm1 : (∑ i, (mu i : ℝ)) = 1 := by rw [← NNReal.coe_sum, hm]; norm_num
+  have hm1 : (∑ i, (mu i : ℝ)) = 1 := sum_coe_eq_one hm
   set f : ℝ → ℝ := ⇑(mkIET1' lam π hl) with hf
   set A : Set ℝ := Set.Ico (leftEnd mu j) (leftEnd mu j + (mu j : ℝ)) with hA
   -- the image of a marked cell lies in the `B`-cell of `g`
@@ -225,7 +221,7 @@ theorem IsCompPresentation.mu_eq_sum {d e n : ℕ} [NeZero d] [NeZero e]
         linarith
   -- the two volumes
   have hvolA : volume (f ⁻¹' A ∩ Set.Ico (0 : ℝ) 1) = ENNReal.ofReal (mu j) := by
-    rw [Equiv.IsIET.measure_preimage (isCutSet_mkIET1 lam π hl) measurableSet_Ico]
+    rw [IsCutSet.measure_preimage (isCutSet_mkIET1 lam π hl) measurableSet_Ico]
     rw [Set.inter_eq_left.mpr (leftEnd_Ico_subset mu hm1 j), volume_leftEnd_Ico]
   have hvol : volume (f ⁻¹' A ∩ Set.Ico (0 : ℝ) 1)
       = ∑ k ∈ Finset.univ.filter (fun k : Fin n => B k = j),
@@ -277,10 +273,9 @@ theorem compLen_injective {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fi
     (htype : ∀ (q) (hq : q ∈ O),
       IsCompType (simplexMap d q.1) π
         (simplexMap_mem_simplex_fin (hreg q hq).1.1 (hreg q hq).1.2)
-        (simplexMap e q.2) (fun k => s k q) a B) :
-    ∀ q ∈ O, ∀ q' ∈ O,
-      (∀ i : Fin n, s i.succ q - s i.castSucc q = s i.succ q' - s i.castSucc q') → q = q' := by
-  intro q hq q' hq' hν
+        (simplexMap e q.2) (fun k => s k q) a B)
+    (q : PReal d e) (hq : q ∈ O) (q' : PReal d e) (hq' : q' ∈ O)
+    (hν : ∀ i : Fin n, s i.succ q - s i.castSucc q = s i.succ q' - s i.castSucc q') : q = q' := by
   obtain ⟨hpq, hwq⟩ := hreg q hq
   obtain ⟨hpq', hwq'⟩ := hreg q' hq'
   -- **the marked positions agree**: the difference of the two lists is constant in the index, and
@@ -325,7 +320,7 @@ measure to Haar measure, and any two Haar measures on a finite-dimensional real 
 mutually absolutely continuous).  The absolute continuity of the pushforward is stated pointwise,
 where `compLenAffine G.s` is injective on `G.O` because the combinatorial type is fixed there
 (`compLen_injective`) and its image lies in `simplexRegion n`; see
-`compLenAffine_absolutelyContinuousAt` in `IETFree.BlockData`. -/
+`compLenAffine_absolutelyContinuousAt` in `IETFree.Pair.Block.AeBlockGood`. -/
 
 section AffineAbsoluteContinuous
 
@@ -411,12 +406,6 @@ theorem absolutelyContinuous_map_affine {E F : Type*} [NormedAddCommGroup E] [No
         rwa [Measure.IsAddRightInvariant.map_add_right_eq_self (μ := (volume : Measure F))
           (A 0)] at h2
 
-/-- **The sum of consecutive differences.** -/
-theorem sum_fin_sub {n : ℕ} (f : ℕ → ℝ) :
-    (∑ j : Fin (n - 1), (f ((j : ℕ) + 1) - f (j : ℕ))) = f (n - 1) - f 0 := by
-  rw [Fin.sum_univ_eq_sum_range (fun m : ℕ => f (m + 1) - f m) (n - 1)]
-  exact Finset.sum_range_sub f (n - 1)
-
 variable {d e : ℕ}
 
 /-- **The first `n - 1` lengths of the composition, as an affine map of the parameters.** -/
@@ -430,7 +419,6 @@ theorem compLenAffine_apply {n : ℕ} (s : Fin (n + 1) → ParamAffine d e)
     compLenAffine s q k
       = s ⟨(k : ℕ) + 1, by have := k.isLt; omega⟩ q - s ⟨(k : ℕ), by have := k.isLt; omega⟩ q :=
   rfl
-
 
 variable [NeZero d] [NeZero e]
 
@@ -451,13 +439,15 @@ theorem GoodRegion.sum_compLenAffine {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm 
   -- telescoping over the first `n - 1` cells
   have htel : (∑ j : Fin (G.n - 1), compLenAffine G.s q j)
       = markExt (fun k => G.s k q) (G.n - 1) - markExt (fun k => G.s k q) 0 := by
-    rw [← sum_fin_sub (fun m => markExt (fun k => G.s k q) m)]
+    rw [← Finset.sum_range_sub (fun m => markExt (fun k => G.s k q) m) (G.n - 1),
+      ← Fin.sum_univ_eq_sum_range (fun m => markExt (fun k => G.s k q) (m + 1)
+        - markExt (fun k => G.s k q) m) (G.n - 1)]
     refine Finset.sum_congr rfl (fun j _ => ?_)
     have h1 : (j : ℕ) + 1 ≤ G.n := by have := j.isLt; omega
     have h2 : (j : ℕ) ≤ G.n := by have := j.isLt; omega
     rw [compLenAffine_apply, markExt_of_le _ h1, markExt_of_le _ h2]
-  rw [htel, markExt_of_le _ (by omega), markExt_of_le _ (by omega),
-    show G.s (⟨0, by omega⟩ : Fin (G.n + 1)) q = 0 from P.zero]
+  have hzero : G.s (⟨0, by omega⟩ : Fin (G.n + 1)) q = 0 := P.zero
+  rw [htel, markExt_of_le _ (by omega), markExt_of_le _ (by omega), hzero]
   ring
 
 /-! ### The pointwise monotonicity of the marked list and the pointwise length vector
@@ -489,16 +479,16 @@ theorem compLenAffine_mem_regionAt {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (F
   refine ⟨fun i => ?_, ?_⟩
   · have hlt := hmono (Fin.castSucc_lt_succ (i := (⟨(i : ℕ), by have := i.isLt; omega⟩ :
       Fin G.n)))
-    beta_reduce at hlt
+    simp only [] at hlt
     simp only [Fin.succ_mk, Fin.castSucc_mk] at hlt
     rw [compLenAffine_apply]
     linarith
   · rw [G.sum_compLenAffine hq]
     have hlastlt : (⟨G.n - 1, Nat.lt_succ_of_le (Nat.sub_le G.n 1)⟩ : Fin (G.n + 1))
         < Fin.last G.n :=
-      Fin.lt_def.mpr (by change G.n - 1 < G.n; omega)
+      Fin.lt_def.mpr (Nat.sub_lt (by omega : 0 < G.n) Nat.zero_lt_one)
     have hlt := hmono hlastlt
-    beta_reduce at hlt
+    simp only [] at hlt
     rw [P.top] at hlt
     linarith
 
@@ -511,5 +501,7 @@ theorem ae_of_ae_of_absolutelyContinuous {α β : Type*} [MeasurableSpace α] [M
     {μ : Measure α} {ν' : Measure β} {φ : α → β} (hφ : AEMeasurable φ μ) (hac : μ.map φ ≪ ν')
     {P : β → Prop} (hP : ∀ᵐ y ∂ν', P y) : ∀ᵐ x ∂μ, P (φ x) :=
   ae_of_ae_map hφ (hac.ae_le hP)
+
+end IntervalExchange.Pair
 
 end

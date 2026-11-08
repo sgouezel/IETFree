@@ -5,25 +5,21 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.Pair.Centralizer
+public import IETFree.FreeGroup.Centralizer
 public import IETFree.Pair.Diophantine
-public import IETFree.Pair.MeasureTools
-public import IETFree.Pair.SingularityBound
-public import IETFree.RauzyVeech.InvariantMeasure
+public import IETFree.Pair.Singularity.Bound
 public import IETFree.Rigidity.DimOne
 public import IETFree.Rigidity.Sequences
 public import IETFree.Rigidity.Transport
-public import IETFree.TopBotFormalism
-public import IETFree.UniqueErgodicity.IET
 public import IETFree.UniqueErgodicity.MainTheorem
+public import IETFree.UniqueErgodicity.Theorem2
 
 /-!
-Section 2 of the paper: the irreducible case.
+# Section 2 of the paper: the irreducible case
 
 The ambient interval is `[0, 1)`, and the two conditions of the paper — unique ergodicity and
 rigidity by translations — are `UniqueErgodic` and `IsRigidByTranslations`, stated for exchanges in
-the sense of `IET 0 1`; the first is in `IETFree/IET.lean` (with `Invariant`), the second in
-`IETFree/TopBotFormalism.lean`.
+the sense of `IET 0 1`; both are in `IETFree/IET.lean`, next to `Invariant`.
 
 The measure-theoretic tools (`unitMeas` and its API, the words in two generators, the toolbox for
 Lemma 2.10) are in `MeasureTools.lean`; Proposition 2.5 and the Diophantine definitions are in
@@ -34,6 +30,10 @@ Lemma 2.10) are in `MeasureTools.lean`; Proposition 2.5 and the Diophantine defi
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal commutatorElement
+open IntervalExchange.RauzyVeech IntervalExchange.Rigidity IntervalExchange.UniqueErgodicity
+open IntervalExchange.IET
+
+namespace IntervalExchange.Pair
 
 /-! ## The two theorems of the literature, proved
 
@@ -70,14 +70,14 @@ statement for the two-bijection datum (`Rigidity.ae_isRigidByTranslations`) is t
 single-permutation form by `Rigidity.ae_isRigidByTranslations_mkIET1`. -/
 theorem veechRigidity {d : ℕ} [NeZero d] {π : Equiv.Perm (Fin d)} (hπ : IsIrreduciblePerm π) :
     ∀ᵐ lam ∂(simplexVolume d), IsRigidByTranslations (mkIET1 lam π) := by
-  have hsimplex : ∀ᵐ lam ∂(simplexVolume d), lam ∈ simplexOn (Fin d) :=
-    ae_mem_simplexOn_fin (NeZero.ne d)
+  have hsimplex : ∀ᵐ lam ∂(simplexVolume d), lam ∈ simplex (Fin d) :=
+    ae_mem_simplex_fin (NeZero.ne d)
   rcases eq_or_lt_of_le (Nat.one_le_iff_ne_zero.mpr (NeZero.ne d)) with h1 | h2
   · subst h1
-    filter_upwards [IETFree.Rigidity.ae_fin_one π, hsimplex] with lam hl hm
+    filter_upwards [IntervalExchange.Rigidity.ae_fin_one π, hsimplex] with lam hl hm
     simpa only [mkIET1_of_mem hm] using hl hm
-  · filter_upwards [IETFree.Rigidity.ae_isRigidByTranslations_mkIET1 (π := π)
-      (IETFree.Rigidity.ae_isRigidByTranslations (IETDatum₂.ofPerm π)
+  · filter_upwards [IntervalExchange.Rigidity.ae_isRigidByTranslations_mkIET1 (π := π)
+      (IntervalExchange.Rigidity.ae_isRigidByTranslations (IETDatum₂.ofPerm π)
         ((IETDatum₂.ofPerm_irreducible_iff π).mpr hπ) h2), hsimplex] with lam hl hm
     simpa only [mkIET1_of_mem hm] using hl hm
 
@@ -274,7 +274,7 @@ theorem exists_word_small_support (f g : IET 0 1) (hrig : IsRigidByTranslations 
           have hfix : ⇑(f ^ qq) (⇑g x) = ⇑g x + tt := by simpa using hBmap n (⇑g x) hxg
           have hinv : ⇑((f ^ qq)⁻¹) (⇑g x + tt) = ⇑g x := by
             rw [← hfix]
-            exact IET.symm_apply_apply (f ^ qq) (⇑g x)
+            exact symm_apply_apply (f ^ qq) (⇑g x)
           have hword : evalWord ⁅genY⁻¹, (genX ^ qq)⁻¹⁆ f g
               = g⁻¹ * (f ^ qq)⁻¹ * g * (f ^ qq) := by
             have hgenX : (FreeGroup.lift (fun i : Gen => if i = 0 then f else g)) genX = f := by
@@ -285,9 +285,9 @@ theorem exists_word_small_support (f g : IET 0 1) (hrig : IsRigidByTranslations 
               hgenX, hgenY]
           have hone : (evalWord ⁅genY⁻¹, (genX ^ qq)⁻¹⁆ f g) x = x := by
             rw [hword]
-            simp only [IET.mul_apply]
+            simp only [mul_apply]
             rw [hgt, hinv]
-            exact IET.symm_apply_apply g x
+            exact symm_apply_apply g x
           exact absurd hone hxsupp
         · exact Or.inr hxg
     · exact Or.inl (Or.inl hxbb)
@@ -312,9 +312,9 @@ theorem exists_word_small_support (f g : IET 0 1) (hrig : IsRigidByTranslations 
         rw [abs_of_neg h]
         exact ⟨by linarith, by linarith⟩
     calc unitMeas.real U ≤ unitMeas.real (⋃ c ∈ sg, Set.Icc (c - |tt|) (c + |tt|)) :=
-          unitMeas_real_mono hsub
+          measureReal_mono hsub (measure_ne_top unitMeas _)
       _ ≤ ∑ c ∈ sg, unitMeas.real (Set.Icc (c - |tt|) (c + |tt|)) :=
-          unitMeas_real_biUnion_finset_le sg _
+          measureReal_biUnion_finset_le (μ := unitMeas) sg _
       _ ≤ ∑ _c ∈ sg, 2 * |tt| := by
           refine Finset.sum_le_sum (fun c _ => ?_)
           refine le_trans (unitMeas_real_Icc_le (c - |tt|) (c + |tt|)) ?_
@@ -340,12 +340,13 @@ theorem exists_word_small_support (f g : IET 0 1) (hrig : IsRigidByTranslations 
             linarith
           nlinarith [hε.le]
   have hgc : unitMeas.real (⇑g ⁻¹' bbᶜ) = unitMeas.real bbᶜ :=
-    IET.unitMeas_real_preimage g hbbmeas.compl
+    unitMeas_real_preimage g hbbmeas.compl
   calc unitMeas.real (wordSupp ⁅genY⁻¹, (genX ^ qq)⁻¹⁆ f g)
-      ≤ unitMeas.real (bbᶜ ∪ U ∪ (⇑g ⁻¹' bbᶜ)) := unitMeas_real_mono hsupp
-    _ ≤ unitMeas.real (bbᶜ ∪ U) + unitMeas.real (⇑g ⁻¹' bbᶜ) := unitMeas_real_union_le _ _
+      ≤ unitMeas.real (bbᶜ ∪ U ∪ (⇑g ⁻¹' bbᶜ)) := measureReal_mono hsupp (measure_ne_top unitMeas _)
+    _ ≤ unitMeas.real (bbᶜ ∪ U) + unitMeas.real (⇑g ⁻¹' bbᶜ) :=
+        measureReal_union_le (μ := unitMeas) _ _
     _ ≤ (unitMeas.real bbᶜ + unitMeas.real U) + unitMeas.real (⇑g ⁻¹' bbᶜ) := by
-        have := unitMeas_real_union_le bbᶜ U
+        have := measureReal_union_le (μ := unitMeas) bbᶜ U
         linarith
     _ ≤ ε / 3 + ε / 3 + ε / 3 := by
         rw [hgc]
@@ -359,16 +360,14 @@ theorem evalWord_commutatorElement (u₁ u₂ : FreeGroup Gen) (f g : IET 0 1) :
     evalWord ⁅u₁, u₂⁆ f g = ⁅evalWord u₁ f g, evalWord u₂ f g⁆ := by
   simp only [commutatorElement_def, evalWord, map_mul, map_inv]
 
-/-- **Lemma 2.10**: one commutator step.  (`hε` and `hsmall` belong to the standing assumptions
-of the
-section, where they are used to start the iteration; this step itself does not need them.) -/
-theorem iterate_word (f g : IET 0 1) (ε : ℝ) (_hε : 0 < ε) (N : ℕ) (hN : 0 < N)
-    (w₀ : FreeGroup Gen) (hw₀ : w₀ ≠ 1) (_hsmall : unitMeas.real (wordSupp w₀ f g) ≤ ε)
+/-- **Lemma 2.10**: one commutator step. -/
+theorem iterate_word (f g : IET 0 1) (ε : ℝ) (N : ℕ) (hN : 0 < N)
+    (w₀ : FreeGroup Gen) (hw₀ : w₀ ≠ 1)
     (hbirk : ∀ x ∈ Set.Ico (0 : ℝ) 1, (N : ℝ)⁻¹ * ∑ i ∈ Finset.range N,
       (wordSupp w₀ f g).indicator (fun _ => (1 : ℝ)) ((f ^ i) x) ≤ 2 * ε)
     (w : FreeGroup Gen) (hw : w ≠ 1) :
     ∃ w' : FreeGroup Gen, w' ≠ 1 ∧
-      wordLength w' ≤ 2 * wordLength w + 4 * N + 2 * wordLength w₀ ∧
+      FreeGroup.norm w' ≤ 2 * FreeGroup.norm w + 4 * N + 2 * FreeGroup.norm w₀ ∧
         unitMeas.real (wordSupp w' f g) ≤ 18 * ε * unitMeas.real (wordSupp w f g) := by
   set S : Set ℝ := wordSupp w f g with hS
   set S₀ : Set ℝ := wordSupp w₀ f g with hS₀
@@ -382,8 +381,8 @@ theorem iterate_word (f g : IET 0 1) (ε : ℝ) (_hε : 0 < ε) (N : ℕ) (hN : 
   have hvSupp : {x : ℝ | (evalWord v f g) x ≠ x} = ⇑(f ^ i) ⁻¹' S₀ := by
     rw [hv]
     exact wordSupp_conj_pow w₀ i f g
-  have hvlen : wordLength v ≤ wordLength w₀ + 2 * i := by
-    rw [hv]; exact wordLength_conj_pow_le w₀ i
+  have hvlen : FreeGroup.norm v ≤ FreeGroup.norm w₀ + 2 * i := by
+    rw [hv]; exact FreeGroup.norm_conjX_pow_le w₀ i
   -- supports of the two conjugates of `w`
   have hwX : {x : ℝ | (evalWord (genX⁻¹ * w * genX) f g) x ≠ x} = ⇑f ⁻¹' S := by
     rw [evalWord_conjX]
@@ -401,32 +400,32 @@ theorem iterate_word (f g : IET 0 1) (ε : ℝ) (_hε : 0 < ε) (N : ℕ) (hN : 
     rw [hφ, hψ] at h1
     linarith
   have hwS : {x : ℝ | (evalWord w f g) x ≠ x} = S := by rw [hS]; rfl
-  have hnn1 : 0 ≤ unitMeas.real (S ∩ ⇑(f ^ i) ⁻¹' S₀) := unitMeas_real_nonneg _
-  have hnn2 : 0 ≤ unitMeas.real (⇑f ⁻¹' S ∩ ⇑(f ^ i) ⁻¹' S₀) := unitMeas_real_nonneg _
-  have hnn3 : 0 ≤ unitMeas.real (⇑g ⁻¹' S ∩ ⇑(f ^ i) ⁻¹' S₀) := unitMeas_real_nonneg _
+  have hnn1 : 0 ≤ unitMeas.real (S ∩ ⇑(f ^ i) ⁻¹' S₀) := measureReal_nonneg (μ := unitMeas)
+  have hnn2 : 0 ≤ unitMeas.real (⇑f ⁻¹' S ∩ ⇑(f ^ i) ⁻¹' S₀) := measureReal_nonneg (μ := unitMeas)
+  have hnn3 : 0 ≤ unitMeas.real (⇑g ⁻¹' S ∩ ⇑(f ^ i) ⁻¹' S₀) := measureReal_nonneg (μ := unitMeas)
   -- Lemma 2.7 gives one of the three words
   -- Lemma 2.7 gives one of the three commutators, and the step uses `[·, v] = ⁅·⁻¹, v⁻¹⁆`
   rcases exists_nontrivial_commutator w v hw hvne with h1 | h2 | h3
   · refine ⟨⁅w⁻¹, v⁻¹⁆,
       fun hc => h1 ((commutatorElement_inv_inv_eq_one_iff w v).mp hc), ?_, ?_⟩
-    · have h := wordLength_commutatorElement_le w⁻¹ v⁻¹
-      rw [wordLength_inv, wordLength_inv] at h
+    · have h := FreeGroup.norm_commutatorElement_le w⁻¹ v⁻¹
+      rw [FreeGroup.norm_inv_eq, FreeGroup.norm_inv_eq] at h
       omega
     · rw [wordSupp, evalWord_commutatorElement, evalWord_inv, evalWord_inv]
       exact key _ _ S hwS hvSupp (by linarith)
   · refine ⟨⁅(genX⁻¹ * w * genX)⁻¹, v⁻¹⁆,
       fun hc => h2 ((commutatorElement_inv_inv_eq_one_iff (genX⁻¹ * w * genX) v).mp hc), ?_, ?_⟩
-    · have h := wordLength_commutatorElement_le (genX⁻¹ * w * genX)⁻¹ v⁻¹
-      rw [wordLength_inv, wordLength_inv] at h
-      have hc := wordLength_conj_le w
+    · have h := FreeGroup.norm_commutatorElement_le (genX⁻¹ * w * genX)⁻¹ v⁻¹
+      rw [FreeGroup.norm_inv_eq, FreeGroup.norm_inv_eq] at h
+      have hc := FreeGroup.norm_conjX_le w
       omega
     · rw [wordSupp, evalWord_commutatorElement, evalWord_inv, evalWord_inv]
       exact key _ _ (⇑f ⁻¹' S) hwX hvSupp (by linarith)
   · refine ⟨⁅(genY⁻¹ * w * genY)⁻¹, v⁻¹⁆,
       fun hc => h3 ((commutatorElement_inv_inv_eq_one_iff (genY⁻¹ * w * genY) v).mp hc), ?_, ?_⟩
-    · have h := wordLength_commutatorElement_le (genY⁻¹ * w * genY)⁻¹ v⁻¹
-      rw [wordLength_inv, wordLength_inv] at h
-      have hc := wordLength_conj_le_of genY wordLength_genY w
+    · have h := FreeGroup.norm_commutatorElement_le (genY⁻¹ * w * genY)⁻¹ v⁻¹
+      rw [FreeGroup.norm_inv_eq, FreeGroup.norm_inv_eq] at h
+      have hc := FreeGroup.norm_conjY_le w
       omega
     · rw [wordSupp, evalWord_commutatorElement, evalWord_inv, evalWord_inv]
       exact key _ _ (⇑g ⁻¹' S) hwY hvSupp (by linarith)
@@ -445,7 +444,7 @@ while `2 * |W n| + 2 ≤ 2 ^ (n+1) * M₀` makes the upper bound decay geometric
 `(18 * ε * 2 ^ c) ^ n`, so the two are incompatible for large `n`. -/
 theorem irreducible_case {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
     (σ : Equiv.Perm (Fin e)) (lam : Fin d → ℝ≥0) (mu : Fin e → ℝ≥0)
-    (hlam : lam ∈ simplex d) (hmu : mu ∈ simplex e)
+    (hlam : lam ∈ simplex (Fin d)) (hmu : mu ∈ simplex (Fin e))
     (hue : UniqueErgodic (mkIET1' lam π hlam)) (hrig : IsRigidByTranslations (mkIET1' lam π hlam))
     (hdio : IsDiophantine lam mu) :
     ∃ w : FreeGroup Gen, w ≠ 1 ∧ evalWord w (mkIET1' lam π hlam) (mkIET1' mu σ hmu) = 1 := by
@@ -466,47 +465,47 @@ theorem irreducible_case {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin
   obtain ⟨w₀, hw₀, hsmall⟩ := exists_word_small_support (mkIET1' lam π hlam)
     (mkIET1' mu σ hmu) hrig ε hε
   -- Lemma 2.9: the uniform Birkhoff estimate for its support
-  obtain ⟨N, hN, hbirk⟩ := IETFree.UniqueErgodicity.exists_uniform_birkhoff (mkIET1' lam π hlam)
-    hue
+  obtain ⟨N, hN, hbirk⟩ :=
+    IntervalExchange.UniqueErgodicity.exists_uniform_birkhoff (mkIET1' lam π hlam) hue
     (wordSupp w₀ (mkIET1' lam π hlam) (mkIET1' mu σ hmu))
     (isFiniteUnionIntervals_wordSupp lam π mu σ hlam hmu w₀) ε hε hsmall
   -- the one-step map
-  set K : ℕ := 4 * N + 2 * wordLength w₀ with hKdef
+  set K : ℕ := 4 * N + 2 * FreeGroup.norm w₀ with hKdef
   let next : FreeGroup Gen → FreeGroup Gen := fun w =>
     if h : w ≠ 1 then
-      (iterate_word (mkIET1' lam π hlam) (mkIET1' mu σ hmu) ε hε N hN w₀ hw₀ hsmall hbirk
+      (iterate_word (mkIET1' lam π hlam) (mkIET1' mu σ hmu) ε N hN w₀ hw₀ hbirk
         w h).choose
     else w₀
   have next_spec (w : FreeGroup Gen) (hw : w ≠ 1) :
-    next w ≠ 1 ∧ wordLength (next w) ≤ 2 * wordLength w + K ∧
+    next w ≠ 1 ∧ FreeGroup.norm (next w) ≤ 2 * FreeGroup.norm w + K ∧
         unitMeas.real (wordSupp (next w) (mkIET1' lam π hlam) (mkIET1' mu σ hmu))
           ≤ 18 * ε * unitMeas.real (wordSupp w (mkIET1' lam π hlam) (mkIET1' mu σ hmu)) := by
-    have hmain := (iterate_word (mkIET1' lam π hlam) (mkIET1' mu σ hmu) ε hε N hN w₀ hw₀ hsmall
+    have hmain := (iterate_word (mkIET1' lam π hlam) (mkIET1' mu σ hmu) ε N hN w₀ hw₀
       hbirk w hw).choose_spec
-    rw [show next w = (iterate_word (mkIET1' lam π hlam) (mkIET1' mu σ hmu) ε hε N hN w₀ hw₀
-      hsmall hbirk w hw).choose from dite_eq_left hw]
+    rw [show next w = (iterate_word (mkIET1' lam π hlam) (mkIET1' mu σ hmu) ε N hN w₀ hw₀
+      hbirk w hw).choose from dite_eq_left hw]
     refine ⟨hmain.1, ?_, hmain.2.2⟩
     rw [hKdef]
     omega
   -- the sequence of words
   let W : ℕ → FreeGroup Gen := fun n => next^[n] w₀
-  have hW0 : W 0 = w₀ := rfl
+  have hW0 : W 0 = w₀ := (rfl)
   have hWsucc (n) : W (n + 1) = next (W n) := Function.iterate_succ_apply' next n w₀
   have hWne (n) : W n ≠ 1 := by
     induction n with
     | zero => rw [hW0]; exact hw₀
     | succ m ih => rw [hWsucc]; exact (next_spec (W m) ih).1
-  have hWlen (n) : wordLength (W n) + K ≤ 2 ^ n * (wordLength w₀ + K) := by
+  have hWlen (n) : FreeGroup.norm (W n) + K ≤ 2 ^ n * (FreeGroup.norm w₀ + K) := by
     induction n with
     | zero => rw [hW0]; simp
     | succ m ih =>
-      have h1 : wordLength (W (m+1)) ≤ 2 * wordLength (W m) + K := by
+      have h1 : FreeGroup.norm (W (m+1)) ≤ 2 * FreeGroup.norm (W m) + K := by
         rw [hWsucc]; exact (next_spec (W m) (hWne m)).2.1
-      have h2 : wordLength (W (m+1)) + K ≤ 2 * wordLength (W m) + K + K := by omega
-      have h3 : 2 * wordLength (W m) + K + K = 2 * (wordLength (W m) + K) := by omega
-      calc wordLength (W (m+1)) + K ≤ 2 * (wordLength (W m) + K) := by omega
-        _ ≤ 2 * (2 ^ m * (wordLength w₀ + K)) := by omega
-        _ = 2 ^ (m+1) * (wordLength w₀ + K) := by ring
+      have h2 : FreeGroup.norm (W (m+1)) + K ≤ 2 * FreeGroup.norm (W m) + K + K := by omega
+      have h3 : 2 * FreeGroup.norm (W m) + K + K = 2 * (FreeGroup.norm (W m) + K) := by omega
+      calc FreeGroup.norm (W (m+1)) + K ≤ 2 * (FreeGroup.norm (W m) + K) := by omega
+        _ ≤ 2 * (2 ^ m * (FreeGroup.norm w₀ + K)) := by omega
+        _ = 2 ^ (m+1) * (FreeGroup.norm w₀ + K) := by ring
   have hWsupp (n) : unitMeas.real (wordSupp (W n) (mkIET1' lam π hlam) (mkIET1' mu σ hmu))
       ≤ ε * (18 * ε) ^ n := by
     induction n with
@@ -521,13 +520,14 @@ theorem irreducible_case {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin
             exact mul_le_mul_of_nonneg_left ih h2
         _ = ε * (18 * ε) ^ (m+1) := by ring
   -- the geometric decay of the lower bound
-  set M₀ : ℝ := (wordLength w₀ : ℝ) + (K : ℝ) + 1 with hM₀def
+  set M₀ : ℝ := (FreeGroup.norm w₀ : ℝ) + (K : ℝ) + 1 with hM₀def
   have hM₀pos : 0 < M₀ := by rw [hM₀def]; positivity
-  have hden (n) : 2 * (wordLength (W n) : ℝ) + 2 ≤ 2 ^ (n+1) * M₀ := by
-    have h1 : (wordLength (W n) : ℝ) + (K : ℝ) ≤ (2:ℝ) ^ n * ((wordLength w₀ : ℝ) + (K : ℝ)) := by
+  have hden (n) : 2 * (FreeGroup.norm (W n) : ℝ) + 2 ≤ 2 ^ (n+1) * M₀ := by
+    have h1 : (FreeGroup.norm (W n) : ℝ) + (K : ℝ)
+        ≤ (2:ℝ) ^ n * ((FreeGroup.norm w₀ : ℝ) + (K : ℝ)) := by
       have h := hWlen n
-      have h' : ((wordLength (W n) + K : ℕ) : ℝ)
-          ≤ ((2 ^ n * (wordLength w₀ + K) : ℕ) : ℝ) := by exact_mod_cast h
+      have h' : ((FreeGroup.norm (W n) + K : ℕ) : ℝ)
+          ≤ ((2 ^ n * (FreeGroup.norm w₀ + K) : ℕ) : ℝ) := by exact_mod_cast h
       push_cast at h'
       simpa using h'
     have h2 : (1:ℝ) ≤ 2 ^ n := one_le_pow₀ (by norm_num)
@@ -547,14 +547,14 @@ theorem irreducible_case {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin
     rw [← Real.rpow_natCast_mul (by norm_num : (0:ℝ) ≤ 2) (n+1) cexp,
       ← Real.rpow_mul_natCast (by norm_num : (0:ℝ) ≤ 2) cexp (n+1), mul_comm]
   -- the upper bound at this `n`
-  have hpow : (2 * (wordLength (W n) : ℝ) + 2) ^ cexp
+  have hpow : (2 * (FreeGroup.norm (W n) : ℝ) + 2) ^ cexp
       ≤ ((2:ℝ) ^ cexp) ^ (n+1) * M₀ ^ cexp := by
-    have h2 : (2 * (wordLength (W n) : ℝ) + 2) ^ cexp
+    have h2 : (2 * (FreeGroup.norm (W n) : ℝ) + 2) ^ cexp
         ≤ ((2:ℝ) ^ (n+1) * M₀) ^ cexp :=
       Real.rpow_le_rpow (by positivity) (hden n) (le_of_lt hcexp)
     rwa [Real.mul_rpow (by positivity) (le_of_lt hM₀pos), hkey] at h2
-  have hn2 : ε * (18 * ε) ^ n * (2 * (wordLength (W n) : ℝ) + 2) ^ cexp < C := by
-    have h2 : ε * (18 * ε) ^ n * (2 * (wordLength (W n) : ℝ) + 2) ^ cexp
+  have hn2 : ε * (18 * ε) ^ n * (2 * (FreeGroup.norm (W n) : ℝ) + 2) ^ cexp < C := by
+    have h2 : ε * (18 * ε) ^ n * (2 * (FreeGroup.norm (W n) : ℝ) + 2) ^ cexp
         ≤ ε * (18 * ε) ^ n * (((2:ℝ) ^ cexp) ^ (n+1) * M₀ ^ cexp) :=
       mul_le_mul_of_nonneg_left hpow (by positivity)
     have h3 : ε * (18 * ε) ^ n * (((2:ℝ) ^ cexp) ^ (n+1) * M₀ ^ cexp)
@@ -565,7 +565,7 @@ theorem irreducible_case {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin
       have hdpos : (0:ℝ) < ε * M₀ ^ cexp * (2:ℝ) ^ cexp := by positivity
       have h5 := mul_lt_mul_of_pos_left hn hdpos
       rwa [mul_div_cancel₀ _ (ne_of_gt hdpos)] at h5
-    calc ε * (18 * ε) ^ n * (2 * (wordLength (W n) : ℝ) + 2) ^ cexp
+    calc ε * (18 * ε) ^ n * (2 * (FreeGroup.norm (W n) : ℝ) + 2) ^ cexp
         ≤ ε * (18 * ε) ^ n * (((2:ℝ) ^ cexp) ^ (n+1) * M₀ ^ cexp) := h2
       _ = (ε * M₀ ^ cexp * (2:ℝ) ^ cexp) * ρ ^ n := h3
       _ < C := h4
@@ -574,25 +574,25 @@ theorem irreducible_case {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin
     exists_lattice_cell lam π mu σ hlam hmu (W n) (hcon (W n) (hWne n))
   set T : ℕ := max (coeffMax a) (coeffMax b) with hTdef
   -- the coefficients are bounded by `2 |W n| + 2`
-  have hTa : coeffMax a ≤ 2 * wordLength (W n) + 2 := by
+  have hTa : coeffMax a ≤ 2 * FreeGroup.norm (W n) + 2 := by
     rw [coeffMax]
     refine Finset.sup_le fun i _ => ?_
-    have h3 : ((a i).natAbs : ℤ) ≤ ((2 * wordLength (W n) + 2 : ℕ) : ℤ) := by
+    have h3 : ((a i).natAbs : ℤ) ≤ ((2 * FreeGroup.norm (W n) + 2 : ℕ) : ℤ) := by
       rw [Int.natCast_natAbs]
       have h := ha i
       push_cast
       exact h
     exact_mod_cast h3
-  have hTb : coeffMax b ≤ 2 * wordLength (W n) + 2 := by
+  have hTb : coeffMax b ≤ 2 * FreeGroup.norm (W n) + 2 := by
     rw [coeffMax]
     refine Finset.sup_le fun j _ => ?_
-    have h3 : ((b j).natAbs : ℤ) ≤ ((2 * wordLength (W n) + 2 : ℕ) : ℤ) := by
+    have h3 : ((b j).natAbs : ℤ) ≤ ((2 * FreeGroup.norm (W n) + 2 : ℕ) : ℤ) := by
       rw [Int.natCast_natAbs]
       have h := hb j
       push_cast
       exact h
     exact_mod_cast h3
-  have hTle : T ≤ 2 * wordLength (W n) + 2 := by
+  have hTle : T ≤ 2 * FreeGroup.norm (W n) + 2 := by
     rw [hTdef]
     exact max_le hTa hTb
   -- the combination is nonzero, so some coefficient is
@@ -632,26 +632,28 @@ theorem irreducible_case {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin
   have hstep : ((∑ i, (a i : ℝ) * (lam i : ℝ)) + (∑ j, (b j : ℝ) * (mu j : ℝ)))
         * (T : ℝ) ^ cexp
       ≤ unitMeas.real (wordSupp (W n) (mkIET1' lam π hlam) (mkIET1' mu σ hmu))
-        * (2 * (wordLength (W n) : ℝ) + 2) ^ cexp := by
-    have hTb' : (T:ℝ) ^ cexp ≤ (2 * (wordLength (W n) : ℝ) + 2) ^ cexp := by
+        * (2 * (FreeGroup.norm (W n) : ℝ) + 2) ^ cexp := by
+    have hTb' : (T:ℝ) ^ cexp ≤ (2 * (FreeGroup.norm (W n) : ℝ) + 2) ^ cexp := by
       refine Real.rpow_le_rpow (by positivity) ?_ (le_of_lt hcexp)
       exact_mod_cast hTle
     have hTp : (0:ℝ) < (T:ℝ) ^ cexp := Real.rpow_pos_of_pos hTpos _
-    exact mul_le_mul hle hTb' (le_of_lt hTp) (unitMeas_real_nonneg _)
+    exact mul_le_mul hle hTb' (le_of_lt hTp) (measureReal_nonneg (μ := unitMeas))
   -- contradiction
-  have hupper : C ≤ ε * (18 * ε) ^ n * (2 * (wordLength (W n) : ℝ) + 2) ^ cexp := by
+  have hupper : C ≤ ε * (18 * ε) ^ n * (2 * (FreeGroup.norm (W n) : ℝ) + 2) ^ cexp := by
     have hsupp := hWsupp n
-    have hnn : (0:ℝ) ≤ (2 * (wordLength (W n) : ℝ) + 2) ^ cexp := by positivity
+    have hnn : (0:ℝ) ≤ (2 * (FreeGroup.norm (W n) : ℝ) + 2) ^ cexp := by positivity
     calc C ≤ ((∑ i, (a i : ℝ) * (lam i : ℝ)) + (∑ j, (b j : ℝ) * (mu j : ℝ)))
           * (T : ℝ) ^ cexp := hC_le
       _ ≤ unitMeas.real (wordSupp (W n) (mkIET1' lam π hlam) (mkIET1' mu σ hmu))
-          * (2 * (wordLength (W n) : ℝ) + 2) ^ cexp := hstep
-      _ ≤ (ε * (18 * ε) ^ n) * (2 * (wordLength (W n) : ℝ) + 2) ^ cexp :=
+          * (2 * (FreeGroup.norm (W n) : ℝ) + 2) ^ cexp := hstep
+      _ ≤ (ε * (18 * ε) ^ n) * (2 * (FreeGroup.norm (W n) : ℝ) + 2) ^ cexp :=
           mul_le_mul_of_nonneg_right hsupp hnn
-      _ = ε * (18 * ε) ^ n * (2 * (wordLength (W n) : ℝ) + 2) ^ cexp := by ring
+      _ = ε * (18 * ε) ^ n * (2 * (FreeGroup.norm (W n) : ℝ) + 2) ^ cexp := by ring
   linarith [hn2, hupper]
 
 /-! **Proposition 2.5** (`ae_diophantine`) is proved in `Diophantine.lean`, which this file imports;
 its statement and the definitions `coeffMax`, `IsDiophantine`, `simplex` used above live there. -/
+
+end IntervalExchange.Pair
 
 end

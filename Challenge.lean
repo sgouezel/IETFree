@@ -9,27 +9,38 @@ public import Mathlib
 
 /-!
 The challenge statement, in the shortest form that can be checked: the *unconditional* form of
-Theorem 1.1, in Mathlib-only language.  This file *is* the comparator challenge (`comparator.json`,
-`Comparator/`): `IETFree/ChallengeSolved.lean` proves it, and the comparator checks that the two
-agree declaration by declaration.
+Theorem 1.1 and the conclusion of the remark that follows it, in Mathlib-only language.  This file
+*is* the comparator challenge (see `comparator.json`): `IETFree/ChallengeSolved.lean` proves both,
+and `lake comparator` checks that the two modules agree declaration by declaration.
 
 `mkIETFun` is the function of the interval exchange with lengths `lam` and permutation `π` placed on
 `[a, a + ∑ lam)`; `mkIETEquiv` packages it as a permutation of `ℝ`, and `coe_mkIETEquiv` records its
 coercion.  The inverse is not *constructed*: `mkIETEquiv` is a
 definition hole (`:= sorry`) and `coe_mkIETEquiv` a statement, so the file contains no proof about
-`mkIETFun`'s inverse — only the statement of Theorem 1.1, with `sorry`, uses them.  `main` is the
-theorem.
+`mkIETFun`'s inverse — only the two theorems below, each with `sorry`, use them: `main` is
+Theorem 1.1, and `Pair.exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one` is the conclusion of
+the remark that follows it.
 
-The declarations are at the root namespace, and their names are the library's.
+The declarations are in `namespace IntervalExchange`, the library's namespace, and their names are
+the library's: `comparator.json` names them in full (`IntervalExchange.main`, …), and the comparator
+compares the two modules constant by constant.
 
-The declarations mirror the library's (`IETFree/IET.lean`) name for name and body for body, so that
-the comparator can compare the statements declaration by declaration; `IETFree/ChallengeSolved.lean`
-proves them. -/
+The declarations mirror the library's — all of them in `IETFree/IET.lean` — name for name and body
+for body, so that the comparator can compare the statements declaration by declaration;
+`IETFree/ChallengeSolved.lean` proves them.
+
+The remark's conclusion is the second target,
+`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`, in `namespace Pair` because the library
+states it there: it names no notion of the library's (no
+predicate on the relation set), only `mkIETEquiv`, `evalWordEquiv`, `simplexVolume` and the two
+normalisation conditions as hypotheses, so that it reads as a statement on its own. -/
 
 @[expose] public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
+
+namespace IntervalExchange
 
 /-- Left endpoint of the `i`-th interval of the arrangement with lengths `lam`. -/
 noncomputable def leftEnd {n : ℕ} (lam : Fin n → ℝ≥0) (i : Fin n) : ℝ :=
@@ -107,9 +118,13 @@ parametrisation `λ_d = 1 - ∑_{i<d} λ_i`.  Almost every point of the image is
 noncomputable def simplexVolume (d : ℕ) : Measure (Fin d → ℝ≥0) :=
   Measure.map (simplexMap d) (volume.restrict (simplexRegion d))
 
-/-- Evaluation of a word in the two generators at a pair of permutations of `ℝ`. -/
+/-- Evaluation of a word in the two generators at a pair of permutations of `ℝ`.
+
+The generator map is `Fin.cases f fun _ => g` rather than `if i = 0 then f else g`: the latter
+carries a `DecidableEq (Fin 2)` instance whose proof is an auxiliary declaration of the module it
+is written in, and the comparator compares these two copies of the definition term by term. -/
 noncomputable def evalWordEquiv (w : FreeGroup (Fin 2)) (f g : Equiv ℝ ℝ) : Equiv ℝ ℝ :=
-  (FreeGroup.lift (fun i : Fin 2 => if i = 0 then f else g)) w
+  FreeGroup.lift (Fin.cases f fun _ => g) w
 
 /-- **The main theorem.**  For almost every pair of length vectors of total mass `1`, the two
 exchanges satisfy a nontrivial relation in the group of permutations of `ℝ`. -/
@@ -119,5 +134,25 @@ theorem main {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
       ∃ w : FreeGroup (Fin 2), w ≠ 1 ∧
         evalWordEquiv w (mkIETEquiv p.1 π 0) (mkIETEquiv p.2 σ 0) = 1 := by
   sorry
+
+namespace Pair
+
+/-- **The remark after the main theorem.**  The pairs of length vectors which do not generate a free
+group contain an open set of full measure: some open set `O` of the ambient space — of null
+complement for the product of the two simplex measures — is such that every `p ∈ O` whose two
+vectors have total mass `1` carries a nontrivial word which is trivial for the two permutations
+`mkIETEquiv p.1 π 0` and `mkIETEquiv p.2 σ 0`. -/
+theorem exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one {d e : ℕ} [NeZero d] [NeZero e]
+    (π : Equiv.Perm (Fin d)) (σ : Equiv.Perm (Fin e)) :
+    ∃ O : Set ((Fin d → ℝ≥0) × (Fin e → ℝ≥0)), IsOpen O ∧
+      ((simplexVolume d).prod (simplexVolume e)) Oᶜ = 0 ∧
+      ∀ p ∈ O, (∑ i, p.1 i = 1) → (∑ j, p.2 j = 1) →
+        ∃ w : FreeGroup (Fin 2), w ≠ 1 ∧
+          evalWordEquiv w (mkIETEquiv p.1 π 0) (mkIETEquiv p.2 σ 0) = 1 := by
+  sorry
+
+end Pair
+
+end IntervalExchange
 
 end

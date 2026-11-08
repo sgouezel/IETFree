@@ -5,14 +5,14 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.Pair.BlockRescaling
+public import IETFree.Pair.Block.Rescaling
 
 /-!
 # The restriction of an exchange to an invariant interval
 
 This module has no counterpart in the numbering of the paper: it is the lemma by which Lemma 3.4
 turns the *second* generator `g` into an exchange of `[0,1)` on a block, exactly as
-`RescaleBlock.mkIET1_rescale_subinterval` does for the composition.
+`mkIET1_rescale_subinterval` does for the composition.
 
 ## The restriction of an exchange to an invariant interval is an exchange
 
@@ -30,14 +30,15 @@ at the two ends of a cell is the length of the part of that cell inside `[u, v)`
 open Finset
 open scoped BigOperators NNReal
 
-
-namespace RestrictIET
+namespace IntervalExchange.Pair
 
 variable {u v : ℝ}
 
 /-! ### The clamping function -/
 
-/-- Clamping to `[u, v]`: `t ↦ min v (max u t)`. -/
+/-- Clamping to `[u, v]`: `t ↦ min v (max u t)`, i.e. `Set.projIcc u v ·` composed with the
+coercion to `ℝ` on `u ≤ v`.  It is kept as a real-valued function because every use in this file is
+an ordinary real number. -/
 def clamp (u v t : ℝ) : ℝ := min v (max u t)
 
 theorem clamp_zero (h0u : 0 ≤ u) (huv : u ≤ v) : clamp u v 0 = u := by
@@ -116,7 +117,7 @@ theorem prefixMass_eq_upperEnd (lam : Fin n → ℝ≥0) {k : ℕ} (hk : k < n) 
 
 theorem prefixMass_eq_total (lam : Fin n → ℝ≥0) :
     prefixMass lam n = ∑ i, (lam i : ℝ) := by
-  rw [prefixMass, RescaleBlock.sum_range_lamNat_eq_total]
+  rw [prefixMass, sum_range_lamNat_eq_total]
 
 /-- **The clamped lengths telescope.** -/
 theorem sum_clamp_sub (lam : Fin n → ℝ≥0) (hlam : (∑ i, (lam i : ℝ)) = 1)
@@ -173,17 +174,15 @@ variable {e : ℕ} [NeZero e] {mu : Fin e → ℝ≥0} {σ : Equiv.Perm (Fin e)}
 /-- **The truncated cell is mapped into the truncated image.**  For a point of the cell `i` of `mu`
 that lies in `[u, v)`, the translated point lies in `[u, v)` (by invariance) and in the image of the
 cell, whence it lies in the part of the image that is inside `[u, v)`. -/
-theorem image_truncation_subset (hl : (∑ j, mu j) = 1) {u v : ℝ} (h0u : 0 ≤ u) (_huv : u < v)
-    (_hv1 : v ≤ 1)
+theorem image_truncation_subset (hl : (∑ j, mu j) = 1) {u v : ℝ} (h0u : 0 ≤ u)
     (hinv : ∀ x ∈ Set.Ico u v, (mkIET1' mu σ hl x ∈ Set.Ico u v ↔ x ∈ Set.Ico u v))
-    (i : Fin e) :
-    ∀ z : ℝ, max u (leftEnd mu i) ≤ z → z < min v (upperEnd mu i) →
+    (i : Fin e) (z : ℝ) (hz1 : max u (leftEnd mu i) ≤ z)
+    (hz2 : z < min v (upperEnd mu i)) :
       (max u (imageLeft σ mu i) ≤ z + (imageLeft σ mu i - leftEnd mu i) ∧
         z + (imageLeft σ mu i - leftEnd mu i)
           < min v (imageLeft σ mu i + (mu i : ℝ))) := by
   have htot : (∑ j, (mu j : ℝ)) = 1 := by
-    rw [← NNReal.coe_sum, hl, NNReal.coe_one]
-  intro z hz1 hz2
+    rw [sum_coe_eq_one (hl)]
   have hzl : leftEnd mu i ≤ z := le_trans (le_max_right u _) hz1
   have hzu : u ≤ z := le_trans (le_max_left u _) hz1
   have hzr : z < upperEnd mu i := lt_of_lt_of_le hz2 (min_le_right _ _)
@@ -235,7 +234,7 @@ theorem clamp_imageLengths_eq (hl : (∑ j, mu j) = 1) {u v : ℝ} (h0u : 0 ≤ 
         - clamp u v (leftEnd (imageLengths σ mu) (σ i))
       = clamp u v (upperEnd mu i) - clamp u v (leftEnd mu i) := by
   have htot : (∑ j, (mu j : ℝ)) = 1 := by
-    rw [← NNReal.coe_sum, hl, NNReal.coe_one]
+    rw [sum_coe_eq_one (hl)]
   have hnu : (∑ k, (imageLengths σ mu k : ℝ)) = 1 := by
     rw [sum_imageLengths, htot]
   have hLI (j : Fin e) : leftEnd mu j ≤ upperEnd mu j := by
@@ -257,9 +256,9 @@ theorem clamp_imageLengths_eq (hl : (∑ j, mu j) = 1) {u v : ℝ} (h0u : 0 ≤ 
     · rw [max_eq_left (by linarith :
         min v (upperEnd mu i) - max u (leftEnd mu i) ≤ 0)]
       exact le_max_left _ _
-    · have h1 := (image_truncation_subset hl h0u huv hv1 hinv i _ le_rfl hne).1
+    · have h1 := (image_truncation_subset hl h0u hinv i _ le_rfl hne).1
       have h2 := min_add_translation_le (u := u) (v := v) i hne
-        (image_truncation_subset hl h0u huv hv1 hinv i)
+        (image_truncation_subset hl h0u hinv i)
       have h3 : (0 : ℝ) ≤ min v (imageLeft σ mu i + (mu i : ℝ))
           - max u (imageLeft σ mu i) := by
         linarith
@@ -292,7 +291,7 @@ theorem mkIET1_restrict_invariant (hl : (∑ j, mu j) = 1) {u v : ℝ}
       (∀ j, (mu' j : ℝ)
         = max 0 (min v (upperEnd mu j) - max u (leftEnd mu j)) / (v - u)) ∧
       ∀ y ∈ Set.Ico (0 : ℝ) 1, rescaleFun u v (mkIET1' mu σ hl) y = mkIET1' mu' σ hl' y := by
-  have htot : (∑ j, (mu j : ℝ)) = 1 := by rw [← NNReal.coe_sum, hl, NNReal.coe_one]
+  have htot : (∑ j, (mu j : ℝ)) = 1 := by rw [sum_coe_eq_one (hl)]
   have hvu : (0 : ℝ) < v - u := by linarith
   have hvune : v - u ≠ 0 := ne_of_gt hvu
   have hLI (j : Fin e) : leftEnd mu j ≤ upperEnd mu j := by
@@ -302,7 +301,7 @@ theorem mkIET1_restrict_invariant (hl : (∑ j, mu j) = 1) {u v : ℝ}
     ⟨max 0 (min v (upperEnd mu j) - max u (leftEnd mu j)) / (v - u),
       div_nonneg (le_max_left _ _) hvu.le⟩ with hmu'def
   have hmu'max (j) : (mu' j : ℝ)
-      = max 0 (min v (upperEnd mu j) - max u (leftEnd mu j)) / (v - u) := rfl
+      = max 0 (min v (upperEnd mu j) - max u (leftEnd mu j)) / (v - u) := (rfl)
   have hmu'coe (j) : (mu' j : ℝ)
       = (clamp u v (upperEnd mu j) - clamp u v (leftEnd mu j)) / (v - u) := by
     rw [hmu'max j, clamp_sub_clamp huv (hLI j)]
@@ -354,7 +353,7 @@ theorem mkIET1_restrict_invariant (hl : (∑ j, mu j) = 1) {u v : ℝ}
   -- the key computation: the translation at the cell of `x`
   have hclamp_a : clamp u v (imageLeft σ mu i)
       = clamp u v (leftEnd mu i) + (imageLeft σ mu i - leftEnd mu i) := by
-    have hpt := image_truncation_subset hl h0u huv hv1 hinv i
+    have hpt := image_truncation_subset hl h0u hinv i
     have hlo := (hpt _ le_rfl hne).1
     have hsup := min_add_translation_le (u := u) (v := v) i hne hpt
     have hlen := clamp_imageLengths_eq hl h0u huv hv1 hinv i
@@ -386,14 +385,14 @@ theorem mkIET1_restrict_invariant (hl : (∑ j, mu j) = 1) {u v : ℝ}
       congr 1
       ring
     rw [h2, hyx, div_lt_div_iff_of_pos_right hvu]
-    have h3 : clamp u v (upperEnd mu i) = min v (max u (upperEnd mu i)) := rfl
+    have h3 : clamp u v (upperEnd mu i) = min v (max u (upperEnd mu i)) := (rfl)
     rw [h3]
     have h4 : x < min v (max u (upperEnd mu i)) :=
       lt_min hxv (lt_of_lt_of_le hixr (le_max_right _ _))
     linarith
   have hy' : y ∈ Set.Ico (0 : ℝ) (∑ j, (mu' j : ℝ)) := by
     refine ⟨hy.1, ?_⟩
-    have h1 : (∑ j, (mu' j : ℝ)) = 1 := by rw [← NNReal.coe_sum, hl', NNReal.coe_one]
+    have h1 : (∑ j, (mu' j : ℝ)) = 1 := by rw [sum_coe_eq_one (hl')]
     rw [h1]; exact hy.2
   set i' := idx mu' y hy'.1 with hi'def
   have hidx : i' = i := by
@@ -428,7 +427,7 @@ noncomputable def truncatedLengths (mu : Fin e → ℝ≥0) (u v : ℝ) (huv : u
 omit [NeZero e] in
 theorem truncatedLengths_coe (mu : Fin e → ℝ≥0) {u v : ℝ} (huv : u < v) (j : Fin e) :
     (truncatedLengths mu u v huv j : ℝ)
-      = max 0 (min v (upperEnd mu j) - max u (leftEnd mu j)) / (v - u) := rfl
+      = max 0 (min v (upperEnd mu j) - max u (leftEnd mu j)) / (v - u) := (rfl)
 
 omit [NeZero e] in
 theorem truncatedLengths_clamp (mu : Fin e → ℝ≥0) {u v : ℝ} (huv : u < v) (j : Fin e) :
@@ -442,7 +441,7 @@ omit [NeZero e] in
 theorem sum_truncatedLengths (mu : Fin e → ℝ≥0) (hl : (∑ j, mu j) = 1) {u v : ℝ}
     (h0u : 0 ≤ u) (huv : u < v) (hv1 : v ≤ 1) :
     (∑ j, truncatedLengths mu u v huv j) = 1 := by
-  have htot : (∑ j, (mu j : ℝ)) = 1 := by rw [← NNReal.coe_sum, hl, NNReal.coe_one]
+  have htot : (∑ j, (mu j : ℝ)) = 1 := by rw [sum_coe_eq_one (hl)]
   have hvu : (0 : ℝ) < v - u := by linarith
   have hvune : v - u ≠ 0 := ne_of_gt hvu
   refine NNReal.coe_injective ?_
@@ -459,6 +458,6 @@ theorem sum_truncatedLengths (mu : Fin e → ℝ≥0) (hl : (∑ j, mu j) = 1) {
 
 end Main
 
-end RestrictIET
+end IntervalExchange.Pair
 
 end

@@ -45,9 +45,15 @@ both disjointness and nullity fail. -/
 
 open MeasureTheory
 open scoped BigOperators ENNReal NNReal
+open IntervalExchange.RauzyVeech
 
+namespace IntervalExchange
 
 namespace IETDatum₂
+
+variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
+
+end IETDatum₂
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -96,6 +102,10 @@ theorem cone_mul (A B : Matrix α α ℤ) :
   · rintro ⟨z, ⟨y, hy, rfl⟩, rfl⟩
     exact ⟨y, hy, (qApply_mul A B y).symm⟩
 
+namespace IETDatum₂
+
+variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
+
 /-! ## 2. The cone of a single step -/
 
 /-- The action of `rvMat ε`: it adds the `α_{1-ε}` coordinate to the `α_ε` coordinate. -/
@@ -109,7 +119,7 @@ theorem qApply_rvMat (P : IETDatum₂ α n) (ε : Bool) (hne : P.last ε ≠ P.l
     (if a = P.last ε ∧ b = P.last (!ε) then (1 : ℝ) else 0)) * y b := by
     rw [rvMat_cast P ε a b hne]
   rw [Finset.sum_congr rfl (fun b _ => hstep b),
-    sum_rvMat_mul (P.last ε) (P.last (!ε)) y a]
+    sum_add_single_mul (P.last ε) (P.last (!ε)) 1 y a, one_mul]
 
 /-- Pointwise form of `qApply_rvMat`. -/
 theorem qApply_rvMat_apply (P : IETDatum₂ α n) (ε : Bool) (hne : P.last ε ≠ P.last (!ε))
@@ -169,7 +179,7 @@ theorem cone_rvMat (P : IETDatum₂ α n) (ε : Bool) (hne : P.last ε ≠ P.las
 /-! ## 3. Renormalised length vectors and the two descriptions of `simplexCyl` -/
 
 /-- `w` is a renormalised length vector of `x` along the path `γ`: it is positive and
-`x = Q(γ) w` (as real vectors).  This is the source's `λ^{(n)}`. -/
+`x = Q(γ) w` (as real vectors).  This is Yoccoz's `λ^{(n)}`. -/
 def IsRenorm (P : IETDatum₂ α n) (γ : List Bool) (x : α → ℝ≥0) (w : α → ℝ) : Prop :=
   (∀ a, 0 < w a) ∧ (fun a => (x a : ℝ)) = qApply (Path.Q P γ) w
 
@@ -180,7 +190,7 @@ theorem isRenorm_iff (P : IETDatum₂ α n) (γ : List Bool) (x : α → ℝ≥0
 /-- Membership in a path cylinder: a point of the simplex whose real length vector lies in the
 cone `C(γ)`, i.e. which has a positive renormalised vector. -/
 theorem mem_simplexCyl_iff (P : IETDatum₂ α n) (γ : List Bool) (x : α → ℝ≥0) :
-    x ∈ simplexCyl P γ ↔ x ∈ simplexOn α ∧ ∃ w : α → ℝ, IsRenorm P γ x w := by
+    x ∈ simplexCyl P γ ↔ x ∈ simplex α ∧ ∃ w : α → ℝ, IsRenorm P γ x w := by
   rw [simplexCyl]
   constructor
   · rintro ⟨h1, h2⟩
@@ -247,6 +257,17 @@ theorem simplexCyl_append_subset (P : IETDatum₂ α n) (hP : P.Irreducible) (hn
     simplexCyl P (γ ++ [e]) ⊆ simplexCyl P γ := by
   intro x hx
   exact ((mem_simplexCyl_append_iff P hP hn γ e x).mp hx).1
+
+/-- Nesting for an arbitrary extension: a cylinder is contained in the cylinder of any prefix of
+its word. -/
+theorem simplexCyl_append_prefix (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
+    (γ δ : List Bool) : simplexCyl P (γ ++ δ) ⊆ simplexCyl P γ := by
+  induction δ generalizing γ with
+  | nil => simp
+  | cons e es ih =>
+    have h1 : γ ++ e :: es = (γ ++ [e]) ++ es := by simp
+    rw [h1]
+    exact Set.Subset.trans (ih (γ ++ [e])) (simplexCyl_append_subset P hP hn γ e)
 
 /-! ## 4. Injectivity of the renormalisation map -/
 
@@ -349,39 +370,17 @@ theorem simplexCyl_eq_union (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 
     · exact simplexCyl_append_subset P hP hn γ false h
     · exact h.1
 
-/-! ## 7. The inverse of `Q(γ)` and the stopping set as a hyperplane section -/
+/-! ## 6. The inverse of `Q(γ)` and the stopping set as a hyperplane section -/
 
 /-- The inverse of the elementary matrix `V_ε = 1 + E`: `1 - E`. -/
 def rvMatInv (P : IETDatum₂ α n) (ε : Bool) : Matrix α α ℤ :=
   fun i j => if i = j then 1 else if i = P.last ε ∧ j = P.last (!ε) then -1 else 0
 
-/-- A sum with a general coefficient on the elementary part (generalises `sum_rvMat_mul`). -/
-theorem sum_add_single_mul (c c' : α) (t : ℝ) (y : α → ℝ) (a : α) :
-    ∑ b, ((if b = a then (1 : ℝ) else 0) + (if a = c ∧ b = c' then t else 0)) * y b
-      = y a + t * (if a = c then y c' else 0) := by
-  have hexp (b) : ((if b = a then (1 : ℝ) else 0) +
-        (if a = c ∧ b = c' then t else 0)) * y b
-      = (if b = a then y b else 0) + (if a = c ∧ b = c' then t * y b else 0) := by
-    rw [add_mul, ite_mul, ite_mul, one_mul, zero_mul]
-  have hsplit : ∑ b, ((if b = a then (1 : ℝ) else 0) +
-        (if a = c ∧ b = c' then t else 0)) * y b
-      = (∑ b, (if b = a then y b else 0)) +
-        (∑ b, (if a = c ∧ b = c' then t * y b else 0)) := by
-    rw [Finset.sum_congr rfl (fun b _ => hexp b), Finset.sum_add_distrib]
-  rw [hsplit, Finset.sum_ite_eq' Finset.univ a (fun b => y b)]
-  simp only [Finset.mem_univ, ite_true]
-  by_cases ha : a = c
-  · have h2 (b) : (if a = c ∧ b = c' then t * y b else 0) =
-        (if b = c' then t * y b else 0) := by
-      rw [ha]
-      simp
-    rw [Finset.sum_congr rfl (fun b _ => h2 b),
-      Finset.sum_ite_eq' Finset.univ c' (fun b => t * y b)]
-    simp [ha]
-  · have h2 (b) : (if a = c ∧ b = c' then t * y b else 0) = (0 : ℝ) := by
-      rw [ite_eq_right (fun h => ha h.1)]
-    rw [Finset.sum_congr rfl (fun b _ => h2 b), Finset.sum_const_zero, add_zero]
-    simp [ha]
+end IETDatum₂
+
+namespace IETDatum₂
+
+variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
 /-- The action of `rvMatInv ε`: it subtracts the `α_{1-ε}` coordinate from the `α_ε` one. -/
 theorem qApply_rvMatInv (P : IETDatum₂ α n) (ε : Bool) (hne : P.last ε ≠ P.last (!ε))
@@ -454,8 +453,12 @@ theorem qApply_Qinv_Q (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
 
 end Path
 
-/-- **A level set of a nonzero linear functional on `Fin m → ℝ` is Lebesgue-null.** -/
-theorem volume_linear_eq_zero {k : ℕ} (f : (Fin k → ℝ) →ₗ[ℝ] ℝ) (hf : f ≠ 0) (c : ℝ) :
+end IETDatum₂
+
+variable {k : ℕ}
+
+/-- **A level set of a nonzero linear functional on `Fin k → ℝ` is Lebesgue-null.** -/
+theorem volume_linear_eq_zero (f : (Fin k → ℝ) →ₗ[ℝ] ℝ) (hf : f ≠ 0) (c : ℝ) :
     volume {v : Fin k → ℝ | f v = c} = 0 := by
   have hzero : volume {v : Fin k → ℝ | f v = 0} = 0 := by
     have h : {v : Fin k → ℝ | f v = 0} = (LinearMap.ker f : Set _) := by
@@ -499,7 +502,11 @@ theorem volume_linear_eq_zero {k : ℕ} (f : (Fin k → ℝ) →ₗ[ℝ] ℝ) (h
       (measure_preimage_add_right volume a _).symm
     rw [hset, h1, himg, hzero]
 
-/-! ## 8. The stopping set is null: the hyperplane computation -/
+namespace IETDatum₂
+
+variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
+
+/-! ## 7. The stopping set is null: the hyperplane computation -/
 
 section Null
 
@@ -521,7 +528,7 @@ noncomputable def hallLin (A : Fin (m + 1) → ℝ) : (Fin (m + 1) → ℝ) →�
     exact Finset.sum_congr rfl fun i _ => by simp only [RingHom.id_apply]; ring
 
 theorem hallLin_apply (A : Fin (m + 1) → ℝ) (w : Fin (m + 1) → ℝ) :
-    hallLin A w = ∑ i, A i * w i := rfl
+    hallLin A w = ∑ i, A i * w i := (rfl)
 
 /-- The linear part of `v ↦ hallLin A (chart m v)`. -/
 noncomputable def glin (A : Fin (m + 1) → ℝ) : (Fin m → ℝ) →ₗ[ℝ] ℝ where
@@ -533,7 +540,7 @@ noncomputable def glin (A : Fin (m + 1) → ℝ) : (Fin m → ℝ) →ₗ[ℝ] �
     exact Finset.sum_congr rfl fun i _ => by simp only [RingHom.id_apply]; ring
 
 theorem hallLin_linChart (A : Fin (m + 1) → ℝ) (v : Fin m → ℝ) :
-    hallLin A (linChart m v) = glin A v := rfl
+    hallLin A (linChart m v) = glin A v := (rfl)
 
 /-- The last coordinate vector. -/
 def delta (m : ℕ) : Fin (m + 1) → ℝ := fun i => if i = Fin.last m then 1 else 0
@@ -630,7 +637,7 @@ theorem volume_hallLin_chart_eq_zero {A : Fin (m + 1) → ℝ} (hA : A ≠ 0) :
 
 end Null
 
-/-! ## 9. The stopping set is null for `simplexVolumeOn` -/
+/-! ## 8. The stopping set is null for `simplexVolumeOn` -/
 
 section NullVolume
 
@@ -764,7 +771,7 @@ theorem simplexVolumeOn_cylStop (P : IETDatum₂ α n) (hP : P.Irreducible) (hn 
     rw [simplexVolumeOn_apply_gchart P _ hS]
     exact volume_gchart_preimage_hyperplane P γ hA
 
-/-! ## 10. Measurability of the cylinders and additivity of the measure -/
+/-! ## 9. Measurability of the cylinders and additivity of the measure -/
 
 section Measurable
 
@@ -812,13 +819,11 @@ theorem qApply_rvMat_qApply_rvMatInv (P : IETDatum₂ α n) (ε : Bool)
     rw [hq', add_zero]
 
 theorem Path.qApply_Q_Qinv (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
-    (γ : List Bool) : ∀ y : α → ℝ, qApply (Q P γ) (qApply (Qinv P γ) y) = y := by
-  induction γ generalizing P with
+    (γ : List Bool) (y : α → ℝ) : qApply (Q P γ) (qApply (Qinv P γ) y) = y := by
+  induction γ generalizing P y with
   | nil =>
-    intro y
     simp [Qinv, Q_nil, qApply, qMat, Matrix.map_one, Matrix.one_mulVec]
   | cons e es ih =>
-    intro y
     have hne := last_ne_last_not P hP hn e
     rw [Q_cons, Qinv, qApply_mul, qApply_mul]
     rw [ih (P.rvStep e) (rvStep_irreducible P hP e) (qApply (P.rvMatInv e) y)]
@@ -854,8 +859,8 @@ theorem measurableSet_simplexCyl (P : IETDatum₂ α n) (hP : P.Irreducible) (hn
   have h1 : MeasurableSet
       ((fun x : α → ℝ≥0 => fun a => (x a : ℝ)) ⁻¹' cone (Path.Q P γ)) :=
     (isOpen_cone P hP hn γ).measurableSet.preimage (continuous_coe_lengths α).measurable
-  have h2 : MeasurableSet (simplexOn α) := by
-    have h3 : simplexOn α = {x : α → ℝ≥0 | ∑ a, x a = 1} := rfl
+  have h2 : MeasurableSet (simplex α) := by
+    have h3 : simplex α = {x : α → ℝ≥0 | ∑ a, x a = 1} := (rfl)
     rw [h3]
     refine (isClosed_eq ?_ continuous_const).measurableSet
     exact continuous_finsetSum _ fun a _ => continuous_apply a
@@ -863,11 +868,11 @@ theorem measurableSet_simplexCyl (P : IETDatum₂ α n) (hP : P.Irreducible) (hn
 
 end Measurable
 
-/-! ## 11. Capstones -/
+/-! ## 10. Capstones -/
 
 omit [DecidableEq α] in
 /-- **The column sums are the total lengths**: `∑_a (Q y) a = ∑_b Q_β y_b`.  In particular, for
-`x = Q(γ) λ̂` with `x ∈ simplexOn α` one has `∑_b Q_β λ̂_b = 1`, the normalisation of the
+`x = Q(γ) λ̂` with `x ∈ simplex α` one has `∑_b Q_β λ̂_b = 1`, the normalisation of the
 renormalised length vector. -/
 theorem sum_qApply (Q : Matrix α α ℤ) (y : α → ℝ) :
     ∑ a, qApply Q y a = ∑ b, ((∑ a, Q a b : ℤ) : ℝ) * y b := by
@@ -878,5 +883,7 @@ theorem sum_qApply (Q : Matrix α α ℤ) (y : α → ℝ) :
   rw [Finset.sum_mul]
 
 end IETDatum₂
+
+end IntervalExchange
 
 end

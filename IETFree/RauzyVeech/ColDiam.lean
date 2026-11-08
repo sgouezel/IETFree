@@ -5,24 +5,24 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.BoundedSimplex
-public import IETFree.RauzyVeech.CylinderVolume
-public import IETFree.RauzyVeech.MeshShrink
+public import IETFree.RauzyVeech.CocycleVolume
+public import IETFree.RauzyVeech.Nesting
+public import IETFree.RauzyVeech.PrefixWord
 
 /-!
 # The shrinking of the path cylinders, and the coalescence of the normalised columns
 
 For a finite word `γ` put `Q = Path.Q P γ` (the Rauzy–Veech path matrix), `c_b = ∑_a Q_{ab}` (the
 *heights* of the level-`|γ|` tower) and `ŵ_b = Q e_b / c_b` (the *normalised columns*, i.e. the
-vertices of the closed cylinder `Δ̄(γ) = conv{ŵ_b}`; `ColShrink.cs`, `ColShrink.ncol`). This file
+vertices of the closed cylinder `Δ̄(γ) = conv{ŵ_b}`; `colSum`, `ncol`). This file
 proves
 
-* `ColShrink.exists_weights`: every point of `Δ(γ)` is a convex combination of the `ŵ_b`, with
+* `exists_weights`: every point of `Δ(γ)` is a convex combination of the `ŵ_b`, with
   nonnegative weights summing to `1`;
-* `ColShrink.abs_sub_le_of_cols_close` and `ColShrink.diam_le_of_cols_close`: if the normalised
+* `abs_sub_le_of_cols_close` and `diam_le_of_cols_close`: if the normalised
   columns are pairwise close, then so are the coordinates of the points of `Δ(γ)`, hence
   `diam Δ(γ) ≤ 2 · max_{b,b',a} |ŵ_{b,a} - ŵ_{b',a}|`;
-* `ColShrink.tendsto_diam_of_cols_eventually_close`: consequently, along a path of the Rauzy–Veech
+* `tendsto_diam_of_cols_eventually_close`: consequently, along a path of the Rauzy–Veech
   algorithm, eventual pointwise closeness of the normalised columns of `Q(γ_k)` forces `diam Δ(γ_k)
   → 0`.
 
@@ -35,38 +35,38 @@ purely geometric: no statement about the *volume* of `Δ(γ_k)` is used. -/
 open MeasureTheory Set Filter
 open scoped BigOperators ENNReal NNReal Topology
 
-namespace ColShrink
+namespace IntervalExchange.RauzyVeech
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
-/-! ## 0. The column sums and the normalised columns -/
+/-! ## 1. The column sums and the normalised columns -/
 
 /-- The `b`-th column sum of the path matrix `Q(γ)`: the number of level-`|γ|` floors of the tower
 over the letter `b`. -/
-noncomputable def cs (P : IETDatum₂ α n) (γ : List Bool) (b : α) : ℝ :=
+noncomputable def colSum (P : IETDatum₂ α n) (γ : List Bool) (b : α) : ℝ :=
   ∑ a, (IETDatum₂.Path.Q P γ a b : ℝ)
 
 /-- The `b`-th **normalised column** of `Q(γ)`, i.e. the vertex `Q e_b / c_b` of the closed
 cylinder `Δ̄(γ)` attached to the letter `b`. -/
 noncomputable def ncol (P : IETDatum₂ α n) (γ : List Bool) (b : α) : α → ℝ :=
-  fun a => (IETDatum₂.Path.Q P γ a b : ℝ) / cs P γ b
+  fun a => (IETDatum₂.Path.Q P γ a b : ℝ) / colSum P γ b
 
-theorem cs_pos (P : IETDatum₂ α n) (γ : List Bool) (b : α) : 0 < cs P γ b := by
+theorem colSum_pos (P : IETDatum₂ α n) (γ : List Bool) (b : α) : 0 < colSum P γ b := by
   have h := IETDatum₂.Path.Q_colsum_pos P γ b
   have h2 : ((∑ a, IETDatum₂.Path.Q P γ a b : ℤ) : ℝ)
       = ∑ a, (IETDatum₂.Path.Q P γ a b : ℝ) := by
     push_cast
     ring
-  rw [cs, ← h2]
+  rw [colSum, ← h2]
   exact_mod_cast h
 
-theorem cs_nonneg (P : IETDatum₂ α n) (γ : List Bool) (b : α) : 0 ≤ cs P γ b :=
-  le_of_lt (cs_pos P γ b)
+theorem colSum_nonneg (P : IETDatum₂ α n) (γ : List Bool) (b : α) : 0 ≤ colSum P γ b :=
+  le_of_lt (colSum_pos P γ b)
 
-theorem cs_ne_zero (P : IETDatum₂ α n) (γ : List Bool) (b : α) : cs P γ b ≠ 0 :=
-  ne_of_gt (cs_pos P γ b)
+theorem colSum_ne_zero (P : IETDatum₂ α n) (γ : List Bool) (b : α) : colSum P γ b ≠ 0 :=
+  ne_of_gt (colSum_pos P γ b)
 
-/-! ## 1. The barycentric representation of a point of the cylinder -/
+/-! ## 2. The barycentric representation of a point of the cylinder -/
 
 /-- **Every point of `Δ(γ)` is a convex combination of the normalised columns `ŵ_b`.** -/
 theorem exists_weights (P : IETDatum₂ α n) (γ : List Bool) {x : α → ℝ≥0}
@@ -80,26 +80,26 @@ theorem exists_weights (P : IETDatum₂ α n) (γ : List Bool) {x : α → ℝ�
     have h1 : ((∑ a, x a : ℝ≥0) : ℝ) = ((1 : ℝ≥0) : ℝ) := by rw [hsim]
     push_cast at h1 ⊢
     exact h1
-  have hcolsumw : ∑ b, cs P γ b * w b = 1 := by
-    have h1 : ∑ b, cs P γ b * w b
-        = ∑ a, IETDatum₂.qApply (IETDatum₂.Path.Q P γ) w a := by
+  have hcolsumw : ∑ b, colSum P γ b * w b = 1 := by
+    have h1 : ∑ b, colSum P γ b * w b
+        = ∑ a, qApply (IETDatum₂.Path.Q P γ) w a := by
       rw [IETDatum₂.sum_qApply]
-      simp only [cs]
+      simp only [colSum]
       push_cast
       ring
-    have h2 : ∑ a, IETDatum₂.qApply (IETDatum₂.Path.Q P γ) w a = ∑ a, (x a : ℝ) := by
+    have h2 : ∑ a, qApply (IETDatum₂.Path.Q P γ) w a = ∑ a, (x a : ℝ) := by
       rw [← hwx]
     rw [h1, h2, hsumw]
-  refine ⟨fun b => cs P γ b * w b, fun b => mul_nonneg (cs_nonneg P γ b) (le_of_lt (hwpos b)),
-    hcolsumw, fun a => ?_⟩
-  rw [show (x a : ℝ) = IETDatum₂.qApply (IETDatum₂.Path.Q P γ) w a from by rw [← hwx],
-    IETDatum₂.qApply_apply]
+  refine ⟨fun b => colSum P γ b * w b,
+    fun b => mul_nonneg (colSum_nonneg P γ b) (le_of_lt (hwpos b)), hcolsumw, fun a => ?_⟩
+  rw [congrFun hwx a,
+    qApply_apply]
   refine Finset.sum_congr rfl fun b _ => ?_
-  have hc : cs P γ b ≠ 0 := cs_ne_zero P γ b
+  have hc : colSum P γ b ≠ 0 := colSum_ne_zero P γ b
   rw [ncol]
   field_simp
 
-/-! ## 2. Two points of the same cylinder are close if the columns are -/
+/-! ## 3. Two points of the same cylinder are close if the columns are -/
 
 /-- **The diameter bound.**  If all normalised columns of `Q(γ)` are pairwise within `r` in every
 coordinate, then `Δ(γ)` has diameter at most `2 r`. -/
@@ -157,27 +157,27 @@ theorem diam_le_of_cols_close (P : IETDatum₂ α n) (γ : List Bool) {r : ℝ} 
   rw [NNReal.dist_eq]
   exact abs_sub_le_of_cols_close P γ hr hx hy a
 
-/-! ## 3. From the coalescence of the columns to the shrinking of the cylinders -/
+/-! ## 4. From the coalescence of the columns to the shrinking of the cylinders -/
 
 /-- **The shrinking of the path cylinders from the coalescence of the normalised columns.** If the
 normalised columns of `Q(γ_k)` become eventually pairwise close along a path `p`, the path cylinders
 shrink to points. -/
 theorem tendsto_diam_of_cols_eventually_close (P : IETDatum₂ α n) (p : ℕ → Bool)
     (h : ∀ ε > 0, ∀ᶠ k in atTop,
-      ∀ b b' a, |ncol P (PrefixWord.pfx p k) b a
-        - ncol P (PrefixWord.pfx p k) b' a| ≤ ε) :
-    Tendsto (fun k => Metric.diam (IETDatum₂.simplexCyl P (PrefixWord.pfx p k)))
+      ∀ b b' a, |ncol P (pfx p k) b a
+        - ncol P (pfx p k) b' a| ≤ ε) :
+    Tendsto (fun k => Metric.diam (IETDatum₂.simplexCyl P (pfx p k)))
       atTop (𝓝 0) := by
   rw [tendsto_order]
   refine ⟨fun a ha => ?_, fun a ha => ?_⟩
   · filter_upwards [Filter.Eventually.of_forall
-      (fun k => Metric.diam_nonneg (s := IETDatum₂.simplexCyl P (PrefixWord.pfx p k)))]
+      (fun k => Metric.diam_nonneg (s := IETDatum₂.simplexCyl P (pfx p k)))]
       with k hk
     linarith
   · filter_upwards [h (a / 4) (by linarith)] with k hk
-    have := diam_le_of_cols_close P (PrefixWord.pfx p k) (by linarith) hk
+    have := diam_le_of_cols_close P (pfx p k) (by linarith) hk
     linarith
 
-end ColShrink
+end IntervalExchange.RauzyVeech
 
 end

@@ -5,9 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.CutSet
-public import IETFree.IET
-public import Mathlib
+public import Mathlib.Topology.UniformSpace.Uniformizable
 
 /-!
 # The split interval
@@ -19,9 +17,11 @@ which is exactly the doubling of `d`.  The topology is the subspace topology of
 `ℝ × (D → Bool)`.
 
 We prove that the split interval is a compact Hausdorff pseudo-metrizable Borel space, define the
-projection and the two germs of a point of `[0,1]`, show that every point is one of the two germs
-of its projection, describe the one-sided neighbourhoods, and define the germ map of an interval
-exchange, together with its equivariance property on right germs.
+projection and the two germs of a point of `[0,1]`, and show that every point is one of the two
+germs of its projection, describing the one-sided neighbourhoods.  The germ map of an interval
+exchange itself, and its equivariance on right germs, are `germMapOf` in `Germ/Basic.lean`, above.
+`clampI`, the real-valued projection onto `[0, 1]`, is here because both the germ section and its
+transfer use it.
 -/
 
 @[expose] public section
@@ -29,7 +29,7 @@ exchange, together with its equivariance property on right germs.
 open Set Function Filter Topology
 open scoped BigOperators
 
-namespace IETFree.UniqueErgodicity
+namespace IntervalExchange.UniqueErgodicity
 
 /-- The defining condition of the split interval: `x ∈ [0,1]` and the side choice `χ` is
 compatible with `x`. -/
@@ -115,8 +115,19 @@ theorem coord_of_lt {z : SplitI D} {d : D} (h : (d : ℝ) < proj z) : z.1.2 d = 
 theorem coord_of_lt' {z : SplitI D} {d : D} (h : proj z < (d : ℝ)) : z.1.2 d = false :=
   (z.2.2 d).1 h
 
-theorem ext {z z' : SplitI D} (h1 : proj z = proj z') (h2 : z.1.2 = z'.1.2) : z = z' :=
+@[ext] theorem ext {z z' : SplitI D} (h1 : proj z = proj z') (h2 : z.1.2 = z'.1.2) : z = z' :=
   Subtype.ext (Prod.ext h1 h2)
+
+/-- **The fibre of the projection over a point outside the split set is a single point.**  Two
+points of the split interval with the same projection outside `D` have the same side choices, so
+they are equal. -/
+theorem eq_of_proj_eq_of_notMem {z z' : SplitI D} (h : proj z = proj z')
+    (hz : proj z ∉ D) : z = z' := by
+  refine ext h (funext fun d => ?_)
+  rcases lt_trichotomy (d : ℝ) (proj z) with hlt | heq | hgt
+  · rw [coord_of_lt hlt, coord_of_lt (h ▸ hlt)]
+  · exact absurd (heq ▸ d.2) hz
+  · rw [coord_of_lt' hgt, coord_of_lt' (h ▸ hgt)]
 
 /-- **The right germ** of a point `x ∈ [0,1]`: the point of the split interval sitting at `x` and
 to the right of every split point `d ≤ x`. -/
@@ -134,20 +145,24 @@ noncomputable def leftGerm (x : ℝ) (hx : x ∈ Set.Icc (0 : ℝ) 1) : SplitI D
         fun h => decide_eq_true_iff.mpr (h : (d : ℝ) < x)⟩⟩⟩
 
 theorem coord_leftGerm (x : ℝ) (hx : x ∈ Set.Icc (0 : ℝ) 1) (d : D) :
-    (leftGerm (D := D) x hx).1.2 d = decide ((d : ℝ) < x) := rfl
+    (leftGerm (D := D) x hx).1.2 d = decide ((d : ℝ) < x) := (rfl)
+
+/-- The coordinate of the **right** germ: `decide (d ≤ x)`. -/
+theorem coord_rightGerm (x : ℝ) (hx : x ∈ Set.Icc (0 : ℝ) 1) (d : D) :
+    (rightGerm (D := D) x hx).1.2 d = decide ((d : ℝ) ≤ x) := (rfl)
 
 @[simp]
 theorem proj_rightGerm (x : ℝ) (hx : x ∈ Set.Icc (0 : ℝ) 1) :
-    proj (D := D) (rightGerm x hx) = x := rfl
+    proj (D := D) (rightGerm x hx) = x := (rfl)
 
 @[simp]
 theorem proj_leftGerm (x : ℝ) (hx : x ∈ Set.Icc (0 : ℝ) 1) :
-    proj (D := D) (leftGerm x hx) = x := rfl
+    proj (D := D) (leftGerm x hx) = x := (rfl)
 
 theorem rightGerm_eq_leftGerm {x : ℝ} (hx : x ∉ D) (hx1 : x ∈ Set.Icc (0 : ℝ) 1) :
     rightGerm (D := D) x hx1 = leftGerm x hx1 := by
   refine ext rfl (funext fun d => ?_)
-  change decide ((d : ℝ) ≤ x) = decide ((d : ℝ) < x)
+  rw [coord_rightGerm, coord_leftGerm]
   rcases lt_trichotomy (d : ℝ) x with h | h | h
   · rw [decide_eq_true_iff.mpr (le_of_lt h), decide_eq_true_iff.mpr h]
   · exact absurd (by rw [← h]; exact d.2) hx
@@ -164,7 +179,7 @@ theorem eq_rightGerm_or_leftGerm (z : SplitI D) :
   · by_cases hb : z.1.2 ⟨proj z, hxD⟩ = true
     · left
       refine ext rfl (funext fun d => ?_)
-      change z.1.2 d = decide ((d : ℝ) ≤ proj z)
+      rw [coord_rightGerm]
       rcases lt_trichotomy (d : ℝ) (proj z) with h | h | h
       · rw [coord_of_lt h, decide_eq_true_iff.mpr (le_of_lt h)]
       · have hd : d = ⟨proj z, hxD⟩ := Subtype.ext h
@@ -176,7 +191,7 @@ theorem eq_rightGerm_or_leftGerm (z : SplitI D) :
         · rfl
         · exact absurd hv hb
       refine ext rfl (funext fun d => ?_)
-      change z.1.2 d = decide ((d : ℝ) < proj z)
+      rw [coord_leftGerm]
       rcases lt_trichotomy (d : ℝ) (proj z) with h | h | h
       · rw [coord_of_lt h, decide_eq_true_iff.mpr h]
       · have hd : d = ⟨proj z, hxD⟩ := Subtype.ext h
@@ -184,7 +199,7 @@ theorem eq_rightGerm_or_leftGerm (z : SplitI D) :
       · rw [coord_of_lt' h, decide_eq_false_iff_not.mpr (not_lt.mpr (le_of_lt h))]
   · right
     refine ext rfl (funext fun d => ?_)
-    change z.1.2 d = decide ((d : ℝ) < proj z)
+    rw [coord_leftGerm]
     rcases lt_trichotomy (d : ℝ) (proj z) with h | h | h
     · rw [coord_of_lt h, decide_eq_true_iff.mpr h]
     · exact absurd (by rw [← h]; exact d.2) hxD
@@ -196,7 +211,7 @@ theorem eq_rightGerm_of_coord_true {z : SplitI D} {x : ℝ} (hx : x ∈ Set.Icc 
     z = rightGerm (D := D) x hx := by
   subst hp
   refine ext rfl (funext fun d => ?_)
-  change z.1.2 d = decide ((d : ℝ) ≤ proj z)
+  rw [coord_rightGerm]
   rcases lt_trichotomy (d : ℝ) (proj z) with hlt | heq | hgt
   · rw [coord_of_lt hlt, decide_eq_true_iff.mpr (le_of_lt hlt)]
   · have hd : d = ⟨proj z, hxD⟩ := Subtype.ext heq
@@ -209,7 +224,7 @@ theorem eq_leftGerm_of_coord_false {z : SplitI D} {x : ℝ} (hx : x ∈ Set.Icc 
     z = leftGerm (D := D) x hx := by
   subst hp
   refine ext rfl (funext fun d => ?_)
-  change z.1.2 d = decide ((d : ℝ) < proj z)
+  rw [coord_leftGerm]
   rcases lt_trichotomy (d : ℝ) (proj z) with hlt | heq | hgt
   · rw [coord_of_lt hlt, decide_eq_true_iff.mpr hlt]
   · have hd : d = ⟨proj z, hxD⟩ := Subtype.ext heq
@@ -248,14 +263,14 @@ left germ of `x`.  For `x ∈ D` this is the clopen set `{z : χ z x = false}`. 
 def downSet (x : ℝ) (hx : x ∈ Set.Icc (0 : ℝ) 1) : Set (SplitI D) :=
   {z | proj z < x} ∪ {leftGerm x hx}
 
-theorem upSet_subset {x : ℝ} {hx : x ∈ Set.Icc (0 : ℝ) 1} {z : SplitI D}
+theorem le_proj_of_mem_upSet {x : ℝ} {hx : x ∈ Set.Icc (0 : ℝ) 1} {z : SplitI D}
     (hz : z ∈ upSet x hx) : x ≤ proj z := by
   have hz' : x < proj z ∨ z = rightGerm (D := D) x hx := hz
   rcases hz' with hz' | rfl
   · exact le_of_lt hz'
   · simp
 
-theorem downSet_subset {x : ℝ} {hx : x ∈ Set.Icc (0 : ℝ) 1} {z : SplitI D}
+theorem proj_le_of_mem_downSet {x : ℝ} {hx : x ∈ Set.Icc (0 : ℝ) 1} {z : SplitI D}
     (hz : z ∈ downSet x hx) : proj z ≤ x := by
   have hz' : proj z < x ∨ z = leftGerm (D := D) x hx := hz
   rcases hz' with hz' | rfl
@@ -329,21 +344,14 @@ interval with the two endpoint germs `leftGerm 0` and `rightGerm 1` removed. -/
 def rightPart (D : Set ℝ) : Set (SplitI D) :=
   closure (range (fun x : Set.Ico (0 : ℝ) 1 => rightGerm x.1 ⟨x.2.1, le_of_lt x.2.2⟩))
 
-theorem isClosed_rightPart (D : Set ℝ) : IsClosed (rightPart D) := isClosed_closure
-
 theorem isCompact_rightPart (D : Set ℝ) : IsCompact (rightPart D) :=
-  isClosed_rightPart D |>.isCompact
+  isClosed_closure.isCompact
 
 theorem rightGerm_mem_rightPart {x : ℝ} (hx : x ∈ Set.Ico (0 : ℝ) 1) :
     rightGerm (D := D) x ⟨hx.1, le_of_lt hx.2⟩ ∈ rightPart D :=
   subset_closure ⟨⟨x, hx⟩, rfl⟩
 
 end SplitI
-
-end IETFree.UniqueErgodicity
-
-namespace IETFree.UniqueErgodicity
-
 
 variable {f : ℝ → ℝ} {s : Finset ℝ}
 
@@ -362,30 +370,25 @@ theorem mem_splitSet_of_mem (T : ℝ ≃ ℝ) (s : Finset ℝ) {x : ℝ} (hx : x
 theorem one_mem_splitSet (T : ℝ ≃ ℝ) (s : Finset ℝ) : (1 : ℝ) ∈ splitSet T s :=
   subset_splitSet T s (Or.inr rfl)
 
-end IETFree.UniqueErgodicity
-
-/-! ## The one-sided behaviour of the germs (the blueprint's Lemma 2.4(iv)(v))
-
-These are the lemmas that *pin the naming* of the two germs: `rightGerm x` is the point approached
-by the right germs of `y > x` and `leftGerm x` the one approached by the right germs of `y < x`,
-and the two differ exactly at the split points.  Without them the left/right convention of `side`,
-and hence of the germ map's second coordinate, could only be checked by hand — a consistently
-mirrored convention would satisfy every proof downstream.  Also here: `side`'s formula (blueprint
-§3.1) and the identification of `upSet`/`downSet` with the displayed sets of blueprint §2.3.
--/
-
-namespace IETFree.UniqueErgodicity
-
 namespace SplitI
-
-section GermLimits
-
-variable {D : Set ℝ}
-
-end GermLimits
 
 end SplitI
 
-end IETFree.UniqueErgodicity
+/-- The clamp of a real number into `[0, 1]`, used to make the germ section total.  This is
+Mathlib's `Set.projIcc 0 1 zero_le_one` composed with the coercion to `ℝ`, kept as a real-valued
+function because every use site is an ordinary real number. -/
+noncomputable def clampI (x : ℝ) : ℝ := min (max x 0) 1
+
+theorem continuous_clampI : Continuous clampI :=
+  (continuous_id.max continuous_const).min continuous_const
+
+theorem clampI_mem (x : ℝ) : clampI x ∈ Set.Icc (0 : ℝ) 1 :=
+  ⟨le_min (le_max_right x 0) zero_le_one, min_le_right _ _⟩
+
+theorem clampI_eq_self {x : ℝ} (hx : x ∈ Set.Icc (0 : ℝ) 1) : clampI x = x := by
+  unfold clampI
+  rw [max_eq_left hx.1, min_eq_left hx.2]
+
+end IntervalExchange.UniqueErgodicity
 
 end

@@ -6,7 +6,6 @@ Authors: Sébastien Gouëzel
 module
 
 public import IETFree.Rigidity.Veech
-public import IETFree.TopBotFormalism
 
 /-!
 # From "arbitrarily large return times" to rigidity by translations
@@ -24,8 +23,10 @@ steps.  Taking `ε k = 1/(k+1)` and `N₀ = k` turns it into the sequence form o
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
+open IntervalExchange.RauzyVeech
+open IntervalExchange.IET
 
-namespace IETFree.Rigidity
+namespace IntervalExchange.Rigidity
 
 /-- **(R2) implies rigidity by translations.**  For a.e. length vector, choose the data of the
 a.e. statement at the precision `ε k = 1/(k+1)` and the target time `N₀ = k`; then `q k ≥ k`, so
@@ -52,10 +53,7 @@ theorem ae_isRigidByTranslations {α : Type*} [Fintype α] {n : ℕ} [NeZero n]
     have hcoe (k) : unitMeas.real (B k) = (volume (B k)).toReal := by
       rw [unitMeas, Measure.real, Measure.restrict_apply (hmeas k),
         Set.inter_eq_left.mpr (hsub k)]
-    have hIco : unitMeas (Set.Ico (0:ℝ) 1) = 1 := by
-      rw [unitMeas, Measure.restrict_apply measurableSet_Ico, Set.inter_self,
-        Real.volume_Ico]
-      norm_num
+    have hIco : unitMeas (Set.Ico (0:ℝ) 1) = 1 := unitMeas_Ico
     have hle (k) : unitMeas.real (B k) ≤ 1 := by
       have h1 : unitMeas (B k)
           ≤ unitMeas (Set.Ico (0:ℝ) 1) := measure_mono (hsub k)
@@ -63,7 +61,7 @@ theorem ae_isRigidByTranslations {α : Type*} [Fintype α] {n : ℕ} [NeZero n]
         rw [hIco]
         simp
       calc unitMeas.real (B k)
-          = (unitMeas (B k)).toReal := rfl
+          = (unitMeas (B k)).toReal := (rfl)
         _ ≤ (unitMeas (Set.Ico (0:ℝ) 1)).toReal :=
             ENNReal.toReal_mono hne h1
         _ = 1 := by rw [hIco]; simp
@@ -74,9 +72,9 @@ theorem ae_isRigidByTranslations {α : Type*} [Fintype α] {n : ℕ} [NeZero n]
     exact tendsto_of_tendsto_of_tendsto_of_le_of_le hlow tendsto_const_nhds
       (fun k => by rw [hcoe k]; exact hvol k) hle
   · intro k x hx
-    rw [IET.pow_apply_iterate]
+    rw [pow_apply_iterate]
     exact hex k x hx
 
-end IETFree.Rigidity
+end IntervalExchange.Rigidity
 
 end
