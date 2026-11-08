@@ -11,7 +11,7 @@ public import IETFree.RauzyVeech.Step
 # Paths of the Rauzy–Veech algorithm
 
 The iteration of the step along a finite path (`vertex`), the name and secondary name of a step,
-Corollary 1 of the source (p. 13: consecutive arrows with different names satisfy `secondary(γₙ₊₁) =
+Corollary 1 of Yoccoz (p. 13: consecutive arrows with different names satisfy `secondary(γₙ₊₁) =
 name(γₙ)`), the multiplicativity of `Path.Q`, and the fact that for irreducible data on at least two
 letters the two last letters differ (so the two `last` values never coincide).  Also `vertexNat`,
 the iteration along an infinite sequence of types, which is the shape needed for Proposition 4.3. -/
@@ -19,10 +19,11 @@ the iteration along an infinite sequence of types, which is the shape needed for
 @[expose] public section
 
 open scoped BigOperators
+open IntervalExchange.IETDatum₂
+
+namespace IntervalExchange
 
 namespace IETDatum₂
-
-open IETDatum₂
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -35,16 +36,17 @@ noncomputable def vertex (P : IETDatum₂ α n) : List Bool → IETDatum₂ α n
 
 omit [DecidableEq α] in
 @[simp]
-theorem vertex_nil (P : IETDatum₂ α n) : vertex P [] = P := rfl
+theorem vertex_nil (P : IETDatum₂ α n) : vertex P [] = P := (rfl)
 
 omit [DecidableEq α] in
 @[simp]
 theorem vertex_cons (P : IETDatum₂ α n) (e : Bool) (es : List Bool) :
-    vertex P (e :: es) = vertex (P.rvStep e) es := rfl
+    vertex P (e :: es) = vertex (P.rvStep e) es := (rfl)
 
 omit [DecidableEq α] in
-@[simp]
-theorem vertex_singleton (P : IETDatum₂ α n) (e : Bool) : vertex P [e] = P.rvStep e := rfl
+/-- **One letter.**  `vertex_cons` with `es = []` followed by `vertex_nil`; it is therefore not a
+`simp` lemma, `simp` reaching the same normal form through those two. -/
+theorem vertex_singleton (P : IETDatum₂ α n) (e : Bool) : vertex P [e] = P.rvStep e := (rfl)
 
 omit [DecidableEq α] in
 /-- **Bimodularity of `vertex`**: reading `γ` then `δ` is reading `γ ++ δ`
@@ -70,7 +72,7 @@ theorem vertex_irreducible (P : IETDatum₂ α n) (γ : List Bool) (hP : P.Irred
   | nil => exact hP
   | cons e es ih => exact ih (P.rvStep e) (P.rvStep_irreducible hP e)
 
-/-! ## 3. A step does not change the last letter of the order of its own type -/
+/-! ## 2. A step does not change the last letter of the order of its own type -/
 
 omit [DecidableEq α] in
 /-- **The name is preserved by the step**: a step of type `e` leaves the order `e` unchanged, so
@@ -83,13 +85,13 @@ theorem rvStep_last_self (P : IETDatum₂ α n) (e : Bool) : (P.rvStep e).last e
   | true => rfl
 
 omit [DecidableEq α] in
-/-- **Corollary 1 of the source (p. 13)**, in the form used by Corollary 4: consecutive arrows of
+/-- **Corollary 1 of Yoccoz (p. 13)**, in the form used by Corollary 4: consecutive arrows of
 *different types* satisfy secondary$(γ_{n+1})$ = name$(γ_n)$. -/
 theorem secondary_eq_of_type_ne (P : IETDatum₂ α n) (e e' : Bool) (h : e' ≠ e) :
     (P.rvStep e).last (!e') = P.last e := by
   cases e <;> cases e' <;> simp_all
 
-/-! ## 4. The two last letters of an irreducible vertex are distinct -/
+/-! ## 3. The two last letters of an irreducible vertex are distinct -/
 
 omit [DecidableEq α] in
 /-- **For irreducible data with `2 ≤ n` the two last letters differ.** Otherwise the pivot of a step
@@ -101,24 +103,25 @@ theorem last_true_ne_last_false (P : IETDatum₂ α n) (hP : P.Irreducible) (hn 
   rw [h, last_bottom]
 
 omit [DecidableEq α] in
-/-- The same, at an arbitrary vertex of the path. -/
+/-- **The two last letters differ at every vertex of the path**, for irreducible data on at least
+two letters. -/
 theorem vertex_last_ne (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) (γ : List Bool) :
     (vertex P γ).last true ≠ (vertex P γ).last false := by
   intro h
   apply pivot_true_ne_lastPos (vertex P γ) (vertex_irreducible P γ hP) hn
   rw [h, last_bottom]
 
-/-! ## 5. Multiplicativity of `Q` -/
+/-! ## 4. Multiplicativity of `Q` -/
 
 namespace Path
 
 /-- `Q` of the empty word is the identity (definitional). -/
 @[simp]
-theorem Q_nil (P : IETDatum₂ α n) : Path.Q P [] = 1 := rfl
+theorem Q_nil (P : IETDatum₂ α n) : Path.Q P [] = 1 := (rfl)
 
 /-- The recursion of `Q` (definitional). -/
 theorem Q_cons (P : IETDatum₂ α n) (e : Bool) (es : List Bool) :
-    Path.Q P (e :: es) = P.rvMat e * Path.Q (P.rvStep e) es := rfl
+    Path.Q P (e :: es) = P.rvMat e * Path.Q (P.rvStep e) es := (rfl)
 
 /-- **Multiplicativity of `Q` along a path**: `Q(γ ++ δ) = Q(γ) · Q_γ(δ)`, where `Q_γ` is `Q`
 read from the vertex reached after `γ`. -/
@@ -135,9 +138,43 @@ theorem Q_singleton (P : IETDatum₂ α n) (e : Bool) : Path.Q P [e] = P.rvMat e
   rw [Q_cons]
   simp
 
+/-- The height of the letter `b` at the node reached by `γ`: the column sum of the path matrix
+`Q(γ)`, i.e. the number of floors of the tower of `b` above the node. -/
+noncomputable def height (P : IETDatum₂ α n) (γ : List Bool) (b : α) : ℕ :=
+  ∑ a, (Path.Q P γ a b).toNat
+
+/-- Every entry of `Q(γ)` is non-negative: the product of elementary matrices with entries `0`
+and `1`. -/
+theorem Q_nonneg (P : IETDatum₂ α n) (γ : List Bool) (a b : α) : 0 ≤ Path.Q P γ a b := by
+  induction γ generalizing P a b with
+  | nil =>
+    rw [Q_nil, Matrix.one_apply]
+    split_ifs <;> norm_num
+  | cons e es ih =>
+    rw [Q_cons, Matrix.mul_apply]
+    exact Finset.sum_nonneg fun c _ => mul_nonneg (rvMat_nonneg P e a c) (ih (P.rvStep e) c b)
+
+/-- **The diagonal of `Q` is at least `1`**: "the diagonal terms of the `V` matrices are equal to
+`1`", so along a product of them the diagonal never drops below `1`. -/
+theorem one_le_Q_diag (P : IETDatum₂ α n) (γ : List Bool) (a : α) : 1 ≤ Path.Q P γ a a := by
+  induction γ generalizing P with
+  | nil =>
+    rw [Path.Q_nil, Matrix.one_apply, ite_eq_left rfl]
+  | cons e es ih =>
+    rw [Path.Q_cons, Matrix.mul_apply]
+    refine le_trans ?_
+      (Finset.single_le_sum
+        (f := fun k => P.rvMat e a k * Path.Q (P.rvStep e) es k a)
+        (fun k _ => mul_nonneg (rvMat_nonneg P e a k) (Path.Q_nonneg (P.rvStep e) es k a))
+        (Finset.mem_univ a))
+    have h1 : P.rvMat e a a = 1 := by
+      rw [rvMat, ite_eq_left rfl]
+    rw [h1, one_mul]
+    exact ih (P.rvStep e)
+
 end Path
 
-/-! ## 6. Iterating the path along a sequence of types -/
+/-! ## 5. Iterating the path along a sequence of types -/
 
 /-- The vertex reached at time `k` along the infinite sequence of types `γ`. -/
 noncomputable def vertexNat (P : IETDatum₂ α n) (γ : ℕ → Bool) : ℕ → IETDatum₂ α n
@@ -147,7 +184,7 @@ noncomputable def vertexNat (P : IETDatum₂ α n) (γ : ℕ → Bool) : ℕ →
 omit [DecidableEq α] in
 /-- The time-`k+1` vertex is the step of type `γ k` applied to the time-`k` vertex. -/
 theorem vertexNat_succ (P : IETDatum₂ α n) (γ : ℕ → Bool) (k : ℕ) :
-    vertexNat P γ (k + 1) = rvStep (vertexNat P γ k) (γ k) := rfl
+    vertexNat P γ (k + 1) = rvStep (vertexNat P γ k) (γ k) := (rfl)
 
 omit [DecidableEq α] in
 /-- The recursive vertex is the vertex of the word `γ 0 … γ (k-1)`. -/
@@ -166,5 +203,7 @@ theorem vertexNat_irreducible (P : IETDatum₂ α n) (γ : ℕ → Bool) (hP : P
   exact vertex_irreducible P _ hP
 
 end IETDatum₂
+
+end IntervalExchange
 
 end

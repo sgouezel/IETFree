@@ -5,10 +5,10 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.Pair.SingularityList
+public import IETFree.Pair.Singularity.List
 
 /-!
-The image side of `g ∘ f`, the partial sums, and the local presentation: the type `GoodRegion`.
+# The image side of `g ∘ f`, the partial sums, and the type `GoodRegion`
 
 This is where `IsCompType.image` and `IsCompPresentation.cell` are proved, on a ball of good
 parameters:
@@ -19,7 +19,8 @@ parameters:
   `(g ∘ f) (s k)` is an affine function of the parameters;
 * `partialSum_image` / `partialSum_cell`: the image starts and the cell starts are the partial
   sums of the cell lengths (the volume argument `sum_len_eq_of_tiling`);
-* `exists_rank_perm` (from `IETFree.Presentation`) turns the order of the affine images into the
+* `exists_rank_perm` (from `IETFree.Pair.Presentation`) turns the order of the affine images into
+  the
   permutation `ρ`;
 * `exists_compPresentation_on_ball` assembles all of it into the ball of good parameters on which
   the type `GoodRegion` below lives.
@@ -35,14 +36,17 @@ condition of their own, `G.pres q hq` and `G.type q hq`.  Next to it the two tup
 bundled — `BlockIdx n`
 (`k`, `l`, `hkl`, `hln`, with the `NeZero (l - k)` instance, in `IET.lean`), `Block` (`+ hstab`,
 with `lam`, `perm` and the `Countable`
-instance that makes "every block" a countable intersection) and `Fits` (`D.π = π`, `D.v = q.1`,
-`E.π = σ`, `E.v = q.2`).
+instance that makes "every block" a countable intersection) and `Fits` (`D.perm = π`, `D.v = q.1`,
+`E.perm = σ`, `E.v = q.2`).
 -/
 
 @[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
+open IntervalExchange.IET
+
+namespace IntervalExchange.Pair
 
 /-- **The explicit shape of the singularity list.**  Each entry of the marked list `s` of `g ∘ f` is
 one of: `0`, `1`, a cut of `f` (a `leftEnd λ i`), or the preimage under `f` of a cut of `g` (a
@@ -82,9 +86,24 @@ structure SingularityShape {d e : ℕ} [NeZero d] [NeZero e] (n : ℕ) (π : Equ
   /-- the `posG` entries really are the preimages under `f` of the cuts of `g`.  This is the strong
   form (an evaluation of `f⁻¹`, not the affine candidate), and it is what
   `GoodRegion.mem_pairSplitting` consumes. -/
-  posG_pre : ∀ q ∈ O, ∀ (j : Fin (e - 1)) (hl : simplexMap d q.1 ∈ simplex d),
+  posG_pre : ∀ q ∈ O, ∀ (j : Fin (e - 1)) (hl : simplexMap d q.1 ∈ simplex (Fin d)),
     s (posG j) q = (mkIET1' (simplexMap d q.1) π hl)⁻¹
       (leftEnd (simplexMap e q.2) ⟨j.val + 1, by have := j.isLt; omega⟩)
+
+namespace SingularityShape
+
+variable {d e : ℕ} [NeZero d] [NeZero e] {n : ℕ} {π : Equiv.Perm (Fin d)}
+  {s : Fin (n + 1) → ParamAffine d e} {O : Set (PReal d e)}
+
+/-- Two shapes with the same cell and position maps are equal: the constraints are propositions. -/
+@[ext] theorem ext {A B : SingularityShape n π s O} (hc : A.cellIdx = B.cellIdx)
+    (hpF : A.posF = B.posF) (hpG : A.posG = B.posG) : A = B := by
+  cases A; cases B
+  simp only at hc hpF hpG
+  subst hc hpF hpG
+  rfl
+
+end SingularityShape
 
 /-- **The image of each marked cell lies in a single cell of `g`.**  At a good parameter pair, for
 each marked cell `k` there is an index `B k` such that
@@ -96,7 +115,7 @@ would lie strictly inside it.  When `B k` is the last cell, the right end of the
 `1` because the image is contained in `[0, 1)`. -/
 theorem imageInG {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
     {v : Fin (d - 1) → ℝ} {w : Fin (e - 1) → ℝ} (hv : v ∈ simplexRegion d)
-    (hl : simplexMap d v ∈ simplex d) (hm : simplexMap e w ∈ simplex e)
+    (hl : simplexMap d v ∈ simplex (Fin d)) (hm : simplexMap e w ∈ simplex (Fin e))
     {τ : Fin (n - 1) ≃ (Fin (d - 1) ⊕ Fin (e - 1))} {s : Fin (n + 1) → ℝ}
     (hmono : StrictMono s) (hzero : s 0 = 0) (htop : s (Fin.last n) = 1)
     (hcut : ∀ i : Fin (d - 1),
@@ -110,8 +129,7 @@ theorem imageInG {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
       leftEnd (simplexMap e w) (B k) ≤ mkIET1' (simplexMap d v) π hl (s k.castSucc) ∧
         mkIET1' (simplexMap d v) π hl (s k.castSucc) + (s k.succ - s k.castSucc)
           ≤ leftEnd (simplexMap e w) (B k) + (simplexMap e w (B k) : ℝ) := by
-  have hsum_mu : (∑ j, (simplexMap e w j : ℝ)) = 1 := by
-    rw [← NNReal.coe_sum]; exact_mod_cast hm
+  have hsum_mu : (∑ j, (simplexMap e w j : ℝ)) = 1 := sum_coe_eq_one (hm)
   -- `f (s k)` lies in `[0, 1)`
   have hk0 (k : Fin n) : 0 ≤ s k.castSucc := by rw [← hzero]; exact hmono.monotone (Fin.zero_le _)
   have hk1 (k : Fin n) : s k.castSucc < 1 := by
@@ -153,15 +171,15 @@ theorem imageInG {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
         lt_of_lt_of_le hx.2 (hks k)⟩
     -- the index of the cell
     set c := idx (simplexMap e w) (mkIET1' (simplexMap d v) π hl (s k.castSucc)) (hfmem k).1 with hc
-    beta_reduce at hcon
+    simp only [] at hcon
     rw [← hc, ← upperEnd_eq] at hcon
     have hup : mkIET1' (simplexMap d v) π hl (s k.castSucc) < upperEnd (simplexMap e w) c :=
       lt_upperEnd_idx (simplexMap e w) ⟨(hfmem k).1, by rw [hsum_mu]; exact (hfmem k).2⟩
-    rcases eq_or_ne c (lastIdx e) with hcl | hcl
+    rcases eq_or_ne c (lastPos e) with hcl | hcl
     · -- the last cell of `g`: `upperEnd = 1`
       have h1 : upperEnd (simplexMap e w) c = 1 := by
         rw [hcl, upperEnd_of_max (simplexMap e w) (fun j => by
-          rw [Fin.le_def]; simp only [lastIdx]; have := j.isLt; omega), hsum_mu]
+          rw [Fin.le_def]; simp only [lastPos]; have := j.isLt; omega), hsum_mu]
       rw [h1] at hup
       rw [h1] at hcon
       exact absurd (le_of_Ico_subset hup hsub) (not_le.mpr hcon)
@@ -170,10 +188,10 @@ theorem imageInG {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
         rcases Nat.lt_or_ge (c.val + 1) e with h | h
         · exact h
         · exfalso
-          exact hcl (Fin.ext (by simp only [lastIdx]; omega))
+          exact hcl (Fin.ext (by simp only [lastPos]; omega))
       have hnext : upperEnd (simplexMap e w) c
           = leftEnd (simplexMap e w) ⟨c.val + 1, hcv⟩ := by
-        rw [leftEnd_eq_upperEnd_of_succ (simplexMap e w) hcv, upperEnd_eq]
+        rw [leftEnd_succ_eq_upperEnd (simplexMap e w) c hcv, upperEnd_eq]
       have hleft : leftEnd (simplexMap e w) ⟨c.val + 1, hcv⟩ = upperEnd (simplexMap e w) c :=
         hnext.symm
       exact absurd ⟨by rw [hleft]; exact hup, by rw [hleft]; exact hcon⟩
@@ -185,8 +203,8 @@ such an image (`no_gcut_inside_image`), so the cut-set criterion applies with a 
 hypothesis. -/
 theorem markedCell_g_transl {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
     (σ : Equiv.Perm (Fin e)) {v : Fin (d - 1) → ℝ} {w : Fin (e - 1) → ℝ}
-    (hv : v ∈ simplexRegion d) (hw : w ∈ simplexRegion e) (hl : simplexMap d v ∈ simplex d)
-    (hm : simplexMap e w ∈ simplex e)
+    (hv : v ∈ simplexRegion d) (hw : w ∈ simplexRegion e) (hl : simplexMap d v ∈ simplex (Fin d))
+    (hm : simplexMap e w ∈ simplex (Fin e))
     {τ : Fin (n - 1) ≃ (Fin (d - 1) ⊕ Fin (e - 1))} {s : Fin (n + 1) → ℝ}
     (hmono : StrictMono s) (hzero : s 0 = 0) (htop : s (Fin.last n) = 1)
     (hcut : ∀ i : Fin (d - 1),
@@ -200,8 +218,7 @@ theorem markedCell_g_transl {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm
     ∃ δ : ℝ, ∀ x : ℝ, s k.castSucc ≤ x → x < s k.succ →
       mkIET1' (simplexMap e w) σ hm (mkIET1' (simplexMap d v) π hl x)
         = mkIET1' (simplexMap d v) π hl x + δ := by
-  have hsum_mu : (∑ j, (simplexMap e w j : ℝ)) = 1 := by
-    rw [← NNReal.coe_sum]; exact_mod_cast hm
+  have hsum_mu : (∑ j, (simplexMap e w j : ℝ)) = 1 := sum_coe_eq_one (hm)
   have hcs := isCutSet_mkIET1 (simplexMap e w) σ hm
   obtain ⟨δ, hδ⟩ := markedCell_transl π hv hl hmono hzero htop hcut k
   have hcell : s k.castSucc < s k.succ := hmono (Fin.castSucc_lt_succ)
@@ -285,7 +302,7 @@ theorem markedPos_eq_cut_of_eq {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.P
           by have := (τ.symm (Sum.inl i)).isLt; omega⟩ q
         = leftEnd (simplexMap d q.1) ⟨i.val + 1, by have := i.isLt; omega⟩)
     (hpre : ∀ (q : PReal d e), q ∈ Metric.ball q₀ ε →
-      ∀ (j : Fin (e - 1)) (hl : simplexMap d q.1 ∈ simplex d),
+      ∀ (j : Fin (e - 1)) (hl : simplexMap d q.1 ∈ simplex (Fin d)),
       withEnds hn A ⟨(τ.symm (Sum.inr j)).val + 1,
           by have := (τ.symm (Sum.inr j)).isLt; omega⟩ q
         = (mkIET1' (simplexMap d q.1) π hl)⁻¹
@@ -295,7 +312,7 @@ theorem markedPos_eq_cut_of_eq {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.P
     markedPos (e := e) π τ k = cutAffineRight (d := d) j := by
   obtain ⟨q, hq, heq⟩ := h
   have hrq := hr q hq
-  have hl : simplexMap d q.1 ∈ simplex d := simplexMap_mem_simplex_fin hrq.1.1 hrq.1.2
+  have hl : simplexMap d q.1 ∈ simplex (Fin d) := simplexMap_mem_simplex_fin hrq.1.1 hrq.1.2
   have hjpos : 0 < j.val := Fin.pos_iff_ne_zero.mpr hj
   have hjlt : j.val - 1 < e - 1 := by have := j.isLt; have := NeZero.pos e; omega
   set r' : Fin (e - 1) := ⟨j.val - 1, hjlt⟩ with hr'
@@ -323,7 +340,7 @@ theorem markedPos_eq_cut_of_eq {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.P
     rw [show (⟨m.val + 1, by have := m.isLt; omega⟩ : Fin (n + 1))
       = (⟨(τ.symm (Sum.inr r')).val + 1,
           by have := (τ.symm (Sum.inr r')).isLt; omega⟩ : Fin (n + 1)) from rfl]
-    rw [hprej, ← hfk, IET.symm_apply_apply]
+    rw [hprej, ← hfk, symm_apply_apply]
   -- so the indices coincide and the two affine functions are equal
   have hidx : k.castSucc = (⟨m.val + 1, by have := m.isLt; omega⟩ : Fin (n + 1)) :=
     (hmono q hq).injective hsk
@@ -340,7 +357,7 @@ theorem markedPos_eq_cut_of_eq {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.P
 nonempty image is above its left end, so the point is strictly inside the `g`-cell). -/
 theorem imageInG_idx {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
     {v : Fin (d - 1) → ℝ} {w : Fin (e - 1) → ℝ} (hv : v ∈ simplexRegion d)
-    (hl : simplexMap d v ∈ simplex d) (hm : simplexMap e w ∈ simplex e)
+    (hl : simplexMap d v ∈ simplex (Fin d)) (hm : simplexMap e w ∈ simplex (Fin e))
     {τ : Fin (n - 1) ≃ (Fin (d - 1) ⊕ Fin (e - 1))} {s : Fin (n + 1) → ℝ}
     (hmono : StrictMono s) (hzero : s 0 = 0) (htop : s (Fin.last n) = 1)
     (hcut : ∀ i : Fin (d - 1),
@@ -362,8 +379,7 @@ theorem imageInG_idx {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d
             (idx (simplexMap e w) (mkIET1' (simplexMap d v) π hl (s k.castSucc)) hkmem.1) : ℝ) := by
   obtain ⟨B, hB⟩ := imageInG π hv hl hm hmono hzero htop hcut hpre
   obtain ⟨h1, h2⟩ := hB k
-  have hsum_mu : (∑ j, (simplexMap e w j : ℝ)) = 1 := by
-    rw [← NNReal.coe_sum]; exact_mod_cast hm
+  have hsum_mu : (∑ j, (simplexMap e w j : ℝ)) = 1 := sum_coe_eq_one (hm)
   have hpos : 0 < s k.succ - s k.castSucc :=
     sub_pos.mpr (hmono (Fin.castSucc_lt_succ (i := k)))
   have h2' : mkIET1' (simplexMap d v) π hl (s k.castSucc)
@@ -419,7 +435,7 @@ theorem compTypeA_cut {d e n : ℕ} [NeZero d] {τ : Fin (n - 1) ≃ (Fin (d - 1
   · -- `i = 0`
     have hi0 : i = 0 := Fin.ext (by simpa using hi)
     subst hi0
-    rw [show (0 : Fin d).castSucc = (0 : Fin (d + 1)) from Fin.ext rfl, compTypeA_zero, hzero,
+    rw [Fin.castSucc_zero, compTypeA_zero, hzero,
       leftEnd_zero]
   · -- `i = i' + 1`
     have hpos : 0 < i.val := by
@@ -459,13 +475,13 @@ theorem exists_compImage_on_ball {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv
           by have := (τ.symm (Sum.inl i)).isLt; omega⟩ q
         = leftEnd (simplexMap d q.1) ⟨i.val + 1, by have := i.isLt; omega⟩)
     (hpre : ∀ (q : PReal d e), q ∈ Metric.ball q₀ ε →
-      ∀ (j : Fin (e - 1)) (hl : simplexMap d q.1 ∈ simplex d),
+      ∀ (j : Fin (e - 1)) (hl : simplexMap d q.1 ∈ simplex (Fin d)),
       withEnds hn A ⟨(τ.symm (Sum.inr j)).val + 1,
           by have := (τ.symm (Sum.inr j)).isLt; omega⟩ q
         = (mkIET1' (simplexMap d q.1) π hl)⁻¹
             (leftEnd (simplexMap e q.2) ⟨j.val + 1, by have := j.isLt; omega⟩)) :
     ∃ B : Fin n → Fin e, ∀ (q : PReal d e), q ∈ Metric.ball q₀ ε →
-      ∀ (hl : simplexMap d q.1 ∈ simplex d) (k : Fin n),
+      ∀ (hl : simplexMap d q.1 ∈ simplex (Fin d)) (k : Fin n),
       leftEnd (simplexMap e q.2) (B k)
           ≤ mkIET1' (simplexMap d q.1) π hl (withEnds hn A k.castSucc q) ∧
         mkIET1' (simplexMap d q.1) π hl (withEnds hn A k.castSucc q)
@@ -473,27 +489,22 @@ theorem exists_compImage_on_ball {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv
           ≤ leftEnd (simplexMap e q.2) (B k) + (simplexMap e q.2 (B k) : ℝ) := by
   have hq₀ : q₀ ∈ Metric.ball q₀ ε := Metric.mem_ball_self hε
   have hr₀ := hr q₀ hq₀
-  have hl₀ : simplexMap d q₀.1 ∈ simplex d := simplexMap_mem_simplex_fin hr₀.1.1 hr₀.1.2
-  have hm₀ : simplexMap e q₀.2 ∈ simplex e := simplexMap_mem_simplex_fin hr₀.2.1 hr₀.2.2
-  have hsum_mu : (∑ j, (simplexMap e q₀.2 j : ℝ)) = 1 := by
-    rw [← NNReal.coe_sum]; exact_mod_cast hm₀
+  have hl₀ : simplexMap d q₀.1 ∈ simplex (Fin d) := simplexMap_mem_simplex_fin hr₀.1.1 hr₀.1.2
+  have hm₀ : simplexMap e q₀.2 ∈ simplex (Fin e) := simplexMap_mem_simplex_fin hr₀.2.1 hr₀.2.2
+  have hsum_mu : (∑ j, (simplexMap e q₀.2 j : ℝ)) = 1 := sum_coe_eq_one (hm₀)
   -- the marked points lie in `[0, 1)`
-  have hk0 (q : PReal d e) (hq : q ∈ Metric.ball q₀ ε) :
-    ∀ k : Fin n,
+  have hk0 (q : PReal d e) (hq : q ∈ Metric.ball q₀ ε) (k : Fin n) :
       0 ≤ withEnds hn A k.castSucc q := by
-    intro k
     rw [← hzero q hq]
     exact (hmono q hq).monotone (Fin.zero_le _)
-  have hk1 (q : PReal d e) (hq : q ∈ Metric.ball q₀ ε) :
-    ∀ k : Fin n,
+  have hk1 (q : PReal d e) (hq : q ∈ Metric.ball q₀ ε) (k : Fin n) :
       withEnds hn A k.castSucc q < 1 := by
-    intro k
     rw [← htop q hq]
     exact (hmono q hq) (by
       simp only [Fin.lt_def, Fin.val_castSucc, Fin.val_last]; have := k.isLt; omega)
   -- the image of a marked point under `f` is `markedPos`
   have hP (q : PReal d e) (hq : q ∈ Metric.ball q₀ ε) (k : Fin n)
-      (hl : simplexMap d q.1 ∈ simplex d) :
+      (hl : simplexMap d q.1 ∈ simplex (Fin d)) :
       mkIET1' (simplexMap d q.1) π hl (withEnds hn A k.castSucc q) =
         markedPos (e := e) π τ k q := by
     exact markedPos_spec (hn := hn) (A := A) (q := q) π κ τ hA (hr q hq) (hzero q hq)
@@ -502,7 +513,7 @@ theorem exists_compImage_on_ball {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv
   have hfmem (q : PReal d e) (hq : q ∈ Metric.ball q₀ ε) : ∀ k : Fin n,
       markedPos (e := e) π τ k q ∈ Set.Ico (0 : ℝ) 1 := by
     intro k
-    have hl : simplexMap d q.1 ∈ simplex d :=
+    have hl : simplexMap d q.1 ∈ simplex (Fin d) :=
       simplexMap_mem_simplex_fin (hr q hq).1.1 (hr q hq).1.2
     rw [← hP q hq k hl]
     exact (mkIET1' (simplexMap d q.1) π hl).isIET.mapsTo ⟨hk0 q hq k, hk1 q hq k⟩
@@ -521,7 +532,7 @@ theorem exists_compImage_on_ball {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv
       exact (hfmem q hq k).1
     · have hGapp (x : PReal d e) :
           (markedPos (e := e) π τ k - cutAffineRight (d := d) (B k)) x
-            = markedPos (e := e) π τ k x - cutAffineRight (d := d) (B k) x := rfl
+            = markedPos (e := e) π τ k x - cutAffineRight (d := d) (B k) x := (rfl)
       have hres := nonneg_on_ball_of_vanish_imp (d := d) (e := e)
         (G := markedPos (e := e) π τ k - cutAffineRight (d := d) (B k)) hε ?_ ?_ q hq
       · have := hres
@@ -552,7 +563,7 @@ theorem exists_compImage_on_ball {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv
         upperEndAffineRight_of_lt hlt
       have hGapp (x : PReal d e) :
           (upperEndAffineRight (d := d) (B k) - markedPos (e := e) π τ k) x
-            = upperEndAffineRight (d := d) (B k) x - markedPos (e := e) π τ k x := rfl
+            = upperEndAffineRight (d := d) (B k) x - markedPos (e := e) π τ k x := (rfl)
       have hres := pos_on_ball_of_vanish_imp (d := d) (e := e)
         (G := upperEndAffineRight (d := d) (B k) - markedPos (e := e) π τ k) hε ?_ ?_ q hq
       · have := hres
@@ -577,7 +588,7 @@ theorem exists_compImage_on_ball {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv
     · -- the last cell: its upper end is `1`
       have hU : upperEndAffineRight (d := d) (B k) = AffineMap.const ℝ (PReal d e) 1 :=
         upperEndAffineRight_of_last heq
-      have hc : (AffineMap.const ℝ (PReal d e) (1 : ℝ)) q = 1 := rfl
+      have hc : (AffineMap.const ℝ (PReal d e) (1 : ℝ)) q = 1 := (rfl)
       rw [hU, hc, ← hP q hq k (simplexMap_mem_simplex_fin (hr q hq).1.1 (hr q hq).1.2)]
       exact (mkIET1' (simplexMap d q.1) π
         (simplexMap_mem_simplex_fin (hr q hq).1.1 (hr q hq).1.2)).isIET.mapsTo
@@ -585,12 +596,12 @@ theorem exists_compImage_on_ball {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv
   -- the `g`-cell of the image is `B k` at every parameter of the ball
   refine ⟨B, ?_⟩
   intro q hq hl k
-  have hsum : (∑ j, (simplexMap e q.2 j : ℝ)) = 1 := by
-    rw [← NNReal.coe_sum]
-    exact_mod_cast simplexMap_mem_simplex_fin (hr q hq).2.1 (hr q hq).2.2
+  have hsum : (∑ j, (simplexMap e q.2 j : ℝ)) = 1 :=
+    sum_coe_eq_one (simplexMap_mem_simplex_fin (hr q hq).2.1 (hr q hq).2.2)
   have hkmem : mkIET1' (simplexMap d q.1) π hl (withEnds hn A k.castSucc q) ∈ Set.Ico (0 : ℝ) 1 :=
     (mkIET1' (simplexMap d q.1) π hl).isIET.mapsTo ⟨hk0 q hq k, hk1 q hq k⟩
-  have hm : simplexMap e q.2 ∈ simplex e := simplexMap_mem_simplex_fin (hr q hq).2.1 (hr q hq).2.2
+  have hm : simplexMap e q.2 ∈ simplex (Fin e) :=
+    simplexMap_mem_simplex_fin (hr q hq).2.1 (hr q hq).2.2
   obtain ⟨i1, i2⟩ := imageInG_idx π (hr q hq).1 hl hm (hmono q hq) (hzero q hq) (htop q hq)
     (fun i => hcut q hq i) (fun j' => hpre q hq j' hl) k hkmem
   have hidxB : idx (simplexMap e q.2) (mkIET1' (simplexMap d q.1) π hl (withEnds hn A k.castSucc q))
@@ -608,16 +619,15 @@ theorem exists_compImage_on_ball {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv
 theorem markedImage_g {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
     (σ : Equiv.Perm (Fin e)) {s : Fin (n + 1) → ℝ}
     (hmono : StrictMono s) (hzero : s 0 = 0) (htop : s (Fin.last n) = 1)
-    {v : Fin (d - 1) → ℝ} {w : Fin (e - 1) → ℝ} (hl : simplexMap d v ∈ simplex d)
-    (hm : simplexMap e w ∈ simplex e) {P : Fin n → ℝ}
+    {v : Fin (d - 1) → ℝ} {w : Fin (e - 1) → ℝ} (hl : simplexMap d v ∈ simplex (Fin d))
+    (hm : simplexMap e w ∈ simplex (Fin e)) {P : Fin n → ℝ}
     (hP : ∀ i, mkIET1' (simplexMap d v) π hl (s i.castSucc) = P i) {B : Fin n → Fin e}
     (hB : ∀ i, leftEnd (simplexMap e w) (B i) ≤ P i ∧
       P i + (s i.succ - s i.castSucc) ≤ leftEnd (simplexMap e w) (B i) + (simplexMap e w (B i) : ℝ))
     (i : Fin n) :
     mkIET1' (simplexMap e w) σ hm (P i)
       = P i + translationVector σ (simplexMap e w) (B i) := by
-  have hsum_mu : (∑ j, (simplexMap e w j : ℝ)) = 1 := by
-    rw [← NNReal.coe_sum]; exact_mod_cast hm
+  have hsum_mu : (∑ j, (simplexMap e w j : ℝ)) = 1 := sum_coe_eq_one (hm)
   have hν : 0 < s i.succ - s i.castSucc := sub_pos.mpr (hmono (Fin.castSucc_lt_succ (i := i)))
   have hs0 : 0 ≤ s i.castSucc := by
     rw [← hzero]
@@ -642,7 +652,7 @@ theorem markedImage_g {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin 
   have hx' : P i ∈ Set.Ico (0 : ℝ) (0 + ∑ j, (simplexMap e w j : ℝ)) :=
     ⟨hmem0, by rw [hsum_mu]; linarith⟩
   have hlink : (mkIET1' (simplexMap e w) σ hm) (P i)
-      = mkIETFun (simplexMap e w) σ 0 (P i) := rfl
+      = mkIETFun (simplexMap e w) σ 0 (P i) := (rfl)
   rw [hlink, mkIETFun_of_mem _ _ 0 hx']
   simp only [sub_zero]
   rw [hidx]
@@ -669,7 +679,7 @@ theorem markedImage_gf {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin
   have h2 : (cutAffineRight (d := d) (B i)) q = leftEnd (simplexMap e q.2) (B i) :=
     cutAffineRight_eq_leftEnd (d := d) hreg.2 (B i)
   have h3 : ((imageLeftAffineRight (d := d) σ (B i) - cutAffineRight (d := d) (B i)) q)
-      = (imageLeftAffineRight (d := d) σ (B i)) q - (cutAffineRight (d := d) (B i)) q := rfl
+      = (imageLeftAffineRight (d := d) σ (B i)) q - (cutAffineRight (d := d) (B i)) q := (rfl)
   rw [h3, h1, h2]
 
 /-- **The image starts are the partial sums of the cell lengths**: if `F i q = (g ∘ f) (s i q)` on
@@ -681,15 +691,16 @@ theorem partialSum_image {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (F
     (hzero : ∀ q ∈ Metric.ball q₀ ε, (s 0) q = 0)
     (htop : ∀ q ∈ Metric.ball q₀ ε, s (Fin.last n) q = 1)
     {F : Fin n → ParamAffine d e}
-    (hF : ∀ q ∈ Metric.ball q₀ ε, ∀ (hl : simplexMap d q.1 ∈ simplex d)
-      (hm : simplexMap e q.2 ∈ simplex e), ∀ i : Fin n,
+    (hF : ∀ q ∈ Metric.ball q₀ ε, ∀ (hl : simplexMap d q.1 ∈ simplex (Fin d))
+      (hm : simplexMap e q.2 ∈ simplex (Fin e)), ∀ i : Fin n,
       (mkIET1' (simplexMap e q.2) σ hm * mkIET1' (simplexMap d q.1) π hl) (s i.castSucc q) = F i q)
-    (htransl : ∀ q ∈ Metric.ball q₀ ε, ∀ (hl : simplexMap d q.1 ∈ simplex d)
-      (hm : simplexMap e q.2 ∈ simplex e), ∀ i : Fin n, ∃ δ : ℝ, ∀ x : ℝ,
+    (htransl : ∀ q ∈ Metric.ball q₀ ε, ∀ (hl : simplexMap d q.1 ∈ simplex (Fin d))
+      (hm : simplexMap e q.2 ∈ simplex (Fin e)), ∀ i : Fin n, ∃ δ : ℝ, ∀ x : ℝ,
       s i.castSucc q ≤ x → x < s i.succ q →
         (mkIET1' (simplexMap e q.2) σ hm * mkIET1' (simplexMap d q.1) π hl) x = x + δ)
     (q : PReal d e) (hq : q ∈ Metric.ball q₀ ε)
-    (hl : simplexMap d q.1 ∈ simplex d) (hm : simplexMap e q.2 ∈ simplex e) (i : Fin n) :
+    (hl : simplexMap d q.1 ∈ simplex (Fin d)) (hm : simplexMap e q.2 ∈ simplex (Fin e))
+    (i : Fin n) :
     F i q = ∑ j ∈ Finset.univ.filter (fun j : Fin n => F j q < F i q),
       (s j.succ q - s j.castSucc q) := by
   set h := mkIET1' (simplexMap e q.2) σ hm * mkIET1' (simplexMap d q.1) π hl with hh
@@ -745,7 +756,7 @@ theorem partialSum_image {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (F
       ∃ j : Fin n, y ∈ Set.Ico (F j q) (F j q + (s j.succ q - s j.castSucc q)) := by
     -- a preimage of `y` lies in some cell
     obtain ⟨S, hS⟩ := h.isIET.exists_isCutSet (by norm_num : (0 : ℝ) < 1)
-    have hpre : h.symm y ∈ Set.Ico (0 : ℝ) 1 := Equiv.IsIET.symm_mapsTo (e := h.toEquiv) hS hy
+    have hpre : h.symm y ∈ Set.Ico (0 : ℝ) 1 := IsCutSet.symm_mapsTo (e := h.toEquiv) hS hy
     obtain ⟨j, hj⟩ := hcover_cell (h.symm y) hpre
     refine ⟨j, ?_⟩
     rw [← himg j]
@@ -865,24 +876,24 @@ theorem exists_compPresentation_on_ball {d e : ℕ} [NeZero d] [NeZero e]
           ∃ (_shape : SingularityShape (d := d) (e := e) n π s (Metric.ball q₀ ε)),
           n = d + e - 1 ∧
             ∀ q ∈ Metric.ball q₀ ε,
-              ∀ (hl : simplexMap d q.1 ∈ simplex d) (hm : simplexMap e q.2 ∈ simplex e),
+              ∀ (hl : simplexMap d q.1 ∈ simplex (Fin d)) (hm : simplexMap e q.2 ∈ simplex (Fin e)),
                 IsCompPresentation (simplexMap d q.1) π (simplexMap e q.2) σ hl hm n
                     (fun k => s k q) ρ ∧
                   IsCompType (simplexMap d q.1) π hl (simplexMap e q.2) (fun k => s k q) a B := by
-  obtain ⟨k, ε₁, hε₁, hgood₁, hreg₁, hineq₁, hinv₁⟩ := exists_ball_forall_imageLeft_lt π hq₀ hr₀
+  obtain ⟨k, ε₁, hε₁, hgood₁, hreg₁, _, hinv₁⟩ := exists_ball_forall_imageLeft_lt π hq₀ hr₀
   have hn : 1 ≤ d + e - 1 := by
     have hd := NeZero.pos d
     have he := NeZero.pos e
     omega
   obtain ⟨τ, A, ε, hε, hgood, hreg, hmono, hzero, htop, hcut, hpre, hA⟩ :=
-    exists_markedList π hq₀ hr₀ hn hε₁ hgood₁ hreg₁ hineq₁ hinv₁
+    exists_markedList π hn hε₁ hgood₁ hreg₁ hinv₁
   obtain ⟨B, hB⟩ := exists_compImage_on_ball π k τ hA hε hreg hmono hzero htop hcut hpre
   -- the affine function `(g ∘ f) (s i)`
   set Ggf : Fin (d + e - 1) → ParamAffine d e := fun i =>
     markedPos π τ i + (imageLeftAffineRight (d := d) σ (B i) - cutAffineRight (d := d) (B i))
     with hGgfdef
   have hGgf (q : PReal d e) (hq : q ∈ Metric.ball q₀ ε)
-      (hl : simplexMap d q.1 ∈ simplex d) (hm : simplexMap e q.2 ∈ simplex e)
+      (hl : simplexMap d q.1 ∈ simplex (Fin d)) (hm : simplexMap e q.2 ∈ simplex (Fin e))
       (i : Fin (d + e - 1)) :
       (mkIET1' (simplexMap e q.2) σ hm * mkIET1' (simplexMap d q.1) π hl)
         (withEnds hn A i.castSucc q) = Ggf i q := by
@@ -900,15 +911,15 @@ theorem exists_compPresentation_on_ball {d e : ℕ} [NeZero d] [NeZero e]
       exact h
     have hres := markedImage_gf (M := fun i => markedPos (e := e) π τ i q) π σ
       (hmono q hq) (hzero q hq) (htop q hq) (hreg q hq) hM hB' i
-    rw [IET.mul_apply, hres, hGgfdef]
+    rw [mul_apply, hres, hGgfdef]
     rfl
   -- the order of the images is fixed on the ball
   have hne (i j : Fin (d + e - 1)) (hij : i ≠ j) : ∀ q ∈ Metric.ball q₀ ε,
       Ggf i q ≠ Ggf j q := by
     intro q hq hcon
-    have hl : simplexMap d q.1 ∈ simplex d :=
+    have hl : simplexMap d q.1 ∈ simplex (Fin d) :=
       simplexMap_mem_simplex_fin (hreg q hq).1.1 (hreg q hq).1.2
-    have hm : simplexMap e q.2 ∈ simplex e :=
+    have hm : simplexMap e q.2 ∈ simplex (Fin e) :=
       simplexMap_mem_simplex_fin (hreg q hq).2.1 (hreg q hq).2.2
     rw [← hGgf q hq hl hm i, ← hGgf q hq hl hm j] at hcon
     have h1 : withEnds hn A i.castSucc q = withEnds hn A j.castSucc q :=
@@ -1001,11 +1012,11 @@ theorem exists_compPresentation_on_ball {d e : ℕ} [NeZero d] [NeZero e]
       hmono q hq (Fin.castSucc_lt_succ (i := i))
     have h0 : (mkIET1' (simplexMap e q.2) σ hm * mkIET1' (simplexMap d q.1) π hl)
         (withEnds hn A i.castSucc q) = withEnds hn A i.castSucc q + (δf + δg) := by
-      rw [IET.mul_apply, hδg _ le_rfl hν, hδf _ le_rfl hν]
+      rw [mul_apply, hδg _ le_rfl hν, hδf _ le_rfl hν]
       ring
     have hx : (mkIET1' (simplexMap e q.2) σ hm * mkIET1' (simplexMap d q.1) π hl) x
         = x + (δf + δg) := by
-      rw [IET.mul_apply, hδg x hx1 hx2, hδf x hx1 hx2]
+      rw [mul_apply, hδg x hx1 hx2, hδf x hx1 hx2]
       ring
     -- the displacement is `Ggf i q - s i q`
     have hdisp : δf + δg = Ggf i q - withEnds hn A i.castSucc q := by
@@ -1023,7 +1034,7 @@ theorem exists_compPresentation_on_ball {d e : ℕ} [NeZero d] [NeZero e]
           (hmono q hq) (hzero q hq) (htop q hq) (fun i => hcut q hq i)
           (fun j' => hpre q hq j' hl) i
         exact ⟨δf + δg, fun x hx1 hx2 => by
-          rw [IET.mul_apply, hδg x hx1 hx2, hδf x hx1 hx2]; ring⟩) q hq hl hm i
+          rw [mul_apply, hδg x hx1 hx2, hδf x hx1 hx2]; ring⟩) q hq hl hm i
     have hsumC : withEnds hn A i.castSucc q = ∑ j ∈ Finset.univ.filter
         (fun j : Fin (d + e - 1) => j < i),
         (withEnds hn A j.succ q - withEnds hn A j.castSucc q) :=
@@ -1108,14 +1119,14 @@ them from it, and these two lemmas give them their own names. -/
 theorem GoodRegion.simplexMap_mem_simplex_fst {d e : ℕ} [NeZero d] [NeZero e]
     {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)} {q₀ : PReal d e}
     (G : GoodRegion d e π σ q₀) {q : PReal d e} (hq : q ∈ G.O) :
-    simplexMap d q.1 ∈ simplex d :=
+    simplexMap d q.1 ∈ simplex (Fin d) :=
   simplexMap_mem_simplex_fin (G.subset_region q hq).1.1 (G.subset_region q hq).1.2
 
 /-- `simplexMap e q.2` is in the simplex at a point of the region. -/
 theorem GoodRegion.simplexMap_mem_simplex_snd {d e : ℕ} [NeZero d] [NeZero e]
     {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)} {q₀ : PReal d e}
     (G : GoodRegion d e π σ q₀) {q : PReal d e} (hq : q ∈ G.O) :
-    simplexMap e q.2 ∈ simplex e :=
+    simplexMap e q.2 ∈ simplex (Fin e) :=
   simplexMap_mem_simplex_fin (G.subset_region q hq).2.1 (G.subset_region q hq).2.2
 
 /-! ### Blocks of cells, and the data that fit a point of the region
@@ -1123,8 +1134,9 @@ theorem GoodRegion.simplexMap_mem_simplex_snd {d e : ℕ} [NeZero d] [NeZero e]
 Every block statement of Section 3 quantifies over the same tuple: two indices `k < l ≤ G.n` and the
 invariance of the initial segments `{i | i < k}` and `{i | i < l}` under the permutation `ρ` of the
 presentation.  The indices alone are `BlockIdx n` (in `IET.lean`, which also derives
-`NeZero (l - k)`), and the two together are `Block`.  Likewise a statement about a pair of data `D`,
-`E` always carries `D.π = π`, `D.v = q.1`, `E.π = σ`, `E.v = q.2`; that is the structure `Fits`. -/
+`NeZero (l - k)`), and the two together are `Block`.  Likewise a statement about a pair of data
+`D`, `E` always carries `D.perm = π`, `D.v = q.1`, `E.perm = σ`, `E.v = q.2`; that is the
+structure `Fits`. -/
 
 namespace GoodRegion
 
@@ -1143,6 +1155,14 @@ namespace Block
 variable {d e : ℕ} [NeZero d] [NeZero e] {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)}
   {q₀ : PReal d e} (G : GoodRegion d e π σ q₀)
 
+/-- Two blocks of the same region with the same index pair are equal: the invariance is a
+proposition. -/
+@[ext] theorem ext {A B : Block G} (h : A.toBlockIdx = B.toBlockIdx) : A = B := by
+  cases A; cases B
+  simp only at h
+  subst h
+  rfl
+
 /-- There are only countably many blocks: the two indices determine the block, since the invariance
 and the index bounds are propositions.  This is what turns "every block" into a countable
 intersection of almost-sure statements. -/
@@ -1160,9 +1180,9 @@ the lengths and the permutations of the region at the point `q`. -/
 structure Fits {d e : ℕ} [NeZero d] [NeZero e] {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)}
     {q₀ : PReal d e} (G : GoodRegion d e π σ q₀) (q : PReal d e) (D : IETDatum d)
     (E : IETDatum e) : Prop where
-  hDπ : D.π = π
+  hDπ : D.perm = π
   hDv : D.v = q.1
-  hEπ : E.π = σ
+  hEπ : E.perm = σ
   hEv : E.v = q.2
 
 end GoodRegion
@@ -1183,5 +1203,7 @@ theorem exists_goodRegion {d e : ℕ} [NeZero d] [NeZero e]
     (fun q hq => (hpres q hq
       (simplexMap_mem_simplex_fin (hreg q hq).1.1 (hreg q hq).1.2)
       (simplexMap_mem_simplex_fin (hreg q hq).2.1 (hreg q hq).2.2)).2), hshape⟩
+
+end IntervalExchange.Pair
 
 end

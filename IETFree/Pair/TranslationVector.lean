@@ -5,11 +5,10 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.IET
 public import IETFree.Pair.MeasureTools
 
 /-!
-**Translation vectors are lattice vectors with coefficients in `{-1, 0, 1}`.**
+# Translation vectors are lattice vectors with coefficients in `{-1, 0, 1}`
 
 For the exchange with lengths `lam` and permutation `π`, the displacement of a point `x` of the
 `i`-th interval is
@@ -33,6 +32,8 @@ identifies the coercion of `evalWord w f g` with the corresponding permutation l
 
 open MeasureTheory
 open scoped BigOperators ENNReal NNReal
+
+namespace IntervalExchange.Pair
 
 /-! ## The displacement of a single exchange -/
 
@@ -68,21 +69,14 @@ theorem translationVector_eq_sum_coeff {n : ℕ} (π : Equiv.Perm (Fin n)) (lam 
 
 /-! ## The lift of a word, as a permutation -/
 
-/-- The coercion of an exchange to the underlying permutation, as a monoid homomorphism. -/
-def IET.coeHom {a b : ℝ} : IET a b →* Equiv.Perm ℝ where
-  toFun e := e.toEquiv
-  map_one' := rfl
-  map_mul' _ _ := rfl
-
-@[simp] theorem IET.coeHom_apply {a b : ℝ} (e : IET a b) : IET.coeHom e = e.toEquiv := rfl
-
 /-- **`evalWord` is the lift of the two exchanges as permutations**: the coercion of the group
 element
 `evalWord w f g` to a function is the image of `w` under the homomorphism into `Equiv.Perm ℝ`. -/
 theorem evalWord_apply_coe (w : FreeGroup Gen) (f g : IET 0 1) :
     ⇑(evalWord w f g)
       = FreeGroup.lift (fun i : Gen => if i = 0 then f.toEquiv else g.toEquiv) w := by
-  have h2 : IET.coeHom.comp (FreeGroup.lift (fun i : Gen => if i = 0 then f else g))
+  have h2 : IntervalExchange.IET.coeHom.comp
+        (FreeGroup.lift (fun i : Gen => if i = 0 then f else g))
       = FreeGroup.lift (fun i : Gen => if i = 0 then f.toEquiv else g.toEquiv) := by
     refine FreeGroup.ext_hom _ _ (fun i => ?_)
     by_cases h : i = 0 <;> simp [h]
@@ -146,5 +140,7 @@ theorem cellCuts_lattice {n : ℕ} (lam : Fin n → ℝ≥0) {c : ℝ} (hc : c �
   refine ⟨fun j => if j < i then 1 else 0, fun j => ?_, leftEnd_eq_sum lam i⟩
   simp only []
   split_ifs <;> simp
+
+end IntervalExchange.Pair
 
 end

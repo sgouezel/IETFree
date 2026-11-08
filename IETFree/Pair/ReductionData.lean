@@ -5,11 +5,12 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.Pair.Irreducible
+public import IETFree.Pair.Diophantine
 
 /-!
-The reduction data: the blocks and the pair-splitting singularities, the good parameter set `O`, and
-the covering step.
+# The reduction data
+
+The blocks and the pair-splitting singularities, the good parameter set `O`, and the covering step.
 
 This file sets up the interface that the reduction runs on:
 
@@ -25,7 +26,7 @@ This file sets up the interface that the reduction runs on:
 The parameter space is `PReal d e` — the **free** lengths `(λ₁, …, λ_{d-1})` and `(μ₁, …, μ_{e-1})`,
 the last length of each vector being `1` minus their sum.  The choice is essential: with all `d + e`
 lengths as coordinates (or even with the `d + e - 2` "redundant" ones) the relation
-`-1 + ∑ λᵢ = 0` holds on the whole simplex and every parameter is bad.  See `HISTORY.md`.
+`-1 + ∑ λᵢ = 0` holds on the whole simplex and every parameter is bad.
 -/
 
 @[expose] public section
@@ -33,7 +34,9 @@ lengths as coordinates (or even with the `d + e - 2` "redundant" ones) the relat
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
 
-/-! ## 0. Blocks and pair-splitting singularities
+namespace IntervalExchange.Pair
+
+/-! ## 1. Blocks and pair-splitting singularities
 
 The interval `[0, 1)` splits into blocks between consecutive *pair-splitting* singularities of the
 pair `(f, g)`; on each block the pair is irreducible, which is what lets Theorem 2.6 be applied
@@ -51,7 +54,7 @@ that `simplexVolume` is built on — makes the datum literally a point of the me
 pair of data is a point of `PReal`. -/
 structure IETDatum (n : ℕ) [NeZero n] where
   /-- the permutation of the cells -/
-  π : Equiv.Perm (Fin n)
+  perm : Equiv.Perm (Fin n)
   /-- the `n - 1` free lengths, as a point of the free region -/
   v : Fin (n - 1) → ℝ
   /-- the free lengths are positive with total mass `< 1`, so that `1 - ∑ v` is positive -/
@@ -61,48 +64,51 @@ namespace IETDatum
 
 variable {n : ℕ} [NeZero n]
 
+/-- Two data with the same permutation and the same free lengths are equal: the region membership is
+a proposition. -/
+@[ext] theorem ext {D E : IETDatum n} (hπ : D.perm = E.perm) (hv : D.v = E.v) : D = E := by
+  cases D; cases E
+  simp only at hπ hv
+  subst hπ hv
+  rfl
+
 /-- **The free lengths of a datum are positive.** -/
 theorem pos (D : IETDatum n) (i : Fin (n - 1)) : 0 < D.v i := D.mem_region.1 i
 
 /-- **The free lengths of a datum have total mass less than `1`.** -/
 theorem sum_lt_one (D : IETDatum n) : ∑ i, D.v i < 1 := D.mem_region.2
 
-/-- A datum from a point of the free region: the way data arise almost everywhere. -/
-def ofMem (π : Equiv.Perm (Fin n)) {v : Fin (n - 1) → ℝ} (hv : v ∈ simplexRegion n) :
-    IETDatum n :=
-  ⟨π, v, hv⟩
-
 /-- The length vector of the datum: the free coordinates, with `1 - ∑ v` as the last length. -/
 noncomputable def lam (D : IETDatum n) : Fin n → ℝ≥0 := simplexMap n D.v
 
 /-- The length vector is in the simplex. -/
-theorem mem_simplex (D : IETDatum n) : D.lam ∈ simplex n := by
+theorem mem_simplex (D : IETDatum n) : D.lam ∈ simplex (Fin n) := by
   obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, (Nat.sub_one_add_one (NeZero.ne n)).symm⟩
   exact simplexMap_mem_simplex D.pos D.sum_lt_one
 
 /-- **The exchange itself**, as a function. -/
-noncomputable def toFun (D : IETDatum n) : ℝ → ℝ := mkIETFun D.lam D.π 0
+noncomputable def toFun (D : IETDatum n) : ℝ → ℝ := mkIETFun D.lam D.perm 0
 
 /-- **The exchange of a datum, as a function**: `toFun` is `mkIETFun` at the datum's lengths and
 permutation.  The computation form proofs unfolding `toFun` need. -/
-theorem toFun_apply (D : IETDatum n) (x : ℝ) : D.toFun x = mkIETFun D.lam D.π 0 x := rfl
+theorem toFun_apply (D : IETDatum n) (x : ℝ) : D.toFun x = mkIETFun D.lam D.perm 0 x := (rfl)
 
 /-- The exchange as an element of `IET 0 1`.  (This is derived data, not an input: everything below
 takes the datum `D`, never an `IET 0 1`.) -/
-noncomputable def toIET (D : IETDatum n) : IET 0 1 := mkIET1' D.lam D.π D.mem_simplex
+noncomputable def toIET (D : IETDatum n) : IET 0 1 := mkIET1' D.lam D.perm D.mem_simplex
 
 /-- The unfolding of `toFun`: the exchange of the datum is `mkIETFun` of its length vector and
 permutation. -/
-theorem toFun_def (D : IETDatum n) : D.toFun = mkIETFun D.lam D.π 0 := rfl
+theorem toFun_def (D : IETDatum n) : D.toFun = mkIETFun D.lam D.perm 0 := (rfl)
 
 /-- The unfolding of `toIET`: the exchange of the datum, as an element of `IET 0 1`, is `mkIET1'` of
 its length vector and permutation. -/
-theorem toIET_def (D : IETDatum n) : D.toIET = mkIET1' D.lam D.π D.mem_simplex := rfl
+theorem toIET_def (D : IETDatum n) : D.toIET = mkIET1' D.lam D.perm D.mem_simplex := (rfl)
 
 /-- The coercion of `toIET` is `toFun`, by the two unfolding lemmas above. -/
 theorem toIET_apply (D : IETDatum n) (x : ℝ) : D.toIET x = D.toFun x := by
   rw [toIET_def, toFun_def]
-  exact mkIET1_eq_mkIETFun D.lam D.π D.mem_simplex x
+  exact mkIET1_eq_mkIETFun D.lam D.perm D.mem_simplex x
 
 /-- **An exchange maps `[0, 1)` into itself.** -/
 theorem mapsTo (D : IETDatum n) {x : ℝ} (hx : x ∈ Set.Ico (0 : ℝ) 1) :
@@ -115,7 +121,7 @@ end IETDatum
 
 The singularities of `D` are the marked points `∑_{i<k} λ_i` (`k = 0, …, n`); the `k`-th one is
 **splitting** when the cells on its left are mapped among themselves, `π {i | i < k} = {i | i < k}`.
-This is a condition on the *permutation* `D.π` alone, which is why the definitions below take the
+This is a condition on the *permutation* `D.perm` alone, which is why the definitions below take the
 datum `D` and no extra parameter. -/
 
 /-- **The `k`-th marked point of `D`** (the `k`-th singularity, in the paper's language): the total
@@ -129,8 +135,8 @@ noncomputable def IETDatum.mark {n : ℕ} [NeZero n] (D : IETDatum n) (k : Fin (
   simp only [IETDatum.mark, Fin.val_zero, Nat.not_lt_zero, Finset.filter_false, Finset.sum_empty]
 
 /-- The `i`-th marked point is the left end of the `i`-th cell. -/
-theorem IETDatum.mark_castSucc {n : ℕ} [NeZero n] (D : IETDatum n) (i : Fin n) :
-    D.mark i.castSucc = leftEnd D.lam i := rfl
+@[simp] theorem IETDatum.mark_castSucc {n : ℕ} [NeZero n] (D : IETDatum n) (i : Fin n) :
+    D.mark i.castSucc = leftEnd D.lam i := (rfl)
 
 /-- The `(i+1)`-th marked point is the right end of the `i`-th cell. -/
 theorem IETDatum.mark_succ {n : ℕ} [NeZero n] (D : IETDatum n) (i : Fin n) :
@@ -148,11 +154,8 @@ theorem IETDatum.mark_succ {n : ℕ} [NeZero n] (D : IETDatum n) (i : Fin n) :
   rw [hstep, upperEnd_eq]
 
 /-- The total length is `1`. -/
-theorem IETDatum.sum_lam {n : ℕ} [NeZero n] (D : IETDatum n) : ∑ i, (D.lam i : ℝ) = 1 := by
-  have h := D.mem_simplex
-  simp only [simplex, Set.mem_ofPred_eq] at h
-  rw [← NNReal.coe_sum, h]
-  simp
+theorem IETDatum.sum_lam {n : ℕ} [NeZero n] (D : IETDatum n) : ∑ i, (D.lam i : ℝ) = 1 :=
+  sum_coe_eq_one D.mem_simplex
 
 /-- The marked points are monotone in the index. -/
 theorem IETDatum.mark_mono {n : ℕ} [NeZero n] (D : IETDatum n) : Monotone D.mark := by
@@ -168,14 +171,8 @@ theorem IETDatum.mark_mono {n : ℕ} [NeZero n] (D : IETDatum n) : Monotone D.ma
 @[simp] theorem IETDatum.mark_last {n : ℕ} [NeZero n] (D : IETDatum n) :
     D.mark (Fin.last n) = 1 := by
   simp only [IETDatum.mark, Fin.val_last]
-  rw [show Finset.univ.filter (fun i : Fin n => i.val < n) = Finset.univ from ?_]
-  · have h := D.mem_simplex
-    simp only [simplex, Set.mem_ofPred_eq] at h
-    rw [← NNReal.coe_sum, h]
-    simp
-  · ext i
-    simp only [Finset.mem_filter, Finset.mem_univ, true_and, iff_true]
-    exact i.isLt
+  rw [Finset.filter_true_of_mem fun i _ => i.isLt]
+  rw [sum_coe_eq_one D.mem_simplex]
 
 /-- **The marked points lie in `[0, 1]`.** -/
 theorem IETDatum.mark_mem_Icc {n : ℕ} [NeZero n] (D : IETDatum n) (k : Fin (n + 1)) :
@@ -190,7 +187,7 @@ theorem IETDatum.mark_mem_Icc {n : ℕ} [NeZero n] (D : IETDatum n) (k : Fin (n 
 left of it are mapped among themselves.  For `k = 0` and `k = n` this is vacuous, which is the
 paper's convention that `0` and `1` are splitting. -/
 def IETDatum.IsSplitting {n : ℕ} [NeZero n] (D : IETDatum n) (k : Fin (n + 1)) : Prop :=
-  ∀ i : Fin n, i.val < k.val ↔ (D.π i).val < k.val
+  ∀ i : Fin n, i.val < k.val ↔ (D.perm i).val < k.val
 
 /-- **A cell is fixed** when both of its ends are splitting singularities: then `D` is the identity
 on it (the paper's "the `ℓ`-th interval is fixed if both the `ℓ-1`-th and the `ℓ`-th singularities
@@ -204,28 +201,28 @@ theorem IETDatum.isFixedCell_apply {n : ℕ} [NeZero n] (D : IETDatum n) {l : Fi
     (hl : D.IsFixedCell l) {x : ℝ}
     (hx : x ∈ Set.Ico (D.mark l.castSucc) (D.mark l.succ)) : D.toFun x = x := by
   -- both ends splitting force `π l = l`
-  have hπl : D.π l = l := by
+  have hπl : D.perm l = l := by
     have h1 := hl.2 l
     have h2 := hl.1 l
     simp only [Fin.val_succ, Fin.val_castSucc] at h1 h2
-    have h3 : (D.π l).val < l.val + 1 := h1.mp (Nat.lt_succ_self _)
-    have h4 : ¬ (D.π l).val < l.val := fun h => absurd (h2.mpr h) (lt_irrefl _)
+    have h3 : (D.perm l).val < l.val + 1 := h1.mp (Nat.lt_succ_self _)
+    have h4 : ¬ (D.perm l).val < l.val := fun h => absurd (h2.mpr h) (lt_irrefl _)
     refine Fin.ext ?_
     omega
   -- hence the cells left of `l` are exactly the images left of `π l`
-  have hset : (Finset.univ.filter (fun j : Fin n => D.π j < D.π l))
+  have hset : (Finset.univ.filter (fun j : Fin n => D.perm j < D.perm l))
       = Finset.univ.filter (fun j : Fin n => j < l) := by
     ext j
     simp only [Finset.mem_filter, Finset.mem_univ, true_and, Fin.lt_def, hπl]
     exact (hl.1 j).symm
   -- so the displacement on the `l`-th cell vanishes
-  have hzero : translationVector D.π D.lam l = 0 := by
-    have h1 : imageLeft D.π D.lam l = leftEnd D.lam l := by
+  have hzero : translationVector D.perm D.lam l = 0 := by
+    have h1 : imageLeft D.perm D.lam l = leftEnd D.lam l := by
       rw [imageLeft, leftEnd, hset]
     rw [translationVector, h1]
     ring
   -- and the marked points are the cell ends of `D.lam`
-  have hleft : D.mark l.castSucc = leftEnd D.lam l := rfl
+  have hleft : D.mark l.castSucc = leftEnd D.lam l := (rfl)
   have hstep : D.mark l.succ = leftEnd D.lam l + (D.lam l : ℝ) := by
     simp only [IETDatum.mark, leftEnd, Fin.val_succ]
     rw [show Finset.univ.filter (fun i : Fin n => i.val < l.val + 1)
@@ -245,7 +242,7 @@ theorem IETDatum.isFixedCell_apply {n : ℕ} [NeZero n] (D : IETDatum n) {l : Fi
   have hidx : idx D.lam (x - 0) (by simpa using hx0) = l :=
     idx_eq D.lam ⟨by simpa using hx0, by simpa using hxT⟩ (by simpa using hx'.1)
       (by simpa using hx'.2)
-  rw [IETDatum.toFun_def, mkIETFun_of_mem D.lam D.π 0 ⟨hx0, by simpa using hxT⟩, hidx, hzero]
+  rw [IETDatum.toFun_def, mkIETFun_of_mem D.lam D.perm 0 ⟨hx0, by simpa using hxT⟩, hidx, hzero]
   ring
 
 /-- The cells whose image starts at or before the image of the `i`-th cell are exactly the `i`-th
@@ -253,19 +250,7 @@ one and those before it, so their total length is `imageLeft + λ i`. -/
 theorem imageLeft_add {n : ℕ} (π : Equiv.Perm (Fin n)) (lam : Fin n → ℝ≥0) (i : Fin n) :
     imageLeft π lam i + (lam i : ℝ)
       = ∑ j ∈ Finset.univ.filter (fun j : Fin n => π j ≤ π i), (lam j : ℝ) := by
-  have hins : Finset.univ.filter (fun j : Fin n => π j ≤ π i)
-      = insert i (Finset.univ.filter (fun j : Fin n => π j < π i)) := by
-    ext j
-    simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_insert]
-    constructor
-    · intro hj
-      rcases lt_or_eq_of_le hj with hlt | heq
-      · exact Or.inr hlt
-      · exact Or.inl (π.injective heq)
-    · rintro (rfl | hlt)
-      · exact le_rfl
-      · exact le_of_lt hlt
-  rw [hins, Finset.sum_insert (by simp), imageLeft]
+  rw [filter_perm_le_eq_insert π i, Finset.sum_insert (by simp), imageLeft]
   ring
 
 /-- **A splitting singularity leaves the left side invariant**: if the `k`-th marked point of `D` is
@@ -297,9 +282,9 @@ theorem IETDatum.isSplitting_below {n : ℕ} [NeZero n] (D : IETDatum n) {k : Fi
         · rfl
       linarith
   -- hence the image cell is also left of `k`
-  have hπ : (D.π i).val < k.val := (hk i).mp hik
+  have hπ : (D.perm i).val < k.val := (hk i).mp hik
   -- so the whole image cell is below the `k`-th marked point
-  have himg : imageLeft D.π D.lam i + (D.lam i : ℝ) ≤ D.mark k := by
+  have himg : imageLeft D.perm D.lam i + (D.lam i : ℝ) ≤ D.mark k := by
     rw [imageLeft_add, IETDatum.mark]
     refine Finset.sum_le_sum_of_subset_of_nonneg ?_ (fun j _ _ => (D.lam j).coe_nonneg)
     intro j hj
@@ -309,7 +294,7 @@ theorem IETDatum.isSplitting_below {n : ℕ} [NeZero n] (D : IETDatum n) {k : Fi
   have hidx : idx D.lam (y - 0) (by simpa using hy.1) = i := by
     refine idx_eq D.lam ⟨by simpa using hy.1, by simpa using hyT⟩ (by simpa using hle)
       (by simpa using hiy)
-  rw [IETDatum.toFun_def, mkIETFun_of_mem D.lam D.π 0 ⟨hy.1, by simpa using hyT⟩, hidx,
+  rw [IETDatum.toFun_def, mkIETFun_of_mem D.lam D.perm 0 ⟨hy.1, by simpa using hyT⟩, hidx,
     translationVector]
   have h1 : y < leftEnd D.lam i + (D.lam i : ℝ) := by rw [← upperEnd_eq]; exact hiy
   linarith
@@ -334,12 +319,12 @@ theorem IETDatum.isSplitting_above {n : ℕ} [NeZero n] (D : IETDatum n) {k : Fi
       exact D.mark_mono (by simp only [Fin.le_def, Fin.val_succ]; exact hcon)
     linarith
   -- so its image cell is right of `mark k`
-  have hπ : k.val ≤ (D.π i).val := by
+  have hπ : k.val ≤ (D.perm i).val := by
     by_contra hcon
     rw [not_le] at hcon
     exact absurd ((hk i).mpr hcon) (by omega)
-  have himg : D.mark k ≤ imageLeft D.π D.lam i := by
-    have h1 : D.mark k = ∑ j ∈ Finset.univ.filter (fun j : Fin n => (D.π j).val < k.val),
+  have himg : D.mark k ≤ imageLeft D.perm D.lam i := by
+    have h1 : D.mark k = ∑ j ∈ Finset.univ.filter (fun j : Fin n => (D.perm j).val < k.val),
         (D.lam j : ℝ) := by
       rw [IETDatum.mark]
       refine Finset.sum_congr ?_ (fun _ _ => rfl)
@@ -355,7 +340,7 @@ theorem IETDatum.isSplitting_above {n : ℕ} [NeZero n] (D : IETDatum n) {k : Fi
   have hidx : idx D.lam (y - 0) (by simpa using hy.1) = i := by
     refine idx_eq D.lam ⟨by simpa using hy.1, by simpa using hyT⟩ (by simpa using hle)
       (by simpa using hiy)
-  rw [IETDatum.toFun_def, mkIETFun_of_mem D.lam D.π 0 ⟨hy.1, by simpa using hyT⟩, hidx,
+  rw [IETDatum.toFun_def, mkIETFun_of_mem D.lam D.perm 0 ⟨hy.1, by simpa using hyT⟩, hidx,
     translationVector]
   linarith
 
@@ -365,7 +350,7 @@ cell of `E` on which `E` is the identity (the paper's "belongs to a fixed interv
 The interval is **left-closed**, so this is `≤` and not `<` on the left: the paper's fixed interval
 is `J_ℓ = [s_{ℓ-1}, s_ℓ)`, and a singularity sitting at its left end belongs to it.  This matters
 for the case analysis of Lemma 3.2, where the point produced is a marked point *and* a cell boundary
-(see `HISTORY.md`); the invariance that `IsPairSplitting` is for holds either way, since
+the invariance that `IsPairSplitting` is for holds either way, since
 `E.IsFixedCell l` gives `E.IsSplitting l`. -/
 def IETDatum.InFixedCell {d e : ℕ} [NeZero d] [NeZero e] (D : IETDatum d) (E : IETDatum e)
     (k : Fin (d + 1)) : Prop :=
@@ -528,19 +513,18 @@ theorem perm_eq_of_preimage {n : ℕ} (ρ : Equiv.Perm (Fin n)) (a b : Fin n)
   subst hba
   exact ⟨rfl, fun i => h i⟩
 
-/-! ## 1. The open set `O` (the paper's "connected component of the complement of the hyperplanes")
+/-! ## 2. The open set `O` (the paper's "connected component of the complement of the hyperplanes")
 
 The paper fixes the finitely many expressions `k + ∑ aᵢ λᵢ + ∑ bⱼ μⱼ` whose integer coefficients are
 bounded by `4`, and discards the hyperplanes where one vanishes.  `O` is a connected component of
 the complement.
 
-The bound is `4` and not `2`, which is a decision taken with the user.  `2` is enough for Case 1a of
-the case analysis of Lemma 3.2 (its relations have coefficients in `{-1,0,1}`, and trivialising a
-relation with coefficients `≤ 1` needs the bound on *free* coefficients, which are differences
-`aᵢ - a_last`, so `2`).  It is **not** enough for Case 1b, whose relation has coefficients up to `2`
-(`λ_i` gets `[π i < π k] + [π i < π m] - [i < m]`): a full-coordinate relation with coefficients
-`≤ 2` has free coefficients `≤ 4`, so its trivialisation needs the bound `4` — the paper's choice.
-See `HISTORY.md`, "The `IsSmallRelation` bound: `4` cannot be lowered to `2`". -/
+The bound is `4` and not `2`.  `2` is enough for Case 1a of the case analysis of Lemma 3.2 (its
+relations have coefficients in `{-1,0,1}`, and trivialising a relation with coefficients `≤ 1`
+needs the bound on *free* coefficients, which are differences `aᵢ - a_last`, so `2`).  It is **not**
+enough for Case 1b, whose relation has coefficients up to `2` (`λ_i` gets
+`[π i < π k] + [π i < π m] - [i < m]`): a full-coordinate relation with coefficients `≤ 2` has free
+coefficients `≤ 4`, so its trivialisation needs the bound `4` — the paper's choice. -/
 
 /-- **The real parameter space**: the `d - 1` free coordinates of `λ` and the `e - 1` free
 coordinates of `μ`, as real vectors.  This is the space of `d + e - 2` degrees of freedom on which
@@ -555,35 +539,6 @@ presentation on a region, and stating affinity this way makes it a *global* affi
 rather than a check on each coordinate: the whole vector `s · q` is an affine image of `q`. -/
 abbrev ParamAffine (d e : ℕ) := PReal d e →ᵃ[ℝ] ℝ
 
-/-- **A small nontrivial integer relation vanishing at `q`**: the coefficient data `(k, a, b)` of
-`IsBadParam`, with its five conditions named rather than conjoined. -/
-structure IsSmallRelation {d e : ℕ} (q : PReal d e) (k : ℤ) (a : Fin (d - 1) → ℤ)
-    (b : Fin (e - 1) → ℤ) : Prop where
-  /-- the coefficient of each free `λᵢ` is bounded by `4` -/
-  a_bound : ∀ i, |a i| ≤ 4
-  /-- the coefficient of each free `μⱼ` is bounded by `4` -/
-  b_bound : ∀ j, |b j| ≤ 4
-  /-- the constant term is bounded by `4` -/
-  k_bound : |k| ≤ 4
-  /-- the relation is nontrivial -/
-  nontrivial : k ≠ 0 ∨ (∃ i, a i ≠ 0) ∨ ∃ j, b j ≠ 0
-  /-- the relation vanishes at `q` -/
-  vanishes : (k : ℝ) + (∑ i, (a i : ℝ) * q.1 i) + (∑ j, (b j : ℝ) * q.2 j) = 0
-
-/-- **A bad parameter pair**: a nontrivial relation `k + ∑ aᵢ λᵢ + ∑ bⱼ μⱼ = 0` between the *free*
-coordinates `λ₁, …, λ_{d-1}`, `μ₁, …, μ_{e-1}`, with all coefficients bounded by `4` in absolute
-value.  The five conditions on the coefficients are the named fields of `IsSmallRelation`.
-
-It is stated on `PReal d e`, the space of the `d + e - 2` free coordinates, and not on the length
-vectors themselves: the coordinates must be the free ones, since with all `d + e` lengths the
-relation `-1 + ∑ᵢ λᵢ = 0` holds on the whole simplex and would make every parameter pair bad.  This
-is the paper's own convention — it ranges `i` over `1, …, d-1` and `j` over `1, …, e-1`. -/
-def IsBadParam {d e : ℕ} (q : PReal d e) : Prop :=
-  ∃ (k : ℤ) (a : Fin (d - 1) → ℤ) (b : Fin (e - 1) → ℤ), IsSmallRelation q k a b
-
-/-- **`O`**: the points of the free-coordinate space on which no small nontrivial integer relation
-holds. -/
-def goodParams (d e : ℕ) : Set (PReal d e) := {q | ¬ IsBadParam q}
 
 /-! ### Passing from a parameter pair to its free coordinates
 
@@ -639,20 +594,80 @@ theorem relReal_ofCoeffs {d e : ℕ} (k : ℤ) (a : Fin (d - 1) → ℤ) (b : Fi
       = (k : ℝ) + (∑ i, (a i : ℝ) * q.1 i) + ∑ j, (b j : ℝ) * q.2 j := by
   simp [relReal, constCoeff, ofCoeffs]
 
-/-- The finitely many coefficient vectors with all coefficients of absolute value at most `4`. -/
+/-! ## The small coefficient vectors: the paper's bound `4` as the case `N = 4`
+
+`smallCoeffsAt N` enumerates the coefficient vectors whose entries are all bounded by `N` in
+absolute value.  The paper's `smallCoeffs` is the case `N = 4`, and so are `IsBadParam` and
+`goodParams`; the statements about them are proved once, at `N`, and read off at `4`, so there is
+one definition and one proof of each fact. -/
+
+/-- **The coefficient enumeration at scale `N`**: the finitely many coefficient vectors all of whose
+coefficients have absolute value at most `N`.  The `N = 4` case is the paper's `smallCoeffs`. -/
+noncomputable def smallCoeffsAt (N : ℕ) (d e : ℕ) : Finset (CoeffData d e) :=
+  Fintype.piFinset fun _ => Finset.Icc (-(N : ℤ)) (N : ℤ)
+
+/-- **Membership in the enumeration**: a coefficient vector is enumerated at scale `N` exactly when
+all its coefficients are bounded by `N` in absolute value. -/
+theorem mem_smallCoeffsAt {N d e : ℕ} {t : CoeffData d e} :
+    t ∈ smallCoeffsAt N d e ↔ ∀ ix, |t ix| ≤ (N : ℤ) := by
+  simp only [smallCoeffsAt, Fintype.mem_piFinset, Finset.mem_Icc, abs_le]
+
+/-- The paper's coefficient vectors: **all coefficients of absolute value at most `4`**, the case
+`N = 4` of `smallCoeffsAt`. -/
 noncomputable def smallCoeffs (d e : ℕ) : Finset (CoeffData d e) :=
-  Fintype.piFinset fun _ => Finset.Icc (-4 : ℤ) 4
+  smallCoeffsAt 4 d e
 
 theorem mem_smallCoeffs {d e : ℕ} {t : CoeffData d e} :
-    t ∈ smallCoeffs d e ↔ ∀ ix, |t ix| ≤ 4 := by
-  simp only [smallCoeffs, Fintype.mem_piFinset, Finset.mem_Icc, abs_le]
+    t ∈ smallCoeffs d e ↔ ∀ ix, |t ix| ≤ 4 :=
+  mem_smallCoeffsAt
 
-theorem isBadParam_iff {d e : ℕ} {q : PReal d e} :
-    IsBadParam q ↔ ∃ t ∈ smallCoeffs d e, NontrivialCoeff t ∧ relReal t q = 0 := by
+/-- **A bad parameter pair at threshold `N`**: a nontrivial relation
+`k + ∑ aᵢ λᵢ + ∑ bⱼ μⱼ = 0` between the *free* coordinates, with all coefficients — the
+constant term included — bounded by `N` in absolute value.  The `N = 4` case is the paper's
+`IsBadParam`. -/
+def IsBadParamAt {d e : ℕ} (N : ℕ) (q : PReal d e) : Prop :=
+  ∃ t ∈ smallCoeffsAt N d e, NontrivialCoeff t ∧ relReal t q = 0
+
+/-- **A bad parameter pair**, the paper's case `N = 4` of `IsBadParamAt`: a nontrivial relation
+`k + ∑ aᵢ λᵢ + ∑ bⱼ μⱼ = 0` between the *free* coordinates `λ₁, …, λ_{d-1}`, `μ₁, …, μ_{e-1}`, with
+all coefficients — the constant term included — bounded by `4` in absolute value.  The coefficient
+vectors are the ones enumerated by `smallCoeffs`, which is what makes the bad set a finite union of
+hyperplanes (`isClosed_badParam`).
+
+It is stated on `PReal d e`, the space of the `d + e - 2` free coordinates, and not on the length
+vectors themselves: the coordinates must be the free ones, since with all `d + e` lengths the
+relation `-1 + ∑ᵢ λᵢ = 0` holds on the whole simplex and would make every parameter pair bad.  This
+is the paper's own convention — it ranges `i` over `1, …, d-1` and `j` over `1, …, e-1`. -/
+def IsBadParam {d e : ℕ} (q : PReal d e) : Prop :=
+  IsBadParamAt 4 q
+
+/-- **The good set at threshold `N`**: the points on which no nontrivial relation with coefficients
+bounded by `N` vanishes.  The `N = 4` case is the paper's `O = goodParams`. -/
+def goodParamsAt (N : ℕ) (d e : ℕ) : Set (PReal d e) := {q | ¬ IsBadParamAt N q}
+
+/-- **`O`**: the points of the free-coordinate space on which no nontrivial integer relation with
+coefficients bounded by `4` holds, the paper's case `N = 4` of `goodParamsAt`. -/
+def goodParams (d e : ℕ) : Set (PReal d e) := goodParamsAt 4 d e
+
+/-- **`IsBadParamAt` in components**: the enumeration form and the `(k, a, b)` form are the same
+predicate. -/
+theorem isBadParamAt_iff_coeffs {N d e : ℕ} {q : PReal d e} :
+    IsBadParamAt N q ↔ ∃ (k : ℤ) (a : Fin (d - 1) → ℤ) (b : Fin (e - 1) → ℤ),
+      (∀ i, |a i| ≤ (N : ℤ)) ∧ (∀ j, |b j| ≤ (N : ℤ)) ∧ |k| ≤ (N : ℤ) ∧
+        (k ≠ 0 ∨ (∃ i, a i ≠ 0) ∨ ∃ j, b j ≠ 0) ∧
+        (k : ℝ) + (∑ i, (a i : ℝ) * q.1 i) + (∑ j, (b j : ℝ) * q.2 j) = 0 := by
   constructor
+  · rintro ⟨t, ht, hnt, hrel⟩
+    rw [mem_smallCoeffsAt] at ht
+    refine ⟨constCoeff t, fun i => t (Sum.inl (Sum.inl i)), fun j => t (Sum.inl (Sum.inr j)),
+      fun i => ht _, fun j => ht _, ht _, ?_, ?_⟩
+    · simpa [NontrivialCoeff, constCoeff] using hnt
+    · rw [relReal, constCoeff] at hrel
+      simp only [constCoeff]
+      linarith
   · rintro ⟨k, a, b, ha, hb, hk, hnt, hrel⟩
     refine ⟨ofCoeffs k a b, ?_, ?_, ?_⟩
-    · rw [mem_smallCoeffs]
+    · rw [mem_smallCoeffsAt]
       rintro (⟨i | j⟩ | u)
       · exact ha i
       · exact hb j
@@ -660,39 +675,67 @@ theorem isBadParam_iff {d e : ℕ} {q : PReal d e} :
     · simpa [NontrivialCoeff, constCoeff, ofCoeffs] using hnt
     · rw [relReal_ofCoeffs]
       exact hrel
-  · rintro ⟨t, ht, hnt, hrel⟩
-    rw [mem_smallCoeffs] at ht
-    refine ⟨constCoeff t, fun i => t (Sum.inl (Sum.inl i)), fun j => t (Sum.inl (Sum.inr j)),
-      fun i => ht (Sum.inl (Sum.inl i)), fun j => ht (Sum.inl (Sum.inr j)), ?_, hnt, ?_⟩
-    · exact ht (Sum.inr 0)
-    · simpa [relReal] using hrel
+
+/-- **`IsBadParam` in components**, the paper's case `N = 4`: the enumeration form and the
+`(k, a, b)` form are the same predicate, which is the form the estimates of Lemma 3.2 work in. -/
+theorem isBadParam_iff_coeffs {d e : ℕ} {q : PReal d e} :
+    IsBadParam q ↔ ∃ (k : ℤ) (a : Fin (d - 1) → ℤ) (b : Fin (e - 1) → ℤ),
+      (∀ i, |a i| ≤ 4) ∧ (∀ j, |b j| ≤ 4) ∧ |k| ≤ 4 ∧
+        (k ≠ 0 ∨ (∃ i, a i ≠ 0) ∨ ∃ j, b j ≠ 0) ∧
+        (k : ℝ) + (∑ i, (a i : ℝ) * q.1 i) + (∑ j, (b j : ℝ) * q.2 j) = 0 :=
+  isBadParamAt_iff_coeffs
+
+/-- A larger threshold makes more parameters bad: `IsBadParamAt` is monotone in `N`. -/
+theorem IsBadParamAt.mono {d e N M : ℕ} {q : PReal d e} (hNM : N ≤ M)
+    (h : IsBadParamAt N q) : IsBadParamAt M q := by
+  obtain ⟨t, ht, hnt, hrel⟩ := h
+  refine ⟨t, ?_, hnt, hrel⟩
+  rw [mem_smallCoeffsAt] at ht ⊢
+  intro ix
+  have h1 := ht ix
+  rw [abs_le] at h1 ⊢
+  constructor <;> omega
 
 theorem continuous_relReal {d e : ℕ} (t : CoeffData d e) : Continuous (relReal t) := by
   unfold relReal constCoeff
   fun_prop
 
-/-- The bad set is a finite union of hyperplanes, hence closed. -/
-theorem isClosed_badParam (d e : ℕ) : IsClosed {q : PReal d e | IsBadParam q} := by
+/-- **The bad set is a finite union of hyperplanes**, hence closed — at every threshold. -/
+theorem isClosed_badParamAt (N d e : ℕ) : IsClosed {q : PReal d e | IsBadParamAt N q} := by
   classical
-  have hset : {q : PReal d e | IsBadParam q}
-      = ⋃ t ∈ (smallCoeffs d e).filter NontrivialCoeff, {q : PReal d e | relReal t q = 0} := by
+  have hset : {q : PReal d e | IsBadParamAt N q}
+      = ⋃ t ∈ (smallCoeffsAt N d e).filter NontrivialCoeff,
+          {q : PReal d e | relReal t q = 0} := by
     ext q
-    simp only [Set.mem_ofPred_eq, Set.mem_iUnion, Finset.mem_filter, exists_prop]
-    rw [isBadParam_iff]
+    simp only [IsBadParamAt, Set.mem_ofPred_eq, Set.mem_iUnion, Finset.mem_filter, exists_prop]
     constructor
     · rintro ⟨t, ht, hnt, hrel⟩
       exact ⟨t, ⟨ht, hnt⟩, hrel⟩
     · rintro ⟨t, ⟨ht, hnt⟩, hrel⟩
       exact ⟨t, ht, hnt, hrel⟩
   rw [hset]
-  refine (Finset.finite_toSet ((smallCoeffs d e).filter NontrivialCoeff)).isClosed_biUnion ?_
+  refine (Finset.finite_toSet ((smallCoeffsAt N d e).filter NontrivialCoeff)).isClosed_biUnion ?_
   intro t _
   exact isClosed_eq (continuous_relReal t) continuous_const
 
-/-- **`O` is open** in the free-coordinate space: it is the complement of a finite union of closed
+/-- **The bad set is closed**, the paper's case `N = 4`: a finite union of hyperplanes. -/
+theorem isClosed_badParam (d e : ℕ) : IsClosed {q : PReal d e | IsBadParam q} :=
+  isClosed_badParamAt 4 d e
+
+/-- **The good set at threshold `N` is open**: it is the complement of a finite union of closed
 hyperplanes. -/
+theorem isOpen_goodParamsAt (N d e : ℕ) : IsOpen (goodParamsAt N d e) :=
+  (isClosed_badParamAt N d e).isOpen_compl
+
+/-- **`O` is open** in the free-coordinate space, the paper's case `N = 4`: it is the complement of
+a finite union of closed hyperplanes. -/
 theorem isOpen_goodParams (d e : ℕ) : IsOpen (goodParams d e) :=
-  (isClosed_badParam d e).isOpen_compl
+  isOpen_goodParamsAt 4 d e
+
+/-- A larger threshold gives a smaller good set. -/
+theorem goodParamsAt_antitone {d e N M : ℕ} (hNM : N ≤ M) :
+    goodParamsAt M d e ⊆ goodParamsAt N d e :=
+  fun _ hq hbad => hq (hbad.mono hNM)
 
 /-- The value of `simplexMap` at a *free* coordinate is that coordinate. -/
 theorem simplexMap_castLE {d : ℕ} [NeZero d] {v : Fin (d - 1) → ℝ} (i : Fin (d - 1)) :
@@ -713,19 +756,31 @@ theorem toReal_simplexMap {d e : ℕ} [NeZero d] [NeZero e] {v : Fin (d - 1) →
   · simp only [toReal, simplexMap_castLE, Real.coe_toNNReal _ (le_of_lt (hv i))]
   · simp only [toReal, simplexMap_castLE, Real.coe_toNNReal _ (le_of_lt (hw j))]
 
-/-- A bad pair at the point of the simplex given by the free coordinates `z` puts `z` in the tube of
-the corresponding integer form. -/
-theorem isBadParam_mem_badSet {d e N : ℕ} [NeZero d] [NeZero e]
+/-- **A bad point at scale `N'` is in the tube of scale `N`**, for `N' ≤ N`: the relation that
+makes the parameter bad is one of the forms enumerated by `formBox N`, and its vanishing puts the
+point in the tube of that form. -/
+theorem isBadParamAt_mem_badSet {d e N' N : ℕ} [NeZero d] [NeZero e]
     {z : (Fin (d - 1) → ℝ) × (Fin (e - 1) → ℝ)}
-    (hz : z ∈ ubox (d - 1) ×ˢ ubox (e - 1)) (hN : 4 ≤ N)
-    (hbad : IsBadParam (toReal (simplexMap d z.1, simplexMap e z.2))) :
+    (hz : z ∈ ubox (d - 1) ×ˢ ubox (e - 1)) (hN : N' ≤ N)
+    (hbad : IsBadParamAt N' (toReal (simplexMap d z.1, simplexMap e z.2))) :
     z ∈ badSet (d - 1) (e - 1) N := by
   have hposv (i) : 0 < z.1 i := (Set.mem_pi.mp hz.1 i (Set.mem_univ i)).1
   have hposw (j) : 0 < z.2 j := (Set.mem_pi.mp hz.2 j (Set.mem_univ j)).1
   rw [toReal_simplexMap hposv hposw] at hbad
-  obtain ⟨k, a, b, ha, hb, hk, hnt, hrel⟩ := hbad
+  obtain ⟨t, ht, hnt, hrel⟩ := hbad
+  rw [mem_smallCoeffsAt] at ht
+  set a : Fin (d - 1) → ℤ := fun i => t (Sum.inl (Sum.inl i)) with ha_def
+  set b : Fin (e - 1) → ℤ := fun j => t (Sum.inl (Sum.inr j)) with hb_def
+  set k : ℤ := constCoeff t with hk_def
+  have ha : ∀ i, |a i| ≤ (N' : ℤ) := fun i => ht _
+  have hb : ∀ j, |b j| ≤ (N' : ℤ) := fun j => ht _
+  have hk : |k| ≤ (N' : ℤ) := ht _
+  have hntK : k ≠ 0 ∨ (∃ i, a i ≠ 0) ∨ ∃ j, b j ≠ 0 := by
+    simpa [NontrivialCoeff, constCoeff, ha_def, hb_def, hk_def] using hnt
+  rw [relReal, constCoeff] at hrel
   -- after `toReal_simplexMap` the relation is already in the free coordinates
   have hrel' : (∑ i, (a i : ℝ) * z.1 i) + (∑ j, (b j : ℝ) * z.2 j) + (k : ℝ) = 0 := by
+    simp only [ha_def, hb_def, hk_def, constCoeff]
     linarith
   -- the coefficients are in the box at scale `N`
   have hbox : (a, (b, k)) ∈ formBox (d - 1) (e - 1) N := by
@@ -742,7 +797,7 @@ theorem isBadParam_mem_badSet {d e N : ℕ} [NeZero d] [NeZero e]
     by_contra hcon
     push Not at hcon
     obtain ⟨ha0, hb0⟩ := hcon
-    rcases hnt with h | ⟨i, hi⟩ | ⟨j, hj⟩
+    rcases hntK with h | ⟨i, hi⟩ | ⟨j, hj⟩
     · apply h
       rw [ha0, hb0] at hrel'
       simp only [Pi.zero_apply, Int.cast_zero, zero_mul, Finset.sum_const_zero, zero_add] at hrel'
@@ -753,8 +808,18 @@ theorem isBadParam_mem_badSet {d e N : ℕ} [NeZero d] [NeZero e]
   refine ⟨hz, ?_⟩
   have hε : (0 : ℝ) < ((N : ℝ) + 1) ^ (-(expo (d - 1) (e - 1) : ℝ)) := by positivity
   simp only [Set.mem_ofPred_eq]
-  rw [show (∑ i, (a i : ℝ) * z.1 i) + (∑ j, (b j : ℝ) * z.2 j) + (k : ℝ) = 0 from hrel']
+  rw [hrel']
   simpa using hε
+
+/-- **A bad pair puts `z` in the tube**, the paper's case `N' = 4`: the relation that makes the
+parameter bad is one of the forms enumerated by `formBox N`, and its vanishing puts the point in the
+tube of that form. -/
+theorem isBadParam_mem_badSet {d e N : ℕ} [NeZero d] [NeZero e]
+    {z : (Fin (d - 1) → ℝ) × (Fin (e - 1) → ℝ)}
+    (hz : z ∈ ubox (d - 1) ×ˢ ubox (e - 1)) (hN : 4 ≤ N)
+    (hbad : IsBadParam (toReal (simplexMap d z.1, simplexMap e z.2))) :
+    z ∈ badSet (d - 1) (e - 1) N :=
+  isBadParamAt_mem_badSet hz hN hbad
 
 /-- **Almost every point of the product of the two free regions lies in their product.** -/
 theorem ae_mem_simplexRegion_prod {d e : ℕ} :
@@ -798,23 +863,13 @@ theorem ae_goodParams_real {d e : ℕ} [NeZero d] [NeZero e] :
     (isBadParam_mem_badSet ⟨simplexRegion_subset_ubox d hmemz.1,
       simplexRegion_subset_ubox e hmemz.2⟩ (le_max_right _ _) hbad')
 
-/-- The last index of `Fin n`: the length determined by `∑ λ = 1`. -/
-def lastIdx (n : ℕ) [NeZero n] : Fin n := ⟨n - 1, by have := NeZero.pos n; omega⟩
-
-/-- **`lastIdx`, as a number**: the computation form proofs unfolding it need. -/
-theorem lastIdx_val (n : ℕ) [NeZero n] : (lastIdx n).val = n - 1 := rfl
-
-theorem lastIdx_eq_last {m : ℕ} : lastIdx (m + 1) = Fin.last m := Fin.ext rfl
-
 /-- **A sum over all the lengths, split into the last coordinate and the free ones.** -/
 theorem sum_eq_last_add_free {m : ℕ} (lam : Fin (m + 1) → ℝ≥0) (hl : (∑ i, lam i) = 1)
     (a : Fin (m + 1) → ℝ) :
     (∑ i, a i * (lam i : ℝ))
       = a (Fin.last m)
         + ∑ i : Fin m, (a i.castSucc - a (Fin.last m)) * (lam i.castSucc : ℝ) := by
-  have hcoe : (∑ i, (lam i : ℝ)) = 1 := by
-    rw [← NNReal.coe_sum, hl]
-    simp
+  have hcoe : (∑ i, (lam i : ℝ)) = 1 := sum_coe_eq_one hl
   have hsplit : (∑ i, (lam i : ℝ))
       = (lam (Fin.last m) : ℝ) + ∑ i : Fin m, (lam i.castSucc : ℝ) := by
     rw [Fin.sum_univ_castSucc]
@@ -834,11 +889,12 @@ theorem sum_eq_last_add_free {m : ℕ} (lam : Fin (m + 1) → ℝ≥0) (hl : (�
   rw [h1, h2, hlast]
   ring
 
-/-- **The vanishing form with the constant term**: a relation between the *free* coordinates with
-coefficients bounded by `4` — constant term included — that vanishes at a good pair is trivial. -/
-theorem coeffs_zero_of_good_with_const {d e : ℕ} {q : PReal d e} (hp : ¬ IsBadParam q)
-    {k : ℤ} {a : Fin (d - 1) → ℤ} {b : Fin (e - 1) → ℤ} (ha : ∀ i, |a i| ≤ 4)
-    (hb : ∀ j, |b j| ≤ 4) (hk : |k| ≤ 4)
+/-- **The vanishing form with the constant term, at threshold `N`**: a relation between the *free*
+coordinates with coefficients bounded by `N` — constant term included — that vanishes at a good
+pair is trivial. -/
+theorem coeffs_zero_of_good_with_const_at {d e N : ℕ} {q : PReal d e} (hp : ¬ IsBadParamAt N q)
+    {k : ℤ} {a : Fin (d - 1) → ℤ} {b : Fin (e - 1) → ℤ} (ha : ∀ i, |a i| ≤ (N : ℤ))
+    (hb : ∀ j, |b j| ≤ (N : ℤ)) (hk : |k| ≤ (N : ℤ))
     (h : (k : ℝ) + (∑ i, (a i : ℝ) * q.1 i) + (∑ j, (b j : ℝ) * q.2 j) = 0) :
     k = 0 ∧ a = 0 ∧ b = 0 := by
   by_contra hne
@@ -847,7 +903,25 @@ theorem coeffs_zero_of_good_with_const {d e : ℕ} {q : PReal d e} (hp : ¬ IsBa
     by_contra hcon
     push Not at hcon
     exact hne ⟨hcon.1, funext hcon.2.1, funext hcon.2.2⟩
-  exact ⟨k, a, b, ha, hb, hk, hnt, h⟩
+  refine ⟨ofCoeffs k a b, ?_, ?_, ?_⟩
+  · rw [mem_smallCoeffsAt]
+    rintro (⟨i | j⟩ | u)
+    · exact ha i
+    · exact hb j
+    · exact hk
+  · simpa [NontrivialCoeff, constCoeff, ofCoeffs] using hnt
+  · rw [relReal_ofCoeffs]
+    exact h
+
+/-- **The vanishing form with the constant term**, the paper's case `N = 4`: a relation between the
+*free* coordinates with coefficients bounded by `4` — constant term included — that vanishes at a
+good pair is trivial. -/
+theorem coeffs_zero_of_good_with_const {d e : ℕ} {q : PReal d e} (hp : ¬ IsBadParam q)
+    {k : ℤ} {a : Fin (d - 1) → ℤ} {b : Fin (e - 1) → ℤ} (ha : ∀ i, |a i| ≤ 4)
+    (hb : ∀ j, |b j| ≤ 4) (hk : |k| ≤ 4)
+    (h : (k : ℝ) + (∑ i, (a i : ℝ) * q.1 i) + (∑ j, (b j : ℝ) * q.2 j) = 0) :
+    k = 0 ∧ a = 0 ∧ b = 0 :=
+  coeffs_zero_of_good_with_const_at (N := 4) hp ha hb hk h
 
 /-- **`O` in full coordinates**: at a good pair, a homogeneous relation among *all* the lengths with
 coefficients bounded by `2` in absolute value forces the coefficients to be constant, with the two
@@ -861,17 +935,15 @@ Case 1a only uses coefficients in `{-1,0,1}`. -/
 theorem relation_of_good {d e : ℕ} [NeZero d] [NeZero e] {p : (Fin d → ℝ≥0) × (Fin e → ℝ≥0)}
     (hp : ¬ IsBadParam (toReal p)) {a : Fin d → ℤ} {b : Fin e → ℤ}
     (ha : ∀ i, |a i| ≤ 2) (hb : ∀ j, |b j| ≤ 2)
-    (hl : p.1 ∈ simplex d) (hm : p.2 ∈ simplex e)
+    (hl : p.1 ∈ simplex (Fin d)) (hm : p.2 ∈ simplex (Fin e))
     (h : (∑ i, (a i : ℝ) * (p.1 i : ℝ)) + (∑ j, (b j : ℝ) * (p.2 j : ℝ)) = 0) :
-    (∀ i, a i = a (lastIdx d)) ∧ (∀ j, b j = b (lastIdx e)) ∧
-      a (lastIdx d) + b (lastIdx e) = 0 := by
+    (∀ i, a i = a (lastPos d)) ∧ (∀ j, b j = b (lastPos e)) ∧
+      a (lastPos d) + b (lastPos e) = 0 := by
   obtain ⟨m, rfl⟩ : ∃ m, d = m + 1 := ⟨d - 1, by have := NeZero.pos d; omega⟩
   obtain ⟨n, rfl⟩ : ∃ n, e = n + 1 := ⟨e - 1, by have := NeZero.pos e; omega⟩
-  rw [lastIdx_eq_last, lastIdx_eq_last]
-  have hlam : (∑ i : Fin (m + 1), (p.1 i : ℝ)) = 1 := by
-    rw [← NNReal.coe_sum]; exact_mod_cast hl
-  have hmu : (∑ j : Fin (n + 1), (p.2 j : ℝ)) = 1 := by
-    rw [← NNReal.coe_sum]; exact_mod_cast hm
+  rw [lastPos_eq_last, lastPos_eq_last]
+  have hlam : (∑ i : Fin (m + 1), (p.1 i : ℝ)) = 1 := sum_coe_eq_one (hl)
+  have hmu : (∑ j : Fin (n + 1), (p.2 j : ℝ)) = 1 := sum_coe_eq_one (hm)
   have h1 := sum_eq_last_add_free p.1 hl (fun i => (a i : ℝ))
   have h2 := sum_eq_last_add_free p.2 hm (fun j => (b j : ℝ))
   -- the relation, in the free coordinates
@@ -957,5 +1029,7 @@ theorem ae_diophantine_real {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (
     ((measurable_simplexMap d).prodMap (measurable_simplexMap e)).aemeasurable hmap'
   rw [hν] at h
   exact h
+
+end IntervalExchange.Pair
 
 end

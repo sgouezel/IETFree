@@ -8,24 +8,27 @@ module
 public import IETFree.Pair.Presentation
 
 /-!
-Integer-affine functions of the free parameters.
+# Integer-affine functions of the free parameters
 
 A function of the free parameters is integer affine (`IsIntAffine`) when it is an integer constant
 plus an integer combination of the coordinates.  The file proves that the class is closed under the
 operations used in the reduction (`add`, `neg`, `sub`, `sum`, `ite`), that the concrete
-singularity functions of `IETFree.Presentation` are integer affine (`isIntAffine_cutAffine`,
+singularity functions of `IETFree.Pair.Presentation` are integer affine (`isIntAffine_cutAffine`,
 `isIntAffine_imageLeftAffine`, …), and it extracts the data (`intAffineData`) that the Diophantine
 transfer consumes.
 
 The truncation lemma that the assembly uses is `GoodRegion.exists_isIntAffine_truncatedLengths` in
-`IETFree.BlockDiophantine`, where the integer-affine families are built directly.
+`IETFree.Pair.Block.DiophantineTransfer`, where the integer-affine families are built directly.
 -/
 
 @[expose] public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
+
 /-! ### Integer-affine functions of the free parameters -/
+
+namespace IntervalExchange.Pair
 
 section IntAffine
 
@@ -83,7 +86,7 @@ theorem IsIntAffine.add {f g : ParamAffine d e} (hf : IsIntAffine f) (hg : IsInt
   obtain ⟨c1, A1, B1, h1⟩ := hf
   obtain ⟨c2, A2, B2, h2⟩ := hg
   refine ⟨c1 + c2, A1 + A2, B1 + B2, fun q => ?_⟩
-  have hfg : (f + g) q = f q + g q := rfl
+  have hfg : (f + g) q = f q + g q := by simp only [AffineMap.coe_add, Pi.add_apply]
   rw [hfg, h1 q, h2 q]
   have e1 : (∑ i, ((A1 + A2) i : ℝ) * q.1 i)
       = (∑ i, (A1 i : ℝ) * q.1 i) + ∑ i, (A2 i : ℝ) * q.1 i := by
@@ -106,7 +109,7 @@ theorem IsIntAffine.add {f g : ParamAffine d e} (hf : IsIntAffine f) (hg : IsInt
 theorem IsIntAffine.neg {f : ParamAffine d e} (hf : IsIntAffine f) : IsIntAffine (-f) := by
   obtain ⟨c, A, B, h⟩ := hf
   refine ⟨-c, -A, -B, fun q => ?_⟩
-  have hneg : (-f) q = -(f q) := rfl
+  have hneg : (-f) q = -(f q) := by simp only [AffineMap.coe_neg, Pi.neg_apply]
   rw [hneg, h q]
   have e1 : (∑ i, ((-A) i : ℝ) * q.1 i) = -(∑ i, (A i : ℝ) * q.1 i) := by
     rw [← Finset.sum_neg_distrib]
@@ -128,9 +131,9 @@ theorem IsIntAffine.sub {f g : ParamAffine d e} (hf : IsIntAffine f) (hg : IsInt
     IsIntAffine (f - g) := by
   have h : f - g = f + (-g) := by
     ext q
-    have h1 : (f - g) q = f q - g q := rfl
-    have h2 : (f + (-g)) q = f q + (-g) q := rfl
-    have h3 : (-g) q = -(g q) := rfl
+    have h1 : (f - g) q = f q - g q := by simp only [AffineMap.coe_sub, Pi.sub_apply]
+    have h2 : (f + (-g)) q = f q + (-g) q := by simp only [AffineMap.coe_add, Pi.add_apply]
+    have h3 : (-g) q = -(g q) := by simp only [AffineMap.coe_neg, Pi.neg_apply]
     rw [h1, h2, h3]
     ring
   rw [h]
@@ -278,5 +281,7 @@ with a *single* integer-affine function: the pattern cannot change without the t
 and a meeting point would be an interior zero of a continuous function (IVT).  This is what makes
 the `μ'` of Lemma 3.4 integer combinations of the parameters, as the paper's
 "integer combination" step needs. -/
+
+end IntervalExchange.Pair
 
 end

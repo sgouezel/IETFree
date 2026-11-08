@@ -5,9 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.ColDiam
 public import IETFree.RauzyVeech.InvariantMeasure
-public import IETFree.TopBotFormalism
+public import IETFree.RauzyVeech.Path
 
 /-!
 # The ray condition, and the positive blocks that yield it
@@ -24,7 +23,7 @@ The a.e. assembly — richness plus the uniform bound on the entries gives those
 gives the ray condition a.e. — is in `IETFree/UniqueErgodicity/MainTheorem.lean`, above the modules
 that prove its two inputs.
 
-Why the definitions live *here*: `RauzyVeech/PosBlocks.lean`, `RayPointwise.lean` and
+Why the definitions live *here*: `RauzyVeech/PosBlocks.lean`, `Ray/Pointwise.lean` and
 `RichPath/*` all state their results with `RayCondition` or `HasPositiveBlocks`, so the notions must
 sit below them; the assembly, which needs their proofs, sits above.
 
@@ -40,6 +39,8 @@ positive Rauzy matrix at every irreducible vertex, for every `2 ≤ n`
 
 open MeasureTheory Filter
 open scoped NNReal ENNReal BigOperators Topology
+
+namespace IntervalExchange.RauzyVeech
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -63,9 +64,14 @@ def HasPositiveBlocks (P : IETDatum₂ α n) (lam : α → ℝ≥0) (M : ℕ) : 
   ∀ k : ℕ, ∃ m ≥ k, HasPositiveBlockAt P lam M m
 
 /-- The **ray condition** at a length vector: every invariant probability measure carried by `[0,1)`
-has length vector proportional to `λ`. -/
+has length vector proportional to `λ`.  This is the conclusion of **Kerckhoff's criterion**
+(*Simplicial systems for interval exchange maps and measured foliations*, 1985): positive blocks on
+a nested sequence of simplices force every invariant measure onto the ray of `λ`.  The criterion
+itself is `positiveBlocksRay`. -/
 def RayCondition (P : IETDatum₂ α n) (lam : α → ℝ≥0) : Prop :=
   ∀ μ : ProbabilityMeasure ℝ, Invariant μ (P.toIET lam) → (μ : Measure ℝ) (Set.Ico (0:ℝ) 1) = 1 →
-    ∃ c : ℝ, InvariantMeasure.lambdaOf μ P lam = c • (fun a : α => (lam a : ℝ))
+    ∃ c : ℝ, lambdaOf μ P lam = c • (fun a : α => (lam a : ℝ))
+
+end IntervalExchange.RauzyVeech
 
 end

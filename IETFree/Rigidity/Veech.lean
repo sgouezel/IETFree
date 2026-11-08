@@ -19,7 +19,7 @@ The assembly of the a.e. rigidity statement from two ingredients:
 * `Rigidity/Hit.lean` — the hitting lemma, used below in the strengthened form `ae_exists_hit_base`
   (proved here privately, bounding the base length at `w` itself rather than at the *deeper* node
   `w ++ γ₀`);
-* `Rigidity/RigidStep.lean` — the rigid step `IETFree.Rigidity.Internal.rigid_step`.
+* `Rigidity/RigidStep.lean` — the rigid step `IntervalExchange.Rigidity.Internal.rigid_step`.
 
 The good node is assembled here as well, as the private `exists_good_node_uniform`: it is the
 form the rigid step needs, and it is stated with `M` before `δ` (see below).
@@ -51,18 +51,13 @@ many precisions `ε = 1/(k+1)` (`ae_all_iff`) and transported to every `ε > 0` 
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
+open IntervalExchange.RauzyVeech IntervalExchange.RauzyVeech.RichPath
 
-namespace IETFree.Rigidity
+namespace IntervalExchange.Rigidity
+
 namespace Internal
 
-/-! ## 1. The precision `deltaOf` -/
-
-/-- `deltaOf ε M` is positive. -/
-private theorem deltaOf_pos {ε : ℝ} (hε : 0 < ε) (M : ℕ) : 0 < deltaOf ε M := by
-  rw [deltaOf]
-  exact lt_min (by norm_num) (div_pos hε (by positivity))
-
-/-! ## 2. From cylinder membership to the type rule
+/-! ## 1. From cylinder membership to the type rule
 
 The next five lemmas are the tree of BLUEPRINT §4.4: they say that a point of the cylinder of a word
 follows the Rauzy type rule along it, and they are what makes the good node independent of the
@@ -82,85 +77,81 @@ private theorem mem_simplexCyl_of_append {α : Type*} [Fintype α] [DecidableEq 
 
 /-- A Rauzy step keeps the length vector strictly positive. -/
 private theorem hatLam_pos {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
-    {P : IETDatum₂ α n} {lam : α → ℝ≥0} (hpos : ∀ a, 0 < lam a) {e : Bool}
-    (hstep : TowerTrue.StepOK P lam e) : ∀ a, 0 < Tower.hatLam P e lam a := by
-  intro a
-  rw [Tower.hatLam]
+    {P : IETDatum₂ α n} {lam : α → ℝ≥0} (hpos : Positive lam) {e : Bool}
+    (hstep : IsRauzyStep P lam e) (a : α) : 0 < hatLam P e lam a := by
+  rw [hatLam]
   by_cases ha : a = P.last e
   · rw [ite_eq_left ha]
     subst ha
     cases e with
     | false =>
-      rw [TowerTrue.stepOK_false_iff] at hstep
+      rw [isRauzyStep_false_iff] at hstep
       exact tsub_pos_of_lt hstep
     | true =>
-      rw [TowerTrue.stepOK_true_iff] at hstep
+      rw [isRauzyStep_true_iff] at hstep
       exact tsub_pos_of_lt hstep
   · rw [ite_eq_right ha]
     exact hpos a
 
-/-- The renormalised length vector stays strictly positive along an `IterOK` word. -/
-private theorem lamAfter_pos_of_iterOK {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
-    [NeZero n] {P : IETDatum₂ α n} {lam : α → ℝ≥0} (hpos : ∀ a, 0 < lam a) {γ : List Bool}
-    (hOK : TowerTrue.IterOK P lam γ) : ∀ a, 0 < Tower.lamAfter P γ lam a := by
+/-- The renormalised length vector stays strictly positive along an `IsRauzyPath` word. -/
+private theorem lamAfter_pos_of_isRauzyPath {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
+    [NeZero n] {P : IETDatum₂ α n} {lam : α → ℝ≥0} (hpos : Positive lam) {γ : List Bool}
+    (hOK : IsRauzyPath P lam γ) (a : α) : 0 < lamAfter P γ lam a := by
   induction γ generalizing P lam with
-  | nil => exact hpos
+  | nil => exact hpos a
   | cons e es ih =>
-    have h1 : TowerTrue.StepOK P lam e := by
-      rw [TowerTrue.IterOK] at hOK
+    have h1 : IsRauzyStep P lam e := by
+      rw [IsRauzyPath] at hOK
       exact hOK.1
-    have h2 : TowerTrue.IterOK (P.rvStep e) (Tower.hatLam P e lam) es := by
-      rw [TowerTrue.IterOK] at hOK
+    have h2 : IsRauzyPath (P.rvStep e) (hatLam P e lam) es := by
+      rw [IsRauzyPath] at hOK
       exact hOK.2
-    rw [Tower.lamAfter_cons]
+    rw [lamAfter_cons]
     exact ih (hatLam_pos hpos h1) h2
 
 /-- **A point of a cylinder follows the word**: membership of `lam` in the cylinder of `γ` forces
 the Rauzy type rule along `γ`. -/
-private theorem iterOK_of_mem_simplexCyl {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
-    [NeZero n] {P : IETDatum₂ α n} (hP : P.Irreducible) (hn : 2 ≤ n) :
-    ∀ (γ : List Bool) {lam : α → ℝ≥0}, lam ∈ IETDatum₂.simplexCyl P γ →
-      TowerTrue.IterOK P lam γ := by
-  intro γ
+private theorem isRauzyPath_of_mem_simplexCyl {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
+    [NeZero n] {P : IETDatum₂ α n} (hP : P.Irreducible) (hn : 2 ≤ n) (γ : List Bool)
+    {lam : α → ℝ≥0} (hmem : lam ∈ IETDatum₂.simplexCyl P γ) : IsRauzyPath P lam γ := by
   induction γ using List.reverseRecOn with
-  | nil => intro lam _; trivial
+  | nil => trivial
   | append_singleton γ e ih =>
-    intro lam hmem
     obtain ⟨hmemγ, w, hw, hlt⟩ :=
       (IETDatum₂.mem_simplexCyl_append_iff P hP hn γ e lam).mp hmem
-    have hOKγ : TowerTrue.IterOK P lam γ := ih hmemγ
+    have hOKγ : IsRauzyPath P lam γ := ih hmemγ
     have hnil : lam ∈ IETDatum₂.simplexCyl P ([] : List Bool) := by
       simpa using mem_simplexCyl_of_append hP hn ([] : List Bool) γ hmemγ
     have hpos (a) : 0 < lam a := ((IETDatum₂.mem_simplexCyl_nil_iff P lam).mp hnil).2 a
-    have hposA (a) : 0 < Tower.lamAfter P γ lam a := lamAfter_pos_of_iterOK hpos hOKγ a
-    have hren : IETDatum₂.IsRenorm P γ lam (fun a => (Tower.lamAfter P γ lam a : ℝ)) :=
+    have hposA (a) : 0 < lamAfter P γ lam a := lamAfter_pos_of_isRauzyPath hpos hOKγ a
+    have hren : IETDatum₂.IsRenorm P γ lam (fun a => (lamAfter P γ lam a : ℝ)) :=
       (IETDatum₂.isRenorm_iff P γ lam _).mpr
-        ⟨hposA, (IterGlue.qApply_lamAfter P hP hn γ lam hOKγ).symm⟩
-    have hw_eq : w = fun a => (Tower.lamAfter P γ lam a : ℝ) :=
+        ⟨hposA, (qApply_lamAfter P hP hn γ lam hOKγ).symm⟩
+    have hw_eq : w = fun a => (lamAfter P γ lam a : ℝ) :=
       IETDatum₂.IsRenorm.unique hP hn hw hren
-    have hcmp : Tower.lamAfter P γ lam ((IETDatum₂.vertex P γ).last (!e))
-        < Tower.lamAfter P γ lam ((IETDatum₂.vertex P γ).last e) := by
-      have h1 : ((Tower.lamAfter P γ lam ((IETDatum₂.vertex P γ).last (!e)) : ℝ))
-          < ((Tower.lamAfter P γ lam ((IETDatum₂.vertex P γ).last e) : ℝ)) := by
+    have hcmp : lamAfter P γ lam ((IETDatum₂.vertex P γ).last (!e))
+        < lamAfter P γ lam ((IETDatum₂.vertex P γ).last e) := by
+      have h1 : ((lamAfter P γ lam ((IETDatum₂.vertex P γ).last (!e)) : ℝ))
+          < ((lamAfter P γ lam ((IETDatum₂.vertex P γ).last e) : ℝ)) := by
         have h1a := congrFun hw_eq ((IETDatum₂.vertex P γ).last (!e))
         have h1b := congrFun hw_eq ((IETDatum₂.vertex P γ).last e)
         rw [← h1a, ← h1b]
         exact hlt
       exact_mod_cast h1
-    exact (IterGlue2.iterOK_append_singleton P lam γ e).mpr
-      ⟨hOKγ, (IterGlue2.stepOK_last_iff (IETDatum₂.vertex P γ)
-        (Tower.lamAfter P γ lam) e).mpr hcmp⟩
+    exact (isRauzyPath_append_singleton P lam γ e).mpr
+      ⟨hOKγ, (isRauzyStep_last_iff (IETDatum₂.vertex P γ)
+        (lamAfter P γ lam) e).mpr hcmp⟩
 
 /-- The sum of the natural-number parts of a family of nonnegative integers is the natural-number
 part of the sum. -/
-private theorem sum_toNat {ι : Type*} [Fintype ι] (f : ι → ℤ) (hf : ∀ i, 0 ≤ f i) :
+theorem sum_toNat {ι : Type*} [Fintype ι] (f : ι → ℤ) (hf : ∀ i, 0 ≤ f i) :
     (∑ i, (f i).toNat) = (∑ i, f i).toNat := by
   have h : ((∑ i, (f i).toNat : ℕ) : ℤ) = ∑ i, f i := by
     rw [Nat.cast_sum]
     exact Finset.sum_congr rfl fun i _ => Int.toNat_of_nonneg (hf i)
   rw [← h, Int.toNat_natCast]
 
-/-! ## 3. The good node, with the comparability constant fixed first -/
+/-! ## 2. The good node, with the comparability constant fixed first -/
 
 /-- **The good node, uniform in the precision.**  There is a vertex `π₁` reachable from `P`, a
 positive cycle `Bw` at it, a letter `b` and a bound `M ≥ 2`, such that the node `w ++ Bw` has
@@ -180,7 +171,7 @@ private theorem exists_good_node_uniform {α : Type*} [Fintype α] [DecidableEq 
       (Bw : List Bool) (b : α) (M : ℕ),
       1 < M ∧
       (∀ (w : List Bool), IETDatum₂.vertex P w = π₁ → ∀ c : α,
-        height P (w ++ Bw) c ≤ M * height P (w ++ Bw) b) ∧
+        IETDatum₂.Path.height P (w ++ Bw) c ≤ M * IETDatum₂.Path.height P (w ++ Bw) b) ∧
       ∀ δ : ℝ, 0 < δ → ∃ K : ℕ, ∀ (w : List Bool), IETDatum₂.vertex P w = π₁ →
         ∀ {lam : α → ℝ≥0},
           lam ∈ IETDatum₂.simplexCyl P (w ++ Bw ++ List.replicate K true) →
@@ -189,7 +180,7 @@ private theorem exists_good_node_uniform {α : Type*} [Fintype α] [DecidableEq 
   have hπ₁ : π₁.Irreducible := by
     rw [← hu]
     exact IETDatum₂.vertex_irreducible P u hP
-  obtain ⟨Bw, Mℤ, hMℤ, hcyc, hbounded⟩ := exists_pos_cycle π₁ hπ₁ hn
+  obtain ⟨Bw, Mℤ, hMℤ, hcyc, hbounded⟩ := exists_pos_cycle π₁ hπ₁
   set b : α := π₁.piBottom.symm 0 with hb
   have hlast : π₁.last true = b := by rw [hb]; exact hx
   set M : ℕ := Mℤ.natAbs with hMset
@@ -208,7 +199,7 @@ private theorem exists_good_node_uniform {α : Type*} [Fintype α] [DecidableEq 
     simpa using h
   -- the comparability of the heights, uniform in the prefix
   have hdom (w : List Bool) (hw : IETDatum₂.vertex P w = π₁) (c : α) :
-    height P (w ++ Bw) c ≤ M * height P (w ++ Bw) b := by
+    IETDatum₂.Path.height P (w ++ Bw) c ≤ M * IETDatum₂.Path.height P (w ++ Bw) b := by
     have hQw : IETDatum₂.Path.Q P (w ++ Bw)
         = IETDatum₂.Path.Q P w * IETDatum₂.Path.Q π₁ Bw := by
       rw [IETDatum₂.Path.Q_append, hw]
@@ -218,18 +209,18 @@ private theorem exists_good_node_uniform {α : Type*} [Fintype α] [DecidableEq 
     rw [← hQw] at hcol
     have hSb : (0 : ℤ) ≤ ∑ a, IETDatum₂.Path.Q P (w ++ Bw) a b :=
       Finset.sum_nonneg (fun a _ => IETDatum₂.Path.Q_nonneg P (w ++ Bw) a b)
-    have hc : height P (w ++ Bw) c
+    have hc : IETDatum₂.Path.height P (w ++ Bw) c
         = (∑ a, IETDatum₂.Path.Q P (w ++ Bw) a c).toNat :=
       sum_toNat _ (fun a => IETDatum₂.Path.Q_nonneg P (w ++ Bw) a c)
-    have hb' : height P (w ++ Bw) b
+    have hb' : IETDatum₂.Path.height P (w ++ Bw) b
         = (∑ a, IETDatum₂.Path.Q P (w ++ Bw) a b).toNat :=
       sum_toNat _ (fun a => IETDatum₂.Path.Q_nonneg P (w ++ Bw) a b)
-    calc height P (w ++ Bw) c
+    calc IETDatum₂.Path.height P (w ++ Bw) c
         = (∑ a, IETDatum₂.Path.Q P (w ++ Bw) a c).toNat := hc
       _ ≤ (Mℤ * ∑ a, IETDatum₂.Path.Q P (w ++ Bw) a b).toNat := Int.toNat_le_toNat hcol
       _ = Mℤ.toNat * (∑ a, IETDatum₂.Path.Q P (w ++ Bw) a b).toNat :=
             Int.toNat_mul hMℤ0 hSb
-      _ = M * height P (w ++ Bw) b := by rw [htoNat, hb']
+      _ = M * IETDatum₂.Path.height P (w ++ Bw) b := by rw [htoNat, hb']
   -- the big cell at the node `w ++ Bw`, from a run long enough for the prescribed `δ`
   have hbig (δ : ℝ) (hδ : 0 < δ) : ∃ K : ℕ, ∀ (w : List Bool), IETDatum₂.vertex P w =
       π₁ → ∀ {lam : α → ℝ≥0},
@@ -255,24 +246,25 @@ private theorem exists_good_node_uniform {α : Type*} [Fintype α] [DecidableEq 
         (w ++ Bw ++ List.replicate K true) lam).mp hmem
       have hmemγ : lam ∈ IETDatum₂.simplexCyl P (w ++ Bw) :=
         mem_simplexCyl_of_append hP hn (w ++ Bw) (List.replicate K true) hmem
-      have hOKγ : TowerTrue.IterOK P lam (w ++ Bw) :=
-        iterOK_of_mem_simplexCyl hP hn (w ++ Bw) hmemγ
-      have hσ : (fun a => (Tower.lamAfter P (w ++ Bw) lam a : ℝ))
-          = IETDatum₂.qApply (IETDatum₂.Path.Q π₁ (List.replicate K true)) σ' := by
+      have hOKγ : IsRauzyPath P lam (w ++ Bw) :=
+        isRauzyPath_of_mem_simplexCyl hP hn (w ++ Bw) hmemγ
+      have hσ : (fun a => (lamAfter P (w ++ Bw) lam a : ℝ))
+          = qApply (IETDatum₂.Path.Q π₁ (List.replicate K true)) σ' := by
         refine IETDatum₂.injective_qApply_Q P hP hn (w ++ Bw) ?_
-        have h1 : IETDatum₂.qApply (IETDatum₂.Path.Q P (w ++ Bw))
-            (fun a => (Tower.lamAfter P (w ++ Bw) lam a : ℝ)) = fun a => (lam a : ℝ) :=
-          IterGlue.qApply_lamAfter P hP hn (w ++ Bw) lam hOKγ
-        have h2 : IETDatum₂.qApply (IETDatum₂.Path.Q P (w ++ Bw))
-            (IETDatum₂.qApply (IETDatum₂.Path.Q π₁ (List.replicate K true)) σ')
+        have h1 : qApply (IETDatum₂.Path.Q P (w ++ Bw))
+            (fun a => (lamAfter P (w ++ Bw) lam a : ℝ)) = fun a => (lam a : ℝ) :=
+          qApply_lamAfter P hP hn (w ++ Bw) lam hOKγ
+        have h2 : qApply (IETDatum₂.Path.Q P (w ++ Bw))
+            (qApply (IETDatum₂.Path.Q π₁ (List.replicate K true)) σ')
               = fun a => (lam a : ℝ) := by
           have hv : IETDatum₂.vertex P (w ++ Bw) = π₁ := by
             rw [IETDatum₂.vertex_append, hw, hcyc]
-          rw [← IETDatum₂.qApply_mul, ← hv, ← IETDatum₂.Path.Q_append]
+          rw [← qApply_mul, ← hv, ← IETDatum₂.Path.Q_append]
           exact hσ'eq.symm
         exact h1.trans h2.symm
       have hcone := bigCell_of_mem_cone π₁ hπ₁ hn hx hδ hδ1 hK hpos' hσ
-      change (1 - δ) * baseLen P (w ++ Bw) lam ≤ (Tower.lamAfter P (w ++ Bw) lam b : ℝ)
+      -- restated in the `baseLen`-folded shape that `simpa [baseLen] using hcone` lands on
+      change (1 - δ) * baseLen P (w ++ Bw) lam ≤ (lamAfter P (w ++ Bw) lam b : ℝ)
       rw [← hlast]
       simpa [baseLen] using hcone
     · -- for `δ > 1` the big-cell inequality is trivial
@@ -280,24 +272,25 @@ private theorem exists_good_node_uniform {α : Type*} [Fintype α] [DecidableEq 
       refine ⟨0, fun w _hw lam _hmem => ?_⟩
       have h1 : 1 - δ < 0 := by linarith
       have h2 : (0 : ℝ) ≤ baseLen P (w ++ Bw) lam :=
-        Finset.sum_nonneg (fun a _ => (Tower.lamAfter P (w ++ Bw) lam a).coe_nonneg)
-      have h3 : (0 : ℝ) ≤ (Tower.lamAfter P (w ++ Bw) lam b : ℝ) :=
-        (Tower.lamAfter P (w ++ Bw) lam b).coe_nonneg
-      change (1 - δ) * baseLen P (w ++ Bw) lam ≤ (Tower.lamAfter P (w ++ Bw) lam b : ℝ)
+        Finset.sum_nonneg (fun a _ => (lamAfter P (w ++ Bw) lam a).coe_nonneg)
+      have h3 : (0 : ℝ) ≤ (lamAfter P (w ++ Bw) lam b : ℝ) :=
+        (lamAfter P (w ++ Bw) lam b).coe_nonneg
+      -- `baseLen` written out, so that `nlinarith` sees the expression `h1` speaks about
+      change (1 - δ) * baseLen P (w ++ Bw) lam ≤ (lamAfter P (w ++ Bw) lam b : ℝ)
       nlinarith
   exact ⟨π₁, ⟨u, hu⟩, Bw, b, M, hM1, hdom, hbig⟩
 
-/-! ## 4. Monotonicity of `IterOK` under prefixes -/
+/-! ## 3. Monotonicity of `IsRauzyPath` under prefixes -/
 
-/-- A prefix of an `IterOK` word is `IterOK`. -/
-private theorem iterOK_of_append_left {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
-    {P : IETDatum₂ α n} {lam : α → ℝ≥0} {γ δ : List Bool}
-    (h : TowerTrue.IterOK P lam (γ ++ δ)) : TowerTrue.IterOK P lam γ := by
+/-- A prefix of an `IsRauzyPath` word is `IsRauzyPath`. -/
+private theorem isRauzyPath_of_append_left {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ}
+    [NeZero n] {P : IETDatum₂ α n} {lam : α → ℝ≥0} {γ δ : List Bool}
+    (h : IsRauzyPath P lam (γ ++ δ)) : IsRauzyPath P lam γ := by
   induction γ generalizing P lam with
   | nil => trivial
   | cons e es ih => exact ⟨h.1, ih h.2⟩
 
-/-! ## 5. The hitting lemma with the base length at the vertex -/
+/-! ## 4. The hitting lemma with the base length at the vertex -/
 
 /-- **The hitting lemma, with the base length at the node `w`.**  The base length decreases along
 the word, so a bound at the deeper node `w ++ γ₀` gives nothing at `w ++ Bw`, where the rigid
@@ -312,9 +305,9 @@ private theorem ae_exists_hit_base {α : Type*} [Fintype α] [DecidableEq α] {n
   obtain ⟨u, hu⟩ := hπ₁
   have hrich := RichPath.richGreedyPath P hP hn π₁ u hu γ₀
   have htend := tendsto_baseLen_pathWord P hP hn
-  have haeN : ∀ᵐ lam ∂(simplexVolumeOn α), lam ∉ CylRec.Nbad P := by
+  have haeN : ∀ᵐ lam ∂(simplexVolumeOn α), lam ∉ Nbad P := by
     rw [← measure_eq_zero_iff_ae_notMem]
-    exact CylRec.measure_Nbad P hP hn
+    exact measure_Nbad P hP hn
   filter_upwards [hrich, htend, haeN] with lam hlam hlim hN
   intro N₀
   have hev : ∀ᶠ k : ℕ in atTop, baseLen P (IETDatum₂.pathWord P lam k) lam < η :=
@@ -337,7 +330,7 @@ private theorem ae_exists_hit_base {α : Type*} [Fintype α] [DecidableEq α] {n
   rw [hword]
   exact le_of_lt (hK m hmK)
 
-/-! ## 6. The assembly -/
+/-! ## 5. The assembly -/
 
 /-- **Veech's Theorem 1.4, improved**: the return time may be taken arbitrarily large. -/
 theorem ae_rigid_step {α : Type*} [Fintype α] {n : ℕ} [NeZero n]
@@ -351,11 +344,11 @@ theorem ae_rigid_step {α : Type*} [Fintype α] {n : ℕ} [NeZero n]
   have hcard : Fintype.card α ≠ 0 := by
     rw [Fintype.card_congr P.piTop, Fintype.card_fin]
     exact NeZero.ne n
-  have hmem : ∀ᵐ lam ∂(simplexVolumeOn α), lam ∈ simplexOn α :=
-    ae_mem_simplexOn_of_card_ne_zero hcard
-  have hNbad : ∀ᵐ lam ∂(simplexVolumeOn α), lam ∉ CylRec.Nbad P := by
+  have hmem : ∀ᵐ lam ∂(simplexVolumeOn α), lam ∈ simplex α :=
+    ae_mem_simplex_of_card_ne_zero hcard
+  have hNbad : ∀ᵐ lam ∂(simplexVolumeOn α), lam ∉ Nbad P := by
     rw [← measure_eq_zero_iff_ae_notMem]
-    exact CylRec.measure_Nbad P hP hn
+    exact measure_Nbad P hP hn
   have step (ε : ℝ) (N₀ : ℕ) (hε : 0 < ε) :
     ∀ᵐ lam ∂(simplexVolumeOn α),
       ∃ (q : ℕ) (t : ℝ) (B : Set ℝ),
@@ -377,21 +370,21 @@ theorem ae_rigid_step {α : Type*} [Fintype α] {n : ℕ} [NeZero n]
       hmem, hNbad] with lam hhit hlamS hN
     obtain ⟨m, _hm, w, _hwlen, hwvert, hwmem, hbasew⟩ := hhit N₁
     have hroot : lam ∈ IETDatum₂.simplexCyl P [] := by
-      have h := not_or.mp ((CylRec.mem_Nbad_iff P lam).not.mp hN)
+      have h := not_or.mp ((mem_Nbad_iff P lam).not.mp hN)
       exact not_not.mp h.2
     have hstop (γ : List Bool) : lam ∉ IETDatum₂.cylStop P γ := by
-      have h := not_or.mp ((CylRec.mem_Nbad_iff P lam).not.mp hN)
+      have h := not_or.mp ((mem_Nbad_iff P lam).not.mp hN)
       exact fun hγ => h.1 ⟨γ, hγ⟩
     have hcyl : IETDatum₂.pathWord P lam (w ++ (Bw ++ List.replicate K true)).length
         = w ++ (Bw ++ List.replicate K true) :=
       pathWord_of_mem_simplexCyl P hP hn hN hwmem
-    have hOKfull : TowerTrue.IterOK P lam (w ++ Bw ++ List.replicate K true) := by
-      have h := (IterGlue2.iterOK_pathWord P hP hn hroot hstop
+    have hOKfull : IsRauzyPath P lam (w ++ Bw ++ List.replicate K true) := by
+      have h := (isRauzyPath_pathWord P hP hn hroot hstop
         (w ++ (Bw ++ List.replicate K true)).length).1
       rw [hcyl, ← List.append_assoc] at h
       exact h
-    have hOKγ : TowerTrue.IterOK P lam (w ++ Bw) :=
-      iterOK_of_append_left (δ := List.replicate K true) hOKfull
+    have hOKγ : IsRauzyPath P lam (w ++ Bw) :=
+      isRauzyPath_of_append_left (δ := List.replicate K true) hOKfull
     have hΛ : baseLen P (w ++ Bw) lam ≤ min ε (1 / (2 * (N₁ : ℝ))) :=
       le_trans (baseLen_append_le (γ := w) (δ := Bw) hOKγ) hbasew
     have hmemrun : lam ∈ IETDatum₂.simplexCyl P (w ++ Bw ++ List.replicate K true) := by
@@ -400,7 +393,7 @@ theorem ae_rigid_step {α : Type*} [Fintype α] {n : ℕ} [NeZero n]
     have hbignode : BigCell P (w ++ Bw) lam (deltaOf ε M) b := hK w hwvert hmemrun
     obtain ⟨q, t, B, hq, ht, hsub, hmeas, hvol, hex⟩ :=
       rigid_step (N₀ := N₁) (lam := lam) (γ := w ++ Bw) (b := b) (M := M)
-        P hP hn hε hlamS hstop hM hOKγ hbignode (hdom w hwvert) hΛ
+        P hP hn hε hlamS hM hOKγ hbignode (hdom w hwvert) hΛ
     exact ⟨q, t, B, le_trans hN₁ge hq, ht, hsub, hmeas, hvol, hex⟩
   -- the countably many precisions `1/(k+1)` give every `ε > 0`
   have hfam : ∀ᵐ lam ∂(simplexVolumeOn α), ∀ p : ℕ × ℕ,
@@ -417,6 +410,7 @@ theorem ae_rigid_step {α : Type*} [Fintype α] {n : ℕ} [NeZero n]
   exact ⟨q, t, B, hq, le_trans ht hk.le, hsub, hmeas, le_trans (by linarith) hvol, hex⟩
 
 end Internal
-end IETFree.Rigidity
+
+end IntervalExchange.Rigidity
 
 end

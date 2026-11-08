@@ -6,16 +6,18 @@ Authors: Sébastien Gouëzel
 module
 
 public import IETFree.Pair.LengthMap
+public import Mathlib.Analysis.Calculus.FDeriv.Mul
+public import Mathlib.MeasureTheory.Function.Jacobian
 
 /-!
-The transfer of almost-sure statements to a rescaled sub-interval.
+# The transfer of almost-sure statements to a rescaled sub-interval
 
 Lemma 3.4 applies Theorem 2.6 to the exchange `g ∘ f` **restricted to a block and rescaled to
 `[0, 1)`**, and then transports the word back.  The measure-theoretic content of the first step is
 that rescaling a length vector to total mass `1` does not create measure from nothing: a null set of
 rescaled length vectors pulls back to a null set of length vectors.  Since the length vector of
 `g ∘ f` is almost surely absolutely continuous with respect to Lebesgue measure (Lemma 3.1,
-`BlockData.compLen_absolutelyContinuousAt`), an almost-sure statement about the *rescaled* length
+`compLen_absolutelyContinuousAt`), an almost-sure statement about the *rescaled* length
 vector of a sub-interval is an almost-sure statement about the parameters.
 
 The file proves the two ingredients, both free of any interval-exchange structure:
@@ -34,6 +36,8 @@ The file proves the two ingredients, both free of any interval-exchange structur
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
+
+namespace IntervalExchange.Pair
 
 /-- **Rescaling a length vector to total mass `1` preserves null sets.**  On the positive orthant
 (where the total mass is positive) the normalisation `y ↦ y / ∑ y` pulls null sets back to null
@@ -107,6 +111,7 @@ theorem volume_normalize_preimage_null {r : ℕ} {Z : Set (Fin r → ℝ)} (hZ :
   · have hcast' : (Fin.snoc z S ∘ Fin.castSucc : Fin r → ℝ) = z := by
       funext i
       simp [Fin.snoc_castSucc]
+    -- stated so that `hcast'`, an equality of functions, can rewrite
     change (Fin.snoc z S ∘ Fin.castSucc : Fin r → ℝ) ∈ Z'
     rwa [hcast']
   · funext j
@@ -320,7 +325,7 @@ theorem splitMap_injective {n k r : ℕ} (hk : k + r ≤ n - 1) :
     exact injective_split hk
   intro v w hvw
   refine hfun ?_
-  beta_reduce
+  simp only []
   rw [← splitMap_apply hk v, ← splitMap_apply hk w]
   rw [hA v, hA w, hvw]
 
@@ -412,6 +417,7 @@ theorem splitMapLast_injective {n k r : ℕ} (hn : 0 < n) (hr : 1 ≤ r) (hk : k
       have hm0m : m0 = m := by
         have h1 : m0.val = k - 1 := by rw [hm0]
         refine Fin.ext ?_
+        -- `Fin.ext` asks for this; stated so that `omega` sees both bounds
         show m0.val = m.val
         omega
       rw [hm0m] at hkey
@@ -444,7 +450,7 @@ theorem splitMapLast_linear_injective {n k r : ℕ} (hn : 0 < n) (hr : 1 ≤ r) 
     simpa using h
   intro v w hvw
   refine splitMapLast_injective hn hr hk ?_
-  beta_reduce
+  simp only []
   rw [← splitMapLast_apply v, ← splitMapLast_apply w]
   rw [hA v, hA w, hvw]
 
@@ -491,7 +497,7 @@ theorem rescaleSub_mem_simplexRegion {n k m : ℕ} {x : Fin (n - 1) → ℝ}
 
 /-- **Rescaling a sub-interval does not create measure.**  A null set of rescaled length vectors has
 a null preimage in the parameters of the whole length vector: full-measure sets pull back to
-full-measure sets.  With Lemma 3.1 (`BlockData.compLen_absolutelyContinuousAt`) this is what
+full-measure sets.  With Lemma 3.1 (`compLen_absolutelyContinuousAt`) this is what
 carries an almost-sure statement about the rescaled exchange of a block to the parameters.
 
 The proof splits the free coordinates of `simplexRegion n` into the `r` cell lengths of the block
@@ -561,7 +567,7 @@ theorem absolutelyContinuous_map_rescaleSub {n : ℕ} (hn : 0 < n) {k r : ℕ} (
         ext u
         simp only [hAdef, Set.mem_ofPred_eq, Set.mem_prod, Set.mem_univ, and_true]
       have hvol : (volume : Measure ((Fin (m + 1) → ℝ) × (Fin (n - 1 - (m + 1)) → ℝ)))
-          = volume.prod volume := rfl
+          = volume.prod volume := (rfl)
       rw [hprod, hvol, Measure.prod_prod, hA1]
       simp
     set A' := toMeasurable (volume : Measure ((Fin (m + 1) → ℝ)
@@ -583,7 +589,7 @@ theorem absolutelyContinuous_map_rescaleSub {n : ℕ} (hn : 0 < n) {k r : ℕ} (
         · show (fun i : Fin m => (Φ x).1 i.castSucc / ∑ j, (Φ x).1 j) ∈ Z'
           rw [h1]
           have hres : (fun i : Fin m => blockLen k (m + 1) x i.castSucc
-              / ∑ j, blockLen k (m + 1) x j) = rescaleSub k (m + 1) x := rfl
+              / ∑ j, blockLen k (m + 1) x j) = rescaleSub k (m + 1) x := (rfl)
           rw [hres]
           exact hZsub ⟨hxZ, rescaleSub_mem_simplexRegion hxO⟩
       exact subset_toMeasurable _ _ hxA
@@ -617,6 +623,7 @@ theorem absolutelyContinuous_map_rescaleSub {n : ℕ} (hn : 0 < n) {k r : ℕ} (
           have hb : (∑ j : Fin (m + 1), blockLen 0 (m + 1) x j)
               = ∑ j : Fin (m + 1), cellLen (n := m + 1) x j :=
             Finset.sum_congr rfl (fun j _ => by
+              -- `0 + j.val` is `j`: stated so that `Nat.zero_add` applies
               change cellLen (n := m + 1) x (0 + j.val) = cellLen (n := m + 1) x j
               rw [Nat.zero_add])
           rw [hb]
@@ -630,5 +637,7 @@ theorem absolutelyContinuous_map_rescaleSub {n : ℕ} (hn : 0 < n) {k r : ℕ} (
     · refine key (splitMapLast (n := n) (k := k) (r := m + 1))
         (splitMapLast_linear_injective hn (by omega) hk2) (finrank_split (by omega)) (fun x => ?_)
       rw [splitMapLast_apply (n := n) (k := k) (r := m + 1) x]
+
+end IntervalExchange.Pair
 
 end

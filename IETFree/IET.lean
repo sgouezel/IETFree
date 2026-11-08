@@ -4,11 +4,12 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sébastien Gouëzel
 -/
 module
-
-public import IETFree.CutSetMeasure
+public import IETFree.CutSet.Measure
+public import IETFree.RauzyVeech.SimplexVolume
+public import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 
 /-!
-Interval exchanges: the predicate, the explicit construction, and the group.
+# Interval exchanges: the predicate, the explicit construction, and the group
 
 `IsIET a b f` says that the bare function `f` is the identity or has a cut set.  The file then
 constructs the exchange attached to a length vector
@@ -19,12 +20,26 @@ proves the classification `exists_mkIETEquiv_eq`: every exchange is
 `mkIETFun` of the lengths and the permutation of any of its cut sets.  It closes with the type
 `IET a b` of exchanges as permutations of `ℝ` fixing the complement of `[a, b)`, and its group
 structure.
+
+## Sources
+
+The notions are Definitions 2.1 and 2.2 of Sébastien Gouëzel, *Almost every pair of interval
+exchange transformations does not generate a free group* (arXiv:2610.29993), whose Theorem 1.1
+is the target of the library; the two results that paper quotes from the literature are proved
+here, in `IETFree/RauzyVeech/` (after J.-C. Yoccoz, *Continued fraction algorithms for interval
+exchange maps: an introduction*) and `IETFree/Rigidity/` (after W. A. Veech, *Interval exchange
+transformations and measured foliations*, 1984).  `IETFree/RauzyVeech/RichPath/` follows
+Appendix A of A. Avila, S. Gouëzel and J.-C. Yoccoz, *Exponential mixing for the Teichmüller
+flow* — "AGY" in the docstrings.
 -/
 
 @[expose] public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
+
+namespace IntervalExchange
+
 /-! ## Exchanges, and the minimal cut set
 
 A cut set forces `a < b` (`IsCutSet.lt`), because `a` is one of its cuts.  So on an **empty**
@@ -56,9 +71,9 @@ theorem exists_isCutSet (h : IsIET a b f) (hab : a < b) : ∃ s, IsCutSet f a b 
   · exact ⟨s, hs⟩
 
 /-- **On an empty interval only the identity qualifies.** -/
-theorem eq_id_of_le (h : IsIET a b f) (hba : b ≤ a) : ∀ x, f x = x := by
+theorem eq_id_of_le (h : IsIET a b f) (hba : b ≤ a) (x : ℝ) : f x = x := by
   rcases h with hid | ⟨s, hs⟩
-  · exact hid
+  · exact hid x
   · exact absurd hs.lt (not_lt.mpr hba)
 
 /-- **An exchange is the identity outside its interval.** -/
@@ -98,14 +113,17 @@ theorem comp (hf : IsIET a b f) (hg : IsIET a b g) : IsIET a b (g ∘ f) := by
 end IsIET
 
 -- the data of one cut set, in scope below (`hs` stays a binder of each declaration)
-variable {f : ℝ → ℝ} {a b : ℝ} {s : Finset ℝ}
 
 /-! ## Lebesgue measure on the simplex -/
 
 /-- The free region: the `d - 1` free coordinates are positive and have total mass less than `1`,
-so that every coordinate of the image, including the last one `1 - ∑`, is positive. -/
+so that every coordinate of the image, including the last one `1 - ∑`, is positive.
+
+This is `RauzyVeech.region` at `d - 1`: the chart's own indexing (a simplex in `n + 1` dimensions
+has `n` free coordinates) is in `RauzyVeech/SimplexVolume.lean`, which needs only Mathlib, and the
+`d`-indexed form the length vectors use is this instance of it. -/
 def simplexRegion (d : ℕ) : Set (Fin (d - 1) → ℝ) :=
-  {v | (∀ i, 0 < v i) ∧ ∑ i, v i < 1}
+  RauzyVeech.region (d - 1)
 
 /-- The `d - 1` free coordinates sit below `d - 1` in the `d`-th slot of the last coordinate.
 `omega` would be shorter, but it generates an auxiliary declaration, and auxiliaries are private to
@@ -126,14 +144,24 @@ parametrisation `λ_d = 1 - ∑_{i<d} λ_i`.  Almost every point of the image is
 noncomputable def simplexVolume (d : ℕ) : Measure (Fin d → ℝ≥0) :=
   Measure.map (simplexMap d) (volume.restrict (simplexRegion d))
 
+/-- The definition of `simplexVolume`, as an equation: use it rather than `unfold` (`simp` does not
+know the equation, since `simplexVolume` is not a `simp` lemma). -/
+theorem simplexVolume_def (d : ℕ) :
+    simplexVolume d = Measure.map (simplexMap d) (volume.restrict (simplexRegion d)) := (rfl)
+
 /-- **A length vector is positive** when all its coordinates are.  This is the hypothesis under
 which the endpoints of the arrangement and the block mass behave (`leftEnd_lt_total`,
-`leftEnd_pos_of_ne_zero`, `blockMass_pos`).
+`leftEnd_pos_of_ne_zero`, `blockMass_pos`).  It is stated on an arbitrary alphabet, like
+`totalLength` and `simplex`: the `α`-indexed half of the tower writes the same hypothesis.
 
 An `abbrev`, not a `def`: it is a hypothesis, destructured with `h i` and unfolded by `rw`, in
 files across the block development, so its body has to be visible to clients. -/
-abbrev Positive {n : ℕ} (lam : Fin n → ℝ≥0) : Prop :=
-  ∀ i, 0 < lam i
+abbrev Positive {α : Type*} (lam : α → ℝ≥0) : Prop :=
+  ∀ a, 0 < lam a
+
+/-- **The total length** `Λ = ∑ lam` of a length vector, on an arbitrary alphabet: the mass of the
+interval the exchange acts on, when that interval is `[0, Λ)`. -/
+def totalLength {α : Type*} [Fintype α] (lam : α → ℝ≥0) : ℝ := ∑ a, (lam a : ℝ)
 
 /-- **The indices of a block of `n` cells**: `k < l ≤ n`.  The instance `NeZero (l - k)`, which
 `blockLam` and `mkIET1'` need to form the rescaled block, is derived here once, so that no statement
@@ -142,9 +170,9 @@ about a block has to carry it.
 Two layers use the indices: the *raw* API of `blockMass` / `blockLam` / `blockPerm` takes
 `(k) {l} (hkl : k < l) (hln : l ≤ n)` as plain arguments — it is stated for an arbitrary
 length vector, with no region in scope — and the *block-level* statements (`GoodRegion.Block`,
-`mkIET1_rescale_subinterval`, `idx_rescaleMap_aux`) take the bundle `BlockIdx n` (or a `Block`,
-which extends it).  The bundle is not threaded through the raw API: doing so would touch the ~150
-call sites of those three definitions for no change in their statements. -/
+`mkIET1_rescale_subinterval`, `idx_rescaleMap`) take the bundle `BlockIdx n` (or a `Block`,
+which extends it).  The bundle is not threaded through the raw API: the raw statements are about an
+arbitrary length vector, and the block hypothesis `k < l ≤ n` is what their proofs use. -/
 structure BlockIdx (n : ℕ) where
   /-- The index of the first cell of the block. -/
   k : ℕ
@@ -162,6 +190,13 @@ namespace BlockIdx
 where their proofs work with `⟨k, _⟩`, and a reducible definition lets `rw` and `exact` see through
 it (a regular `def` does not unfold during rewrite matching). -/
 abbrev kFin {n : ℕ} (I : BlockIdx n) : Fin n := ⟨I.k, by have := I.hkl; have := I.hln; omega⟩
+
+/-- Two block indices with the same `k` and `l` are equal: the bounds are propositions. -/
+@[ext] theorem ext {n : ℕ} {I J : BlockIdx n} (hk : I.k = J.k) (hl : I.l = J.l) : I = J := by
+  cases I; cases J
+  simp only at hk hl
+  subst hk hl
+  rfl
 
 end BlockIdx
 
@@ -208,16 +243,36 @@ theorem upperEnd_eq {n : ℕ} (lam : Fin n → ℝ≥0) (i : Fin n) :
   rw [upperEnd, leftEnd, h, Finset.sum_insert (by simp)]
   ring
 
+/-- `leftEnd` is monotone in the index. -/
+theorem leftEnd_mono {n : ℕ} (lam : Fin n → ℝ≥0) {i j : Fin n} (h : i ≤ j) :
+    leftEnd lam i ≤ leftEnd lam j := by
+  rw [leftEnd, leftEnd]
+  refine Finset.sum_le_sum_of_subset_of_nonneg (fun k hk => ?_)
+    (fun k _ _ => (lam k).coe_nonneg)
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hk ⊢
+  exact lt_of_lt_of_le hk h
+
+/-- The left end of the `(i+1)`-st interval is the right end of the `i`-th. -/
+theorem leftEnd_succ_eq_upperEnd {n : ℕ} (lam : Fin n → ℝ≥0) (i : Fin n) (h : i.val + 1 < n) :
+    leftEnd lam ⟨i.val + 1, h⟩ = upperEnd lam i := by
+  rw [leftEnd, upperEnd]
+  congr 1
+
 /-- The cells are disjoint: the right end of the `i`-th interval is at most the left end of any
-later one.  Only nonnegativity of the lengths is used. -/
+later one. -/
 theorem upperEnd_le_leftEnd {n : ℕ} (lam : Fin n → ℝ≥0) {i j : Fin n} (hij : i < j) :
     upperEnd lam i ≤ leftEnd lam j := by
-  rw [upperEnd, leftEnd]
-  refine Finset.sum_le_sum_of_subset_of_nonneg ?_ ?_
-  · intro k hk
-    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hk ⊢
-    exact lt_of_le_of_lt hk hij
-  · intro k _ _; exact (lam k).coe_nonneg
+  have hlt : i.val + 1 < n := by
+    have := j.isLt
+    rw [Fin.lt_def] at hij
+    omega
+  have h1 : leftEnd lam ⟨i.val + 1, hlt⟩ ≤ leftEnd lam j := by
+    refine leftEnd_mono lam ?_
+    rw [Fin.le_def]
+    dsimp only [Fin.val_mk]
+    rw [Fin.lt_def] at hij
+    omega
+  rwa [leftEnd_succ_eq_upperEnd lam i hlt] at h1
 
 theorem upperEnd_of_max {n : ℕ} (lam : Fin n → ℝ≥0) {i : Fin n}
     (hi : ∀ j : Fin n, j ≤ i) : upperEnd lam i = ∑ j, (lam j : ℝ) := by
@@ -235,13 +290,33 @@ theorem upperEnd_le_total {n : ℕ} (lam : Fin n → ℝ≥0) (i : Fin n) :
   exact Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _)
     (fun k _ _ => (lam k).coe_nonneg)
 
+/-- **Every cell starts before the total length**, for a positive length vector. -/
+theorem leftEnd_lt_total {n : ℕ} [NeZero n] {lam : Fin n → ℝ≥0} (hpos : Positive lam)
+    (i : Fin n) : leftEnd lam i < ∑ j, (lam j : ℝ) := by
+  obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, (Nat.sub_one_add_one (NeZero.ne n)).symm⟩
+  have hle : leftEnd lam i ≤ leftEnd lam (Fin.last m) := leftEnd_mono lam (Fin.le_last i)
+  have hu : upperEnd lam (Fin.last m) = ∑ j, (lam j : ℝ) :=
+    upperEnd_of_max lam (fun j => Fin.le_last j)
+  have h2 : upperEnd lam (Fin.last m) = leftEnd lam (Fin.last m) + (lam (Fin.last m) : ℝ) :=
+    upperEnd_eq lam _
+  have h3 : (0 : ℝ) < (lam (Fin.last m) : ℝ) := by exact_mod_cast hpos _
+  linarith
+
+/-- **A cell ends before the total length**: the left end plus the length of the `i`-th cell is at
+most `∑ j, lam j`, the cells of the bottom order being disjoint half-open intervals. -/
+theorem leftEnd_add_le_total {n : ℕ} (lam : Fin n → ℝ≥0) (i : Fin n) :
+    leftEnd lam i + (lam i : ℝ) ≤ ∑ j, (lam j : ℝ) := by
+  rw [← upperEnd_eq]
+  exact upperEnd_le_total lam i
+
 /-- The intervals whose left endpoint is at most `x`. -/
 noncomputable def idxSet {n : ℕ} (lam : Fin n → ℝ≥0) (x : ℝ) : Finset (Fin n) :=
   Finset.univ.filter (fun i : Fin n => leftEnd lam i ≤ x)
 
-/-- The set of intervals whose left endpoint is at most `x` is never empty.  Like every declaration
-copied into `Challenge.lean`, its proof must generate no auxiliary declaration — `simp` here would,
-and the comparator would then see two different constants.  `refine`/`exact` are safe. -/
+/-- The set of intervals whose left endpoint is at most `x` is never empty.
+
+The proof generates no auxiliary declaration (`refine`/`exact`, no `simp`): this statement is copied
+verbatim into `Challenge.lean`, and the two copies must elaborate to the same term. -/
 theorem idxSet_nonempty {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (x : ℝ) (hx : 0 ≤ x) :
     (idxSet lam x).Nonempty := by
   refine ⟨0, Finset.mem_filter.2 ⟨Finset.mem_univ 0, ?_⟩⟩
@@ -333,23 +408,27 @@ theorem imageLeft_nonneg {n : ℕ} (π : Equiv.Perm (Fin n)) (lam : Fin n → �
   rw [imageLeft]
   exact Finset.sum_nonneg fun j _ => (lam j).coe_nonneg
 
+/-- The cells whose image starts at or before the image of the `i`-th cell are exactly the `i`-th
+one and those before it. -/
+theorem filter_perm_le_eq_insert {n : ℕ} (π : Equiv.Perm (Fin n)) (i : Fin n) :
+    Finset.univ.filter (fun j : Fin n => π j ≤ π i)
+      = insert i (Finset.univ.filter (fun j : Fin n => π j < π i)) := by
+  ext j
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_insert]
+  constructor
+  · intro hj
+    rcases lt_or_eq_of_le hj with hlt | heq
+    · exact Or.inr hlt
+    · exact Or.inl (π.injective heq)
+  · rintro (rfl | hlt)
+    · exact le_rfl
+    · exact le_of_lt hlt
+
 theorem imageLeft_add_le_total {n : ℕ} (π : Equiv.Perm (Fin n)) (lam : Fin n → ℝ≥0)
     (i : Fin n) : imageLeft π lam i + (lam i : ℝ) ≤ ∑ j, (lam j : ℝ) := by
-  have hins : Finset.univ.filter (fun j : Fin n => π j ≤ π i)
-      = insert i (Finset.univ.filter (fun j : Fin n => π j < π i)) := by
-    ext j
-    simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_insert]
-    constructor
-    · intro hj
-      rcases lt_or_eq_of_le hj with hlt | heq
-      · exact Or.inr hlt
-      · exact Or.inl (π.injective heq)
-    · rintro (rfl | hlt)
-      · exact le_rfl
-      · exact le_of_lt hlt
   have hgoal : imageLeft π lam i + (lam i : ℝ)
       = (Finset.univ.filter (fun j : Fin n => π j ≤ π i)).sum (fun j => (lam j : ℝ)) := by
-    rw [imageLeft, hins, Finset.sum_insert (by simp)]
+    rw [imageLeft, filter_perm_le_eq_insert π i, Finset.sum_insert (by simp)]
     ring
   rw [hgoal]
   exact Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _)
@@ -383,7 +462,7 @@ theorem image_point_mem {n : ℕ} (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fi
     x + translationVector π lam i ∈ Set.Ico 0 (∑ i, (lam i : ℝ)) ∧
       imageLeft π lam i ≤ x + translationVector π lam i ∧
         x + translationVector π lam i < imageLeft π lam i + (lam i : ℝ) := by
-  have htv : translationVector π lam i = imageLeft π lam i - leftEnd lam i := rfl
+  have htv : translationVector π lam i = imageLeft π lam i - leftEnd lam i := (rfl)
   have h2' : x < leftEnd lam i + (lam i : ℝ) := by rw [upperEnd_eq] at h2; exact h2
   have h1' : 0 ≤ x + translationVector π lam i := by
     have := imageLeft_nonneg π lam i; rw [htv]; linarith
@@ -394,9 +473,8 @@ theorem image_point_mem {n : ℕ} (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fi
 /-- **The inverse relation**: the exchange with the inverse permutation and the reordered lengths
 is a left inverse. -/
 private theorem mkIETFunCore_inv_left {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin
-  n)) :
-    ∀ x, mkIETFunCore (imageLengths π lam) π.symm (mkIETFunCore lam π x) = x := by
-  intro x
+  n)) (x : ℝ) :
+    mkIETFunCore (imageLengths π lam) π.symm (mkIETFunCore lam π x) = x := by
   by_cases hx : x ∈ Set.Ico 0 (∑ i, (lam i : ℝ))
   · have htot : (∑ k, (imageLengths π lam k : ℝ)) = ∑ i, (lam i : ℝ) := sum_imageLengths π lam
     set i := idx lam x hx.1 with hi
@@ -421,7 +499,8 @@ private theorem mkIETFunCore_inv_left {n : ℕ} [NeZero n] (lam : Fin n → ℝ�
           Equiv.symm_apply_apply]
       have hB : leftEnd (imageLengths π lam) (π i) = imageLeft π lam i :=
         (imageLeft_eq_leftEnd π lam i).symm
-      rw [translationVector, translationVector, hA, hB]
+      unfold translationVector
+      rw [hA, hB]
       ring
     rw [mkIETFunCore_of_mem lam π hx, mkIETFunCore_of_mem (imageLengths π lam) π.symm hIm, hidx,
       htv]
@@ -432,9 +511,8 @@ private theorem mkIETFunCore_inv_left {n : ℕ} [NeZero n] (lam : Fin n → ℝ�
 
 /-- **The other inverse relation.** -/
 private theorem mkIETFunCore_inv_right {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin
-  n)) :
-    ∀ x, mkIETFunCore lam π (mkIETFunCore (imageLengths π lam) π.symm x) = x := by
-  intro x
+  n)) (x : ℝ) :
+    mkIETFunCore lam π (mkIETFunCore (imageLengths π lam) π.symm x) = x := by
   simpa only [imageLengths_self π lam, Equiv.symm_symm]
     using mkIETFunCore_inv_left (imageLengths π lam) π.symm x
 
@@ -446,6 +524,9 @@ noncomputable def mkIETFun {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : 
     x + translationVector π lam (idx lam (x - a) (by linarith [hx.1]))
   else x
 
+/-- **The value of an interval exchange inside its interval.**  The formula is an implementation
+detail of `mkIETFun` and is **deliberately not a `simp` lemma**: `mkIETFun` is meant to stay folded,
+and the formula is unfolded by naming this lemma where the formula is what one wants. -/
 theorem mkIETFun_of_mem {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
     (a : ℝ) {x : ℝ} (hx : x ∈ Set.Ico a (a + ∑ i, (lam i : ℝ))) :
     mkIETFun lam π a x
@@ -453,6 +534,9 @@ theorem mkIETFun_of_mem {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equ
   unfold mkIETFun
   exact dite_eq_left hx
 
+/-- **The value of an interval exchange outside its interval** — the identity.  Like the `of_mem`
+form, **deliberately not a `simp` lemma**: the `if` in `mkIETFun` is an implementation
+detail. -/
 theorem mkIETFun_of_notMem {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
     (a : ℝ) {x : ℝ} (hx : x ∉ Set.Ico a (a + ∑ i, (lam i : ℝ))) :
     mkIETFun lam π a x = x := by
@@ -478,7 +562,7 @@ private theorem mkIETFun_eq_shift {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0)
 theorem mkIETFun_inv_left {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
     (a x : ℝ) : mkIETFun (imageLengths π lam) π.symm a (mkIETFun lam π a x) = x := by
   rw [mkIETFun_eq_shift, mkIETFun_eq_shift,
-    show a + mkIETFunCore lam π (x - a) - a = mkIETFunCore lam π (x - a) from by ring,
+    add_sub_cancel_left,
     mkIETFunCore_inv_left]
   ring
 
@@ -492,6 +576,7 @@ noncomputable def mkIETEquiv {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π 
   left_inv := mkIETFun_inv_left lam π a
   right_inv := fun x => by
     -- the right inverse is the left inverse of the inverse permutation
+    -- (the `show` in it cancels the `+ a - a` so that the shift lemma fires)
     rw [mkIETFun_eq_shift, mkIETFun_eq_shift,
       show a + mkIETFunCore (imageLengths π lam) π.symm (x - a) - a
         = mkIETFunCore (imageLengths π lam) π.symm (x - a) from by ring,
@@ -502,16 +587,33 @@ noncomputable def mkIETEquiv {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π 
 shifted by `a` is `mkIETFun lam π a`.  This is an equality of *functions* (a coercion lemma, and a
 definitional one), not the value at a point; hence `coe_mkIETEquiv` and not `mkIETEquiv_apply`. -/
 theorem coe_mkIETEquiv {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
-    (a : ℝ) : ⇑(mkIETEquiv lam π a) = mkIETFun lam π a := rfl
+    (a : ℝ) : ⇑(mkIETEquiv lam π a) = mkIETFun lam π a := (rfl)
+
+/-- **The evaluation of a word in two equivs**: the `Equiv`-valued evaluation of `w` at a pair of
+permutations `(f, g)` of `ℝ` — the form the main theorem is stated with, since its exchanges are
+`mkIETEquiv p π 0 : Equiv ℝ ℝ` rather than bundled exchanges.  The evaluation on bundled exchanges
+is `IntervalExchange.Pair.evalWord`, and `evalWord_toEquiv` says the two agree.
+
+The generator map is `Fin.cases f fun _ => g` rather than `if i = 0 then f else g`: the latter
+carries a `DecidableEq (Fin 2)` instance whose proof is an auxiliary declaration of the module it is
+written in, and this definition is copied verbatim into `Challenge.lean`, where the comparator
+compares the two elaborated bodies. -/
+noncomputable def evalWordEquiv (w : FreeGroup (Fin 2)) (f g : Equiv ℝ ℝ) : Equiv ℝ ℝ :=
+  FreeGroup.lift (Fin.cases f fun _ => g) w
 
 /-! ## The group of exchanges on `[a, b)` -/
 
+end IntervalExchange
+
 namespace Equiv
+open IntervalExchange
 
 /-- An equiv is an exchange on `[a, b)` if its underlying function is. -/
-abbrev IsIET (a b : ℝ) (e : Equiv ℝ ℝ) : Prop := _root_.IsIET a b (⇑e)
+abbrev IsIET (a b : ℝ) (e : Equiv ℝ ℝ) : Prop := IntervalExchange.IsIET a b (⇑e)
 
 end Equiv
+
+namespace IntervalExchange
 
 /-- **The cuts of `mkIETFun lam π a` on `[a, a + t)`**: the cell starts `a + leftEnd lam i`,
 together with `a + ∑ lam` when `[a, a + t)` is longer than the total length.  This is the cut set
@@ -539,6 +641,17 @@ theorem isCutSet_mkIETCuts {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : 
     refine Finset.mem_union.mpr (Or.inl ?_)
     refine Finset.mem_image.mpr ⟨0, Finset.mem_univ 0, ?_⟩
     exact h0
+  -- the bounds on the cell of a point of `[a, a + T)`, once, for the three places that need them
+  have cell_bounds {u : ℝ} (hu0 : 0 ≤ u - a) (huT : u - a < T) :
+      u - a ∈ Set.Ico 0 (∑ i, (lam i : ℝ)) ∧
+        leftEnd lam (idx lam (u - a) hu0) ≤ u - a ∧
+        u - a < leftEnd lam (idx lam (u - a) hu0) + (lam (idx lam (u - a) hu0) : ℝ) := by
+    have hmem : u - a ∈ Set.Ico 0 (∑ i, (lam i : ℝ)) := by
+      refine ⟨hu0, ?_⟩
+      rw [← hT]; exact huT
+    exact ⟨hmem, idx_mem lam _ hu0, by
+      have := lt_upperEnd_idx lam hmem
+      rwa [upperEnd_eq] at this⟩
   refine ⟨?_, ?_, ?_, hamem, ?_, ?_⟩
   · -- identity below `a`
     intro x hx
@@ -552,16 +665,10 @@ theorem isCutSet_mkIETCuts {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : 
     by_cases hxT : x ∈ Set.Ico a (a + T)
     · rw [mkIETFun_of_mem lam π a hxT]
       set i := idx lam (x - a) (by linarith [hxT.1]) with hi
-      have h1 : leftEnd lam i ≤ x - a := idx_mem lam (x - a) (by linarith [hxT.1])
-      have hxT' : x - a ∈ Set.Ico 0 (∑ i, (lam i : ℝ)) := by
-        refine ⟨by linarith [hxT.1], ?_⟩
-        rw [← hT]; linarith [hxT.2]
-      have h2 : x - a < leftEnd lam i + (lam i : ℝ) := by
-        have := lt_upperEnd_idx lam hxT'
-        rwa [upperEnd_eq] at this
+      obtain ⟨-, h1, h2⟩ := cell_bounds (u := x) (by linarith [hxT.1]) (by linarith [hxT.2])
       have h3 : 0 ≤ imageLeft π lam i := imageLeft_nonneg π lam i
       have h4 : imageLeft π lam i + (lam i : ℝ) ≤ T := imageLeft_add_le_total π lam i
-      have htv : translationVector π lam i = imageLeft π lam i - leftEnd lam i := rfl
+      have htv : translationVector π lam i = imageLeft π lam i - leftEnd lam i := (rfl)
       constructor
       · rw [htv]; linarith
       · rw [htv]; linarith
@@ -581,20 +688,8 @@ theorem isCutSet_mkIETCuts {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : 
         rw [mkIETFun_of_mem lam π a hyT, mkIETFun_of_mem lam π a hxT]
         set i := idx lam (x - a) (by linarith [hxT.1]) with hi
         set j := idx lam (y - a) (by linarith [hyT.1]) with hj
-        have hxi' : x - a ∈ Set.Ico 0 (∑ i, (lam i : ℝ)) := by
-          refine ⟨by linarith [hxT.1], ?_⟩
-          rw [← hT]; linarith [hxT.2]
-        have hxi : leftEnd lam i ≤ x - a ∧ x - a < leftEnd lam i + (lam i : ℝ) := by
-          refine ⟨idx_mem lam _ (by linarith [hxT.1]), ?_⟩
-          have := lt_upperEnd_idx lam hxi'
-          rwa [upperEnd_eq] at this
-        have hyj' : y - a ∈ Set.Ico 0 (∑ i, (lam i : ℝ)) := by
-          refine ⟨by linarith [hyT.1], ?_⟩
-          rw [← hT]; linarith [hyT.2]
-        have hyj : leftEnd lam j ≤ y - a ∧ y - a < leftEnd lam j + (lam j : ℝ) := by
-          refine ⟨idx_mem lam _ (by linarith [hyT.1]), ?_⟩
-          have := lt_upperEnd_idx lam hyj'
-          rwa [upperEnd_eq] at this
+        obtain ⟨-, hxi1, hxi2⟩ := cell_bounds (u := x) (by linarith [hxT.1]) (by linarith [hxT.2])
+        obtain ⟨-, hyj1, hyj2⟩ := cell_bounds (u := y) (by linarith [hyT.1]) (by linarith [hyT.2])
         have hij : i = j := by
           by_contra hne
           rcases lt_or_gt_of_ne hne with hlt | hlt
@@ -604,21 +699,21 @@ theorem isCutSet_mkIETCuts {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : 
               exact Finset.mem_union_left _ (Finset.mem_image_of_mem _ (Finset.mem_univ j))
             have hxj : x - a < leftEnd lam j := by
               have h1 := upperEnd_le_leftEnd lam hlt
-              linarith [hxi.2, upperEnd_eq lam i]
+              linarith [hxi2, upperEnd_eq lam i]
             exact hns' ⟨a + leftEnd lam j, hsep, by
               constructor
               · linarith [hxj, min_le_left x y, min_le_right x y]
-              · linarith [hyj.1, le_max_left x y, le_max_right x y]⟩
+              · linarith [hyj1, le_max_left x y, le_max_right x y]⟩
           · have hsep : a + leftEnd lam i ∈ cuts := by
               rw [hcuts]
               exact Finset.mem_union_left _ (Finset.mem_image_of_mem _ (Finset.mem_univ i))
             have hyi : y - a < leftEnd lam i := by
               have h1 := upperEnd_le_leftEnd lam hlt
-              linarith [hyj.2, upperEnd_eq lam j]
+              linarith [hyj2, upperEnd_eq lam j]
             exact hns' ⟨a + leftEnd lam i, hsep, by
               constructor
               · linarith [hyi, min_le_left x y, min_le_right x y]
-              · linarith [hxi.1, le_max_left x y, le_max_right x y]⟩
+              · linarith [hxi1, le_max_left x y, le_max_right x y]⟩
         rw [hij]
         ring
       · -- `y` is outside: the cut `a + T` separates them
@@ -677,6 +772,8 @@ theorem isIET_mkIETEquiv {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Eq
     (a : ℝ) {t : ℝ} (ht : (∑ i, (lam i : ℝ)) ≤ t) : IsIET a (a + t) (mkIETEquiv lam π a) := by
   exact isIET_mkIETFun lam π a ht
 
+variable {f : ℝ → ℝ} {a b : ℝ} {s : Finset ℝ}
+
 /-! ## The exchange attached to a cut set
 
 Every cut set, not only the minimal one, gives a length vector and a permutation: the lengths of its
@@ -691,13 +788,8 @@ noncomputable def IsCutSet.lengths (hs : IsCutSet f a b s) :
   fun i => ⟨hs.cellLen i, by
     have h1 := hs.cellPos_of_lt i.isLt
     have h2 := hs.cellStarts_lt_cellPos i
-    unfold IsCutSet.cellLen
+    rw [IsCutSet.cellLen_def]
     rw [h1]; linarith⟩
-
-/-- **The permutation of a cut set**: the `i`-th cell goes to the position of its image. -/
-noncomputable def IsCutSet.perm (hs : IsCutSet f a b s)
-    (hinj : Function.Injective f) : Equiv.Perm (Fin s.card) :=
-  hs.cellPerm hinj
 
 /-- The lengths of the cells of a cut set add up to `b - a`. -/
 theorem IsCutSet.sum_lengths (hs : IsCutSet f a b s) :
@@ -713,23 +805,23 @@ theorem IsCutSet.leftEnd_lengths (hs : IsCutSet f a b s)
 /-- The left end of the image of the `i`-th cell, in the data of the cut set. -/
 theorem IsCutSet.imageLeft_lengths {a b : ℝ} {e : Equiv ℝ ℝ} {s : Finset ℝ}
     (hs : IsCutSet (⇑e) a b s) (i : Fin s.card) :
-    imageLeft (hs.perm e.injective) hs.lengths i = ⇑e (hs.cellStarts i) - a :=
+    imageLeft (hs.cellPerm e.injective) hs.lengths i = ⇑e (hs.cellStarts i) - a :=
   hs.sum_cellLen_image i
 
 /-- The translation vector on the `i`-th cell, in the data of the cut set. -/
 theorem IsCutSet.translationVector_lengths {a b : ℝ} {e : Equiv ℝ ℝ} {s : Finset ℝ}
     (hs : IsCutSet (⇑e) a b s) (i : Fin s.card) :
-    translationVector (hs.perm e.injective) hs.lengths i
+    translationVector (hs.cellPerm e.injective) hs.lengths i
       = ⇑e (hs.cellStarts i) - hs.cellStarts i := by
-  rw [translationVector, hs.imageLeft_lengths i, hs.leftEnd_lengths i]
+  unfold translationVector
+  rw [hs.imageLeft_lengths i, hs.leftEnd_lengths i]
   ring
 
 /-- **An exchange is `mkIETFun` of its cut-set data**: on the cells of the cut set it shifts by the
 translation vector of the corresponding cell, and outside `[a, b)` both are the identity. -/
 theorem IsCutSet.eq_mkIETFun {a b : ℝ} {e : Equiv ℝ ℝ} {s : Finset ℝ} [NeZero s.card]
-    (hs : IsCutSet (⇑e) a b s) :
-    ∀ x : ℝ, ⇑e x = mkIETFun hs.lengths (hs.perm e.injective) a x := by
-  intro x
+    (hs : IsCutSet (⇑e) a b s) (x : ℝ) :
+    ⇑e x = mkIETFun hs.lengths (hs.cellPerm e.injective) a x := by
   have hsum := hs.sum_lengths
   by_cases hx : x ∈ Set.Ico a b
   · -- `x` lies in the `i`-th cell
@@ -737,7 +829,7 @@ theorem IsCutSet.eq_mkIETFun {a b : ℝ} {e : Equiv ℝ ℝ} {s : Finset ℝ} [N
     have hleft : leftEnd hs.lengths i = hs.cellStarts i - a := hs.leftEnd_lengths i
     have hi_mem : leftEnd hs.lengths i ≤ x - a := by rw [hleft]; linarith [hi.1]
     have hβ : (hs.lengths i : ℝ) = hs.cellPos (i.val + 1) - hs.cellStarts i := by
-      have hc : (hs.lengths i : ℝ) = hs.cellLen i := rfl
+      have hc : (hs.lengths i : ℝ) = hs.cellLen i := (rfl)
       rw [hc, IsCutSet.cellLen, hs.cellPos_of_lt i.isLt]
     have hi_lt : x - a < leftEnd hs.lengths i + (hs.lengths i : ℝ) := by
       rw [hleft, hβ]; linarith [hi.2]
@@ -777,10 +869,13 @@ theorem exists_mkIETEquiv_eq {a b : ℝ} {e : Equiv ℝ ℝ} (hab : a ≤ b) (h 
   · -- the cut set of `e` gives the data
     obtain ⟨s, hs⟩ := h.exists_isCutSet hlt
     have : NeZero s.card := ⟨hs.card_pos.ne'⟩
-    exact ⟨s.card, ‹NeZero s.card›, hs.lengths, hs.perm e.injective, hs.sum_lengths,
+    exact ⟨s.card, ‹NeZero s.card›, hs.lengths, hs.cellPerm e.injective, hs.sum_lengths,
       Equiv.ext hs.eq_mkIETFun⟩
 
+end IntervalExchange
+
 namespace Equiv
+open IntervalExchange
 
 /-- **The inverse of an exchange is an exchange**, from the classification: the inverse of
 `mkIETEquiv lam π a` is `mkIETEquiv` of the reordered lengths and the inverse permutation. -/
@@ -790,7 +885,7 @@ theorem IsIET.symm {a b : ℝ} {e : Equiv ℝ ℝ} (h : IsIET a b e) : IsIET a b
     have hsum' : (∑ i, (imageLengths π lam i : ℝ)) = b - a := by
       rw [sum_imageLengths]; exact hsum
     have h1 := isIET_mkIETEquiv (imageLengths π lam) π.symm a (t := b - a) (le_of_eq hsum')
-    rw [show a + (b - a) = b from by ring] at h1
+    rw [add_sub_cancel] at h1
     exact h1
   · -- the interval is empty, so `e` is the identity and so is its inverse
     have hid (x) : e x = x := h.eq_id_of_le (le_of_lt hba) x
@@ -803,8 +898,10 @@ theorem IsIET.symm {a b : ℝ} {e : Equiv ℝ ℝ} (h : IsIET a b e) : IsIET a b
 
 end Equiv
 
-/-- The interval exchange transformations of `[a, b)`: the permutations of `ℝ` that fix everything
-outside and are piecewise translations inside. -/
+namespace IntervalExchange
+
+/-- The interval exchange transformations of `[a, b)`: the permutations of `ℝ` that fix
+everything outside and are piecewise translations inside. -/
 structure IET (a b : ℝ) extends Equiv ℝ ℝ where
   /-- The piecewise-translation datum. -/
   isIET : Equiv.IsIET a b toEquiv
@@ -828,12 +925,8 @@ theorem injective (f : IET a b) : Function.Injective f := by
   have h' := congrArg (fun t => f.toEquiv.symm t) h
   simpa using h'
 
-/-- The identity exchange. -/
-def id (a b : ℝ) : IET a b where
-  toEquiv := Equiv.refl ℝ
-  isIET := IsIET.id a b
-
-instance : One (IET a b) := ⟨id a b⟩
+instance : One (IET a b) where
+  one := ⟨Equiv.refl ℝ, IsIET.id a b⟩
 instance : Mul (IET a b) :=
   ⟨fun g f => ⟨f.toEquiv.trans g.toEquiv, by
     have h := IsIET.comp (f := ⇑f.toEquiv) (g := ⇑g.toEquiv) f.isIET g.isIET
@@ -855,17 +948,25 @@ instance : Group (IET a b) where
 @[simp] theorem apply_symm_apply' (f : IET a b) (x : ℝ) : f (f⁻¹ x) = x :=
   Equiv.apply_symm_apply f.toEquiv x
 
-@[simp] theorem mul_apply (g h : IET a b) (x : ℝ) : (g * h) x = g (h x) := rfl
+@[simp] theorem mul_apply (g h : IET a b) (x : ℝ) : (g * h) x = g (h x) := (rfl)
 
-@[simp] theorem one_apply (x : ℝ) : (1 : IET a b) x = x := rfl
+@[simp] theorem one_apply (x : ℝ) : (1 : IET a b) x = x := (rfl)
+
+/-- The coercion of an exchange to the underlying permutation, as a monoid homomorphism. -/
+def coeHom {a b : ℝ} : IET a b →* Equiv.Perm ℝ where
+  toFun e := e.toEquiv
+  map_one' := rfl
+  map_mul' _ _ := rfl
+
+@[simp] theorem coeHom_apply {a b : ℝ} (e : IET a b) :
+    coeHom e = e.toEquiv := (rfl)
 
 /-- **Iterating an exchange**: the `n`-th power in the group `IET a b` is the `n`-th iterate of the
 underlying function.  (The paper's ergodicity statements are about iterates.) -/
-theorem pow_apply_iterate (f : IET a b) (n : ℕ) : ∀ x : ℝ, (f ^ n) x = f^[n] x := by
-  induction n with
-  | zero => intro x; rfl
+theorem pow_apply_iterate (f : IET a b) (n : ℕ) (x : ℝ) : (f ^ n) x = f^[n] x := by
+  induction n generalizing x with
+  | zero => rfl
   | succ k ih =>
-    intro x
     rw [pow_succ, mul_apply, Function.iterate_succ_apply, ih]
 
 end IET
@@ -882,7 +983,7 @@ noncomputable def mkIET1' {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : E
 /-- **The function of `mkIET1'`**: the unfolding of the definition, `mkIET1' lam π hl` acting on `ℝ`
 is `mkIETFun lam π 0`. -/
 theorem coe_mkIET1' {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
-    (hl : (∑ i, lam i) = 1) : ⇑(mkIET1' lam π hl) = mkIETFun lam π 0 := rfl
+    (hl : (∑ i, lam i) = 1) : ⇑(mkIET1' lam π hl) = mkIETFun lam π 0 := (rfl)
 
 /-- The pointwise form of `coe_mkIET1'`. -/
 theorem mkIET1_eq_mkIETFun {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
@@ -902,8 +1003,9 @@ theorem isCutSet_mkIET1 {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equ
 
 /-- **The exchange of a length vector and a permutation, total in the length vector**:
 `mkIET1 lam π` is `mkIET1' lam π h` when the lengths sum to `1`, and the identity otherwise.  This
-is the form the a.e. statements use — they quantify over all length vectors, and `lam ∈ simplex n`
-holds almost everywhere (`ae_mem_simplexOn_of_card_ne_zero`, `ae_mem_simplexOn_of_nonempty`), so no
+is the form the a.e. statements use — they quantify over all length vectors, and
+`lam ∈ simplex (Fin n)` holds almost everywhere
+(`ae_mem_simplex_of_card_ne_zero`, `ae_mem_simplex_of_nonempty`), so no
 hypothesis on `lam` has to be carried in the statement. -/
 noncomputable def mkIET1 {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n)) :
     IET 0 1 :=
@@ -925,13 +1027,23 @@ theorem coe_mkIET1 {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Pe
   rw [mkIET1_of_mem hl]
   exact coe_mkIET1' lam π hl
 
+namespace IET
+
 /-- **An exchange is measurable.** -/
-theorem IET.measurable {a b : ℝ} (f : IET a b) : Measurable f := by
+theorem measurable {a b : ℝ} (f : IET a b) : Measurable f := by
   rcases f.isIET with hid | ⟨s, hs⟩
   · have : (f : ℝ → ℝ) = fun x => x := funext hid
     rw [this]
     exact measurable_id
   · exact hs.measurable
+
+/-- Iterates of an exchange are measurable: the group power is the iterate
+(`pow_apply_iterate`), so this is `Measurable.iterate` applied to the
+measurability of one power. -/
+theorem measurable_pow {a b : ℝ} (f : IET a b) (n : ℕ) : Measurable ⇑(f ^ n) := by
+  have h : ⇑(f ^ n) = f^[n] := funext fun x => pow_apply_iterate f n x
+  rw [h]
+  exact (measurable f).iterate n
 
 /-! ## Lebesgue measure on `[0, 1)`
 
@@ -940,27 +1052,58 @@ interval, as a probability measure.  Both developments above the single-exchange
 free-group one (`IETFree/Pair/`) and the unique-ergodicity one (`IETFree/UniqueErgodicity/`) — so
 it is defined here, with the measure-preservation lemmas they share. -/
 
+end IET
+
 /-- Lebesgue measure on `[0, 1)`, as a probability measure on `ℝ`. -/
 noncomputable def unitMeas : Measure ℝ := volume.restrict (Set.Ico 0 1)
 
 noncomputable instance : IsProbabilityMeasure unitMeas := ⟨by simp [unitMeas]⟩
 
+/-- **Lebesgue measure on `[0, 1)` has mass `1` there** — the one proof of this fact in the library.
+Its real-valued form is `Measure.real` applied to it. -/
+theorem unitMeas_Ico : unitMeas (Set.Ico (0 : ℝ) 1) = 1 := by
+  rw [unitMeas, Measure.restrict_apply measurableSet_Ico, Set.inter_self, Real.volume_Ico,
+    sub_zero, ENNReal.ofReal_one]
+
+/-- The measure of a complement, for `unitMeas.real`. -/
+theorem unitMeas_real_compl (A : Set ℝ) (hA : MeasurableSet A) :
+    unitMeas.real Aᶜ = 1 - unitMeas.real A := by
+  have h : unitMeas.real A + unitMeas.real Aᶜ = 1 := by
+    rw [measureReal_add_measureReal_compl (μ := unitMeas) hA]
+    simp [measureReal_def]
+  linarith
+
+/-- A closed interval has `unitMeas.real`-measure at most its length. -/
+theorem unitMeas_real_Icc_le (a b : ℝ) : unitMeas.real (Set.Icc a b) ≤ max (b - a) 0 := by
+  have h1 : unitMeas (Set.Icc a b) ≤ volume (Set.Icc a b) := by
+    rw [unitMeas, Measure.restrict_apply measurableSet_Icc]
+    exact measure_mono Set.inter_subset_left
+  have h2 : volume (Set.Icc a b) = ENNReal.ofReal (b - a) := Real.volume_Icc
+  calc unitMeas.real (Set.Icc a b) = (unitMeas (Set.Icc a b)).toReal := (rfl)
+    _ ≤ (volume (Set.Icc a b)).toReal :=
+        ENNReal.toReal_mono (by rw [h2]; exact ENNReal.ofReal_ne_top) h1
+    _ = max (b - a) 0 := by rw [h2, ENNReal.toReal_ofReal']
+
+namespace IET
+
 /-- **Exchanges preserve the measure** on `[0, 1)`. -/
-theorem IET.unitMeas_preimage (f : IET 0 1) {A : Set ℝ} (hA : MeasurableSet A) :
+theorem unitMeas_preimage (f : IET 0 1) {A : Set ℝ} (hA : MeasurableSet A) :
     unitMeas (⇑f ⁻¹' A) = unitMeas A := by
   have h1 : (volume.restrict (Set.Ico 0 1)) (⇑f ⁻¹' A)
       = volume (⇑f ⁻¹' A ∩ Set.Ico 0 1) :=
-    Measure.restrict_apply (hA.preimage (IET.measurable f))
+    Measure.restrict_apply (hA.preimage (measurable f))
   have h2 : (volume.restrict (Set.Ico 0 1)) A = volume (A ∩ Set.Ico 0 1) :=
     Measure.restrict_apply hA
   rw [unitMeas, h1, h2]
   obtain ⟨s, hs⟩ := f.isIET.exists_isCutSet zero_lt_one
-  exact Equiv.IsIET.measure_preimage (e := f.toEquiv) hs hA
+  exact IsCutSet.measure_preimage (e := f.toEquiv) hs hA
 
 /-- **Exchanges preserve the measure**: real-valued form. -/
-theorem IET.unitMeas_real_preimage (f : IET 0 1) {A : Set ℝ} (hA : MeasurableSet A) :
+theorem unitMeas_real_preimage (f : IET 0 1) {A : Set ℝ} (hA : MeasurableSet A) :
     unitMeas.real (⇑f ⁻¹' A) = unitMeas.real A := by
-  rw [Measure.real, Measure.real, IET.unitMeas_preimage f hA]
+  rw [Measure.real, Measure.real, unitMeas_preimage f hA]
+
+end IET
 
 /-! ## Invariant measures, unique ergodicity, and rigidity
 
@@ -971,12 +1114,14 @@ stated with the reference measure `unitMeas` above, which is why they come after
 
 /-- Invariance of a probability measure under an exchange: `μ ∘ f⁻¹ = μ`.
 
-**The measure is required to live on `[0, 1)`**, which is the `μ (Ico 0 1) = 1` of `UniqueErgodic`
-below: an exchange is the identity off the interval it is built on (`mkIETFun_of_notMem`), so every
+This is the invariance equation alone.  **The carrier condition `μ (Ico 0 1) = 1` is not part of
+it**: an exchange is the identity off the interval it is built on (`mkIETFun_of_notMem`), so every
 probability measure on `[0, 1)ᶜ` is invariant, and the unrestricted `∃! μ, Invariant μ f` is false
-for every exchange (the Dirac mass at `2` is invariant alongside Lebesgue's); with
-`μ (Ico 0 1) = 1`, `μ ↦ μ|_{[0,1)}` is injective.  Why no hypothesis on the length vector is needed
-is a remark about the a.e. statement, in `IETFree/TopBotFormalism.lean`. -/
+for every exchange (the Dirac mass at `2` is invariant alongside Lebesgue's).  Each consumer
+conjoins the carrier condition — `UniqueErgodic` below, `RayCondition` in
+`RauzyVeech/MainComponents.lean`, `length_injective_of_floors` — and with it `μ ↦ μ|_{[0,1)}` is
+injective.  Why no hypothesis on the length vector is needed is a remark about the a.e. statement,
+in `IETFree/TopBotFormalism.lean`. -/
 def Invariant (μ : ProbabilityMeasure ℝ) (f : IET 0 1) : Prop := (μ : Measure ℝ).map ⇑f = μ
 
 /-- **Definition 2.1 of the paper**: unique ergodicity — there is exactly one invariant probability
@@ -984,15 +1129,17 @@ measure carried by `[0, 1)`.
 
 This is the weak form.  The strong form — the Birkhoff averages of every continuous test function
 converge to their integral, uniformly over the initial point — is not the definition: it is the
-theorem `IETFree.UniqueErgodicity.uniformBirkhoff_of_uniqueErgodic`, proved by the transfer
+theorem `IntervalExchange.UniqueErgodicity.uniformBirkhoff_of_uniqueErgodic`, proved by the transfer
 argument of `IETFree/UniqueErgodicity/` and stated there as `UniformBirkhoff`. -/
 def UniqueErgodic (f : IET 0 1) : Prop :=
   ∃! μ : ProbabilityMeasure ℝ, Invariant μ f ∧ (μ : Measure ℝ) (Set.Ico (0 : ℝ) 1) = 1
 
-/-- **Definition 2.2 of the paper**: rigid by translations — some powers of the exchange are
-translations on sets whose measure tends to `1`.  That almost every irreducible exchange is rigid is
-Veech's rigidity theorem, `veechRigidity` in `IETFree/Pair/Irreducible.lean`, is proved in
-`IETFree/Rigidity/` (`Rigidity.ae_isRigidByTranslations`). -/
+/-- **Definition 2.2 of the paper, with the sets required to lie in `[0, 1)`**: rigid by
+translations — some powers of the exchange are translations on sets whose measure tends to `1`.
+The extra conjunct `B n ⊆ [0, 1)` is a strengthening, recorded in `formalization.yaml`.  That
+almost every irreducible exchange is rigid is Veech's rigidity theorem: `veechRigidity` in
+`IETFree/Pair/Irreducible.lean`, proved in `IETFree/Rigidity/`
+(`Rigidity.ae_isRigidByTranslations`). -/
 def IsRigidByTranslations (f : IET 0 1) : Prop :=
   ∃ q : ℕ → ℕ, ∃ t : ℕ → ℝ, ∃ B : ℕ → Set ℝ,
     Tendsto q atTop atTop ∧ Tendsto t atTop (nhds 0) ∧
@@ -1039,21 +1186,11 @@ theorem simplexMap_castSucc {m : ℕ} (v : Fin m → ℝ) (j : Fin m) :
 /-! ## Irreducibility of a permutation -/
 
 /-- The paper's irreducibility of a permutation: the only initial segment `{i | i ≤ k}` mapped into
-itself by `π` is the whole of `Fin d`. For `(π₀,π₁) = (id,π₁)` this is the source's condition (2.5).
+itself by `π` is the whole of `Fin d`. For `(π₀,π₁) = (id,π₁)` this is Yoccoz's condition (2.5).
 -/
 def IsIrreduciblePerm {d : ℕ} (π : Equiv.Perm (Fin d)) : Prop :=
   ∀ k : Fin d, (∀ i : Fin d, i ≤ k → π i ≤ k) → ∀ i : Fin d, i ≤ k
 
-/-! ## Monotonicity of the left endpoint -/
-
-/-- **The left endpoint is monotone.** -/
-theorem leftEnd_le {n : ℕ} (lam : Fin n → ℝ≥0) {i j : Fin n} (hij : i ≤ j) :
-    leftEnd lam i ≤ leftEnd lam j := by
-  rw [leftEnd, leftEnd]
-  refine Finset.sum_le_sum_of_subset_of_nonneg ?_ ?_
-  · intro k hk
-    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hk ⊢
-    exact lt_of_lt_of_le hk hij
-  · intro k _ _; exact (lam k).coe_nonneg
+end IntervalExchange
 
 end

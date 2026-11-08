@@ -6,9 +6,10 @@ Authors: Sébastien Gouëzel
 module
 
 public import IETFree.Pair.ReductionData
+import Mathlib.Tactic.Linarith.NNRealPreprocessor
 
 /-!
-The presentation of `g ∘ f`: the length vector `ν` and the permutation `ρ`.
+# The presentation of `g ∘ f`: the length vector `ν` and the permutation `ρ`
 
 `IsCompPresentation` is the paper's sentence "the map `g ∘ f` is an interval exchange on `[0, 1)`
 with respect to a permutation `ρ` which does not depend on the parameters in `O`, with singularity
@@ -29,8 +30,11 @@ changes only where it vanishes", on a ball: `pos_on_ball_of_vanish_imp` / `sign_
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
+open IntervalExchange.IET
 
-/-! ## 2. The presentation of `g ∘ f`: the length vector `ν` and the permutation `ρ`
+namespace IntervalExchange.Pair
+
+/-! ## 1. The presentation of `g ∘ f`: the length vector `ν` and the permutation `ρ`
 
 The paper: "the map `gf` is an interval exchange transformation on `[0,1)` with respect to a
 permutation `ρ` which does not depend on the parameters in `O`.  Its singularity set is
@@ -125,6 +129,10 @@ structure IsCompPresentation {d e : ℕ} [NeZero d] [NeZero e] (lam : Fin d → 
 noncomputable def compLen {n : ℕ} {s : Fin (n + 1) → ℝ} (hmono : StrictMono s) (i : Fin n) : ℝ≥0 :=
   ⟨s i.succ - s i.castSucc, sub_nonneg.mpr (le_of_lt (hmono (Fin.castSucc_lt_succ (i := i))))⟩
 
+/-- **`compLen` in `ℝ`**: the `i`-th cell length is the increment of the monotone list. -/
+theorem compLen_coe {n : ℕ} {s : Fin (n + 1) → ℝ} (hmono : StrictMono s) (i : Fin n) :
+    (compLen hmono i : ℝ) = s i.succ - s i.castSucc := (rfl)
+
 /-- **The length vector of a presentation at a single point**, from the monotonicity of the list *at
 that point*.  This is the only form of the length vector: a global monotonicity hypothesis
 `∀ q, StrictMono fun k => s k q` is not derivable from the data of a good region (the list is known
@@ -150,7 +158,8 @@ theorem exists_cell_of_strictMono {n : ℕ} {s : Fin (n + 1) → ℝ} (hmono : S
   have hne : S.Nonempty :=
     ⟨⟨0, hn⟩, by
       simp only [hS, Finset.mem_filter, Finset.mem_univ, true_and]
-      rw [show s (⟨0, hn⟩ : Fin n).castSucc = s 0 from rfl, h0]
+      have hcast : s (⟨0, hn⟩ : Fin n).castSucc = s 0 := (rfl)
+      rw [hcast, h0]
       exact hx.1⟩
   refine ⟨S.max' hne, (Finset.mem_filter.mp (Finset.max'_mem S hne)).2, ?_⟩
   by_contra hcon
@@ -160,7 +169,6 @@ theorem exists_cell_of_strictMono {n : ℕ} {s : Fin (n + 1) → ℝ} (hmono : S
   · -- the next cell start is also at most `x`, contradicting maximality
     have hj : (⟨(S.max' hne).val + 1, hlt⟩ : Fin n) ∈ S := by
       simp only [hS, Finset.mem_filter, Finset.mem_univ, true_and]
-      rw [show s (⟨(S.max' hne).val + 1, hlt⟩ : Fin n).castSucc = s (S.max' hne).succ from rfl]
       exact hcon
     have hle := Finset.le_max' S _ hj
     simp only [Fin.le_def] at hle
@@ -212,7 +220,7 @@ theorem simplexMap_of_lt {d : ℕ} {v : Fin (d - 1) → ℝ} (hv : v ∈ simplex
 /-- **Membership in the simplex from the free region**, in the index form `Fin (n - 1)` (the
 version in `Diophantine.lean` is stated for `p + 1`). -/
 theorem simplexMap_mem_simplex_fin {n : ℕ} [NeZero n] {v : Fin (n - 1) → ℝ}
-    (hpos : ∀ i, 0 < v i) (hsum : ∑ i, v i < 1) : simplexMap n v ∈ simplex n := by
+    (hpos : ∀ i, 0 < v i) (hsum : ∑ i, v i < 1) : simplexMap n v ∈ simplex (Fin n) := by
   obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, (Nat.sub_one_add_one (NeZero.ne n)).symm⟩
   exact simplexMap_mem_simplex hpos hsum
 
@@ -259,7 +267,7 @@ coefficient functions to be constant in their index; the `μ` one is not, becaus
 and `0` at the last index (`j ≠ 0`). -/
 theorem leftEnd_ne_sum_lam_of_good {d e : ℕ} [NeZero d] [NeZero e]
     {p : (Fin d → ℝ≥0) × (Fin e → ℝ≥0)}
-    (hp : ¬ IsBadParam (toReal p)) (hl : p.1 ∈ simplex d) (hm : p.2 ∈ simplex e)
+    (hp : ¬ IsBadParam (toReal p)) (hl : p.1 ∈ simplex (Fin d)) (hm : p.2 ∈ simplex (Fin e))
     {j : Fin e} (hj : j ≠ 0) (S : Finset (Fin d)) :
     leftEnd p.2 j ≠ ∑ i ∈ S, (p.1 i : ℝ) := by
   intro h
@@ -288,9 +296,9 @@ theorem leftEnd_ne_sum_lam_of_good {d e : ℕ} [NeZero d] [NeZero e]
   obtain ⟨-, hbconst, -⟩ := relation_of_good hp ha2 hb2 hl hm hrel
   have h0 := hbconst 0
   have hj0 : (0 : Fin e) < j := Fin.pos_iff_ne_zero.mpr hj
-  have hlast : ¬ ((lastIdx e) < j) := by
+  have hlast : ¬ ((lastPos e) < j) := by
     rw [Fin.lt_def]
-    rw [lastIdx_val]
+    rw [lastPos_val]
     have := j.isLt
     omega
   simp only [hb] at h0
@@ -304,12 +312,12 @@ lengths `imageLengths π λ`; the strictness at the left end is where goodness i
 (`leftEnd_ne_sum_lam_of_good`, with `S = {i | π i < m}`). -/
 theorem exists_lt_imageLeft_of_good {d e : ℕ} [NeZero d] [NeZero e]
     {p : (Fin d → ℝ≥0) × (Fin e → ℝ≥0)}
-    (hp : ¬ IsBadParam (toReal p)) (hl : p.1 ∈ simplex d) (hm : p.2 ∈ simplex e)
+    (hp : ¬ IsBadParam (toReal p)) (hl : p.1 ∈ simplex (Fin d)) (hm : p.2 ∈ simplex (Fin e))
     (hpos : ∀ i, 0 < p.2 i) (π : Equiv.Perm (Fin d)) {j : Fin e} (hj : j ≠ 0) :
     ∃ k : Fin d, imageLeft π p.1 k < leftEnd p.2 j ∧
       leftEnd p.2 j < imageLeft π p.1 k + (p.1 k : ℝ) := by
-  have hsum : (∑ i, (p.1 i : ℝ)) = 1 := by rw [← NNReal.coe_sum]; exact_mod_cast hl
-  have hsum2 : (∑ i, (p.2 i : ℝ)) = 1 := by rw [← NNReal.coe_sum]; exact_mod_cast hm
+  have hsum : (∑ i, (p.1 i : ℝ)) = 1 := sum_coe_eq_one (hl)
+  have hsum2 : (∑ i, (p.2 i : ℝ)) = 1 := sum_coe_eq_one (hm)
   have hy0 : 0 ≤ leftEnd p.2 j := leftEnd_nonneg p.2 j
   have hy1 : leftEnd p.2 j < ∑ i, (imageLengths π p.1 i : ℝ) := by
     rw [sum_imageLengths π p.1, hsum]
@@ -345,12 +353,12 @@ theorem exists_lt_imageLeft_of_good {d e : ℕ} [NeZero d] [NeZero e]
 /-- **`f⁻¹` of a point strictly inside the image of a cell**: the translate back by the translation
 vector of that cell. -/
 theorem mkIET1_inv_of_lt_imageLeft {d e : ℕ} [NeZero d]
-    {p : (Fin d → ℝ≥0) × (Fin e → ℝ≥0)} (hl : p.1 ∈ simplex d)
+    {p : (Fin d → ℝ≥0) × (Fin e → ℝ≥0)} (hl : p.1 ∈ simplex (Fin d))
     {π : Equiv.Perm (Fin d)} {k : Fin d} {y : ℝ}
     (h1 : imageLeft π p.1 k < y) (h2 : y < imageLeft π p.1 k + (p.1 k : ℝ)) :
     (mkIET1' p.1 π hl)⁻¹ y = y - translationVector π p.1 k := by
-  have hsum : (∑ i, (p.1 i : ℝ)) = 1 := by rw [← NNReal.coe_sum]; exact_mod_cast hl
-  have htv : translationVector π p.1 k = imageLeft π p.1 k - leftEnd p.1 k := rfl
+  have hsum : (∑ i, (p.1 i : ℝ)) = 1 := sum_coe_eq_one (hl)
+  have htv : translationVector π p.1 k = imageLeft π p.1 k - leftEnd p.1 k := (rfl)
   set x := y - translationVector π p.1 k with hx
   have hmem : x ∈ Set.Ico (leftEnd p.1 k) (upperEnd p.1 k) := by
     rw [hx, htv, upperEnd_eq]
@@ -365,7 +373,9 @@ theorem mkIET1_inv_of_lt_imageLeft {d e : ℕ} [NeZero d]
     simp only [sub_zero, hidx]
     rw [hx]
     ring
-  rw [← happ, IET.symm_apply_apply]
+  rw [← happ, symm_apply_apply]
+
+end IntervalExchange.Pair
 
 /-- **Pointwise evaluation of a finite sum of affine maps.**  Mathlib has no `AffineMap.sum_apply`,
 and `Finset.sum_apply` does not fire because of the coercion `AffineMap → function`. -/
@@ -378,8 +388,10 @@ theorem AffineMap.sum_apply {ι : Type*} {k V1 P1 V2 : Type*} [Ring k] [AddCommG
   | empty => simp
   | insert a s ha ih =>
       rw [Finset.sum_insert ha, Finset.sum_insert ha]
-      have h1 (f) (g : P1 →ᵃ[k] V2) : (f + g) q = f q + g q := rfl
+      have h1 (f) (g : P1 →ᵃ[k] V2) : (f + g) q = f q + g q := (rfl)
       rw [h1, ih]
+
+namespace IntervalExchange.Pair
 
 /-- **A tiling of `[0,1)` by intervals gives the partial sums**: if the intervals
 `Ico (P i) (P i + ν i)` are pairwise disjoint and cover `[0,1)`, then the left end of each is the
@@ -446,7 +458,7 @@ theorem affine_comb {d e : ℕ} (G : ParamAffine d e) (q₀ q : PReal d e) (t : 
   have h1 : (1 - t) • q₀ + t • q = t • (q - q₀) + q₀ := by
     rw [smul_sub, sub_smul, one_smul]
     module
-  have h1' : t • (q - q₀) + q₀ = (t • (q - q₀)) +ᵥ q₀ := rfl
+  have h1' : t • (q - q₀) + q₀ = (t • (q - q₀)) +ᵥ q₀ := (rfl)
   rw [h1, h1', AffineMap.map_vadd, map_smul, smul_eq_mul]
   have h2 : G.linear (q - q₀) = G.linear q - G.linear q₀ := map_sub _ _ _
   rw [h2, h0 q, h0 q₀, vadd_eq_add]
@@ -463,9 +475,8 @@ theorem comb_zero {b c : ℝ} (hc : 0 < c) (hb : b < 0) :
 `G` to vanish identically.  The ball is convex, so the affine combination
 `(1 - t) • q₀ + t • q` (`affine_comb`) stays inside it. -/
 theorem pos_on_ball_of_vanish_imp {d e : ℕ} {G : ParamAffine d e} {q₀ : PReal d e} {ε : ℝ}
-    (hε : 0 < ε) (hv : ∀ q ∈ Metric.ball q₀ ε, G q = 0 → G = 0) (h0 : 0 < G q₀) :
-    ∀ q ∈ Metric.ball q₀ ε, 0 < G q := by
-  intro q hq
+    (hε : 0 < ε) (hv : ∀ q ∈ Metric.ball q₀ ε, G q = 0 → G = 0) (h0 : 0 < G q₀)
+    (q : PReal d e) (hq : q ∈ Metric.ball q₀ ε) : 0 < G q := by
   by_contra hcon
   rw [not_lt] at hcon
   rcases lt_or_eq_of_le hcon with hq' | hq'
@@ -491,9 +502,8 @@ theorem pos_on_ball_of_vanish_imp {d e : ℕ} {G : ParamAffine d e} {q₀ : PRea
 vanishes at `q₀` and hence identically, or it is strictly positive there and
 `pos_on_ball_of_vanish_imp` applies. -/
 theorem nonneg_on_ball_of_vanish_imp {d e : ℕ} {G : ParamAffine d e} {q₀ : PReal d e} {ε : ℝ}
-    (hε : 0 < ε) (hv : ∀ q ∈ Metric.ball q₀ ε, G q = 0 → G = 0) (h0 : 0 ≤ G q₀) :
-    ∀ q ∈ Metric.ball q₀ ε, 0 ≤ G q := by
-  intro q hq
+    (hε : 0 < ε) (hv : ∀ q ∈ Metric.ball q₀ ε, G q = 0 → G = 0) (h0 : 0 ≤ G q₀)
+    (q : PReal d e) (hq : q ∈ Metric.ball q₀ ε) : 0 ≤ G q := by
   rcases eq_or_lt_of_le h0 with h | h
   · have hG : G = 0 := hv q₀ (Metric.mem_ball_self hε) h.symm
     rw [hG]
@@ -502,7 +512,7 @@ theorem nonneg_on_ball_of_vanish_imp {d e : ℕ} {G : ParamAffine d e} {q₀ : P
 
 /-- **The sign of an affine function is constant on a ball** on which it does not vanish. -/
 theorem sign_congr_on_ball {d e : ℕ} (G : ParamAffine d e) {q₀ : PReal d e} {ε : ℝ}
-    (_hε : 0 < ε) (hne : ∀ q ∈ Metric.ball q₀ ε, G q ≠ 0) {q q' : PReal d e}
+    (hne : ∀ q ∈ Metric.ball q₀ ε, G q ≠ 0) {q q' : PReal d e}
     (hq : q ∈ Metric.ball q₀ ε) (hq' : q' ∈ Metric.ball q₀ ε) :
     0 < G q ↔ 0 < G q' := by
   constructor
@@ -545,17 +555,17 @@ theorem sign_congr_on_ball {d e : ℕ} (G : ParamAffine d e) {q₀ : PReal d e} 
 /-- **The pointwise order of a family of affine functions is constant on a ball on which the values
 never collide.** -/
 theorem lt_iff_lt_of_ne_on_ball {d e m : ℕ} (F : Fin m → ParamAffine d e) {q₀ : PReal d e} {ε : ℝ}
-    (hε : 0 < ε) (hne : ∀ (i j : Fin m), i ≠ j → ∀ q ∈ Metric.ball q₀ ε, F i q ≠ F j q)
+    (hne : ∀ (i j : Fin m), i ≠ j → ∀ q ∈ Metric.ball q₀ ε, F i q ≠ F j q)
     {q q' : PReal d e} (hq : q ∈ Metric.ball q₀ ε) (hq' : q' ∈ Metric.ball q₀ ε) (i j : Fin m) :
     F i q < F j q ↔ F i q' < F j q' := by
   rcases eq_or_ne i j with rfl | hij
   · simp
   have hsign : (0 < F j q - F i q) ↔ (0 < F j q' - F i q') := by
-    have h1 : (F j - F i) q = F j q - F i q := rfl
-    have h2 : (F j - F i) q' = F j q' - F i q' := rfl
+    have h1 : (F j - F i) q = F j q - F i q := (rfl)
+    have h2 : (F j - F i) q' = F j q' - F i q' := (rfl)
     rw [← h1, ← h2]
-    refine sign_congr_on_ball (F j - F i) hε (fun x hx => ?_) hq hq'
-    rw [show (F j - F i) x = F j x - F i x from rfl]
+    refine sign_congr_on_ball (F j - F i) (fun x hx => ?_) hq hq'
+    rw [AffineMap.coe_sub, Pi.sub_apply]
     exact sub_ne_zero.mpr (Ne.symm (hne i j hij x hx))
   constructor
   · intro hlt
@@ -592,9 +602,9 @@ theorem exists_rank_perm {d e m : ℕ} (F : Fin m → ParamAffine d e) {q₀ : P
       have h1 : (⟨F i q₀, hmem i⟩ : T) = ⟨F j q₀, hmem j⟩ := iso.symm.injective hij
       exact hinj (congrArg Subtype.val h1)
     · intro k
-      obtain ⟨i, -, hi⟩ := Finset.mem_image.mp (show (iso k : T).val ∈ T from (iso k).2)
+      obtain ⟨i, -, hi⟩ := Finset.mem_image.mp (iso k).2
       refine ⟨i, ?_⟩
-      beta_reduce
+      simp only []
       have h1 : (⟨F i q₀, hmem i⟩ : T) = iso k := Subtype.ext hi
       rw [h1, iso.symm_apply_apply]
   refine ⟨Equiv.ofBijective _ hbij, ?_⟩
@@ -605,14 +615,14 @@ theorem exists_rank_perm {d e m : ℕ} (F : Fin m → ParamAffine d e) {q₀ : P
   have hsub : (⟨F i q₀, hmem i⟩ : T) < ⟨F j q₀, hmem j⟩ ↔ F i q₀ < F j q₀ :=
     Subtype.mk_lt_mk
   rw [hsub]
-  exact lt_iff_lt_of_ne_on_ball F hε hne (Metric.mem_ball_self hε) hq i j
+  exact lt_iff_lt_of_ne_on_ball F hne (Metric.mem_ball_self hε) hq i j
 
 /-- The free coordinate `q ↦ q.1 j`, as an affine function of the parameters. -/
 noncomputable def leftCoordAffine {d e : ℕ} (j : Fin (d - 1)) : ParamAffine d e :=
   ((LinearMap.proj j).comp (LinearMap.fst ℝ (Fin (d - 1) → ℝ) (Fin (e - 1) → ℝ))).toAffineMap
 
 theorem leftCoordAffine_apply {d e : ℕ} (j : Fin (d - 1)) (q : PReal d e) :
-    leftCoordAffine (e := e) j q = q.1 j := rfl
+    leftCoordAffine (e := e) j q = q.1 j := (rfl)
 
 /-- **The `i`-th cut of `f`, as an affine function of the free parameters.** -/
 noncomputable def cutAffine {d e : ℕ} (i : Fin d) : ParamAffine d e :=
@@ -647,7 +657,7 @@ theorem imageLenAffine_apply_last {d e : ℕ} [NeZero d] {j : Fin d} (h : j.val 
     (q : PReal d e) :
     imageLenAffine (e := e) j q = 1 - ∑ m : Fin (d - 1), q.1 m := by
   rw [imageLenAffine, dite_eq_left h]
-  have hsub (f g : ParamAffine d e) : (f - g) q = f q - g q := rfl
+  have hsub (f g : ParamAffine d e) : (f - g) q = f q - g q := (rfl)
   rw [hsub, AffineMap.sum_apply]
   simp [leftCoordAffine_apply]
 
@@ -707,13 +717,37 @@ theorem imageLenAffine_eq {d e : ℕ} [NeZero d] {q : PReal d e} (hq : q.1 ∈ s
 `∑ v < 1`. -/
 theorem isOpen_simplexRegion (d : ℕ) : IsOpen (simplexRegion d) := by
   have h1 : IsOpen {v : Fin (d - 1) → ℝ | ∀ i, 0 < v i} := by
-    rw [show {v : Fin (d - 1) → ℝ | ∀ i, 0 < v i} = ⋂ i, {v : Fin (d - 1) → ℝ | 0 < v i} from by
-      ext v
-      simp]
+    rw [Set.ofPred_forall]
     exact isOpen_iInter_of_finite fun i => isOpen_lt continuous_const (continuous_apply i)
   have h2 : IsOpen {v : Fin (d - 1) → ℝ | ∑ i, v i < 1} :=
     isOpen_lt (continuous_finsetSum _ fun i _ => continuous_apply i) continuous_const
   exact h1.inter h2
+
+/-- **`simplexVolume d` is not the zero measure**: the free region is open, so it has positive
+Lebesgue measure, and `Measure.map` of a nonzero measure is nonzero.  This is what makes the
+almost-everywhere statements of the development non-vacuous. -/
+theorem simplexVolume_ne_zero {d : ℕ} [NeZero d] : simplexVolume d ≠ 0 := by
+  have hpos : 0 < volume (simplexRegion d) := by
+    refine (isOpen_simplexRegion d).measure_pos volume ⟨fun _ => 1 / (2 * d), ?_, ?_⟩
+    · intro i
+      have hd : (0 : ℝ) < d := by exact_mod_cast NeZero.pos d
+      exact div_pos one_pos (by linarith)
+    · rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+      have hd : (0 : ℝ) < d := by exact_mod_cast NeZero.pos d
+      have hcast : (((d - 1 : ℕ)) : ℝ) = (d : ℝ) - 1 := by
+        rw [Nat.cast_sub (NeZero.pos d)]; norm_num
+      rw [hcast]
+      have : (0 : ℝ) < 2 * d := by linarith
+      rw [mul_one_div, div_lt_one this]
+      linarith
+  intro h
+  have h2 : volume.restrict (simplexRegion d) = 0 := by
+    rw [simplexVolume] at h
+    exact (Measure.map_eq_zero_iff (measurable_simplexMap d).aemeasurable).mp h
+  have h3 : volume (simplexRegion d) = 0 := by
+    have huniv := congrArg (fun μ : Measure (Fin (d - 1) → ℝ) => μ Set.univ) h2
+    simpa using huniv
+  exact hpos.ne' h3
 
 /-- The free coordinate `q ↦ q.2 j` of the second factor, as an affine function of the
 parameters. -/
@@ -721,7 +755,7 @@ noncomputable def rightCoordAffine {d e : ℕ} (j : Fin (e - 1)) : ParamAffine d
   ((LinearMap.proj j).comp (LinearMap.snd ℝ (Fin (d - 1) → ℝ) (Fin (e - 1) → ℝ))).toAffineMap
 
 theorem rightCoordAffine_apply {d e : ℕ} (j : Fin (e - 1)) (q : PReal d e) :
-    rightCoordAffine (d := d) j q = q.2 j := rfl
+    rightCoordAffine (d := d) j q = q.2 j := (rfl)
 
 /-- **The `j`-th cut of `g`, as an affine function of the free parameters.** -/
 noncomputable def cutAffineRight {d e : ℕ} (j : Fin e) : ParamAffine d e :=
@@ -769,8 +803,8 @@ theorem exists_lt_imageLeft_simplexMap {d e : ℕ} [NeZero d] [NeZero e]
       (mkIET1' (simplexMap d q.1) π (simplexMap_mem_simplex_fin hr.1.1 hr.1.2))⁻¹
           (leftEnd (simplexMap e q.2) j)
         = leftEnd (simplexMap e q.2) j - translationVector π (simplexMap d q.1) k := by
-  have hl : simplexMap d q.1 ∈ simplex d := simplexMap_mem_simplex_fin hr.1.1 hr.1.2
-  have hm : simplexMap e q.2 ∈ simplex e := simplexMap_mem_simplex_fin hr.2.1 hr.2.2
+  have hl : simplexMap d q.1 ∈ simplex (Fin d) := simplexMap_mem_simplex_fin hr.1.1 hr.1.2
+  have hm : simplexMap e q.2 ∈ simplex (Fin e) := simplexMap_mem_simplex_fin hr.2.1 hr.2.2
   have hp : ¬ IsBadParam (toReal (simplexMap d q.1, simplexMap e q.2)) := by
     rw [toReal_simplexMap hr.1.1 hr.2.1]
     exact hq
@@ -792,8 +826,8 @@ theorem preimageCutAffine_apply {d e : ℕ} [NeZero d] (π : Equiv.Perm (Fin d))
     preimageCutAffine π j k q
       = cutAffineRight (d := d) j q - imageLeftAffine (e := e) π k q + cutAffine (e := e) k q := by
   rw [preimageCutAffine]
-  have h1 (f g : ParamAffine d e) : (f - g) q = f q - g q := rfl
-  have h2 (f g : ParamAffine d e) : (f + g) q = f q + g q := rfl
+  have h1 (f g : ParamAffine d e) : (f - g) q = f q - g q := (rfl)
+  have h2 (f g : ParamAffine d e) : (f + g) q = f q + g q := (rfl)
   rw [h2, h1]
 
 /-- **At a good parameter pair, `f⁻¹` of a cut of `g` is the affine function
@@ -807,7 +841,7 @@ theorem preimageCutAffine_eq {d e : ℕ} [NeZero d] (π : Equiv.Perm (Fin d))
     (mkIET1' (simplexMap d q.1) π (simplexMap_mem_simplex_fin hr.1.1 hr.1.2))⁻¹
         (leftEnd (simplexMap e q.2) j)
       = preimageCutAffine π j k q := by
-  have hl : simplexMap d q.1 ∈ simplex d := simplexMap_mem_simplex_fin hr.1.1 hr.1.2
+  have hl : simplexMap d q.1 ∈ simplex (Fin d) := simplexMap_mem_simplex_fin hr.1.1 hr.1.2
   rw [mkIET1_inv_of_lt_imageLeft (p := (simplexMap d q.1, simplexMap e q.2)) hl h1 h2,
     preimageCutAffine_apply, cutAffineRight_eq_leftEnd hr.2,
     imageLeftAffine_eq π hr.1, cutAffine_eq_leftEnd hr.1, translationVector]
@@ -825,11 +859,11 @@ theorem exists_ball_imageLeft_lt {d e : ℕ} [NeZero d] [NeZero e] (π : Equiv.P
       (∀ q ∈ Metric.ball q₀ ε, imageLeftAffine (e := e) π k q < cutAffineRight (d := d) j q ∧
         cutAffineRight (d := d) j q
           < imageLeftAffine (e := e) π k q + imageLenAffine (e := e) k q) ∧
-      (∀ q ∈ Metric.ball q₀ ε, ∀ (hl : simplexMap d q.1 ∈ simplex d),
+      (∀ q ∈ Metric.ball q₀ ε, ∀ (hl : simplexMap d q.1 ∈ simplex (Fin d)),
         (mkIET1' (simplexMap d q.1) π hl)⁻¹ (leftEnd (simplexMap e q.2) j)
           = preimageCutAffine π j k q) := by
-  have hl₀ : simplexMap d q₀.1 ∈ simplex d := simplexMap_mem_simplex_fin hr₀.1.1 hr₀.1.2
-  have hm₀ : simplexMap e q₀.2 ∈ simplex e := simplexMap_mem_simplex_fin hr₀.2.1 hr₀.2.2
+  have hl₀ : simplexMap d q₀.1 ∈ simplex (Fin d) := simplexMap_mem_simplex_fin hr₀.1.1 hr₀.1.2
+  have hm₀ : simplexMap e q₀.2 ∈ simplex (Fin e) := simplexMap_mem_simplex_fin hr₀.2.1 hr₀.2.2
   obtain ⟨k, h1, h2, -⟩ := exists_lt_imageLeft_simplexMap π hq₀ hr₀ hj
   -- the same two inequalities, in affine form, at `q₀`
   have h1' : imageLeftAffine (e := e) π k q₀ < cutAffineRight (d := d) j q₀ := by
@@ -905,10 +939,13 @@ theorem exists_ball_lt_of_lt {d e m : ℕ} (F : Fin m → ParamAffine d e) {q₀
   obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.mp hWopen q₀ hq₀
   exact ⟨ε, hε, fun q hq => hball hq⟩
 
-/-- The same, in the form of `StrictMono`. -/
+/-- **Strict monotonicity survives on a ball**, in the `StrictMono` form of `exists_ball_lt_of_lt`.
+-/
 theorem exists_ball_strictMono {d e m : ℕ} (F : Fin m → ParamAffine d e) {q₀ : PReal d e}
     (h : StrictMono fun i => F i q₀) :
     ∃ ε : ℝ, 0 < ε ∧ ∀ q ∈ Metric.ball q₀ ε, StrictMono fun i => F i q :=
   exists_ball_lt_of_lt F fun _ _ hij => h hij
+
+end IntervalExchange.Pair
 
 end

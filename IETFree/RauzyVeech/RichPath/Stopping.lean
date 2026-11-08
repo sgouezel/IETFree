@@ -6,140 +6,44 @@ Authors: Sébastien Gouëzel
 module
 
 public import IETFree.RauzyVeech.RichPath.LargeLetter
+public import IETFree.RauzyVeech.RichPath.LevelWords
 
 /-!
-# The `Γ₃` bookkeeping: level words, thresholds, stop events, and the minimal stopping family
+# The `Γ₃` bookkeeping: thresholds, stop events, and the minimal stopping family
 
-The vocabulary that the `Γ₃` argument of `IETFree.Potential` runs on (`NodeHeight.st = cs` is
-`B_w·1`, `NodeHeight.Mk 1` is the maximum `𝔐 = 𝔐(q_w)`):
+The vocabulary that the `Γ₃` argument of `IETFree.RauzyVeech.RichPath.Potential` runs on (`colSum =
+colSum` is
+`B_w·1`, `mkMass 1` is the maximum `𝔐 = 𝔐(q_w)`):
 
-* §1 the level-`N` words: `levelWords` is the set of words of length `N` (`mem_levelWords_iff`,
-  `pairwiseDisjoint_levelWords`, `prefixFree_of_length`), and the conditional masses of its members
-  add up to `1` (`sum_cond_levelWords`);
-* §2 the threshold `thr = 2·d·𝔐` (`Mx`, `thr`, `qmin`, with `Mx_pos`, `Mx_lt_thr`, `st_le_thr`), the
+* §1 words of equal length are prefix-free (`prefixFree_of_length`); the level-`N` words themselves,
+  with `mem_levelWords_iff` and the mass identity `sum_cond_levelWords`, are in
+  `RauzyVeech/RichPath/LevelWords.lean`, below this file;
+* §2 the threshold `thr = 2·d·𝔐` (`Mx`, `thr`, `qmin`, with `Mx_pos`, `Mx_lt_thr`,
+  `colSum_le_thr`), the
   predicate `Huge` (the maximum has crossed at some prefix, `not_huge_nil`), and the explicit
   stopping length `exists_stop_length`: every word of length `⌈2d²M/min⌉ + 1` is huge;
-* §3 the sum of the `A'`-heights along a continuation: `sum_st_append_singleton` (one step),
-  `sum_st_ge` (growth) and `sum_st_le` (boundedness by `Mx`), hence `length_le_of_not_huge`;
+* §3 the sum of the `A'`-heights along a continuation: `sum_colSum_append_singleton` (one step),
+  `sum_colSum_ge` (growth) and `sum_colSum_le` (boundedness by `Mx`), hence `length_le_of_not_huge`;
 * §4 exit arrows `ExitArrow`, stop events `StopEv`, the cleanness predicate `Clean`, the good/bad
   predicates `GoodFirst`, `Good`, `Bad` with their `Decidable` instances, and the minimal stopping
-  family `StopW`, `StopFam` (`prefixFree_stopFam`, `st_eq_of_exitArrow`).
+  family `StopW`, `StopFam` (`prefixFree_stopFam`, `colSum_eq_of_exitArrow`).
 
 -/
 
 @[expose] public section
 
-
-open MeasureTheory IETDatum₂ Finset NodeHeight
+open MeasureTheory IntervalExchange.IETDatum₂ Finset
 open scoped BigOperators
 
-
-/-! ## Three conventions in the definitions, and why
-
-* **The empty word has no stop event**, so `Good` (a *first* stop which is clean) cannot be the
-  whole story: `Good` carries the extra alternative "no stop yet", i.e. `Good = (no stop yet) ∨
-  GoodFirst`, and a word on which the threshold has not been crossed and no exit arrow has been read
-  is good.
-* **`StopEv` is guarded on the index**: its exit clause reads `δ.getD j false`, which at
-  `j = δ.length` is the default `false`; the guard `j < δ.length` is part of the definition.
-* **`A'` is a nonempty proper subset of the alphabet** wherever a stopping family is used: with
-  `A' = univ` there is no exit arrow and no clean crossing, so every word would be bad.
--/
-
-namespace Stopping
+namespace IntervalExchange.RauzyVeech.RichPath
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
-/-! ## 1. The level-`N` cylinders -/
-
-/-- The words of length `N`. -/
-def levelWords : ℕ → Finset (List Bool)
-  | 0 => {[]}
-  | (N + 1) => (levelWords N).biUnion fun γ =>
-      ({γ ++ [true], γ ++ [false]} : Finset (List Bool))
-
-theorem length_of_mem_levelWords :
-    ∀ {N : ℕ} {δ : List Bool}, δ ∈ levelWords N → δ.length = N := by
-  intro N
-  induction N with
-  | zero =>
-    intro δ h
-    simp only [levelWords, Finset.mem_singleton] at h
-    subst h
-    rfl
-  | succ N ih =>
-    intro δ h
-    simp only [levelWords, Finset.mem_biUnion, Finset.mem_insert, Finset.mem_singleton] at h
-    obtain ⟨γ, hγ, rfl | rfl⟩ := h <;> simp [ih hγ]
-
-theorem mem_levelWords_of_length :
-    ∀ {N : ℕ} {δ : List Bool}, δ.length = N → δ ∈ levelWords N := by
-  intro N
-  induction N with
-  | zero =>
-    intro δ h
-    have hnil : δ = [] := List.eq_nil_of_length_eq_zero h
-    subst hnil
-    exact Finset.mem_singleton_self []
-  | succ N ih =>
-    intro δ h
-    rcases List.eq_nil_or_concat δ with rfl | ⟨L, b, rfl⟩
-    · simp at h
-    · simp only [levelWords, Finset.mem_biUnion, Finset.mem_insert, Finset.mem_singleton]
-      rcases b with _ | _ <;> refine ⟨L, ih (by simpa using h), ?_⟩ <;> simp
-
-theorem mem_levelWords_iff {N : ℕ} {δ : List Bool} : δ ∈ levelWords N ↔ δ.length = N :=
-  ⟨length_of_mem_levelWords, mem_levelWords_of_length⟩
-
-theorem eq_of_append_singleton_eq {γ γ' : List Bool} {e e' : Bool}
-    (hlen : γ.length = γ'.length) (h : γ ++ [e] = γ' ++ [e']) : γ = γ' := by
-  have h1 : (γ ++ [e]).take γ.length = γ := List.take_left
-  have h2 : (γ' ++ [e']).take γ.length = γ' := by
-    rw [hlen]
-    exact List.take_left
-  rw [h, h2] at h1
-  exact h1.symm
-
-theorem pairwiseDisjoint_levelWords (N : ℕ) :
-    (↑(levelWords N) : Set (List Bool)).PairwiseDisjoint
-      (fun γ => ({γ ++ [true], γ ++ [false]} : Finset (List Bool))) := by
-  intro γ hγ γ' hγ' hne
-  refine Finset.disjoint_left.mpr ?_
-  intro x hx hx'
-  simp only [Finset.mem_insert, Finset.mem_singleton] at hx hx'
-  have hlen : γ.length = γ'.length := by
-    rw [length_of_mem_levelWords hγ, length_of_mem_levelWords hγ']
-  rcases hx with rfl | rfl <;> rcases hx' with h | h
-  · exact hne (eq_of_append_singleton_eq hlen h)
-  · have hg : γ = γ' := eq_of_append_singleton_eq hlen h
-    rw [hg] at h
-    exact absurd h (by simp)
-  · have hg : γ = γ' := eq_of_append_singleton_eq hlen h
-    rw [hg] at h
-    exact absurd h (by simp)
-  · exact hne (eq_of_append_singleton_eq hlen h)
-
-/-- **The masses of the level-`N` cylinders sum to `1`.** -/
-theorem sum_cond_levelWords (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
-    (w : List Bool) : ∀ N : ℕ, ∑ δ ∈ levelWords N, CylinderMass.cond P w δ = 1 := by
-  intro N
-  induction N with
-  | zero => simp [levelWords]
-  | succ N ih =>
-    have hdisj := pairwiseDisjoint_levelWords N
-    rw [levelWords, Finset.sum_biUnion hdisj]
-    have hstep (γ) (_ : γ ∈ levelWords N) : ∑ e ∈ ({γ ++ [true], γ ++ [false]} : Finset
-        (List Bool)), CylinderMass.cond P w e
-          = CylinderMass.cond P w γ := by
-      rw [Finset.sum_pair (by simp)]
-      rw [CylinderMass.cond_append, CylinderMass.cond_append,
-        ← mul_add, NodeHeight.cond_arrow_sum P hP hn (w ++ γ)]
-      ring
-    rw [Finset.sum_congr rfl hstep, ih]
+/-! ## 1. Prefix-free families of words of equal length -/
 
 /-- Words of the same length form a prefix-free family. -/
 theorem prefixFree_of_length {N : ℕ} {G : Finset (List Bool)}
-    (hG : ∀ δ ∈ G, δ.length = N) : NodeHeight.PrefixFree G := by
+    (hG : ∀ δ ∈ G, δ.length = N) : PrefixFree G := by
   intro u hu v hv hpre
   have hlen : u.length = v.length := by rw [hG u hu, hG v hv]
   have huv : u = v := List.IsPrefix.eq_of_length hpre hlen
@@ -148,98 +52,89 @@ theorem prefixFree_of_length {N : ℕ} {G : Finset (List Bool)}
 
 /-! ## 2. The threshold, the minimum height, and the stopping rule -/
 
-omit [DecidableEq α] [NeZero n] in
-theorem card_eq_n (P : IETDatum₂ α n) : Fintype.card α = n :=
-  (Fintype.card_congr P.piTop).trans (Fintype.card_fin n)
-
 omit [DecidableEq α] in
-theorem card_ge_one (P : IETDatum₂ α n) : 1 ≤ Fintype.card α := by
-  rw [card_eq_n P]
-  exact Nat.one_le_iff_ne_zero.mpr (NeZero.ne n)
-
-omit [DecidableEq α] in
-theorem card_ge_oneR (P : IETDatum₂ α n) : (1 : ℝ) ≤ (Fintype.card α : ℝ) := by
-  have := card_ge_one P
+theorem one_le_card_cast (P : IETDatum₂ α n) : (1 : ℝ) ≤ (Fintype.card α : ℝ) := by
+  have := P.card_pos
   exact_mod_cast this
 
-omit [DecidableEq α] [NeZero n] in
-theorem card_ge_two (P : IETDatum₂ α n) (hn : 2 ≤ n) : 2 ≤ Fintype.card α := by
-  rw [card_eq_n P]; exact hn
-
 /-- The maximum of the state at the node `w`. -/
-noncomputable def Mx (P : IETDatum₂ α n) (w : List Bool) : ℝ := NodeHeight.Mk 1 (NodeHeight.st P w)
+noncomputable def Mx (P : IETDatum₂ α n) (w : List Bool) : ℝ := mkMass 1 (colSum P w)
 
 /-- The threshold `2·#α·M(q_w)` of the dichotomy. -/
 noncomputable def thr (P : IETDatum₂ α n) (w : List Bool) : ℝ :=
   2 * (Fintype.card α : ℝ) * Mx P w
 
-/-- The minimal height of the state at the node `w`, as `Mk #α`. -/
+/-- The minimal height of the state at the node `w`, as `mkMass #α`. -/
 noncomputable def qmin (P : IETDatum₂ α n) (w : List Bool) : ℝ :=
-  NodeHeight.Mk (Fintype.card α) (NodeHeight.st P w)
+  mkMass (Fintype.card α) (colSum P w)
 
 omit [DecidableEq α] in
-/-- `Mk #α` is the minimum over the alphabet. -/
+/-- `mkMass #α` is the minimum over the alphabet. -/
 theorem Mk_card_eq_mmin (q : α → ℝ) :
-    NodeHeight.Mk (Fintype.card α) q = NodeHeight.mmin Finset.univ q := by
+    mkMass (Fintype.card α) q = mmin Finset.univ q := by
   have hne : ((Finset.univ : Finset α).powersetCard (Fintype.card α)).Nonempty :=
     ⟨Finset.univ, by simp⟩
-  refine le_antisymm ?_ (NodeHeight.mmin_le_Mk (s := Finset.univ) (k := Fintype.card α)
+  refine le_antisymm ?_ (mmin_le_mkMass (s := Finset.univ) (k := Fintype.card α)
     Finset.card_univ)
-  rw [NodeHeight.Mk_eq hne, Finset.sup'_le_iff]
+  rw [mkMass_eq hne, Finset.sup'_le_iff]
   intro s hs
   have hsu : s = Finset.univ :=
     Finset.eq_univ_of_card s (by rw [(Finset.mem_powersetCard.mp hs).2])
   rw [hsu]
 
 theorem qmin_le (P : IETDatum₂ α n) (w : List Bool) (b : α) :
-    qmin P w ≤ NodeHeight.st P w b := by
+    qmin P w ≤ colSum P w b := by
   rw [qmin, Mk_card_eq_mmin]
-  exact NodeHeight.mmin_le (Finset.mem_univ b)
+  exact mmin_le (Finset.mem_univ b)
 
 theorem qmin_pos [Nonempty α] (P : IETDatum₂ α n) (w : List Bool) : 0 < qmin P w := by
   rw [qmin, Mk_card_eq_mmin]
-  exact NodeHeight.mmin_pos (Finset.univ_nonempty) (fun b => NodeHeight.st_pos P w b)
+  exact mmin_pos (Finset.univ_nonempty) (fun b => colSum_pos P w b)
 
 omit [Fintype α] [DecidableEq α] in
 /-- `mmin` is monotone in the state. -/
 theorem mmin_le_mmin {q q' : α → ℝ} (h : ∀ b, q b ≤ q' b) (s : Finset α)
     (hs : s.Nonempty) :
-    NodeHeight.mmin s q ≤ NodeHeight.mmin s q' := by
+    mmin s q ≤ mmin s q' := by
   obtain ⟨b, hb, hbe⟩ := Finset.exists_mem_eq_inf' hs q'
-  have h2 : NodeHeight.mmin s q' = q' b := (NodeHeight.mmin_eq hs q').trans hbe
+  have h2 : mmin s q' = q' b := (mmin_eq hs q').trans hbe
   rw [h2]
-  exact (NodeHeight.mmin_le hb).trans (h b)
+  exact (mmin_le hb).trans (h b)
 
 /-- The minimal height only grows. -/
 theorem qmin_mono [Nonempty α] (P : IETDatum₂ α n) (w δ : List Bool) :
     qmin P w ≤ qmin P (w ++ δ) := by
   rw [qmin, qmin, Mk_card_eq_mmin, Mk_card_eq_mmin]
   refine mmin_le_mmin (fun b => ?_) Finset.univ Finset.univ_nonempty
-  exact CylinderMass.state_mono P w δ b
+  exact state_mono P w δ b
 
 theorem Mx_pos (P : IETDatum₂ α n) (w : List Bool) : 0 < Mx P w :=
-  NodeHeight.Mk_st_pos (k := 1) P w le_rfl (card_ge_one P)
+  mkMass_colSum_pos (k := 1) P w le_rfl (P.card_pos)
 
 /-- `Mx` dominates every height. -/
-theorem st_le_Mx (P : IETDatum₂ α n) (w : List Bool) (b : α) : NodeHeight.st P w b ≤ Mx P w :=
-  (LargeLetter.Mk_one_le_iff (card_ge_one P) (q := NodeHeight.st P w)
+theorem colSum_le_Mx (P : IETDatum₂ α n) (w : List Bool) (b : α) : colSum P w b ≤ Mx P w :=
+  (Mk_one_le_iff (P.card_pos) (q := colSum P w)
     (R := Mx P w)).mp le_rfl b
 
 /-- The threshold dominates every height. -/
-theorem st_le_thr (P : IETDatum₂ α n) (w : List Bool) (b : α) :
-    NodeHeight.st P w b ≤ thr P w := by
-  have h1 := st_le_Mx P w b
+theorem colSum_le_thr (P : IETDatum₂ α n) (w : List Bool) (b : α) :
+    colSum P w b ≤ thr P w := by
+  have h1 := colSum_le_Mx P w b
   have h2 := Mx_pos P w
-  have h3 := card_ge_oneR P
+  have h3 := one_le_card_cast P
   rw [thr]
   nlinarith [h1, h2, h3]
 
 /-- The maximum is below the threshold. -/
 theorem Mx_lt_thr (P : IETDatum₂ α n) (w : List Bool) : Mx P w < thr P w := by
   have h1 := Mx_pos P w
-  have h2 := card_ge_oneR P
+  have h2 := one_le_card_cast P
   rw [thr]
   nlinarith
+
+/-- The threshold `2·#α·M(q_w)` is positive. -/
+theorem thr_pos (P : IETDatum₂ α n) (w : List Bool) : 0 < thr P w :=
+  lt_trans (Mx_pos P w) (Mx_lt_thr P w)
 
 /-- The maximum at the node `w ++ μ` exceeds the threshold. -/
 noncomputable def Huge (P : IETDatum₂ α n) (w μ : List Bool) : Prop :=
@@ -252,41 +147,39 @@ theorem not_huge_nil (P : IETDatum₂ α n) (w : List Bool) : ¬ Huge P w [] := 
 
 /-- The `A'`-heights stay below the threshold along `μ`. -/
 def ABound (P : IETDatum₂ α n) (A' : Finset α) (w μ : List Bool) : Prop :=
-  ∀ i ∈ Finset.range (μ.length + 1), ∀ b ∈ A', NodeHeight.st P (w ++ μ.take i) b ≤ thr P w
+  ∀ i ∈ Finset.range (μ.length + 1), ∀ b ∈ A', colSum P (w ++ μ.take i) b ≤ thr P w
 
 /-! ## 3. The sum of the heights along a continuation -/
 
 /-- The sum of the heights after one more letter: the loser grows by the winner. -/
-theorem sum_st_append_singleton (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
+theorem sum_colSum_append_singleton (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     (v : List Bool) (e : Bool) :
-    ∑ b, NodeHeight.st P (v ++ [e]) b
-      = ∑ b, NodeHeight.st P v b + NodeHeight.st P v ((IETDatum₂.vertex P v).last e) := by
-  have hterm (b) : NodeHeight.st P (v ++ [e]) b
-      = NodeHeight.st P v b + (if b = (IETDatum₂.vertex P v).last (!e)
-          then NodeHeight.st P v ((IETDatum₂.vertex P v).last e) else 0) := by
-    have h := CylinderMass.cs_append_singleton P hP hn v e b
-    simpa [NodeHeight.st] using h
-  calc ∑ b, NodeHeight.st P (v ++ [e]) b
-      = ∑ b, (NodeHeight.st P v b + (if b = (IETDatum₂.vertex P v).last (!e)
-          then NodeHeight.st P v ((IETDatum₂.vertex P v).last e) else 0)) :=
+    ∑ b, colSum P (v ++ [e]) b
+      = ∑ b, colSum P v b + colSum P v ((IETDatum₂.vertex P v).last e) := by
+  have hterm (b) : colSum P (v ++ [e]) b
+      = colSum P v b + (if b = (IETDatum₂.vertex P v).last (!e)
+          then colSum P v ((IETDatum₂.vertex P v).last e) else 0) := by
+    have h := colSum_append_singleton P hP hn v e b
+    simpa [colSum] using h
+  calc ∑ b, colSum P (v ++ [e]) b
+      = ∑ b, (colSum P v b + (if b = (IETDatum₂.vertex P v).last (!e)
+          then colSum P v ((IETDatum₂.vertex P v).last e) else 0)) :=
         Finset.sum_congr rfl fun b _ => hterm b
-    _ = ∑ b, NodeHeight.st P v b + ∑ b, (if b = (IETDatum₂.vertex P v).last (!e)
-          then NodeHeight.st P v ((IETDatum₂.vertex P v).last e) else 0) := Finset.sum_add_distrib
-    _ = ∑ b, NodeHeight.st P v b + NodeHeight.st P v ((IETDatum₂.vertex P v).last e) := by
+    _ = ∑ b, colSum P v b + ∑ b, (if b = (IETDatum₂.vertex P v).last (!e)
+          then colSum P v ((IETDatum₂.vertex P v).last e) else 0) := Finset.sum_add_distrib
+    _ = ∑ b, colSum P v b + colSum P v ((IETDatum₂.vertex P v).last e) := by
         rw [Finset.sum_ite_eq']
         simp
 
 /-- **The total height grows at least by the minimal initial height at each step.** -/
-theorem sum_st_ge [Nonempty α] (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
-    (w : List Bool) :
-    ∀ μ : List Bool, ∑ b, NodeHeight.st P w b + μ.length * qmin P w
-      ≤ ∑ b, NodeHeight.st P (w ++ μ) b := by
-  intro μ
+theorem sum_colSum_ge [Nonempty α] (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
+    (w : List Bool) (μ : List Bool) : ∑ b, colSum P w b + μ.length * qmin P w
+      ≤ ∑ b, colSum P (w ++ μ) b := by
   induction μ generalizing w with
   | nil => simp
   | cons e μ ih =>
-    have h3 := sum_st_append_singleton P hP hn w e
-    have h4 : qmin P w ≤ NodeHeight.st P w ((IETDatum₂.vertex P w).last e) := qmin_le P w _
+    have h3 := sum_colSum_append_singleton P hP hn w e
+    have h4 : qmin P w ≤ colSum P w ((IETDatum₂.vertex P w).last e) := qmin_le P w _
     have h2 := ih (w ++ [e])
     have hmono : qmin P w ≤ qmin P (w ++ [e]) := qmin_mono P w [e]
     have hmlen : (0 : ℝ) ≤ (μ.length : ℝ) := Nat.cast_nonneg _
@@ -297,10 +190,10 @@ theorem sum_st_ge [Nonempty α] (P : IETDatum₂ α n) (hP : P.Irreducible) (hn 
     nlinarith [h2, h3, h4, hq, hmono, hmlen]
 
 /-- The sum of the heights is at most `#α` times the maximum. -/
-theorem sum_st_le (P : IETDatum₂ α n) (v : List Bool) {R : ℝ} (hR : Mx P v ≤ R) :
-    ∑ b, NodeHeight.st P v b ≤ (Fintype.card α : ℝ) * R := by
-  have hb (b) : NodeHeight.st P v b ≤ R := (st_le_Mx P v b).trans hR
-  calc ∑ b, NodeHeight.st P v b ≤ ∑ _b : α, R := Finset.sum_le_sum fun b _ => hb b
+theorem sum_colSum_le (P : IETDatum₂ α n) (v : List Bool) {R : ℝ} (hR : Mx P v ≤ R) :
+    ∑ b, colSum P v b ≤ (Fintype.card α : ℝ) * R := by
+  have hb (b) : colSum P v b ≤ R := (colSum_le_Mx P v b).trans hR
+  calc ∑ b, colSum P v b ≤ ∑ _b : α, R := Finset.sum_le_sum fun b _ => hb b
     _ = (Fintype.card α : ℝ) * R := by
         rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
 
@@ -308,10 +201,10 @@ theorem sum_st_le (P : IETDatum₂ α n) (v : List Bool) {R : ℝ} (hR : Mx P v 
 theorem length_le_of_not_huge [Nonempty α] (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     (w δ : List Bool) (hδ : ¬ Huge P w δ) :
     (δ.length : ℝ) * qmin P w ≤ (Fintype.card α : ℝ) * thr P w := by
-  have h1 := sum_st_ge P hP hn w δ
-  have h2 := sum_st_le P (w ++ δ) (show Mx P (w ++ δ) ≤ thr P w from not_lt.mp hδ)
-  have h3 : (0 : ℝ) ≤ ∑ b, NodeHeight.st P w b :=
-    Finset.sum_nonneg fun b _ => NodeHeight.st_nonneg P w b
+  have h1 := sum_colSum_ge P hP hn w δ
+  have h2 := sum_colSum_le P (w ++ δ) (not_lt.mp hδ)
+  have h3 : (0 : ℝ) ≤ ∑ b, colSum P w b :=
+    Finset.sum_nonneg fun b _ => colSum_nonneg P w b
   linarith [h1, h2, h3]
 
 /-- **The stopping length**: at this length, every word has already crossed the threshold. -/
@@ -349,7 +242,7 @@ noncomputable def StopEv (P : IETDatum₂ α n) (A' : Finset α) (w δ : List Bo
 
 /-- The `A'`-heights are below the threshold at the node `μ`. -/
 def Clean (P : IETDatum₂ α n) (A' : Finset α) (w μ : List Bool) : Prop :=
-  ∀ b ∈ A', NodeHeight.st P (w ++ μ) b ≤ thr P w
+  ∀ b ∈ A', colSum P (w ++ μ) b ≤ thr P w
 
 /-- **A clean stop for `δ`**: at the first stop event the `A'`-heights are still below the threshold
 (so the corresponding word of `StopFam` keeps the `A'`-bound and is usable). Only meaningful when
@@ -373,13 +266,17 @@ family whose mass the race estimate bounds. -/
 noncomputable def Bad (P : IETDatum₂ α n) (A' : Finset α) (w δ : List Bool) : Prop :=
   ¬ Good P A' w δ
 
-noncomputable instance stopEvDecidable (P : IETDatum₂ α n) (A' : Finset α) (w δ : List Bool) :
+/-- Decidability of `StopEv`, classically: the file filters words by it.  `local`, so that
+nothing outside it inherits a classical instance that a computable one would have to shadow. -/
+noncomputable local instance stopEvDecidable (P : IETDatum₂ α n) (A' : Finset α) (w δ : List Bool) :
     DecidablePred (StopEv P A' w δ) := fun _ => Classical.propDecidable _
 
-noncomputable instance goodDecidable (P : IETDatum₂ α n) (A' : Finset α) (w : List Bool) :
+/-- Decidability of `Good`, classically (`local`, as for `stopEvDecidable`). -/
+noncomputable local instance goodDecidable (P : IETDatum₂ α n) (A' : Finset α) (w : List Bool) :
     DecidablePred (Good P A' w) := fun _ => Classical.propDecidable _
 
-noncomputable instance badDecidable (P : IETDatum₂ α n) (A' : Finset α) (w : List Bool) :
+/-- Decidability of `Bad`, classically (`local`, as for `stopEvDecidable`). -/
+noncomputable local instance badDecidable (P : IETDatum₂ α n) (A' : Finset α) (w : List Bool) :
     DecidablePred (Bad P A' w) := fun _ => Classical.propDecidable _
 
 /-- The stop *words*: `η` ends with an exit arrow at its parent node, or the maximum has already
@@ -389,19 +286,20 @@ noncomputable def StopW (P : IETDatum₂ α n) (A' : Finset α) (w : List Bool)
   (∃ e : Bool, η = η.dropLast ++ [e] ∧ ExitArrow P A' w η.dropLast e) ∨ Huge P w η
 
 /-- The predicate defining the minimal stopping family. -/
-noncomputable def stopPred (P : IETDatum₂ α n) (A' : Finset α) (w : List Bool)
+noncomputable def StopPred (P : IETDatum₂ α n) (A' : Finset α) (w : List Bool)
     (η : List Bool) : Prop :=
   StopW P A' w η ∧ ABound P A' w η ∧
     ∀ j ∈ Finset.range η.length, ¬ StopW P A' w (η.take j)
 
-noncomputable instance stopPredDecidable (P : IETDatum₂ α n) (A' : Finset α) (w : List Bool) :
-    DecidablePred (stopPred P A' w) := fun _ => Classical.propDecidable _
+/-- Decidability of `StopPred`, classically (`local`, as for `stopEvDecidable`). -/
+noncomputable local instance stopPredDecidable (P : IETDatum₂ α n) (A' : Finset α) (w : List Bool) :
+    DecidablePred (StopPred P A' w) := fun _ => Classical.propDecidable _
 
 /-- **The minimal stopping family**: the words of length `≤ N` which are a stop word and such that
 no shorter stop word is a prefix, with the `A'`-heights below the threshold throughout. -/
 noncomputable def StopFam (P : IETDatum₂ α n) (A' : Finset α) (w : List Bool) (N : ℕ) :
     Finset (List Bool) :=
-  (Finset.range (N + 1)).biUnion (fun m => (levelWords m).filter (stopPred P A' w))
+  (Finset.range (N + 1)).biUnion (fun m => (levelWords m).filter (StopPred P A' w))
 
 theorem mem_stopFam {P : IETDatum₂ α n} {A' : Finset α} {w : List Bool} {N : ℕ}
     {η : List Bool} (h : η ∈ StopFam P A' w N) :
@@ -413,12 +311,12 @@ theorem mem_stopFam {P : IETDatum₂ α n} {A' : Finset α} {w : List Bool} {N :
   obtain ⟨hlev, hW, hA, hmin⟩ := hμ
   rw [Finset.mem_range] at hm
   refine ⟨hW, hA, ?_, hmin⟩
-  rw [length_of_mem_levelWords hlev]
+  rw [length_mem_levelWords hlev]
   omega
 
 /-- The minimal stopping family is prefix-free. -/
 theorem prefixFree_stopFam (P : IETDatum₂ α n) (A' : Finset α) (w : List Bool) (N : ℕ) :
-    NodeHeight.PrefixFree (StopFam P A' w N) := by
+    PrefixFree (StopFam P A' w N) := by
   intro u hu v hv hpre
   obtain ⟨huW, -, -, humin⟩ := mem_stopFam hu
   obtain ⟨-, -, -, hvmin⟩ := mem_stopFam hv
@@ -449,14 +347,13 @@ theorem take_succ_getD (l : List Bool) {n : ℕ} (h : n < l.length) :
   rfl
 
 /-- **The `A'`-heights do not move across an exit arrow.** -/
-theorem st_eq_of_exitArrow (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
+theorem colSum_eq_of_exitArrow (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     {A' : Finset α} {w μ : List Bool} {e : Bool}
     (hE : ExitArrow P A' w μ e) {b : α} (hb : b ∈ A') :
-    NodeHeight.st P (w ++ μ ++ [e]) b = NodeHeight.st P (w ++ μ) b := by
+    colSum P (w ++ μ ++ [e]) b = colSum P (w ++ μ) b := by
   obtain ⟨-, hlose⟩ := hE
-  have h := CylinderMass.cs_append_singleton P hP hn (w ++ μ) e b
+  have h := colSum_append_singleton P hP hn (w ++ μ) e b
   have hne : b ≠ (IETDatum₂.vertex P (w ++ μ)).last (!e) := fun hb' => hlose (hb' ▸ hb)
-  simp only [NodeHeight.st]
   rw [h, ite_eq_right hne, add_zero]
 
 omit [DecidableEq α] in
@@ -513,17 +410,15 @@ theorem goodFirst_of_good {P : IETDatum₂ α n} {A' : Finset α} {w δ : List B
 /-- **Covering.**  A word with a clean stop has a prefix in the minimal stopping family. -/
 theorem exists_stopfam_of_good (P : IETDatum₂ α n) (hP : P.Irreducible)
     (hn : 2 ≤ n) (w : List Bool) (A' : Finset α) (N : ℕ)
-    (_hN : ∀ δ : List Bool, δ.length = N →
-      ∃ i ∈ Finset.range (δ.length + 1), Huge P w (δ.take i))
     {δ : List Bool} (hlen : δ.length = N) (hgood : GoodFirst P A' w δ) :
     ∃ η ∈ StopFam P A' w N, η <+: δ := by
   obtain ⟨j, hjmem, hjfirst, hcase⟩ := hgood
   have hjle : j ≤ δ.length := by rw [Finset.mem_range] at hjmem; omega
   have hlenj : (δ.take j).length = j := by rw [List.length_take, Nat.min_eq_left hjle]
-  have hbelow (g) (hg : g < j) : ∀ b : α, NodeHeight.st P (w ++ δ.take g) b ≤ thr P w := by
+  have hbelow (g) (hg : g < j) : ∀ b : α, colSum P (w ++ δ.take g) b ≤ thr P w := by
     intro b
     have hns := hjfirst g (by rw [Finset.mem_range]; exact hg)
-    exact (st_le_Mx P (w ++ δ.take g) b).trans
+    exact (colSum_le_Mx P (w ++ δ.take g) b).trans
       (not_lt.mp fun hc => hns (Or.inl hc))
   have hcleanJ : Clean P A' w (δ.take j) := by
     rcases hcase with ⟨-, hc⟩ | ⟨-, -, hc⟩
@@ -579,7 +474,7 @@ theorem exists_stopfam_of_good (P : IETDatum₂ α n) (hP : P.Irreducible)
         · subst heq2
           exact hcleanJ b hb
       · subst heq
-        rw [hsplitj, ← List.append_assoc, st_eq_of_exitArrow P hP hn hEA hb]
+        rw [hsplitj, ← List.append_assoc, colSum_eq_of_exitArrow P hP hn hEA hb]
         exact hcleanJ b hb
     have hminAtJ : ¬ StopW P A' w (δ.take j) := by
       intro hW
@@ -609,8 +504,6 @@ theorem exists_stopfam_of_good (P : IETDatum₂ α n) (hP : P.Irreducible)
     exact Or.inl ⟨δ.getD j false, by rw [hsplitj, List.dropLast_concat],
       by rw [hdropS]; exact hEA⟩
 
-/-! ## 6. The race estimate and the assembly -/
-
-end Stopping
+end IntervalExchange.RauzyVeech.RichPath
 
 end

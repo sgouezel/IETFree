@@ -5,7 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.CylinderVolume
+public import IETFree.RauzyVeech.CocycleVolume
 public import IETFree.RauzyVeech.Nesting
 
 /-!
@@ -15,28 +15,28 @@ public import IETFree.RauzyVeech.Nesting
 chart, `region m ⊆ (Fin m → ℝ)`: the open region is nonempty (`region_nonempty`) and sits in the
 unit box (`region_subset_box`), so it has positive finite Lebesgue measure (`volume_region_pos`,
 `volume_region_ne_top`); the chart preimage of the simplex is the whole region
-(`gchart_mem_simplexOn`), whence `simplexVolumeOn α (simplexOn α) = volume (region m)`
-(`simplexVolumeOn_simplexOn_eq_region`, from `IETDatum₂.simplexVolumeOn_apply_gchart`).
+(`gchart_mem_simplex`), whence `simplexVolumeOn α (simplex α) = volume (region m)`
+(`simplexVolumeOn_simplex_eq_region`, from `IETDatum₂.simplexVolumeOn_apply_gchart`).
 
-From that positivity: `volume_simplexOn_pos` (the simplex has positive mass) and
+From that positivity: `volume_simplex_pos` (the simplex has positive mass) and
 `volume_simplexCyl_pos` (every path cylinder has positive mass, using Lemma 1 in the form
-`volume_simplexCyl` of `IETFree/RauzyVeech/CylinderVolume.lean`).  These are what the strict
+`volume_simplexCyl` of `IETFree/RauzyVeech/CocycleVolume.lean`).  These are what the strict
 inequality of the contraction needs.
 
 The matrix identity `colsum_mul_one_add_single` is the elementary column-sum computation behind the
 step `Q(γ ++ [e]) = Q(γ) · (1 + E_{α_e α_{1-e}})`: only the column of the *secondary* name changes,
 and it grows by the column of the name.
 
-The volume of the child cylinder (Lemma 3 of the source) is the ratio `vol Δ(γ ++ [δ]) / vol Δ(γ) =
+The volume of the child cylinder (Lemma 3 of Yoccoz) is the ratio `vol Δ(γ ++ [δ]) / vol Δ(γ) =
 ∏_b colsum_b(γ) / colsum_b(γ ++ δ)`, proved in `IETFree/RauzyVeech/BalancedSet.lean` as
-`BalancedCylinders.volume_append_mul`. -/
+`volume_append_mul`. -/
 
-open MeasureTheory Matrix IETDatum₂
+open MeasureTheory Matrix IntervalExchange.IETDatum₂
 open scoped BigOperators ENNReal NNReal
 
 @[expose] public section
 
-namespace RegionVolume
+namespace IntervalExchange.RauzyVeech
 
 /-! ## 1. The column sums of `Q · (1 + E_{c c'})`  `1 + E_{c c'}` is `rvMat e` in the coordinates `c
 = α_e`, `c' = α_{1-e}`; the lemma is stated for an arbitrary integer matrix so that it is
@@ -70,14 +70,14 @@ end MatrixColsum
 `≠ ∞`, i.e. the free region of the simplex chart has positive finite Lebesgue measure.  Since the
 region is open and nonempty it has positive measure (`IsOpen.measure_pos` for the `IsOpenPosMeasure`
 volume of `Fin m → ℝ`), and it sits in the unit box, so its measure is finite.  The link between the
-region and `simplexVolumeOn α (simplexOn α)` is `IETDatum₂.simplexVolumeOn_apply_gchart` of
+region and `simplexVolumeOn α (simplex α)` is `IETDatum₂.simplexVolumeOn_apply_gchart` of
 `Nesting`: the chart preimage of the simplex is the whole region. -/
 
 section Region
 
 theorem isOpen_region (m : ℕ) : IsOpen (region m) := by
   have h1 : IsOpen {v : Fin m → ℝ | ∀ i, 0 < v i} := by
-    rw [show {v : Fin m → ℝ | ∀ i, 0 < v i} = ⋂ i, {v | 0 < v i} from by ext v; simp]
+    rw [Set.ofPred_forall]
     exact isOpen_iInter_of_finite fun i => isOpen_lt continuous_const (continuous_apply i)
   have h2 : IsOpen {v : Fin m → ℝ | ∑ i, v i < 1} :=
     isOpen_lt (continuous_finsetSum _ fun i _ => continuous_apply i) continuous_const
@@ -88,8 +88,9 @@ theorem region_nonempty (m : ℕ) : (region m).Nonempty := by
   · intro i; positivity
   · rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
     have h1 : (0:ℝ) < (m : ℝ) + 1 := by positivity
-    rw [show (m : ℝ) * (((m : ℝ) + 1)⁻¹ / 2) = (m:ℝ) / (2 * ((m:ℝ)+1)) from by field_simp]
-    rw [div_lt_one (by positivity)]
+    have harith : (m : ℝ) * (((m : ℝ) + 1)⁻¹ / 2) = (m:ℝ) / (2 * ((m:ℝ)+1)) := by
+      rw [div_eq_mul_inv, div_eq_mul_inv, _root_.mul_inv_rev]
+    rw [harith, div_lt_one (by positivity)]
     linarith
 
 /-- **The free region has positive measure.** -/
@@ -120,9 +121,9 @@ section RegionSimplex
 variable {α : Type*} [Fintype α] [DecidableEq α] {m : ℕ}
 
 omit [DecidableEq α] in
-theorem gchart_mem_simplexOn (P : IETDatum₂ α (m + 1)) {v : Fin m → ℝ} (hv : v ∈ region m) :
-    v ∈ gchart P ⁻¹' simplexOn α := by
-  simp only [Set.mem_preimage, gchart, simplexOn, Set.mem_ofPred_eq]
+theorem gchart_mem_simplex (P : IETDatum₂ α (m + 1)) {v : Fin m → ℝ} (hv : v ∈ region m) :
+    v ∈ gchart P ⁻¹' simplex α := by
+  simp only [Set.mem_preimage, gchart, simplex, Set.mem_ofPred_eq]
   have hpos (i) : 0 < chart m v i := chart_pos hv i
   refine NNReal.coe_injective ?_
   rw [NNReal.coe_sum, NNReal.coe_one]
@@ -135,11 +136,10 @@ theorem gchart_mem_simplexOn (P : IETDatum₂ α (m + 1)) {v : Fin m → ℝ} (h
 
 omit [DecidableEq α] in
 /-- **`simplexVolumeOn α` of the simplex is the Lebesgue measure of the free region.** -/
-theorem simplexVolumeOn_simplexOn_eq_region (P : IETDatum₂ α (m + 1)) :
-    simplexVolumeOn α (simplexOn α) = volume (region m) := by
-  rw [IETDatum₂.simplexVolumeOn_apply_gchart P (simplexOn α) (measurableSet_simplexOn α)]
-  rw [show gchart P ⁻¹' simplexOn α ∩ region m = region m from
-    Set.inter_eq_right.mpr fun v hv => gchart_mem_simplexOn P hv]
+theorem simplexVolumeOn_simplex_eq_region (P : IETDatum₂ α (m + 1)) :
+    simplexVolumeOn α (simplex α) = volume (region m) := by
+  rw [IETDatum₂.simplexVolumeOn_apply_gchart P (simplex α) (measurableSet_simplex α)]
+  rw [Set.inter_eq_right.mpr fun v hv => gchart_mem_simplex P hv]
 
 end RegionSimplex
 
@@ -148,9 +148,9 @@ section Positivity
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
 omit [DecidableEq α] in
-theorem volume_simplexOn_pos (P : IETDatum₂ α n) : 0 < simplexVolumeOn α (simplexOn α) := by
+theorem volume_simplex_pos (P : IETDatum₂ α n) : 0 < simplexVolumeOn α (simplex α) := by
   obtain ⟨m, rfl⟩ : ∃ m, n = m + 1 := ⟨n - 1, by have := NeZero.ne n; omega⟩
-  rw [simplexVolumeOn_simplexOn_eq_region P]
+  rw [simplexVolumeOn_simplex_eq_region P]
   exact volume_region_pos m
 
 /-- **Every path cylinder has positive measure.** -/
@@ -160,10 +160,10 @@ theorem volume_simplexCyl_pos (P : IETDatum₂ α n) (γ : List Bool) :
   have hp : (0 : ℝ≥0∞) < ((∏ b, (colsumNN (Path.Q P γ) b)⁻¹ : ℝ≥0) : ℝ≥0∞) := by
     rw [← ENNReal.coe_zero, ENNReal.coe_lt_coe]
     exact Finset.prod_pos fun b _ => inv_pos.mpr (colsumNN_pos P γ b)
-  exact ENNReal.mul_pos (ne_of_gt hp) (ne_of_gt (volume_simplexOn_pos P))
+  exact ENNReal.mul_pos (ne_of_gt hp) (ne_of_gt (volume_simplex_pos P))
 
 end Positivity
 
-end RegionVolume
+end IntervalExchange.RauzyVeech
 
 end

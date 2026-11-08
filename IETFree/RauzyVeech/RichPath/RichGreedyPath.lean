@@ -5,11 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.MainComponents
-public import IETFree.RauzyVeech.RichPath.GradedInduction
 public import IETFree.RauzyVeech.RichPath.InductionAssembly
-public import IETFree.RauzyVeech.RichPath.Potential
-public import IETFree.RauzyVeech.RichPath.RichPathAssembly
 
 /-!
 # Richness of the greedy path, unconditionally
@@ -22,16 +18,16 @@ lead to it are separate theorems, and it is not restated anywhere.
 
 The two inputs of the graded induction are both theorems:
 
-* `Γ₃` — `Potential.straddleMassCard_of_unclean`, for every cardinality and with no hypothesis
-  beyond irreducibility (`Potential.lean`: the `A'`-sum potential contracts on the non-exit branches
+* `Γ₃` — `straddleMassCard_of_unclean`, for every cardinality and with no hypothesis
+  beyond irreducibility (`lean`: the `A'`-sum potential contracts on the non-exit branches
   at every *non-blocked* node, and `not_blocked_of_noExit` shows no blocked node is reached before
   the stop, so the only obstruction in the potential argument never occurs);
-* `Γ₂` — `MassGrowth.exists_extMassGen_sharp`, unconditionally (`M Cb = (1+ε)(1 + 2^L·Cb)^L`,
+* `Γ₂` — `exists_extMassGen_sharp`, unconditionally (`M Cb = (1+ε)(1 + 2^L·Cb)^L`,
   `C₂ = 2^L`, from the balance degradation along a minimal extension).
 
-The route follows the source: base case and `Γ₁`/pigeonhole (`GradedInduction.lean`), `Γ₂`
-(`MinimalExitMass.lean`, `MassGrowth.lean`), `Γ₃` (`HeightDichotomy.lean`, `StraddleMass.lean`,
-`Potential.lean`), `Γ₄` (`LargeLetter.lean`), the `k → k+1` dichotomy (`HeightDichotomy.lean`), the
+The route follows AGY: base case and `Γ₁`/pigeonhole (`GradedInduction.lean`), `Γ₂`
+(`lean`, `lean`), `Γ₃` (`lean`, `StraddleMass.lean`,
+`lean`), `Γ₄` (`lean`), the `k → k+1` dichotomy (`lean`), the
 reduction to the graded estimate (`GradedInduction.lean`:
 `exists_gradedStep_card_of_inductionStep`), and the analytic step from the estimate to richness,
 which is the body of the theorem below (`step_pinned`, then the pinned Lévy recurrence
@@ -39,10 +35,9 @@ which is the body of the theorem below (`step_pinned`, then the pinned Lévy rec
 
 @[expose] public section
 
+open MeasureTheory Filter IntervalExchange.IETDatum₂
 
-open MeasureTheory Filter IETDatum₂
-
-namespace RichPath
+namespace IntervalExchange.RauzyVeech.RichPath
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -58,9 +53,9 @@ theorem richGreedyPath (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n
     ∀ᵐ lam ∂(simplexVolumeOn α),
       ∀ k : ℕ, ∃ m ≥ k, ∃ w : List Bool, w.length = m ∧ IETDatum₂.vertex P w = π₀ ∧
         lam ∈ IETDatum₂.simplexCyl P (w ++ γ₀) := by
-  have h : ∃ C : ℝ, 1 < C ∧ NodeHeight.GradedStep P (Fintype.card α) C C :=
-    Induction.exists_gradedStep_card_of_inductionStep P
-      (Assemble.inductionStep_of_straddleMass P hP hn)
+  have h : ∃ C : ℝ, 1 < C ∧ GradedStep P (Fintype.card α) C C :=
+    exists_gradedStep_card_of_inductionStep P
+      (inductionStep_of_straddleMass P hP hn)
   obtain ⟨δ, hδ, hstep⟩ := step_pinned P hP hn ⟨u, hu⟩ h
   have key (N : ℕ) : ∀ᵐ x ∂(simplexVolumeOn α), x ∈ IETDatum₂.simplexCyl P [] →
       ∃ m ≥ N, ∃ w : List Bool, w.length = m ∧ IETDatum₂.vertex P w = π₀ ∧
@@ -80,9 +75,9 @@ theorem richGreedyPath (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n
         ((mem_GoodPin_iff P hP hn π₀ γ₀ m hxN).mpr ⟨hv, hmem⟩)
     -- the same for the point form of the target
     have hZt : simplexVolumeOn α (ZpinTgt P π₀ γ₀ N) = 0 := by
-      have heq : ZpinTgt P π₀ γ₀ N \ CylRec.Nbad P = ZpinLev P π₀ γ₀ N \ CylRec.Nbad P := by
+      have heq : ZpinTgt P π₀ γ₀ N \ Nbad P = ZpinLev P π₀ γ₀ N \ Nbad P := by
         rw [Set.sdiff_eq, Set.sdiff_eq, ZpinLev_inter_Nbad P hP hn π₀ γ₀ N]
-      rw [CylRec.measure_eq_of_sdiff_Nbad_eq P hP hn heq]
+      rw [measure_eq_of_sdiff_Nbad_eq P hP hn heq]
       exact hZ
     rw [measure_eq_zero_iff_ae_notMem] at hZt
     filter_upwards [hZt] with x hx hx0
@@ -93,6 +88,6 @@ theorem richGreedyPath (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n
     with x hx hx0
   exact fun k => hx k hx0
 
-end RichPath
+end IntervalExchange.RauzyVeech.RichPath
 
 end

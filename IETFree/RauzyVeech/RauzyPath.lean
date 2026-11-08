@@ -5,11 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.BalancedSet
-public import IETFree.RauzyVeech.ChildVolume
 public import IETFree.RauzyVeech.Nesting
 public import IETFree.RauzyVeech.PrefixWord
-public import IETFree.RauzyVeech.SimplexAe
 
 /-!
 # The greedy Rauzy–Veech path of a length vector
@@ -28,10 +25,12 @@ ingredients, none assumed:
 * `simplexCyl_pfx_succ_subset`: the cylinders along the path are nested.
 -/
 
-open MeasureTheory IETDatum₂
+open MeasureTheory IntervalExchange.RauzyVeech IntervalExchange.IETDatum₂
 open scoped BigOperators ENNReal NNReal
 
 @[expose] public section
+
+namespace IntervalExchange.RauzyVeech
 
 /-!
 # Almost every point of the simplex is strictly positive
@@ -93,6 +92,10 @@ theorem ae_pos_simplexVolumeOn (α : Type*) [Fintype α] :
   intro a
   exact ae_pos_simplexVolume_fin (Fintype.equivFin α a)
 
+end IntervalExchange.RauzyVeech
+
+namespace IntervalExchange
+
 namespace IETDatum₂
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
@@ -135,14 +138,15 @@ noncomputable def pathStep (P : IETDatum₂ α n) (x : α → ℝ≥0) (k : ℕ)
   pathBranch P x (pathWord P x k)
 
 theorem pathWord_succ (P : IETDatum₂ α n) (x : α → ℝ≥0) (k : ℕ) :
-    pathWord P x (k + 1) = pathWord P x k ++ [pathStep P x k] := rfl
+    pathWord P x (k + 1) = pathWord P x k ++ [pathStep P x k] := (rfl)
 
-theorem pathWord_zero (P : IETDatum₂ α n) (x : α → ℝ≥0) : pathWord P x 0 = [] := rfl
+theorem pathWord_zero (P : IETDatum₂ α n) (x : α → ℝ≥0) : pathWord P x 0 = [] := (rfl)
 
-theorem pathWord_length (P : IETDatum₂ α n) (x : α → ℝ≥0) :
-    ∀ k, (pathWord P x k).length = k
-  | 0 => rfl
-  | (k + 1) => by rw [pathWord_succ, List.length_append, pathWord_length P x k]; rfl
+theorem pathWord_length (P : IETDatum₂ α n) (x : α → ℝ≥0) (k : ℕ) :
+    (pathWord P x k).length = k := by
+  induction k with
+  | zero => rfl
+  | succ k ih => rw [pathWord_succ, List.length_append, ih]; rfl
 
 /-! ## 2. The greedy word stays inside the cylinders -/
 
@@ -151,12 +155,11 @@ starts in the root cylinder `Δ[]` and never lies in the stopping set of its own
 lies in the cylinder of that word at every level.  The step is the exact partition
 `Δγ = Δγ⁺ ∪ Δγ⁻ ∪ cylStop P γ`. -/
 theorem mem_pathWord_of_notMem_cylStop (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
-    {x : α → ℝ≥0} (h0 : x ∈ simplexCyl P []) (hstop : ∀ k, x ∉ cylStop P (pathWord P x k)) :
-    ∀ k, x ∈ simplexCyl P (pathWord P x k)
-  | 0 => by rw [pathWord_zero]; exact h0
-  | (k + 1) => by
-    have ih : x ∈ simplexCyl P (pathWord P x k) :=
-      mem_pathWord_of_notMem_cylStop P hP hn h0 hstop k
+    {x : α → ℝ≥0} (h0 : x ∈ simplexCyl P []) (hstop : ∀ k, x ∉ cylStop P (pathWord P x k))
+    (k : ℕ) : x ∈ simplexCyl P (pathWord P x k) := by
+  induction k with
+  | zero => rw [pathWord_zero]; exact h0
+  | succ k ih =>
     rw [pathWord_succ]
     by_cases h : x ∈ simplexCyl P (pathWord P x k ++ [true])
     · have hb : pathStep P x k = true := by
@@ -177,18 +180,24 @@ theorem mem_pathWord_of_notMem_cylStop (P : IETDatum₂ α n) (hP : P.Irreducibl
       · exact h1
       · exact absurd h1 (hstop k)
 
-/-- The same invariant under the stronger hypothesis that `x` lies in *no* stopping set. -/
+/-- **The path word stays in its own cylinder**, under the stronger hypothesis that `x` lies in
+*no* stopping set. -/
 theorem mem_pathWord (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) {x : α → ℝ≥0}
-    (h0 : x ∈ simplexCyl P []) (hstop : ∀ γ : List Bool, x ∉ cylStop P γ) :
-    ∀ k, x ∈ simplexCyl P (pathWord P x k) :=
-  mem_pathWord_of_notMem_cylStop P hP hn h0 fun _ => hstop _
+    (h0 : x ∈ simplexCyl P []) (hstop : ∀ γ : List Bool, x ∉ cylStop P γ) (k : ℕ) :
+    x ∈ simplexCyl P (pathWord P x k) :=
+  mem_pathWord_of_notMem_cylStop P hP hn h0 (fun _ => hstop _) k
 
 /-- The prefixes of the greedy sequence are the greedy words. -/
-theorem pfx_pathStep (P : IETDatum₂ α n) (x : α → ℝ≥0) :
-    ∀ k, PrefixWord.pfx (pathStep P x) k = pathWord P x k
-  | 0 => rfl
-  | (k + 1) => by
-    rw [PrefixWord.pfx_succ, pfx_pathStep P x k, pathWord_succ]
+theorem pfx_pathStep (P : IETDatum₂ α n) (x : α → ℝ≥0) (k : ℕ) :
+    pfx (pathStep P x) k = pathWord P x k := by
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    rw [pfx_succ, ih, pathWord_succ]
+
+end IETDatum₂
+
+variable {α : Type*} [Fintype α] [DecidableEq α]
 
 /-! ## 3. The root cylinder is the open simplex -/
 
@@ -203,11 +212,15 @@ theorem mem_cone_one_iff (y : α → ℝ) :
     funext a
     simp [Matrix.one_apply]
 
+namespace IETDatum₂
+
+variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
+
 /-- **The root cylinder**: `simplexCyl P []` is the set of *strictly positive* points of the
 simplex, since `Q ([]) = 1`. -/
 theorem mem_simplexCyl_nil_iff (P : IETDatum₂ α n) (x : α → ℝ≥0) :
-    x ∈ simplexCyl P [] ↔ x ∈ simplexOn α ∧ ∀ a, 0 < x a := by
-  have hQ : Path.Q P ([] : List Bool) = 1 := rfl
+    x ∈ simplexCyl P [] ↔ x ∈ simplex α ∧ ∀ a, 0 < x a := by
+  have hQ : Path.Q P ([] : List Bool) = 1 := (rfl)
   rw [simplexCyl, hQ]
   constructor
   · rintro ⟨hc, hs⟩
@@ -217,13 +230,13 @@ theorem mem_simplexCyl_nil_iff (P : IETDatum₂ α n) (x : α → ℝ≥0) :
     exact_mod_cast hpos a
 
 /-- Almost every point of the simplex is in the root cylinder.  (No irreducibility is needed:
-`simplexCyl P [] = cone 1 ∩ simplexOn α` does not depend on `P`.) -/
+`simplexCyl P [] = cone 1 ∩ simplex α` does not depend on `P`.) -/
 theorem ae_mem_simplexCyl_nil (P : IETDatum₂ α n) :
     ∀ᵐ x ∂(simplexVolumeOn α), x ∈ simplexCyl P [] := by
   have hcard : Fintype.card α ≠ 0 := by
     rw [Fintype.card_congr P.piTop, Fintype.card_fin]
     exact NeZero.ne n
-  filter_upwards [ae_mem_simplexOn_of_card_ne_zero hcard, ae_pos_simplexVolumeOn α] with x hs hpos
+  filter_upwards [ae_mem_simplex_of_card_ne_zero hcard, ae_pos_simplexVolumeOn α] with x hs hpos
   exact (mem_simplexCyl_nil_iff P x).mpr ⟨hs, hpos⟩
 
 /-- Almost every point lies in no stopping set: `List Bool` is countable and each `cylStop
@@ -236,6 +249,10 @@ theorem ae_notMem_cylStop_all (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 
 
 end IETDatum₂
 
+end IntervalExchange
+
+namespace IntervalExchange.RauzyVeech
+
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
 /-! ## 4. Nesting of the path cylinders -/
@@ -243,9 +260,11 @@ variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 /-- **Nesting**: consecutive path cylinders of an infinite sequence are nested. -/
 theorem simplexCyl_pfx_succ_subset (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     (p : ℕ → Bool) (k : ℕ) :
-    IETDatum₂.simplexCyl P (PrefixWord.pfx p (k + 1)) ⊆
-      IETDatum₂.simplexCyl P (PrefixWord.pfx p k) := by
-  rw [PrefixWord.pfx_succ]
-  exact IETDatum₂.simplexCyl_append_subset P hP hn (PrefixWord.pfx p k) (p k)
+    IETDatum₂.simplexCyl P (pfx p (k + 1)) ⊆
+      IETDatum₂.simplexCyl P (pfx p k) := by
+  rw [pfx_succ]
+  exact IETDatum₂.simplexCyl_append_subset P hP hn (pfx p k) (p k)
+
+end IntervalExchange.RauzyVeech
 
 end

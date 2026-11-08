@@ -5,11 +5,11 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.IET
 public import IETFree.TopBotFormalism
+public import Mathlib.Analysis.PSeries
 
 /-!
-Proposition 2.5 of the paper (`ae_diophantine`): almost every pair of length vectors is Diophantine.
+# Proposition 2.5: almost every pair of length vectors is Diophantine
 
 This file is separate from `Irreducible.lean` only to keep that file to a reasonable length; it is
 imported there, and it carries the Section-2 definitions (`coeffMax`, `IsDiophantine`, `simplex`)
@@ -32,12 +32,19 @@ Diophantine condition `IsDiophC … (expo p q)` with `expo p q = p + q + 3`, whi
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
 
+namespace IntervalExchange.Pair
+
 /-! ## The Section-2 definitions the statement needs -/
 
 /-- The largest absolute value of the coefficients. -/
 def coeffMax {d : ℕ} (a : Fin d → ℤ) : ℕ := Finset.univ.sup fun i => (a i).natAbs
 
-/-- Definition 2.3: the pair `(lam, μ)` is Diophantine. -/
+/-- Definition 2.3: the pair `(lam, μ)` is Diophantine, with the constants `C` and `c` of the paper.
+
+The definition is total on `(Fin d → ℝ≥0) × (Fin e → ℝ≥0)`, where the paper's is stated on
+`Δ_π × Δ_σ`: at `lam = mu = 0` the hypothesis of the inequality is never met and the predicate holds
+vacuously.  Every consumer (`ae_diophantine`, `irreducible_case`, `isDiophantine_blockPair`) is at a
+simplex point. -/
 def IsDiophantine {d e : ℕ} (lam : Fin d → ℝ≥0) (mu : Fin e → ℝ≥0) : Prop :=
   ∃ C : ℝ, 0 < C ∧ ∃ c : ℝ, 0 < c ∧ ∀ (a : Fin d → ℤ) (b : Fin e → ℤ),
     (∑ i, (a i : ℝ) * (lam i : ℝ) + ∑ j, (b j : ℝ) * (mu j : ℝ)) ≠ 0 →
@@ -94,6 +101,7 @@ lemma volume_ubox_affine {n : ℕ} (f : Fin (n + 1) → ℤ) (k : ℝ) (i : Fin 
     volume (ubox (n + 1) ∩
         {x : Fin (n + 1) → ℝ | |(∑ j, (f j : ℝ) * x j) + k| < ε})
       ≤ ENNReal.ofReal (2 * ε) := by
+  -- the points of the box where the form is small, and the measurability of that set
   set S : Set (Fin (n + 1) → ℝ) :=
     ubox (n + 1) ∩ {x : Fin (n + 1) → ℝ | |(∑ j, (f j : ℝ) * x j) + k| < ε} with hS
   have hcont : Continuous fun x : Fin (n + 1) → ℝ => |(∑ j, (f j : ℝ) * x j) + (k : ℝ)| := by
@@ -107,6 +115,7 @@ lemma volume_ubox_affine {n : ℕ} (f : Fin (n + 1) → ℤ) (k : ℝ) (i : Fin 
     calc (1 : ℝ) = ((1 : ℤ) : ℝ) := by simp
       _ ≤ ((|f i| : ℤ) : ℝ) := by exact_mod_cast h2
       _ = |(f i : ℝ)| := Int.cast_abs
+  -- slice along the coordinate `i` on which `f` does not vanish
   set ee : (Fin (n + 1) → ℝ) ≃ᵐ ℝ × (Fin n → ℝ) :=
     MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => ℝ) i with hee
   have hpres : MeasurePreserving ee volume volume := volume_preserving_piFinSuccAbove _ i
@@ -125,6 +134,7 @@ lemma volume_ubox_affine {n : ℕ} (f : Fin (n + 1) → ℤ) (k : ℝ) (i : Fin 
     rwa [Set.preimage_image_eq S ee.injective] at h
   have hfib : volume (ee '' S) = ∫⁻ s : Fin n → ℝ, volume {t : ℝ | (t, s) ∈ ee '' S} :=
     Measure.prod_apply_symm ((MeasurableEquiv.measurableSet_image ee).mpr hSmeas)
+  -- a slice is empty off the box in the remaining coordinates, and small on it
   have hslice_zero (s : Fin n → ℝ) (hs : s ∉ ubox n) : volume {t : ℝ | (t, s) ∈ ee '' S} = 0 := by
     have hempty : {t : ℝ | (t, s) ∈ ee '' S} = ∅ := by
       rw [Set.eq_empty_iff_forall_notMem]
@@ -155,6 +165,7 @@ lemma volume_ubox_affine {n : ℕ} (f : Fin (n + 1) → ℤ) (k : ℝ) (i : Fin 
         ≤ volume {t : ℝ | |(f i : ℝ) * t + ((∑ j : Fin n, (f (i.succAbove j) : ℝ) * s j) + k)| < ε}
           := measure_mono hsub
       _ ≤ ENNReal.ofReal (2 * ε) := volume_abs_lt_le hi1 hε
+  -- so the integral is that of a constant `2ε` over the remaining box
   have hcongr : ∫⁻ s : Fin n → ℝ, volume {t : ℝ | (t, s) ∈ ee '' S}
       = ∫⁻ s : Fin n → ℝ,
           (ubox n).indicator (fun s => volume {t : ℝ | (t, s) ∈ ee '' S}) s := by
@@ -174,6 +185,7 @@ lemma volume_ubox_affine {n : ℕ} (f : Fin (n + 1) → ℤ) (k : ℝ) (i : Fin 
           congr 1
           rw [Measure.restrict_apply MeasurableSet.univ, Set.univ_inter]
       _ = ENNReal.ofReal (2 * ε) := by rw [volume_ubox]; simp
+  -- assembling: the volume of the box in `n` coordinates is one
   calc volume S = volume (ee '' S) := himg
     _ = ∫⁻ s : Fin n → ℝ, volume {t : ℝ | (t, s) ∈ ee '' S} := hfib
     _ = ∫⁻ s : Fin n → ℝ, (ubox n).indicator
@@ -185,18 +197,10 @@ lemma lintegral_le_of_indicator {β : Type*} [MeasurableSpace β] {μ : Measure 
     (hB : MeasurableSet B) (F : β → ℝ≥0∞) (C : ℝ≥0∞) (hle : ∀ x, F x ≤ C)
     (hzero : ∀ x ∉ B, F x = 0) :
     ∫⁻ x, F x ∂μ ≤ C * μ B := by
-  have h1 : ∫⁻ x, F x ∂μ = ∫⁻ x, B.indicator F x ∂μ := by
-    apply lintegral_congr
-    intro x
-    by_cases hx : x ∈ B
-    · rw [Set.indicator_of_mem hx]
-    · rw [Set.indicator_of_notMem hx, hzero x hx]
-  rw [h1, lintegral_indicator hB]
-  calc ∫⁻ x in B, F x ∂μ ≤ ∫⁻ _x in B, C ∂μ := lintegral_mono fun x => hle x
-    _ = C * μ B := by
-        rw [lintegral_const]
-        congr 1
-        rw [Measure.restrict_apply MeasurableSet.univ, Set.univ_inter]
+  refine (lintegral_mono (fun x => ?_)).trans (le_of_eq (lintegral_indicator_const hB C))
+  by_cases hx : x ∈ B
+  · simp only [Set.indicator_of_mem hx]; exact hle x
+  · rw [Set.indicator_of_notMem hx, hzero x hx]
 
 /-- Two factor estimate: the set in the product of two unit boxes where a nontrivial integer
 affine form is small has measure at most `2ε`. -/
@@ -206,6 +210,7 @@ lemma volume_prod_ubox_affine {p q : ℕ} (f : Fin p → ℤ) (g : Fin q → ℤ
         {z : (Fin p → ℝ) × (Fin q → ℝ) |
           |(∑ i, (f i : ℝ) * z.1 i) + (∑ j, (g j : ℝ) * z.2 j) + K| < ε})
       ≤ ENNReal.ofReal (2 * ε) := by
+  -- the set of points of the product of boxes where the form is small
   set T : Set ((Fin p → ℝ) × (Fin q → ℝ)) :=
     (ubox p ×ˢ ubox q) ∩
       {z : (Fin p → ℝ) × (Fin q → ℝ) |
@@ -222,6 +227,7 @@ lemma volume_prod_ubox_affine {p q : ℕ} (f : Fin p → ℤ) (g : Fin q → ℤ
   have hTmeas : MeasurableSet T :=
     MeasurableSet.inter (MeasurableSet.prod (measurableSet_ubox _) (measurableSet_ubox _))
       (measurableSet_lt hcont.measurable measurable_const)
+  -- first case: `f` is not zero, so `p` is a successor
   rcases h with hf | hg
   · obtain ⟨n, hp⟩ : ∃ n, p = n + 1 := by
       rcases Nat.eq_zero_or_pos p with h0 | hpos
@@ -231,6 +237,7 @@ lemma volume_prod_ubox_affine {p q : ℕ} (f : Fin p → ℤ) (g : Fin q → ℤ
     subst hp
     obtain ⟨i, hi⟩ := Function.ne_iff.mp hf
     rw [Measure.prod_apply_symm hTmeas]
+  -- each slice is small by the single-factor estimate, and vanishes off the other box
     have hslice (w : Fin q → ℝ) :
         volume {v : Fin (n + 1) → ℝ | (v, w) ∈ T} ≤ ENNReal.ofReal (2 * ε) := by
       have hsub : {v : Fin (n + 1) → ℝ | (v, w) ∈ T} ⊆
@@ -254,10 +261,12 @@ lemma volume_prod_ubox_affine {p q : ℕ} (f : Fin p → ℤ) (g : Fin q → ℤ
         obtain ⟨hbox, -⟩ := hv
         exact hw hbox.2
       rw [hempty, measure_empty]
+  -- so Fubini gives at most `2ε · volume (ubox q) = 2ε`
     calc ∫⁻ w : Fin q → ℝ, volume {v : Fin (n + 1) → ℝ | (v, w) ∈ T}
         ≤ ENNReal.ofReal (2 * ε) * volume (ubox q) :=
           lintegral_le_of_indicator (ubox q) (measurableSet_ubox q) _ _ hslice hzero
       _ = ENNReal.ofReal (2 * ε) := by rw [volume_ubox, mul_one]
+  -- second case: `g` is not zero, the same with the two factors exchanged
   · obtain ⟨m, hq⟩ : ∃ m, q = m + 1 := by
       rcases Nat.eq_zero_or_pos q with h0 | hpos
       · subst h0
@@ -322,9 +331,11 @@ noncomputable def formBox (p q N : ℕ) : Finset ((Fin p → ℤ) × (Fin q → 
 
 lemma formBox_card_le (p q N : ℕ) : (formBox p q N).card ≤ (2 * N + 1) ^ (p + q + 1) := by
   refine Finset.card_image_le.trans ?_
-  rw [Finset.card_univ, Fintype.card_prod, Fintype.card_prod, Fintype.card_fun, Fintype.card_fun,
-    Fintype.card_fin, Fintype.card_fin, Fintype.card_fin,
-    show p + q + 1 = (p + q) + 1 from rfl, pow_add, pow_add, pow_one, mul_assoc]
+  -- the source is `(Fin (2 * N + 1))^p × (Fin (2 * N + 1))^q × Fin (2 * N + 1)`, whose cardinality
+  -- is `(2 * N + 1)^(p + q + 1)`
+  simp only [Finset.card_univ, Fintype.card_prod, Fintype.card_fun, Fintype.card_fin]
+  rw [pow_add, pow_add, pow_one]
+  exact le_of_eq (by ring)
 
 lemma mem_formBox {p q N : ℕ} {f : Fin p → ℤ} {g : Fin q → ℤ} {k : ℤ} :
     ((f, g, k) ∈ formBox p q N) ↔
@@ -423,7 +434,7 @@ lemma summable_badBound (p q : ℕ) : Summable (badBound p q) := by
     push_cast
     ring
   calc badBound p q N
-      = ((2 * N + 1 : ℕ) : ℝ) ^ (p + q + 1) * (2 * ((N : ℝ) + 1) ^ (-(expo p q : ℝ))) := rfl
+      = ((2 * N + 1 : ℕ) : ℝ) ^ (p + q + 1) * (2 * ((N : ℝ) + 1) ^ (-(expo p q : ℝ))) := (rfl)
     _ ≤ ((3 : ℝ) ^ (p + q + 1) * ((N : ℝ) + 1) ^ (p + q + 1)) *
           (2 * ((N : ℝ) + 1) ^ (-(expo p q : ℝ))) := by
         rw [← mul_pow]
@@ -660,16 +671,20 @@ lemma isDiophC_of_goodFree {p q : ℕ} {v : Fin p → ℝ} {w : Fin q → ℝ}
   obtain ⟨m, hm⟩ := h
   refine ⟨(m + 1) * 3 ^ (expo p q), ?_⟩
   intro a b hL
+  -- split off the common last coordinate: `f` and `g` are the differences, `k` the sum of the two
+  -- last coordinates, so the form becomes one in `v`, `w` plus the constant `k`
   set f : Fin p → ℤ := fun i => a i.castSucc - a (Fin.last p) with hf
   set g : Fin q → ℤ := fun j => b j.castSucc - b (Fin.last q) with hg
   set k : ℤ := a (Fin.last p) + b (Fin.last q) with hk
   set N : ℕ := max (coeffMax a) (coeffMax b) with hN
   set M : ℕ := max (coeffMax f) (max (coeffMax g) k.natAbs) with hM
+  -- the linear form at the simplex points, written in the differences
   have hL' : (∑ i, (a i : ℝ) * ((simplexMap (p + 1) v i : ℝ≥0) : ℝ)
         + ∑ j, (b j : ℝ) * ((simplexMap (q + 1) w j : ℝ≥0) : ℝ))
       = (∑ i, (f i : ℝ) * v i) + (∑ j, (g j : ℝ) * w j) + (k : ℝ) :=
     aff_simplexMap hposv hsumv hposw hsumw a b
   rw [hL']
+  -- the coefficient bound is at least `1`: at `N = 0` both vectors vanish and `hL` fails
   have hN1 : 1 ≤ N := by
     rcases Nat.eq_zero_or_pos N with h0 | hpos
     · exfalso
@@ -690,6 +705,7 @@ lemma isDiophC_of_goodFree {p q : ℕ} {v : Fin p → ℝ} {w : Fin q → ℝ}
       apply hL
       simp [ha, hb]
     · exact hpos
+  -- the differences are no larger than twice the largest coefficient
   have hMle : M ≤ 2 * N := by
     have h1 (i) : (f i).natAbs ≤ 2 * N := by
       simp only [hf]
@@ -834,7 +850,7 @@ simplex is
 an explicit hypothesis; see `ae_diophantine` below for the hypothesis-free form). -/
 theorem ae_diophantine_of_mem {d e : ℕ} (π : Equiv.Perm (Fin d)) (σ : Equiv.Perm (Fin e)) :
     ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)),
-      p.1 ∈ simplex d → p.2 ∈ simplex e → IsDiophantine p.1 p.2 := by
+      p.1 ∈ simplex (Fin d) → p.2 ∈ simplex (Fin e) → IsDiophantine p.1 p.2 := by
   rcases Nat.eq_zero_or_pos d with hd0 | hd
   · subst hd0
     simp [simplex]
@@ -868,7 +884,7 @@ theorem ae_diophantine_of_mem {d e : ℕ} (π : Equiv.Perm (Fin d)) (σ : Equiv.
     exact hgood
   rw [hmap, MeasureTheory.ae_iff]
   have hsubset : {x : (Fin (p + 1) → ℝ≥0) × (Fin (q + 1) → ℝ≥0) |
-        ¬ (x.1 ∈ simplex (p + 1) → x.2 ∈ simplex (q + 1) → IsDiophantine x.1 x.2)}
+        ¬ (x.1 ∈ simplex (Fin (p + 1)) → x.2 ∈ simplex (Fin (q + 1)) → IsDiophantine x.1 x.2)}
       ⊆ {x : (Fin (p + 1) → ℝ≥0) × (Fin (q + 1) → ℝ≥0) | ¬ IsDiophC x.1 x.2 (expo p q)} := by
     intro x hx hD
     exact hx fun _ _ => hD.isDiophantine (by unfold expo; omega)
@@ -888,21 +904,10 @@ For `d = 0` the hypothesis-free form is *false*: `simplex 0 = ∅` (the empty su
 statement below carries `[NeZero d] [NeZero e]`, matching the paper's `d, e ∈ ℕ*`.
 -/
 
-/-- The simplex is closed, hence measurable: it is the preimage of `{1}` under the sum. -/
-theorem isClosed_simplex (d : ℕ) : IsClosed (simplex d) := by
-  have hcont : Continuous fun lam : Fin d → ℝ≥0 => ∑ i, lam i :=
-    continuous_finsetSum _ (fun i _ => continuous_apply i)
-  have h : simplex d = (fun lam : Fin d → ℝ≥0 => ∑ i, lam i) ⁻¹' {1} := rfl
-  rw [h]
-  exact isClosed_singleton.preimage hcont
-
-theorem measurableSet_simplex (d : ℕ) : MeasurableSet (simplex d) :=
-  (isClosed_simplex d).measurableSet
-
 /-- `simplexMap` sends the free region into the simplex: the coordinates are `v i` and `1 - ∑ v`,
 which sum to `1`. -/
 theorem simplexMap_mem_simplex {p : ℕ} {v : Fin p → ℝ} (hpos : ∀ i, 0 < v i)
-    (hsum : ∑ i, v i < 1) : simplexMap (p + 1) v ∈ simplex (p + 1) := by
+    (hsum : ∑ i, v i < 1) : simplexMap (p + 1) v ∈ simplex (Fin (p + 1)) := by
   refine NNReal.coe_injective ?_
   rw [NNReal.coe_sum, NNReal.coe_one, Fin.sum_univ_castSucc,
     simplexMap_last_coe hsum]
@@ -910,15 +915,17 @@ theorem simplexMap_mem_simplex {p : ℕ} {v : Fin p → ℝ} (hpos : ∀ i, 0 < 
   ring
 
 /-- **The measure `simplexVolume d` is supported on the simplex** (for `d ≥ 1`). -/
-theorem simplexVolume_compl_simplex {d : ℕ} [NeZero d] : simplexVolume d (simplex d)ᶜ = 0 := by
+theorem simplexVolume_compl_simplex {d : ℕ} [NeZero d] :
+    simplexVolume d (simplex (Fin d))ᶜ = 0 := by
   have hd : 0 < d := Nat.pos_of_ne_zero (NeZero.ne d)
   obtain ⟨p, rfl⟩ : ∃ p, d = p + 1 := ⟨d - 1, by omega⟩
-  have hempty : (simplexMap (p + 1)) ⁻¹' (simplex (p + 1))ᶜ ∩ simplexRegion (p + 1) = ∅ := by
+  have hempty : (simplexMap (p + 1)) ⁻¹' (simplex (Fin (p + 1)))ᶜ ∩ simplexRegion (p + 1) = ∅ := by
     refine Set.eq_empty_iff_forall_notMem.mpr (fun v hv => ?_)
     exact hv.1 (simplexMap_mem_simplex hv.2.1 hv.2.2)
   rw [simplexVolume,
-    Measure.map_apply (measurable_simplexMap _) (measurableSet_simplex _).compl,
-    Measure.restrict_apply ((measurableSet_simplex _).compl.preimage (measurable_simplexMap _)),
+    Measure.map_apply (measurable_simplexMap _) (measurableSet_simplex (Fin (p + 1))).compl,
+    Measure.restrict_apply
+      ((measurableSet_simplex (Fin (p + 1))).compl.preimage (measurable_simplexMap _)),
     hempty, measure_empty]
 
 /-- The free region has finite volume: it sits inside the unit box `ubox`. -/
@@ -935,23 +942,24 @@ instance instFiniteRestrictSimplexRegion (d : ℕ) :
 
 /-- `simplexVolume d` is a finite measure. -/
 instance instFiniteSimplexVolume (d : ℕ) : IsFiniteMeasure (simplexVolume d) := by
-  unfold simplexVolume
+  rw [simplexVolume_def]
   infer_instance
 
 /-- Almost every pair lies in the product of the simplices. -/
 theorem ae_mem_simplex_prod {d e : ℕ} [NeZero d] [NeZero e] :
-    ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)), p.1 ∈ simplex d ∧ p.2 ∈ simplex e := by
-  have h1 : ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)), p.1 ∈ simplex d := by
+    ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)),
+      p.1 ∈ simplex (Fin d) ∧ p.2 ∈ simplex (Fin e) := by
+  have h1 : ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)), p.1 ∈ simplex (Fin d) := by
     rw [MeasureTheory.ae_iff]
-    have hset : {p : (Fin d → ℝ≥0) × (Fin e → ℝ≥0) | p.1 ∉ simplex d}
-        = (simplex d)ᶜ ×ˢ Set.univ := by
+    have hset : {p : (Fin d → ℝ≥0) × (Fin e → ℝ≥0) | p.1 ∉ simplex (Fin d)}
+        = (simplex (Fin d))ᶜ ×ˢ Set.univ := by
       ext p
       simp
     rw [hset, Measure.prod_prod, simplexVolume_compl_simplex, zero_mul]
-  have h2 : ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)), p.2 ∈ simplex e := by
+  have h2 : ∀ᵐ p ∂((simplexVolume d).prod (simplexVolume e)), p.2 ∈ simplex (Fin e) := by
     rw [MeasureTheory.ae_iff]
-    have hset : {p : (Fin d → ℝ≥0) × (Fin e → ℝ≥0) | p.2 ∉ simplex e}
-        = Set.univ ×ˢ (simplex e)ᶜ := by
+    have hset : {p : (Fin d → ℝ≥0) × (Fin e → ℝ≥0) | p.2 ∉ simplex (Fin e)}
+        = Set.univ ×ˢ (simplex (Fin e))ᶜ := by
       ext p
       simp
     rw [hset, Measure.prod_prod, simplexVolume_compl_simplex, mul_zero]
@@ -997,6 +1005,9 @@ theorem IsDiophantine.of_int_combination (hdio : IsDiophantine lam mu) {K : ℕ}
     IsDiophantine (fun i => ⟨(w i : ℝ) / u, div_nonneg (w i).coe_nonneg hu0.le⟩)
       (fun j => ⟨(w' j : ℝ) / u, div_nonneg (w' j).coe_nonneg hu0.le⟩) := by
   obtain ⟨C, hCpos, c, hcpos, hC⟩ := hdio
+  -- The witness is `C / Ktot ^ c` with `Ktot = (r + n) * K`: combining the two integer matrices
+  -- with coefficients `a`, `b` bounded by `N = max (coeffMax a) (coeffMax b)` gives coordinates
+  -- bounded by `Ktot * N` (`hAbound`, `hBbound`), so `hC` at `Ktot * N` gives the estimate.
   set Acomb : (Fin r → ℤ) → (Fin n → ℤ) → Fin d → ℤ := fun a b k =>
     ∑ i, a i * A i k + ∑ j, b j * A' j k with hAcombdef
   set Bcomb : (Fin r → ℤ) → (Fin n → ℤ) → Fin e → ℤ := fun a b l =>
@@ -1041,6 +1052,7 @@ theorem IsDiophantine.of_int_combination (hdio : IsDiophantine lam mu) {K : ℕ}
   refine ⟨C / (Ktot : ℝ) ^ c, ?_, c, hcpos, ?_⟩
   · exact div_pos hCpos (Real.rpow_pos_of_pos hKtotR c)
   · intro a b hne
+    -- with both sides in the `∑` form the rewrites below match
     change C / (Ktot : ℝ) ^ c / ((max (coeffMax a) (coeffMax b) : ℕ) : ℝ) ^ c
       ≤ |∑ i, (a i : ℝ) * ((w i : ℝ) / u) + ∑ j, (b j : ℝ) * ((w' j : ℝ) / u)|
     have hsub1 (i) : (a i : ℝ) * (w i : ℝ)
@@ -1130,6 +1142,7 @@ theorem IsDiophantine.of_int_combination (hdio : IsDiophantine lam mu) {K : ℕ}
     have hTne : T ≠ 0 := by
       intro h0
       apply hne
+      -- in the explicit `∑` form, which is what `rw [hT, h0, zero_div]` rewrites
       change (∑ i, (a i : ℝ) * ((w i : ℝ) / u)) + ∑ j, (b j : ℝ) * ((w' j : ℝ) / u) = 0
       rw [hT, h0, zero_div]
     have hmaxApos : (0 : ℝ)
@@ -1190,5 +1203,7 @@ theorem IsDiophantine.of_int_combination (hdio : IsDiophantine lam mu) {K : ℕ}
     exact le_trans hmul hfin
 
 end IntCombination
+
+end IntervalExchange.Pair
 
 end

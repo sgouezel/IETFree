@@ -5,25 +5,36 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.CylinderGrowth
+public import IETFree.RauzyVeech.Cylinder.Growth
 public import IETFree.RauzyVeech.NameInfinite
 
 /-!
-# `PairReach`: the combinatorial core of Cor. 4
+# `PairReach`: the combinatorial core of Corollary 4 of Yoccoz
 
-Descent on `pos_T(last false)`. -/
+`Path.PairReach` says that in the diagram of any irreducible datum on at least two letters, every
+ordered pair of letters is reachable from every vertex by a Rauzy path (`pairReach_all`); this is
+what richness of the greedy path consumes.  The proof descends along the block below a last letter:
+the two block lemmas `true_block_piTop` and `false_block_piBottom`, the descent steps
+`descent_subclaim` and `descent_step`, and the counting bounds `card_filter_lt`, `card_filter_le`,
+`card_filter_gt`. -/
 
 @[expose] public section
 
 open scoped BigOperators
+open IntervalExchange.RauzyVeech
+
+namespace IntervalExchange
 
 namespace IETDatum₂
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
+end IETDatum₂
+
+variable {α : Type*} [Fintype α] {n : ℕ}
+
 /-! ## 1. Counting letters by position -/
 
-omit [DecidableEq α] [NeZero n] in
 /-- The letters whose position in the order `e` is `< k` are `k` in number. -/
 theorem card_filter_lt (e : α ≃ Fin n) {k : ℕ} (hk : k ≤ n) :
     (Finset.univ.filter (fun a => (e a).val < k)).card = k := by
@@ -39,7 +50,6 @@ theorem card_filter_lt (e : α ≃ Fin n) {k : ℕ} (hk : k ≤ n) :
   rw [← Finset.card_image_of_injective _ (f := fun a => (e a).val)
     (fun a b h => e.injective (Fin.ext h)), himg, Finset.card_range]
 
-omit [DecidableEq α] [NeZero n] in
 /-- The letters whose position in the order `e` is `≤ k` are `k + 1` in number. -/
 theorem card_filter_le (e : α ≃ Fin n) {k : ℕ} (hk : k < n) :
     (Finset.univ.filter (fun a => (e a).val ≤ k)).card = k + 1 := by
@@ -55,9 +65,8 @@ theorem card_filter_le (e : α ≃ Fin n) {k : ℕ} (hk : k < n) :
   rw [← Finset.card_image_of_injective _ (f := fun a => (e a).val)
     (fun a b h => e.injective (Fin.ext h)), himg, Finset.card_range]
 
-omit [DecidableEq α] [NeZero n] in
 /-- The letters whose position in the order `e` is `> k` are `n - k - 1` in number. -/
-theorem card_filter_gt (e : α ≃ Fin n) {k : ℕ} (_hk : k < n) :
+theorem card_filter_gt (e : α ≃ Fin n) {k : ℕ} :
     (Finset.univ.filter (fun a => k < (e a).val)).card = n - k - 1 := by
   have himg : ((Finset.univ.filter (fun a => k < (e a).val)).image (fun a => (e a).val))
       = Finset.Ico (k + 1) n := by
@@ -71,6 +80,10 @@ theorem card_filter_gt (e : α ≃ Fin n) {k : ℕ} (_hk : k < n) :
   rw [← Finset.card_image_of_injective _ (f := fun a => (e a).val)
     (fun a b h => e.injective (Fin.ext h)), himg, Nat.card_Ico]
   omega
+
+namespace IETDatum₂
+
+variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
 /-! ## 2. `true` blocks do not change the top order, `false` blocks the bottom order -/
 
@@ -100,13 +113,11 @@ theorem false_block_prefix (P : IETDatum₂ α n) (j : ℕ) (a : α)
 /-! ## 3. The sub-claim: in Case B a suitable `c'` exists -/
 
 omit [DecidableEq α] in
-/-- **Sub-claim of the descent** (Case B): if every letter before `d = last false` in the top order
-sits at a bottom position `≤ pos_L(last true)`, then there is a letter after `d` in the top order
-whose bottom position is strictly less than the maximal bottom position of those letters. -/
+/-- **Sub-claim of the descent** (Case B): there is a letter after `d = last false` in the top order
+whose bottom position is strictly less than the maximal bottom position of the letters before `d` in
+the top order. -/
 theorem descent_subclaim (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
-    (hm : 0 < (P.piTop (P.last false)).val)
-    (_hA : ∀ u, (P.piTop u).val < (P.piTop (P.last false)).val →
-      (P.piBottom u).val ≤ (P.piBottom (P.last true)).val) :
+    (hm : 0 < (P.piTop (P.last false)).val) :
     ∃ c', (P.piTop (P.last false)).val < (P.piTop c').val ∧
       (P.piBottom c').val < (Finset.univ.filter (fun a =>
         (P.piTop a).val < (P.piTop (P.last false)).val)).sup (fun a => (P.piBottom a).val) := by
@@ -122,7 +133,7 @@ theorem descent_subclaim (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤
     have hne : P.last false ≠ P.last true := (last_true_ne_last_false P hP hn).symm
     have hlt : m ≠ n - 1 := by
       intro h
-      have h1 : P.piTop (P.last false) = IETDatum₂.lastPos n :=
+      have h1 : P.piTop (P.last false) = lastPos n :=
         Fin.ext (by rw [lastPos_val]; exact h)
       have h2 : P.piTop (P.last false) = P.piTop (P.last true) := by rw [h1, IETDatum₂.last_top]
       exact hne (P.piTop.injective h2)
@@ -170,13 +181,13 @@ theorem descent_subclaim (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤
     set R : Finset α := Finset.univ.filter (fun a => m < (P.piTop a).val) with hR_def
     have hRcard : R.card = n - m - 1 := by
       rw [hR_def]
-      exact card_filter_gt P.piTop hmn
+      exact card_filter_gt P.piTop
     have hRsub : R ⊆ Finset.univ.filter (fun a => ML < (P.piBottom a).val) := by
       intro a ha
       rw [hR_def, Finset.mem_filter] at ha
       exact Finset.mem_filter.mpr ⟨Finset.mem_univ _, hstrict a ha.2⟩
     have h2 := Finset.card_le_card hRsub
-    rw [hRcard, card_filter_gt P.piBottom hML_lt] at h2
+    rw [hRcard, card_filter_gt P.piBottom] at h2
     omega
   have hdich : ML = m - 1 ∨ ML = m := by omega
   rcases hdich with hcase | hcase
@@ -191,7 +202,7 @@ theorem descent_subclaim (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤
         exact Finset.mem_filter.mpr ⟨Finset.mem_univ _, hS_sub a ha⟩
       · rw [hS_card, card_filter_le P.piBottom hML_lt]
         omega
-    refine MeshShrink.no_block P hP S hSne hSproper ?_ ?_
+    refine no_block P hP S hSne hSproper ?_ ?_
     · intro a ha b hb
       rw [hS_def, Finset.mem_filter] at ha
       have hbm : ¬ ((P.piTop b).val < m) := fun h =>
@@ -206,13 +217,13 @@ theorem descent_subclaim (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤
     set R : Finset α := Finset.univ.filter (fun a => m < (P.piTop a).val) with hR_def
     have hRcard : R.card = n - m - 1 := by
       rw [hR_def]
-      exact card_filter_gt P.piTop hmn
+      exact card_filter_gt P.piTop
     have hReq : R = Finset.univ.filter (fun a => ML < (P.piBottom a).val) := by
       refine Finset.eq_of_subset_of_card_le ?_ ?_
       · intro a ha
         rw [hR_def, Finset.mem_filter] at ha
         exact Finset.mem_filter.mpr ⟨Finset.mem_univ _, hstrict a ha.2⟩
-      · rw [hRcard, card_filter_gt P.piBottom hML_lt]
+      · rw [hRcard, card_filter_gt P.piBottom]
         omega
     have hd_not_R : P.last false ∉ R := by
       rw [hR_def, Finset.mem_filter]
@@ -238,7 +249,7 @@ theorem descent_subclaim (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤
       · rw [hS'_card, card_filter_le P.piBottom hmn]
     have hcardα : Fintype.card α = n := by
       rw [Fintype.card_congr P.piTop, Fintype.card_fin]
-    refine MeshShrink.no_block P hP S' (by rw [hS'_def]; exact Finset.insert_nonempty _ _) ?_ ?_ ?_
+    refine no_block P hP S' (by rw [hS'_def]; exact Finset.insert_nonempty _ _) ?_ ?_ ?_
     · intro h
       rw [h, Finset.card_univ, hcardα] at hS'_card
       omega
@@ -292,11 +303,11 @@ theorem descent_step (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
         u).val ≤ (P.piBottom (P.last true)).val := by
       have h := hcaseA u hu
       omega
-    obtain ⟨c', hc'1, hc'2⟩ := descent_subclaim P hP hn hm hA'
+    obtain ⟨c', hc'1, hc'2⟩ := descent_subclaim P hP hn hm
     -- the `false` block puts `c'` last in the top order
     set j₁ : ℕ := n - 1 - (P.piTop c').val with hj₁
     set Q₁ : IETDatum₂ α n := vertex P (List.replicate j₁ false) with hQ₁
-    have hQ₁_top : Q₁.piTop c' = IETDatum₂.lastPos n := by
+    have hQ₁_top : Q₁.piTop c' = lastPos n := by
       rw [hQ₁, hj₁]
       simpa using exists_false_block P (P.piTop c') hc'1
     have hQ₁_last : Q₁.last true = c' := by
@@ -502,7 +513,7 @@ theorem pair_of_last_true_first (Q : IETDatum₂ α n) (hx : Q.last true = Q.piB
 omit [DecidableEq α] in
 /-- **`PairReach`**: from every irreducible vertex, every ordered pair of distinct letters occurs,
 at some reachable vertex, as the pair `(last e, last !e)` of one of the two arrows. -/
-theorem pairReach (P : IETDatum₂ α n) (_hP : P.Irreducible) (hn : 2 ≤ n) : Path.PairReach P := by
+theorem pairReach (hn : 2 ≤ n) : Path.PairReach (α := α) (n := n) := by
   intro v hv a b hne
   obtain ⟨w₁, hw₁⟩ := exists_last_true_first v hv hn
   have hlast : (vertex v w₁).last true = (vertex v w₁).piBottom.symm (0 : Fin n) := by
@@ -514,21 +525,23 @@ theorem pairReach (P : IETDatum₂ α n) (_hP : P.Irreducible) (hn : 2 ≤ n) : 
 omit [DecidableEq α] in
 /-- **`PairReach` with no hypothesis on `n`**: `PairReach` is vacuous for a single letter, and
 `pairReach` covers `n ≥ 2`. -/
-theorem pairReach_all (P : IETDatum₂ α n) (hP : P.Irreducible) : Path.PairReach P := by
+theorem pairReach_all : Path.PairReach (α := α) (n := n) := by
   by_cases hn : 2 ≤ n
-  · exact pairReach P hP hn
+  · exact pairReach hn
   · intro v hv a b hne
     exfalso
-    have hcard : Fintype.card α = n := by rw [Fintype.card_congr P.piTop, Fintype.card_fin]
+    have hcard : Fintype.card α = n := by rw [Fintype.card_congr v.piTop, Fintype.card_fin]
     have h1 : Fintype.card α ≤ 1 := by omega
     exact hne (Fintype.card_le_one_iff.mp h1 a b)
 
 /-- **The uniform constant `C₁` of Lemma 2, unconditional.** -/
-theorem exists_uniform_bound' (hn : 2 ≤ n) :
+theorem exists_uniform_bound' :
     ∃ C₁ : ℝ, 1 ≤ C₁ ∧ ∀ (P : IETDatum₂ α n), P.Irreducible →
       ∃ w : List Bool, ∀ a b, 1 ≤ Path.Q P w a b ∧ (Path.Q P w a b : ℝ) ≤ C₁ :=
-  Path.exists_uniform_bound (fun Q hQ => pairReach Q hQ hn)
+  Path.exists_uniform_bound (α := α) (n := n) pairReach_all
 
 end IETDatum₂
+
+end IntervalExchange
 
 end

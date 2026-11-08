@@ -5,8 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.InvariantMeasure
-public import IETFree.TopBotFormalism
+public import IETFree.IET
+public import Mathlib.Dynamics.BirkhoffSum.Average
 
 /-!
 # The two forms of unique ergodicity: `UniqueErgodic` and `UniformBirkhoff`
@@ -21,15 +21,17 @@ is `UniqueErgodicity.uniformBirkhoff_of_uniqueErgodic`.  The transfer argument o
 works with the iterate `f^[i]` of the underlying function, hence the `birkhoffAverage` shape of the
 averages (`UniformBirkhoff`, not the group power `f ^ i` of `IETFree/IET.lean`); `unitMeas` is the
 library's Lebesgue measure on `[0, 1)`, from `IETFree/IET.lean`.  The references to "the blueprint"
-in this directory are to the Masur–Veech blueprint, reproduced in `HISTORY.md`, Part II.
+in this directory are to the Masur–Veech blueprint of the project: the design document that
+states, in the source's notation, the tower formula, the ray criterion and the graded induction
+formalised in `IETFree/RauzyVeech/` and `IETFree/Rigidity/`.
 
 ## What is proved where
 
 The proof is in the modules of this directory:
 
-* `UniqueErgodicity.CompactTool` — a continuous self-map of a compact space with a unique
-  invariant probability measure has uniformly convergent Birkhoff averages (Tool 1 of the source,
-  Yoccoz p. 55), in a "relative" form for later use;
+* `IETFree/Measure/CompactTool.lean` — a continuous self-map of a compact space with a unique
+  invariant probability measure has uniformly convergent Birkhoff averages (Tool 1 of Yoccoz,
+  p. 55), in a "relative" form for later use;
 * `UniqueErgodicity.Limits` — the one-sided limits of an interval exchange, and the fact that a
   periodic left limit of an exchange is a periodic interval, hence incompatible with unique
   ergodicity;
@@ -38,7 +40,7 @@ The proof is in the modules of this directory:
   homeomorphism it carries;
 * `UniqueErgodicity.Transfer` — the transfer of invariant measures from the split interval back
   to the exchange;
-* `UniqueErgodicity.IET` — Theorem 2: `UniqueErgodic` implies `UniformBirkhoff`, first for
+* `UniqueErgodicity.Theorem2` — Theorem 2: `UniqueErgodic` implies `UniformBirkhoff`, first for
   `mkIET1 lam π` (via the germ map) and then for every exchange on `[0, 1)`, together with
   Lemma 2.9 (`exists_uniform_birkhoff`), the uniform bound on the Birkhoff sums of the indicator of
   a finite union of intervals.
@@ -49,6 +51,8 @@ The proof is in the modules of this directory:
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
 
+namespace IntervalExchange.UniqueErgodicity
+
 /-- **Uniform Birkhoff convergence**: the Birkhoff averages of every continuous test function
 converge to their integral against Lebesgue measure on `[0, 1)`, uniformly over the initial point in
 `[0, 1)`.
@@ -56,11 +60,13 @@ converge to their integral against Lebesgue measure on `[0, 1)`, uniformly over 
 This is the *strong* form of unique ergodicity, stated in the form the transfer argument of this
 directory produces.  It is not a second definition: `UniqueErgodic` (`IETFree/IET.lean`) is the
 existence of a unique invariant probability measure carried by `[0, 1)`, and
-`uniformBirkhoff_of_uniqueErgodic` (`UniqueErgodicity/IET.lean`) proves that unique ergodicity
+`uniformBirkhoff_of_uniqueErgodic` (`UniqueErgodicity/Theorem2.lean`) proves that unique ergodicity
 implies this one — Theorem 2 of the blueprint. -/
 def UniformBirkhoff (f : IET 0 1) : Prop :=
   ∀ ψ : ℝ → ℝ, Continuous ψ → ∀ ε : ℝ, 0 < ε → ∃ N : ℕ, 0 < N ∧
     ∀ n ≥ N, ∀ x ∈ Set.Ico (0 : ℝ) 1,
       |birkhoffAverage ℝ ⇑f ψ n x - ∫ y, ψ y ∂unitMeas| ≤ ε
+
+end IntervalExchange.UniqueErgodicity
 
 end

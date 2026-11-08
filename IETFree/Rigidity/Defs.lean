@@ -5,8 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.RauzyVeech.TrueStep
-public import IETFree.TopBotFormalism
+public import IETFree.RauzyVeech.Tower.Node
 
 /-!
 # Veech rigidity: the node vocabulary
@@ -21,13 +20,14 @@ greedy path of a length vector `lam`:
 
 * `height P γ b` — the height of the tower over the letter `b`, the `b`-th column sum of the
   Rauzy matrix `Path.Q P γ`;
-* `baseLen P γ lam` — the length `∑ a, (lamAfter P γ lam a : ℝ)` of the base interval at
+* `baseLen P γ lam` — the length `∑ a, (lamAfter P γ lam a : ℝ)` of the base
+  interval at
   that node (in the node's own scale, not normalised);
 * `BigCell P γ lam δ b` — the cell of `b` occupies at least `1 - δ` of that base;
 * `deltaOf ε M` — the relative precision used by `rigid_step` as a function of the target
   precision `ε` and of the comparability constant `M` of the heights.
 
-Nothing here is a source statement: the source-facing theorem is `veechRigidity`
+Nothing here is a statement of the paper: the theorem that faces it is `veechRigidity`
 (`IETFree/Pair/Irreducible.lean`), while the intermediate `ae_rigid_step` and `rigid_step` are
 proved in `Rigidity/Veech.lean` and
 `Rigidity/RigidStep.lean`.
@@ -37,31 +37,27 @@ proved in `Rigidity/Veech.lean` and
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal
+open IntervalExchange.RauzyVeech
 
-namespace IETFree.Rigidity
-
-/-- The height of the level-`γ` tower over the letter `b`: the `b`-th column sum of
-`Path.Q P γ`. -/
-noncomputable def height {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
-    (P : IETDatum₂ α n) (γ : List Bool) (b : α) : ℕ :=
-  ∑ a, (IETDatum₂.Path.Q P γ a b).toNat
-
-/-- The length of the base interval at the node `γ`: `∑ a, (lamAfter P γ lam a : ℝ)`, in the
-scale in which the original length vector sums to `1`. -/
-noncomputable def baseLen {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
-    (P : IETDatum₂ α n) (γ : List Bool) (lam : α → ℝ≥0) : ℝ :=
-  ∑ a, (Tower.lamAfter P γ lam a : ℝ)
+namespace IntervalExchange.Rigidity
 
 /-- The cell of the letter `b` is big at the node `γ`, with relative precision `δ`: it occupies at
 least `1 - δ` of the base interval. -/
 noncomputable def BigCell {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
     (P : IETDatum₂ α n) (γ : List Bool) (lam : α → ℝ≥0) (δ : ℝ) (b : α) : Prop :=
-  (1 - δ) * baseLen P γ lam ≤ (Tower.lamAfter P γ lam b : ℝ)
+  (1 - δ) * baseLen P γ lam ≤ (lamAfter P γ lam b : ℝ)
 
 /-- The relative precision of `rigid_step`, as a function of the target precision `ε` and of the
 comparability constant `M` of the heights (`deltaOf`). -/
 noncomputable def deltaOf (ε : ℝ) (M : ℕ) : ℝ := min (1/4) (ε / (8 * ((M : ℝ) + 2)))
 
-end IETFree.Rigidity
+/-- `deltaOf ε M` is positive: the minimum of `1/4` and `ε / (8 (M + 2))`.  Used in both
+`Rigidity/RigidStep.lean` and `Rigidity/Veech.lean`, so it is public here rather than `private` in
+each. -/
+theorem deltaOf_pos {ε : ℝ} (hε : 0 < ε) (M : ℕ) : 0 < deltaOf ε M := by
+  rw [deltaOf]
+  exact lt_min (by norm_num) (div_pos hε (by positivity))
+
+end IntervalExchange.Rigidity
 
 end

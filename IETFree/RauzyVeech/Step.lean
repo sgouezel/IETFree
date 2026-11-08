@@ -18,15 +18,13 @@ product `IETDatum₂.Path.Q` along a word, and the inverse of an irreducible per
 open MeasureTheory
 open scoped BigOperators ENNReal NNReal
 
+namespace IntervalExchange
 
 namespace IETDatum₂
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
-/-- The last position of `Fin n`, as a `Fin n` (needs `n ≠ 0`). -/
-def lastPos (n : ℕ) [NeZero n] : Fin n := ⟨n - 1, by have := NeZero.ne n; omega⟩
-
-/-- The letter at the last position in the order `ε` (`true` = top, `false` = bottom): the source's
+/-- The letter at the last position in the order `ε` (`true` = top, `false` = bottom): Yoccoz's
 `α_ε`, the *name* of an arrow of type `ε`. -/
 def last (P : IETDatum₂ α n) (ε : Bool) : α :=
   if ε then P.piTop.symm (lastPos n) else P.piBottom.symm (lastPos n)
@@ -34,11 +32,11 @@ def last (P : IETDatum₂ α n) (ε : Bool) : α :=
 omit [DecidableEq α] in
 /-- **The last letter of the top order** is the letter whose top position is `lastPos`: the
 computation form of `last`, which is what proofs unfolding it need. -/
-theorem last_true (P : IETDatum₂ α n) : P.last true = P.piTop.symm (lastPos n) := rfl
+theorem last_true (P : IETDatum₂ α n) : P.last true = P.piTop.symm (lastPos n) := (rfl)
 
 omit [DecidableEq α] in
 /-- **The last letter of the bottom order**, in the same computation form. -/
-theorem last_false (P : IETDatum₂ α n) : P.last false = P.piBottom.symm (lastPos n) := rfl
+theorem last_false (P : IETDatum₂ α n) : P.last false = P.piBottom.symm (lastPos n) := (rfl)
 
 omit [DecidableEq α] in
 @[simp] theorem last_top (P : IETDatum₂ α n) : P.piTop (P.last true) = lastPos n := by
@@ -48,7 +46,7 @@ omit [DecidableEq α] in
 @[simp] theorem last_bottom (P : IETDatum₂ α n) : P.piBottom (P.last false) = lastPos n := by
   simp [last]
 
-/-! ## 0. The inverse of an irreducible permutation -/
+/-! ## 1. The inverse of an irreducible permutation -/
 
 theorem IsIrreduciblePerm.symm {n : ℕ} {π : Equiv.Perm (Fin n)} (h : IsIrreduciblePerm π) :
     IsIrreduciblePerm π.symm := by
@@ -66,139 +64,11 @@ theorem IsIrreduciblePerm.symm {n : ℕ} {π : Equiv.Perm (Fin n)} (h : IsIrredu
     exact a.2
   exact h k key i
 
-/-! ## 1. Inserting the last position just after `p` -/
+/-! ## 2. Inserting the last position just after `p` -/
 
-section Insert
 
-variable {n : ℕ} [NeZero n]
 
-/-- The last position of `Fin n`. -/
-lemma lastPos_val : (IETDatum₂.lastPos n).val = n - 1 := rfl
-
-/-- Move the element at the last position to the position just after `p`, shifting the letters
-strictly in between up by one. -/
-def insertFun (p : Fin n) (h : p.val + 1 < n) (k : Fin n) : Fin n :=
-  if k.val ≤ p.val then k
-  else if k = IETDatum₂.lastPos n then ⟨p.val + 1, h⟩
-  else ⟨min (k.val + 1) (n - 1), by have := k.isLt; omega⟩
-
-/-- The inverse of `insertFun`: move the element at position `p + 1` to the last position. -/
-def removeFun (p : Fin n) (_h : p.val + 1 < n) (k : Fin n) : Fin n :=
-  if k.val ≤ p.val then k
-  else if k.val = p.val + 1 then IETDatum₂.lastPos n
-  else ⟨k.val - 1, by have := k.isLt; omega⟩
-
-lemma insertFun_of_le {p : Fin n} (h : p.val + 1 < n) {k : Fin n} (hk : k.val ≤ p.val) :
-    insertFun p h k = k := by
-  rw [insertFun, ite_eq_left hk]
-
-lemma insertFun_lastPos {p : Fin n} (h : p.val + 1 < n) :
-    insertFun p h (IETDatum₂.lastPos n) = ⟨p.val + 1, h⟩ := by
-  rw [insertFun, ite_eq_right (by rw [lastPos_val]; omega), ite_eq_left rfl]
-
-lemma insertFun_of_gt {p : Fin n} (h : p.val + 1 < n) {k : Fin n} (hk : p.val < k.val)
-    (hk' : k ≠ IETDatum₂.lastPos n) :
-    (insertFun p h k).val = k.val + 1 := by
-  have hk2 : k.val + 1 ≤ n - 1 := by
-    have hne : k.val ≠ n - 1 := fun hh => hk' (Fin.ext (by rw [lastPos_val, hh]))
-    omega
-  rw [insertFun, ite_eq_right (by omega), ite_eq_right hk', Fin.val_mk, Nat.min_eq_left hk2]
-
-lemma removeFun_of_le {p : Fin n} (h : p.val + 1 < n) {k : Fin n} (hk : k.val ≤ p.val) :
-    removeFun p h k = k := by
-  rw [removeFun, ite_eq_left hk]
-
-lemma removeFun_insertFun {p : Fin n} (h : p.val + 1 < n) (k : Fin n) :
-    removeFun p h (insertFun p h k) = k := by
-  by_cases h1 : k.val ≤ p.val
-  · rw [insertFun_of_le h h1, removeFun_of_le h h1]
-  · by_cases h2 : k = IETDatum₂.lastPos n
-    · rw [h2, insertFun_lastPos h, removeFun, ite_eq_right (by simp), ite_eq_left (by simp)]
-    · have hk : p.val < k.val := by
-        have := k.isLt
-        omega
-      have hval := insertFun_of_gt h hk h2
-      rw [removeFun, ite_eq_right (by rw [hval]; omega), ite_eq_right (by rw [hval]; omega)]
-      exact Fin.ext (by rw [Fin.val_mk, hval]; omega)
-
-lemma insertFun_removeFun {p : Fin n} (h : p.val + 1 < n) (k : Fin n) :
-    insertFun p h (removeFun p h k) = k := by
-  by_cases h1 : k.val ≤ p.val
-  · rw [removeFun, ite_eq_left h1, insertFun_of_le h h1]
-  · rw [removeFun, ite_eq_right h1]
-    by_cases h2 : k.val = p.val + 1
-    · rw [ite_eq_left h2, insertFun_lastPos h, Fin.ext_iff, h2]
-    · rw [ite_eq_right h2]
-      have hk : p.val + 1 < k.val := by
-        have := k.isLt
-        omega
-      have hk' : (⟨k.val - 1, by have := k.isLt; omega⟩ : Fin n) ≠ IETDatum₂.lastPos n := by
-        intro hh
-        have hh' : k.val - 1 = n - 1 := by
-          have := congrArg Fin.val hh
-          simpa [lastPos_val] using this
-        omega
-      have hk2 : p.val < (⟨k.val - 1, by have := k.isLt; omega⟩ : Fin n).val := by
-        simp only []
-        omega
-      apply Fin.ext
-      rw [insertFun_of_gt h hk2 hk']
-      rw [Fin.val_mk]
-      omega
-
-/-- The insertion as a permutation of the positions.  It is the identity (junk value) when `p` is
-already the last position, which cannot happen for irreducible data with `n ≥ 2`. -/
-noncomputable def insertEquiv (p : Fin n) : Equiv.Perm (Fin n) :=
-  if h : p.val + 1 < n then
-    { toFun := insertFun p h
-      invFun := removeFun p h
-      left_inv := removeFun_insertFun h
-      right_inv := insertFun_removeFun h }
-  else 1
-
-lemma insertEquiv_apply_le {p : Fin n} {k : Fin n} (hk : k.val ≤ p.val) :
-    insertEquiv p k = k := by
-  by_cases h : p.val + 1 < n
-  · rw [insertEquiv, dite_eq_left h]
-    exact insertFun_of_le h hk
-  · rw [insertEquiv, dite_eq_right h]
-    rfl
-
-lemma insertEquiv_lastPos {p : Fin n} (h : p.val + 1 < n) :
-    insertEquiv p (IETDatum₂.lastPos n) = ⟨p.val + 1, h⟩ := by
-  rw [insertEquiv, dite_eq_left h]
-  exact insertFun_lastPos h
-
-lemma insertEquiv_apply_gt {p : Fin n} {k : Fin n} (h : p.val + 1 < n) (hk : p.val < k.val)
-    (hk' : k ≠ IETDatum₂.lastPos n) : (insertEquiv p k).val = k.val + 1 := by
-  rw [insertEquiv, dite_eq_left h]
-  exact insertFun_of_gt h hk hk'
-
-omit [Fintype α] in
-/-- The insertion formula along a bijection `e : α ≃ Fin n` whose last letter is `c`. -/
-theorem trans_insertEquiv_apply_val {α : Type*} [DecidableEq α] {n : ℕ} [NeZero n]
-    (e : α ≃ Fin n) (p : Fin n) {c : α} (hc : e c = IETDatum₂.lastPos n) (a : α) :
-    ((e.trans (insertEquiv p)) a).val =
-      if (e a).val ≤ p.val then (e a).val else if a = c then p.val + 1 else (e a).val + 1 := by
-  rw [Equiv.trans_apply]
-  by_cases h1 : (e a).val ≤ p.val
-  · rw [ite_eq_left h1, insertEquiv_apply_le h1]
-  · rw [ite_eq_right h1]
-    have hp : p.val + 1 < n := by
-      have := (e a).isLt
-      omega
-    by_cases h2 : a = c
-    · subst h2
-      rw [ite_eq_left rfl, hc, insertEquiv_lastPos (p := p) hp]
-    · rw [ite_eq_right h2]
-      have hne : e a ≠ IETDatum₂.lastPos n := by
-        intro hh
-        exact h2 (e.injective (by rw [hh, hc]))
-      rw [insertEquiv_apply_gt (p := p) (k := e a) hp (by omega) hne]
-
-end Insert
-
-/-! ## 2. The Rauzy–Veech step -/
+/-! ## 3. The Rauzy–Veech step -/
 
 section Step
 
@@ -210,10 +80,10 @@ noncomputable def pivot (P : IETDatum₂ α n) (ε : Bool) : Fin n :=
   if ε then P.piBottom (P.last true) else P.piTop (P.last false)
 
 omit [DecidableEq α] in
-@[simp] theorem pivot_true (P : IETDatum₂ α n) : pivot P true = P.piBottom (P.last true) := rfl
+@[simp] theorem pivot_true (P : IETDatum₂ α n) : pivot P true = P.piBottom (P.last true) := (rfl)
 
 omit [DecidableEq α] in
-@[simp] theorem pivot_false (P : IETDatum₂ α n) : pivot P false = P.piTop (P.last false) := rfl
+@[simp] theorem pivot_false (P : IETDatum₂ α n) : pivot P false = P.piTop (P.last false) := (rfl)
 
 /-- **The Rauzy–Veech step** (source 4.1).  The `ε`-order is unchanged; in the `1-ε` order the
 letter `last (1-ε)` is moved from the last position to the position just after `last ε`, the
@@ -224,31 +94,41 @@ noncomputable def rvStep (P : IETDatum₂ α n) (ε : Bool) : IETDatum₂ α n w
 
 omit [DecidableEq α] in
 @[simp] theorem rvStep_piTop_true (P : IETDatum₂ α n) :
-    (rvStep P true).piTop = P.piTop := rfl
+    (rvStep P true).piTop = P.piTop := (rfl)
 
 omit [DecidableEq α] in
 @[simp] theorem rvStep_piBottom_false (P : IETDatum₂ α n) :
-    (rvStep P false).piBottom = P.piBottom := rfl
+    (rvStep P false).piBottom = P.piBottom := (rfl)
 
 omit [DecidableEq α] in
 theorem rvStep_piBottom_true (P : IETDatum₂ α n) :
     (rvStep P true).piBottom =
-      P.piBottom.trans (insertEquiv (P.piBottom (P.last true))) := rfl
+      P.piBottom.trans (insertEquiv (P.piBottom (P.last true))) := (rfl)
 
 omit [DecidableEq α] in
 theorem rvStep_piTop_false (P : IETDatum₂ α n) :
     (rvStep P false).piTop =
-      P.piTop.trans (insertEquiv (P.piTop (P.last false))) := rfl
+      P.piTop.trans (insertEquiv (P.piTop (P.last false))) := (rfl)
+
+omit [DecidableEq α] in
+theorem rvStep_perm_true (P : IETDatum₂ α n) :
+    (rvStep P true).perm =
+      (P.piBottom.trans (insertEquiv (pivot P true))).symm.trans P.piTop := (rfl)
+
+omit [DecidableEq α] in
+theorem rvStep_perm_false (P : IETDatum₂ α n) :
+    (rvStep P false).perm =
+      P.piBottom.symm.trans (P.piTop.trans (insertEquiv (pivot P false))) := (rfl)
 
 omit [DecidableEq α] in
 theorem rvStep_apply_true (P : IETDatum₂ α n) (a : α) :
     (rvStep P true).piBottom a =
-      insertEquiv (P.piBottom (P.last true)) (P.piBottom a) := rfl
+      insertEquiv (P.piBottom (P.last true)) (P.piBottom a) := (rfl)
 
 omit [DecidableEq α] in
 theorem rvStep_apply_false (P : IETDatum₂ α n) (a : α) :
     (rvStep P false).piTop a =
-      insertEquiv (P.piTop (P.last false)) (P.piTop a) := rfl
+      insertEquiv (P.piTop (P.last false)) (P.piTop a) := (rfl)
 
 omit [DecidableEq α] in
 /-- Exchanging the two orders exchanges the two types of step. -/
@@ -323,9 +203,8 @@ theorem rvStep_piBottom_true_apply (P : IETDatum₂ α n) (a : α) :
       else P.piBottom a + 1 := by
   apply Fin.ext
   by_cases h1 : P.piBottom a ≤ P.piBottom (P.last true)
-  · rw [ite_eq_left h1,
-      rvStep_piBottom_true_apply_val,
-      ite_eq_left (show (P.piBottom a).val ≤ (P.piBottom (P.last true)).val from h1)]
+  · have h1' : (P.piBottom a).val ≤ (P.piBottom (P.last true)).val := h1
+    rw [ite_eq_left h1, rvStep_piBottom_true_apply_val, ite_eq_left h1']
   · have hpv : (P.piBottom (P.last true)).val < (P.piBottom a).val := by
       omega
     have hp : (P.piBottom (P.last true)).val + 1 < n := by
@@ -342,14 +221,12 @@ theorem rvStep_piBottom_true_apply (P : IETDatum₂ α n) (a : α) :
             exact Fin.ext (by rw [lastPos_val, hh])))
         have := (P.piBottom a).isLt
         omega
-      rw [ite_eq_right h2,
-        rvStep_piBottom_true_apply_val,
-        ite_eq_right (show ¬ ((P.piBottom a).val ≤ (P.piBottom (P.last true)).val) from h1),
-        ite_eq_right h2]
+      have h1' : ¬ ((P.piBottom a).val ≤ (P.piBottom (P.last true)).val) := h1
+      rw [ite_eq_right h2, rvStep_piBottom_true_apply_val, ite_eq_right h1', ite_eq_right h2]
       exact (fin_add_one_val hp').symm
 
 end Step
-/-! ## 3. Irreducibility is preserved by the step -/
+/-! ## 4. Irreducibility is preserved by the step -/
 
 section Irreducible
 
@@ -388,12 +265,12 @@ theorem rvStep_irreducible_true (P : IETDatum₂ α n) (hP : P.Irreducible) :
     have h1 : (rvStep P true).perm ((rvStep P true).piBottom (P.last true)) ≤ k :=
       hk _ (by rw [hQb]; exact hp_lt.le)
     have h2 : (rvStep P true).perm ((rvStep P true).piBottom (P.last true)) =
-        IETDatum₂.lastPos n := by
+        lastPos n := by
       rw [IETDatum₂.perm_apply]
       rw [Equiv.symm_apply_apply]
       exact IETDatum₂.last_top P
     rw [h2] at h1
-    have hk_last : k = IETDatum₂.lastPos n := by
+    have hk_last : k = lastPos n := by
       apply Fin.ext
       rw [Fin.le_iff_val_le_val, lastPos_val] at h1
       rw [lastPos_val]
@@ -414,7 +291,7 @@ theorem rvStep_irreducible_false (P : IETDatum₂ α n) (hP : P.Irreducible) :
     rw [IETDatum₂.perm_inv]
     exact IsIrreduciblePerm.symm hP
   have h2 : (rvStep P.inv true).Irreducible := rvStep_irreducible_true P.inv h1
-  have heq : rvStep P false = (rvStep P.inv true).inv := rfl
+  have heq : rvStep P false = (rvStep P.inv true).inv := (rfl)
   rw [IETDatum₂.Irreducible_def]
   rw [heq, IETDatum₂.perm_inv]
   exact IsIrreduciblePerm.symm h2
@@ -431,18 +308,18 @@ omit [DecidableEq α] in
 /-- For irreducible data with `n ≥ 2`, the letter last in the top order is not last in the bottom
 order: otherwise the permutation would fix its last point, contradicting irreducibility. -/
 theorem pivot_true_ne_lastPos (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n) :
-    P.piBottom (P.last true) ≠ IETDatum₂.lastPos n := by
+    P.piBottom (P.last true) ≠ lastPos n := by
   intro h
   have hk (i : Fin n) : i ≤ (⟨n - 2, by omega⟩ : Fin n) := by
     refine hP _ ?_ i
     intro j hj
     have hjv : j.val ≤ n - 2 := hj
-    have hjne : j ≠ IETDatum₂.lastPos n := by
+    have hjne : j ≠ lastPos n := by
       intro hh
       rw [hh] at hjv
       rw [lastPos_val] at hjv
       omega
-    have hnp : P.perm j ≠ IETDatum₂.lastPos n := by
+    have hnp : P.perm j ≠ lastPos n := by
       intro hh
       have h1 : P.piTop (P.piBottom.symm j) = P.piTop (P.last true) := by
         rw [IETDatum₂.last_top P]
@@ -454,13 +331,13 @@ theorem pivot_true_ne_lastPos (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 
       exact hjne (by rw [h3, h])
     simp only [Fin.le_iff_val_le_val]
     have hjlt := (P.perm j).isLt
-    have hnv : (IETDatum₂.lastPos n).val = n - 1 := lastPos_val
+    have hnv : (lastPos n).val = n - 1 := lastPos_val
     have hne : (P.perm j).val ≠ n - 1 := by
       intro hh
       exact hnp (Fin.ext (by rw [hnv]; exact hh))
     omega
-  have h1 : (IETDatum₂.lastPos n).val ≤ n - 2 := hk (IETDatum₂.lastPos n)
-  have hnv : (IETDatum₂.lastPos n).val = n - 1 := lastPos_val
+  have h1 : (lastPos n).val ≤ n - 2 := hk (lastPos n)
+  have hnv : (lastPos n).val = n - 1 := lastPos_val
   omega
 
 end Irreducible
@@ -469,13 +346,23 @@ end Irreducible
 def rvMat (P : IETDatum₂ α n) (ε : Bool) : Matrix α α ℤ :=
   fun i j => if i = j then 1 else if i = P.last ε ∧ j = P.last (!ε) then 1 else 0
 
+/-- The entries of the elementary matrix `V = 1 + E_{α_ε α_{1-ε}}` are `0` or `1`. -/
+theorem rvMat_nonneg (P : IETDatum₂ α n) (ε : Bool) (a b : α) : 0 ≤ P.rvMat ε a b := by
+  rw [rvMat]; split_ifs <;> norm_num
+
+end IETDatum₂
+
+variable {α : Type*} [Fintype α] [DecidableEq α]
+
 /-- The open cone `C(γ) = Q(γ)(ℝ^*_+)^A` over a finite path. -/
 def cone (Q : Matrix α α ℤ) : Set (α → ℝ) :=
   {x | ∃ y : α → ℝ, (∀ a, 0 < y a) ∧ x = fun a => ∑ b, (Q a b : ℝ) * y b}
 
+namespace IETDatum₂
+
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
-/-! ## 1. The elementary-matrix identity -/
+/-! ## 5. The elementary-matrix identity -/
 
 /-- The `(a,b)` entry of `rvMat ε`, as a sum of two `ite`'s in `ℝ`.  The hypothesis
 `P.last ε ≠ P.last (!ε)` is what rules out the double counting when `a = b`. -/
@@ -495,47 +382,54 @@ theorem rvMat_cast (P : IETDatum₂ α n) (ε : Bool) (a b : α)
   push_cast
   ring
 
-/-- Summing the elementary matrix `1 + E_{c,c'}` against a vector `y`: the result at `a` is
-`y a` plus (if `a` is the "main" letter `c`) `y c'`. -/
-theorem sum_rvMat_mul (c c' : α) (y : α → ℝ) (a : α) :
-    ∑ b, ((if b = a then (1 : ℝ) else 0) + (if a = c ∧ b = c' then (1 : ℝ) else 0)) * y b
-      = y a + (if a = c then y c' else 0) := by
-  have hexp (b) : ((if b = a then (1 : ℝ) else 0) +
-        (if a = c ∧ b = c' then (1 : ℝ) else 0)) * y b
-      = (if b = a then y b else 0) + (if a = c ∧ b = c' then y b else 0) := by
-    rw [add_mul, ite_mul, ite_mul, one_mul, zero_mul]
-  have hsplit : ∑ b, ((if b = a then (1 : ℝ) else 0) +
-        (if a = c ∧ b = c' then (1 : ℝ) else 0)) * y b
-      = (∑ b, (if b = a then y b else 0)) +
-        (∑ b, (if a = c ∧ b = c' then y b else 0)) := by
-    rw [Finset.sum_congr rfl (fun b _ => hexp b), Finset.sum_add_distrib]
-  rw [hsplit, Finset.sum_ite_eq' Finset.univ a (fun b => y b)]
-  simp only [Finset.mem_univ, ite_true]
-  by_cases ha : a = c
-  · have h2 (b) : (if a = c ∧ b = c' then y b else 0) = (if b = c' then y b else 0) := by
-      rw [ha]
-      simp
-    rw [Finset.sum_congr rfl (fun b _ => h2 b), Finset.sum_ite_eq' Finset.univ c' (fun b => y b)]
-    simp [ha]
-  · have h2 (b) : (if a = c ∧ b = c' then y b else 0) = (0 : ℝ) := by
-      rw [ite_eq_right (fun h => ha h.1)]
-    rw [Finset.sum_congr rfl (fun b _ => h2 b), Finset.sum_const_zero, add_zero]
-    simp [ha]
-
 variable (P : IETDatum₂ α n)
 
-/-! ## 3. The rows of `rvMat` and the converse of the length relation -/
+/-! ## 6. The rows of `rvMat` and the converse of the length relation -/
 
 /-- The matrix `Q(γ) = V⁽¹⁾⋯V⁽ⁿ⁾` of a finite path, i.e. the matrix taking the renormalised
-lengths `λ⁽ⁿ⁾` to the original ones (Lemma 1 of the source). -/
+lengths `λ⁽ⁿ⁾` to the original ones (Lemma 1 of Yoccoz). -/
 noncomputable def Path.Q (P : IETDatum₂ α n) : List Bool → Matrix α α ℤ
   | [] => 1
   | e :: es => P.rvMat e * Path.Q (P.rvStep e) es
 
 /-- The path cylinder `Δ(γ) = C(γ) ∩ Δ`. -/
 def simplexCyl (P : IETDatum₂ α n) (γ : List Bool) : Set (α → ℝ≥0) :=
-  {x | (fun a => (x a : ℝ)) ∈ cone (Path.Q P γ) ∧ x ∈ simplexOn α}
+  {x | (fun a => (x a : ℝ)) ∈ cone (Path.Q P γ) ∧ x ∈ simplex α}
 
 end IETDatum₂
+
+/-! ## 7. The elementary-matrix sum -/
+
+/-- A sum against the elementary matrix `1 + t · E_{c,c'}`: the result at `a` is `y a` plus `t`
+times `y c'` when `a` is the main letter `c`.  At `t = 1` this is the row-sum identity for `rvMat`
+(`rvMat_cast`). -/
+theorem sum_add_single_mul (c c' : α) (t : ℝ) (y : α → ℝ) (a : α) :
+    ∑ b, ((if b = a then (1 : ℝ) else 0) + (if a = c ∧ b = c' then t else 0)) * y b
+      = y a + t * (if a = c then y c' else 0) := by
+  have hexp (b) : ((if b = a then (1 : ℝ) else 0) +
+        (if a = c ∧ b = c' then t else 0)) * y b
+      = (if b = a then y b else 0) + (if a = c ∧ b = c' then t * y b else 0) := by
+    rw [add_mul, ite_mul, ite_mul, one_mul, zero_mul]
+  have hsplit : ∑ b, ((if b = a then (1 : ℝ) else 0) +
+        (if a = c ∧ b = c' then t else 0)) * y b
+      = (∑ b, (if b = a then y b else 0)) +
+        (∑ b, (if a = c ∧ b = c' then t * y b else 0)) := by
+    rw [Finset.sum_congr rfl (fun b _ => hexp b), Finset.sum_add_distrib]
+  rw [hsplit, Finset.sum_ite_eq' Finset.univ a (fun b => y b)]
+  simp only [Finset.mem_univ, ite_true]
+  by_cases ha : a = c
+  · have h2 (b) : (if a = c ∧ b = c' then t * y b else 0) =
+        (if b = c' then t * y b else 0) := by
+      rw [ha]
+      simp
+    rw [Finset.sum_congr rfl (fun b _ => h2 b),
+      Finset.sum_ite_eq' Finset.univ c' (fun b => t * y b)]
+    simp [ha]
+  · have h2 (b) : (if a = c ∧ b = c' then t * y b else 0) = (0 : ℝ) := by
+      rw [ite_eq_right (fun h => ha h.1)]
+    rw [Finset.sum_congr rfl (fun b _ => h2 b), Finset.sum_const_zero, add_zero]
+    simp [ha]
+
+end IntervalExchange
 
 end

@@ -6,31 +6,35 @@ Authors: Sébastien Gouëzel
 module
 
 public import IETFree.RauzyVeech.SimplexAe
-public import IETFree.RauzyVeech.Volume
+public import IETFree.RauzyVeech.SimplexVolume
+public import Mathlib.LinearAlgebra.Matrix.Permutation
+public import Mathlib.LinearAlgebra.Matrix.SchurComplement
+public import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
 
 /-!
 # The analytic layer of the volume computation
 
 This is the analytic layer of the volume computation, on top of the geometric layer of
-`IETFree/RauzyVeech/Volume.lean`:
+`IETFree/RauzyVeech/SimplexVolume.lean`:
 
 * `det_sub_last_col` — the pure matrix identity `det (Q - b·1ᵀ) = det M` for a matrix with column
   sums `1` (by row and column operations);
 * `det_linInducedMap` — the determinant of the linear part of `inducedMap M` is `det M`;
-* `AffineVolume.*` — the affine decomposition `inducedMap M = linInducedMap M + b`, the change of
+* `*` — the affine decomposition `inducedMap M = linInducedMap M + b`, the change of
   variables `volume (inducedMap M '' S) = |det M| · volume S`, injectivity and region membership
   under the hypotheses that are actually needed, and the counterexamples showing that the
   hypotheses cannot be dropped.
 
 The hypotheses that the project's statements carry — column sums `1` and `det M ≠ 0` — are exactly
-the ones used below (`AffineVolume.volume_image_inducedMap_of_det`,
-`AffineVolume.inducedMap_mem_region`). -/
+the ones used below (`volume_image_inducedMap_of_det`,
+`inducedMap_mem_region`). -/
 
 @[expose] public section
 
-
 open MeasureTheory Matrix
 open scoped BigOperators ENNReal NNReal
+
+namespace IntervalExchange.RauzyVeech
 
 /-! ## The pure matrix identity
 
@@ -69,14 +73,16 @@ theorem lastRowOp_apply_castSucc (n : ℕ) (i : Fin n) (j : Fin (n + 1)) :
 theorem isLowerTriangular_lastRowOp (n : ℕ) : (lastRowOp n).IsLowerTriangular := by
   intro i j hij
   -- `toDual j < toDual i` means `i < j`
-  have hi : i ≠ Fin.last n := ne_of_lt ((show i < j from hij).trans_le (Fin.le_last j))
-  have hijne : i ≠ j := ne_of_lt (show i < j from hij)
+  have hij' : i < j := hij
+  have hi : i ≠ Fin.last n := ne_of_lt (hij'.trans_le (Fin.le_last j))
+  have hijne : i ≠ j := ne_of_lt hij'
   simp [lastRowOp, hi, hijne]
 
 theorem isLowerTriangular_lastColOp (n : ℕ) : (lastColOp n).IsLowerTriangular := by
   intro i j hij
-  have hi : i ≠ Fin.last n := ne_of_lt ((show i < j from hij).trans_le (Fin.le_last j))
-  have hijne : i ≠ j := ne_of_lt (show i < j from hij)
+  have hij' : i < j := hij
+  have hi : i ≠ Fin.last n := ne_of_lt (hij'.trans_le (Fin.le_last j))
+  have hijne : i ≠ j := ne_of_lt hij'
   simp [lastColOp, hi, hijne]
 
 theorem det_lastRowOp (n : ℕ) : (lastRowOp n).det = 1 := by
@@ -209,10 +215,6 @@ theorem det_sub_last_col {n : ℕ} (M : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ)
     · intro h; exact absurd (Finset.mem_univ _) h
   rw [← h3, ← h2, h1]
 
-/-! ## The determinant of the linear part of `inducedMap` -/
-
-namespace AffineVolume
-
 /-! ## 1. The affine decomposition `inducedMap M = linInducedMap M + const` -/
 
 /-- `inducedMap M` is its linear part plus the constant vector made of the last column of `M`. -/
@@ -240,7 +242,7 @@ noncomputable def linInducedMapLinear {n : ℕ} (M : Matrix (Fin (n + 1)) (Fin (
     map_smul' := linInducedMap_smul M }
 
 @[simp] theorem linInducedMapLinear_apply {n : ℕ} (M : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ)
-    (v : Fin n → ℝ) : linInducedMapLinear M v = linInducedMap M v := rfl
+    (v : Fin n → ℝ) : linInducedMapLinear M v = linInducedMap M v := (rfl)
 
 /-- Row form of the linear part: on the standard basis its matrix is
 `i j ↦ M i.castSucc j.castSucc - M i.castSucc (Fin.last n)`. -/
@@ -286,7 +288,7 @@ theorem det_linInducedMap_of_matrix {n : ℕ} {M : Matrix (Fin (n + 1)) (Fin (n 
     LinearMap.det (linInducedMapLinear M) = M.det :=
   det_linInducedMap_of_toMatrix_det (by rw [toMatrix'_linInducedMapLinear]; exact hdet)
 
-/-! ## 3. Membership in the region -/
+/-! ## 2. Membership in the region -/
 
 /-- `inducedMap M` maps the open region into itself for a nonnegative `M` with column sums `1` and
 `det M ≠ 0`.  The determinant hypothesis is necessary. -/
@@ -316,10 +318,10 @@ theorem inducedMap_mem_region {n : ℕ} {M : Matrix (Fin (n + 1)) (Fin (n + 1)) 
         ⟨j, Finset.mem_univ _, mul_pos hj (hchart j)⟩
     linarith
 
-/-! ## 4. Change of variables -/
+/-! ## 3. Change of variables -/
 
 /-- Core change of variables: only the determinant of the linear part is needed, and the conclusion
-holds for **every** set `S` (no measurability, no inclusion in the region).  Axiom-free. -/
+holds for **every** set `S` (no measurability, no inclusion in the region). -/
 theorem volume_image_inducedMap_of_det {n : ℕ} {M : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ}
     (hdet_eq : LinearMap.det (linInducedMapLinear M) = M.det) (S : Set (Fin n → ℝ)) :
     volume (inducedMap M '' S) = ENNReal.ofReal |M.det| * volume S := by
@@ -348,94 +350,50 @@ theorem volume_image_inducedMap_of_det {n : ℕ} {M : Matrix (Fin (n + 1)) (Fin 
         Measure.addHaar_image_linearMap volume (linInducedMapLinear M) S
     _ = ENNReal.ofReal |M.det| * volume S := by rw [hdet_eq]
 
-end AffineVolume
-
 /-! ## The determinant of the linear part -/
 
 /-- The determinant of the linear part of `inducedMap M`, deduced from `det_sub_last_col`. -/
 theorem det_linInducedMap {n : ℕ} {M : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ}
-    (hM : ∀ j, ∑ i, M i j = 1) : LinearMap.det (AffineVolume.linInducedMapLinear M) = M.det :=
-  AffineVolume.det_linInducedMap_of_matrix (det_sub_last_col M hM)
-
-/-! ## Permutation invariance of the volume  `chartVolume_map_perm` says that `l ↦ l ∘ σ` is
-`inducedMap (permMat σ)` in the chart, `permMat σ` has nonnegative entries, column sums `1` and
-determinant `±1`, and `inducedMap (permMat σ)` maps the region onto itself (inverse `permMat σ⁻¹`),
-so the change of variables with `|det| = 1` gives the invariance. -/
+    (hM : ∀ j, ∑ i, M i j = 1) : LinearMap.det (linInducedMapLinear M) = M.det :=
+  det_linInducedMap_of_matrix (det_sub_last_col M hM)
 
 /-! ## The permutation matrix -/
 
-/-- The matrix of the permutation `σ`; it acts on vectors by `l ↦ l ∘ σ`. -/
-def permMat {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ :=
-  fun i j => if σ i = j then 1 else 0
+/-- The entries of `Equiv.Perm.permMatrix`, in the `if` form the chart computation rewrites with. -/
+theorem permMatrix_apply {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) (i j : Fin (n + 1)) :
+    σ.permMatrix ℝ i j = if σ i = j then (1 : ℝ) else 0 := by
+  simp [Equiv.Perm.permMatrix]
 
-theorem permMat_apply {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) (i j : Fin (n + 1)) :
-    permMat σ i j = if σ i = j then (1 : ℝ) else 0 := rfl
-
-theorem permMat_eq_one {n : ℕ} {σ : Equiv.Perm (Fin (n + 1))} {i j : Fin (n + 1)}
-    (h : σ i = j) : permMat σ i j = 1 := by
-  rw [permMat_apply, ite_eq_left h]
-
-theorem permMat_eq_zero {n : ℕ} {σ : Equiv.Perm (Fin (n + 1))} {i j : Fin (n + 1)}
-    (h : σ i ≠ j) : permMat σ i j = 0 := by
-  rw [permMat_apply, ite_eq_right h]
-
-theorem permMat_nonneg {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
-    ∀ i j, 0 ≤ permMat σ i j := by
-  intro i j
-  rw [permMat_apply]
+/-- The permutation matrix is nonnegative. -/
+theorem permMatrix_nonneg {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) (i j : Fin (n + 1)) :
+    0 ≤ σ.permMatrix ℝ i j := by
+  rw [permMatrix_apply]
   split <;> norm_num
 
-theorem permMat_col_sum {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
-    ∀ j, ∑ i, permMat σ i j = 1 := by
-  intro j
+/-- **The column sums of the permutation matrix are `1`**, which is what makes `inducedMap` of a
+permutation matrix a map of the region. -/
+theorem permMatrix_col_sum {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) (j : Fin (n + 1)) :
+    ∑ i, σ.permMatrix ℝ i j = 1 := by
   refine (Finset.sum_eq_single (σ.symm j) ?_ ?_).trans ?_
   · intro b _ hb
-    exact permMat_eq_zero (fun h => hb ((Equiv.eq_symm_apply σ).mpr h))
+    have hne : σ b ≠ j := fun h => hb ((Equiv.eq_symm_apply σ).mpr h)
+    rw [permMatrix_apply, ite_eq_right hne]
   · intro h; exact absurd (Finset.mem_univ _) h
-  · exact permMat_eq_one (σ.apply_symm_apply j)
+  · rw [permMatrix_apply, ite_eq_left (σ.apply_symm_apply j)]
 
-theorem permMat_mul_symm {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
-    permMat σ * permMat σ.symm = 1 := by
-  ext i k
-  simp only [Matrix.mul_apply, Matrix.one_apply]
-  refine (Finset.sum_eq_single (σ i) ?_ ?_).trans ?_
-  · intro b _ hb
-    exact mul_eq_zero_of_left (permMat_eq_zero (Ne.symm hb)) _
-  · intro h; exact absurd (Finset.mem_univ _) h
-  · simp [permMat_apply]
-
-theorem permMat_transpose_mul {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
-    (permMat σ)ᵀ * permMat σ = 1 := by
-  ext i k
-  simp only [Matrix.mul_apply, Matrix.one_apply, Matrix.transpose_apply]
-  refine (Finset.sum_eq_single (σ.symm i) ?_ ?_).trans ?_
-  · intro b _ hb
-    exact mul_eq_zero_of_left
-      (permMat_eq_zero (fun h => hb ((Equiv.eq_symm_apply σ).mpr h))) _
-  · intro h; exact absurd (Finset.mem_univ _) h
-  · simp [permMat_apply]
-
-/-- `det (permMat σ) * det (permMat σ) = 1`, from `(permMat σ)ᵀ * permMat σ = 1`. -/
-theorem permMat_det_mul_self {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
-    (permMat σ).det * (permMat σ).det = 1 := by
-  have h := congrArg Matrix.det (permMat_transpose_mul σ)
-  rw [Matrix.det_mul, Matrix.det_transpose, Matrix.det_one] at h
-  exact h
-
-theorem permMat_det_ne_zero {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
-    (permMat σ).det ≠ 0 := by
+/-- The determinant of a permutation matrix is nonzero. -/
+theorem permMatrix_det_ne_zero {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
+    (σ.permMatrix ℝ).det ≠ 0 := by
+  rw [Matrix.det_permutation, Int.cast_ne_zero]
   intro h
-  have := permMat_det_mul_self σ
-  rw [h, mul_zero] at this
-  exact zero_ne_one this
+  have h1 := Equiv.Perm.sign_abs σ
+  rw [h, abs_zero] at h1
+  exact zero_ne_one h1
 
-theorem permMat_abs_det {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
-    |(permMat σ).det| = 1 := by
-  have h2 : (permMat σ).det ^ 2 = 1 := by
-    rw [sq]; exact permMat_det_mul_self σ
-  rcases sq_eq_one_iff.mp h2 with h | h
-  · rw [h, abs_one]
-  · rw [h, abs_neg, abs_one]
+/-- The determinant of a permutation matrix has absolute value `1`. -/
+theorem permMatrix_abs_det {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
+    |(σ.permMatrix ℝ).det| = 1 := by
+  rw [Matrix.det_permutation, ← Int.cast_abs, Equiv.Perm.sign_abs, Int.cast_one]
 
 /-! ## The induced maps: composition and the unit matrix -/
 
@@ -464,23 +422,26 @@ theorem inducedMap_comp {n : ℕ} {M N : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ}
   rw [Finset.sum_mul]
   exact Finset.sum_congr rfl fun j _ => by ring
 
-/-- `inducedMap (permMat σ) ∘ inducedMap (permMat σ⁻¹) = id`. -/
-theorem inducedMap_permMat_comp {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) (v : Fin n → ℝ) :
-    inducedMap (permMat σ) (inducedMap (permMat σ.symm) v) = v := by
-  rw [inducedMap_comp (M := permMat σ) (N := permMat σ.symm) (permMat_col_sum σ.symm),
-    permMat_mul_symm, inducedMap_one]
+/-- `inducedMap` of a permutation matrix, composed with the inverse permutation matrix, is the
+identity. -/
+theorem inducedMap_permMatrix_comp {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) (v : Fin n → ℝ) :
+    inducedMap (σ.permMatrix ℝ) (inducedMap ((σ⁻¹).permMatrix ℝ) v) = v := by
+  have hmul : σ.permMatrix ℝ * (σ⁻¹).permMatrix ℝ = 1 := by
+    simpa using (Matrix.permMatrix_mul (σ := σ⁻¹) (τ := σ) (R := ℝ)).symm
+  rw [inducedMap_comp (M := σ.permMatrix ℝ) (N := (σ⁻¹).permMatrix ℝ)
+    (permMatrix_col_sum (σ⁻¹)), hmul, inducedMap_one]
 
-/-- **The chart identity for permutation matrices**: in the chart, `inducedMap (permMat σ)` is the
-permutation of the coordinates `l ↦ l ∘ σ`. -/
-theorem chart_inducedMap_permMat {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) (v : Fin n → ℝ) :
-    chart n (inducedMap (permMat σ) v) = fun j => chart n v (σ j) := by
-  rw [chart_inducedMap (M := permMat σ) (permMat_col_sum σ)]
+/-- **The chart identity for permutation matrices**: in the chart, `inducedMap (σ.permMatrix ℝ)` is
+the permutation of the coordinates `l ↦ l ∘ σ`. -/
+theorem chart_inducedMap_permMatrix {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) (v : Fin n → ℝ) :
+    chart n (inducedMap (σ.permMatrix ℝ) v) = fun j => chart n v (σ j) := by
+  rw [chart_inducedMap (M := σ.permMatrix ℝ) (permMatrix_col_sum σ)]
   funext j
   refine (Finset.sum_eq_single (σ j) ?_ ?_).trans ?_
   · intro b _ hb
-    exact mul_eq_zero_of_left (permMat_eq_zero (Ne.symm hb)) _
+    rw [permMatrix_apply, ite_eq_right (Ne.symm hb), zero_mul]
   · intro h; exact absurd (Finset.mem_univ _) h
-  · rw [permMat_eq_one rfl, one_mul]
+  · rw [permMatrix_apply, ite_eq_left rfl, one_mul]
 
 /-! ## Continuity of the chart and of the induced maps -/
 
@@ -501,47 +462,49 @@ theorem continuous_inducedMap {n : ℕ} (M : Matrix (Fin (n + 1)) (Fin (n + 1)) 
     Continuous (inducedMap M) := by
   have h : inducedMap M
           = fun v : Fin n → ℝ =>
-              AffineVolume.linInducedMapLinear M v + (fun i => M i.castSucc (Fin.last n)) := by
+              linInducedMapLinear M v + (fun i => M i.castSucc (Fin.last n)) := by
     funext v
-    rw [AffineVolume.inducedMap_eq_linInducedMap_add]
+    rw [inducedMap_eq_linInducedMap_add]
     rfl
   rw [h]
-  exact (AffineVolume.linInducedMapLinear M).continuous_of_finiteDimensional.add continuous_const
+  exact (linInducedMapLinear M).continuous_of_finiteDimensional.add continuous_const
 
 theorem continuous_permCoord {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
     Continuous (fun l : Fin (n + 1) → ℝ => fun i => l (σ i)) :=
   continuous_pi fun i => continuous_apply (σ i)
 
-/-! ## `inducedMap (permMat σ)` maps the open region onto itself -/
+/-! ## `inducedMap` of a permutation matrix maps the open region onto itself -/
 
-theorem inducedMap_permMat_image_region {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
-    inducedMap (permMat σ) '' region n = region n := by
+theorem inducedMap_permMatrix_image_region {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
+    inducedMap (σ.permMatrix ℝ) '' region n = region n := by
   refine Set.Subset.antisymm ?_ ?_
   · rintro _ ⟨v, hv, rfl⟩
-    exact AffineVolume.inducedMap_mem_region (permMat_nonneg σ) (permMat_col_sum σ)
-      (permMat_det_ne_zero σ) hv
+    exact inducedMap_mem_region (permMatrix_nonneg σ) (permMatrix_col_sum σ)
+      (permMatrix_det_ne_zero σ) hv
   · intro y hy
-    exact ⟨inducedMap (permMat σ.symm) y,
-      AffineVolume.inducedMap_mem_region (permMat_nonneg σ.symm) (permMat_col_sum σ.symm)
-        (permMat_det_ne_zero σ.symm) hy,
-      inducedMap_permMat_comp σ y⟩
+    exact ⟨inducedMap ((σ⁻¹).permMatrix ℝ) y,
+      inducedMap_mem_region (permMatrix_nonneg σ⁻¹) (permMatrix_col_sum σ⁻¹)
+        (permMatrix_det_ne_zero σ⁻¹) hy,
+      inducedMap_permMatrix_comp σ y⟩
 
-/-! ## `inducedMap (permMat σ)` preserves `volume.restrict (region n)` -/
+/-! ## `inducedMap` of a permutation matrix preserves `volume.restrict (region n)` -/
 
-theorem map_restrict_permMat {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
-    (volume.restrict (region n)).map (inducedMap (permMat σ)) = volume.restrict (region n) := by
-  have hmeas : Measurable (inducedMap (permMat σ)) := (continuous_inducedMap _).measurable
-  have himage := inducedMap_permMat_image_region σ
-  -- `inducedMap (permMat σ)` does not change the volume of any set
-  have hcov (S : Set (Fin n → ℝ)) : volume (inducedMap (permMat σ) '' S) = volume S := by
-    rw [AffineVolume.volume_image_inducedMap_of_det
-      (M := permMat σ) (det_linInducedMap (permMat_col_sum σ)) S, permMat_abs_det σ,
-      ENNReal.ofReal_one, one_mul]
+theorem map_restrict_permMatrix {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
+    (volume.restrict (region n)).map (inducedMap (σ.permMatrix ℝ))
+      = volume.restrict (region n) := by
+  have hmeas : Measurable (inducedMap (σ.permMatrix ℝ)) :=
+    (continuous_inducedMap _).measurable
+  have himage := inducedMap_permMatrix_image_region σ
+  -- `inducedMap (σ.permMatrix ℝ)` does not change the volume of any set
+  have hcov (S : Set (Fin n → ℝ)) : volume (inducedMap (σ.permMatrix ℝ) '' S) = volume S := by
+    rw [volume_image_inducedMap_of_det
+      (M := σ.permMatrix ℝ) (det_linInducedMap (permMatrix_col_sum σ)) S,
+      permMatrix_abs_det σ, ENNReal.ofReal_one, one_mul]
   ext B hB
   rw [Measure.map_apply hmeas hB, Measure.restrict_apply hB,
     Measure.restrict_apply (hmeas hB)]
-  have hset : inducedMap (permMat σ) ''
-      (inducedMap (permMat σ) ⁻¹' B ∩ region n) = B ∩ region n := by
+  have hset : inducedMap (σ.permMatrix ℝ) ''
+      (inducedMap (σ.permMatrix ℝ) ⁻¹' B ∩ region n) = B ∩ region n := by
     ext y
     constructor
     · rintro ⟨x, ⟨hxB, hxreg⟩, rfl⟩
@@ -550,14 +513,15 @@ theorem map_restrict_permMat {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
       rw [← himage] at hyreg
       obtain ⟨x, hxreg, hxQ⟩ := hyreg
       exact ⟨x, ⟨by rw [Set.mem_preimage, hxQ]; exact hyB, hxreg⟩, hxQ⟩
-  rw [← hcov (inducedMap (permMat σ) ⁻¹' B ∩ region n), hset]
+  rw [← hcov (inducedMap (σ.permMatrix ℝ) ⁻¹' B ∩ region n), hset]
 
 /-! ## The target: permutation invariance of the chart volume -/
 
 /-- **Permutation invariance of the volume**: the chart volume
 `(volume.restrict (region n)).map (chart n)` is invariant under `l ↦ l ∘ σ`.
 
-The proof goes through the change of variables of `AffineVolume` for the permutation matrix of `σ`.
+The proof conjugates the chart with the permutation matrix (`chart_inducedMap_permMatrix`) and uses
+the invariance of the restricted volume under it (`map_restrict_permMatrix`).
 -/
 theorem chartVolume_map_perm {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
     ((volume.restrict (region n)).map (chart n)).map (fun l i => l (σ i))
@@ -565,16 +529,14 @@ theorem chartVolume_map_perm {n : ℕ} (σ : Equiv.Perm (Fin (n + 1))) :
   have hperm : Measurable (fun l : Fin (n + 1) → ℝ => fun i => l (σ i)) :=
     (continuous_permCoord σ).measurable
   have hchart : Measurable (chart n) := (continuous_chart n).measurable
-  have hQ : Measurable (inducedMap (permMat σ)) := (continuous_inducedMap _).measurable
+  have hQ : Measurable (inducedMap (σ.permMatrix ℝ)) :=
+    (continuous_inducedMap _).measurable
   have hcomp : (fun l : Fin (n + 1) → ℝ => fun i => l (σ i)) ∘ chart n
-      = chart n ∘ inducedMap (permMat σ) := by
+      = chart n ∘ inducedMap (σ.permMatrix ℝ) := by
     funext v
-    exact (chart_inducedMap_permMat σ v).symm
-  rw [Measure.map_map hperm hchart, hcomp, ← Measure.map_map hchart hQ, map_restrict_permMat σ]
-
-/-! ## The bridge to the copied `simplexVolume`  `simplexRegion (n+1) = region n` is
-**definitional**, and on the region `simplexMap (n+1)` coincides with `chart n` after the `ℝ≥0 →
-ℝ` coercion. -/
+    exact (chart_inducedMap_permMatrix σ v).symm
+  rw [Measure.map_map hperm hchart, hcomp, ← Measure.map_map hchart hQ,
+    map_restrict_permMatrix σ]
 
 /-! ## The pointwise identity of the two charts -/
 
@@ -589,7 +551,7 @@ theorem coe_simplexMap_eq_chart {n : ℕ} {v : Fin n → ℝ} (hv : v ∈ region
     rw [simplexMap_castSucc, chart_castSucc]
     exact Real.coe_toNNReal _ (le_of_lt (hv.1 j))
 
-/-- The same, as an equality of functions. -/
+/-- **The two charts agree**, as an equality of functions `Fin (n + 1) → ℝ`. -/
 theorem coe_simplexMap_fun_eq_chart {n : ℕ} {v : Fin n → ℝ} (hv : v ∈ region n) :
     (fun i => ((simplexMap (n + 1) v i : ℝ≥0) : ℝ)) = chart n v :=
   funext fun i => coe_simplexMap_eq_chart hv i
@@ -634,7 +596,7 @@ theorem toNNReal_comp_coe (m : ℕ) :
 /-! ## Reading the bridge `simplexVolume_eq_chartVolume` backwards -/
 
 /-- **The chart form of the simplex measure.**  `simplexVolume (n + 1)` is the chart volume of the
-open region pushed forward by the coordinatewise coercion `ℝ → ℝ≥0`.  This is
+open region pushed forward by the coordinatewise coercion `ℝ → ℝ≥0`. This is
 `simplexVolume_eq_chartVolume n` with the coercion inserted, which changes nothing because
 `Real.toNNReal` is a left inverse of the coercion. -/
 theorem simplexVolume_succ_eq_map_toNNReal (n : ℕ) :
@@ -713,5 +675,40 @@ theorem simplexVolumeOn_eq_map {α : Type*} [Fintype α] {n : ℕ} (P : IETDatum
 theorem simplexVolumeOn_fin (n : ℕ) : simplexVolumeOn (Fin n) = simplexVolume n := by
   have h := simplexVolumeOn_eq_map (P := IETDatum₂.ofPerm (Equiv.refl (Fin n)))
   simpa using h
+
+end IntervalExchange.RauzyVeech
+
+/-! ## The transvection determinant and the column sum of the identity -/
+
+section Transvection
+
+variable {α : Type*} [Fintype α] [DecidableEq α]
+
+/-- `det (1 + single i j c) = 1` for `i ≠ j` (a transvection). -/
+theorem det_one_add_single_of_ne (i j : α) (h : i ≠ j) (c : ℤ) :
+    (1 + Matrix.single i j c : Matrix α α ℤ).det = 1 := by
+  have hvec : (Matrix.single i j c : Matrix α α ℤ)
+      = Matrix.vecMulVec (fun a => if i = a then c else 0)
+          (fun b => if j = b then (1 : ℤ) else 0) := by
+    ext a b
+    rw [Matrix.single_apply, Matrix.vecMulVec_apply]
+    by_cases h1 : i = a <;> by_cases h2 : j = b <;> simp [h1, h2]
+  rw [hvec, Matrix.vecMulVec_eq Unit, Matrix.det_one_add_replicateCol_mul_replicateRow]
+  have hdot : (fun b => if j = b then (1 : ℤ) else 0) ⬝ᵥ (fun a => if i = a then c else 0) = 0 := by
+    refine Finset.sum_eq_zero fun a _ => ?_
+    by_cases h1 : j = a
+    · have h2 : ¬ (i = a) := by rw [← h1]; exact h
+      simp [h1, h2]
+    · simp [h1]
+  rw [hdot, add_zero]
+
+/-- The column sum of the identity matrix. -/
+theorem colsum_one (b : α) : (∑ a : α, (1 : Matrix α α ℤ) a b) = 1 := by
+  rw [Finset.sum_eq_single b]
+  · rw [Matrix.one_apply, ite_eq_left rfl]
+  · intro a _ ha; rw [Matrix.one_apply, ite_eq_right ha]
+  · intro h; exact absurd (Finset.mem_univ b) h
+
+end Transvection
 
 end

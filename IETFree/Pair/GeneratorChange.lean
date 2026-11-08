@@ -5,11 +5,12 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.Pair.BlockRescaling
+public import IETFree.Pair.Block.Rescaling
 
 /-!
-The change of generators `(f, g) ↦ (g ∘ f, g)`, and the transport of a word back from the rescaled
-block.
+# The change of generators `(f, g) ↦ (g ∘ f, g)`
+
+The transport of a word back from the rescaled block.
 
 Lemma 3.4 produces its word for the pair `(g ∘ f, g)` on the rescaled block, while the conclusion of
 Theorem 1.1 is a word in the two generators `(f, g)`.  The two pairs generate the same subgroup
@@ -24,6 +25,9 @@ the original block, `exists_word_trivial_on_block_of_rescaled`.
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
+open IntervalExchange.IET
+
+namespace IntervalExchange.Pair
 
 /-! ### The change of generators `(f, g) ↦ (g ∘ f, g)`
 
@@ -92,6 +96,7 @@ theorem evalWord_substGen (w : FreeGroup Gen) (f g : IET 0 1) :
   have h := FreeGroup.lift_unique ((FreeGroup.lift (fun i : Gen => if i = 0 then f else g)).comp
     substGen) hgen (x := w)
   simp only [MonoidHom.comp_apply] at h
+  -- the goal after `MonoidHom.comp_apply`; stated so that `rw [h]` matches it
   change FreeGroup.lift (fun i : Gen => if i = 0 then f else g) (substGen w)
     = FreeGroup.lift (fun i : Gen => if i = 0 then g * f else g) w
   rw [h]
@@ -101,13 +106,12 @@ theorem evalWord_substGen (w : FreeGroup Gen) (f g : IET 0 1) :
 /-- If `φ` conjugates an exchange forwards, it conjugates its inverse as well: the point at which
 the forward identity is read is again in `[0,1)`, because an exchange maps `[0,1)` to itself. -/
 theorem conj_inv_of_conj {B B' : IET 0 1} {φ : ℝ → ℝ}
-    (h : ∀ y ∈ Set.Ico (0 : ℝ) 1, B (φ y) = φ (B' y)) :
-    ∀ y ∈ Set.Ico (0 : ℝ) 1, B⁻¹ (φ y) = φ (B'⁻¹ y) := by
-  intro y hy
+    (h : ∀ y ∈ Set.Ico (0 : ℝ) 1, B (φ y) = φ (B' y)) (y : ℝ) (hy : y ∈ Set.Ico (0 : ℝ) 1) :
+    B⁻¹ (φ y) = φ (B'⁻¹ y) := by
   have hmem : B'⁻¹ y ∈ Set.Ico (0 : ℝ) 1 := (B'⁻¹).isIET.mapsTo hy
   have h1 : B (φ (B'⁻¹ y)) = φ y := by
-    rw [h _ hmem, IET.apply_symm_apply']
-  rw [← h1, IET.symm_apply_apply]
+    rw [h _ hmem, apply_symm_apply']
+  rw [← h1, symm_apply_apply]
 
 /-- **The word transport for Lemma 3.4.**  If `φ = rescaleMapInv u v` conjugates `G ∘ F` to `F'` and
 `G` to `G'` on `[0,1)` — that is, if `(F', G')` is the pair `(G ∘ F, G)` rescaled to the block
@@ -124,9 +128,11 @@ theorem exists_word_trivial_on_block_of_rescaled {F G F' G' : IET 0 1} {u v : �
   have hy : rescaleMap u v x ∈ Set.Ico (0 : ℝ) 1 := (rescaleMap_mem huv).mpr ⟨hx1, hx2⟩
   have hconj := evalWord_conj_apply (F := G * F) (G := G) (F' := F') (G' := G')
     hF (conj_inv_of_conj hF) hG (conj_inv_of_conj hG) w (rescaleMap u v x) hy
-  simp only [hw1, IET.one_apply] at hconj
+  simp only [hw1, one_apply] at hconj
   rw [hφ] at hconj
   rw [evalWord_substGen]
   exact hconj
+
+end IntervalExchange.Pair
 
 end
