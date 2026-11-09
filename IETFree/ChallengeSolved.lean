@@ -47,14 +47,13 @@ repackaged into the permutations `mkIETEquiv p_i π 0` by `evalWord_toEquiv_eq_o
 
 The root theorem `main` is `Challenge.main` in its words, and carries the proof above.
 
-The remark that follows the main theorem is proved here as well, in the `Pair` namespace: the
-almost-sure statement transported to the free parameters (`ae_hasRelation`), and the two
-conclusions — an open set of full measure in the free coordinates
-(`exists_isOpen_subset_hasRelation`) and on the paper's `Δ_π × Δ_σ`
-(`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`).  The machinery behind them is in
-`IETFree/Pair/RobustRelation/`, which sits *below* this file: its assembly takes the almost-sure
-statement as a hypothesis precisely so that it can, and the file feeds it `main` through the chart
-of `Pair/ProductSimplex.lean`.  The challenge's vocabulary (`evalWordEquiv`) lives in
+The remark that follows the main theorem is proved here as well, in the `Pair` namespace: an
+open set of full measure of pairs not generating a free group, on the paper's `Δ_π × Δ_σ`
+(`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`).  The machinery behind it is in
+`IETFree/Pair/RobustRelation/`, which sits *below* this file: its assembly
+(`exists_isOpen_subset_hasRelation_of_ae`) takes the almost-sure relation as a hypothesis precisely
+so that it can, and the file proves that hypothesis from `main` — through the chart of
+`Pair/ProductSimplex.lean` — and feeds it in.  The challenge's vocabulary (`evalWordEquiv`) lives in
 `Pair/MeasureTools.lean` and that chart in `Pair/ProductSimplex.lean`, both below, where the
 Section 3 machinery uses them too.
 
@@ -146,44 +145,10 @@ therefore the pairs not generating a free group contain an open set of full meas
 is in `IETFree/Pair/RobustRelation/` — the parametrised bad set, the symbolic data of an arbitrary
 word with the robustness of a trivial word, and the assembly of the open set from an almost-sure
 input.  That assembly takes the a.e. statement as a hypothesis, precisely so that it can sit below
-this file; what is proved here is the two conclusions, in the free coordinates and on `Δ_π × Δ_σ`,
-by feeding it `main` through the chart of `Pair/ProductSimplex.lean`. -/
+this file; what is proved here is the hypothesis, from `main` through the chart of
+`Pair/ProductSimplex.lean`, and then the conclusion on `Δ_π × Δ_σ`. -/
 
 namespace Pair
-
-/-- **Theorem 1.1 in the free coordinates: almost every parameter pair carries a nontrivial
-relation.**
-
-This is `main`, above, read on the free coordinates `PReal d e`.  The measure is the product of the
-restrictions of Lebesgue measure to the two open regions.
-
-`main` is a statement for the pushforward under `prodSimplexMap d e`; `ae_free_of_ae_prod`
-pulls it back to the free coordinates.  Almost everywhere the parameter pair is in the open
-region (`ae_mem_simplexRegion_prod`), where `fOf`/`gOf` are the exchanges `main` speaks of
-(`evalWord_fOf_eq_one`). -/
-theorem ae_hasRelation {d e : ℕ} [NeZero d] [NeZero e]
-    (π : Equiv.Perm (Fin d)) (σ : Equiv.Perm (Fin e)) :
-    ∀ᵐ q ∂((volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e))),
-      HasRelation π σ q := by
-  -- Theorem 1.1, pulled back along the parametrisation of the two simplices
-  have hpull : ∀ᵐ q ∂((volume.restrict (simplexRegion d)).prod
-      (volume.restrict (simplexRegion e))),
-      ∃ w : FreeGroup Gen, w ≠ 1 ∧
-        evalWordEquiv w (mkIETEquiv (simplexMap d q.1) π 0)
-          (mkIETEquiv (simplexMap e q.2) σ 0) = 1 :=
-    ae_free_of_ae_prod (main π σ)
-  filter_upwards [hpull, ae_mem_simplexRegion_prod (d := d) (e := e)] with q hq hreg
-  obtain ⟨w, hw_ne, hw⟩ := hq
-  exact ⟨w, hw_ne, evalWord_fOf_eq_one hreg.1 hreg.2 hw⟩
-
-/-- **The remark after the main theorem, in the free coordinates**: some nontrivial word is trivial
-on an open set of parameter pairs of full measure. -/
-theorem exists_isOpen_subset_hasRelation {d e : ℕ} [NeZero d] [NeZero e]
-    (π : Equiv.Perm (Fin d)) (σ : Equiv.Perm (Fin e)) :
-    ∃ U : Set (PReal d e), IsOpen U ∧
-      ((volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e))) Uᶜ = 0 ∧
-      U ⊆ {q | HasRelation π σ q} :=
-  exists_isOpen_subset_hasRelation_of_ae π σ (ae_hasRelation π σ)
 
 /-- **The remark after the main theorem, on `Δ_π × Δ_σ`**: the pairs of length vectors not
 generating a free group contain an open set of full measure, in the paper's coordinates.
@@ -202,15 +167,26 @@ theorem exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one {d e : ℕ} [NeZ
       ((simplexVolume d).prod (simplexVolume e)) Oᶜ = 0 ∧
       (∀ p ∈ O, (∑ i, p.1 i = 1) → (∑ j, p.2 j = 1) →
         ∃ w : FreeGroup (Fin 2), w ≠ 1 ∧
-          evalWordEquiv w (mkIETEquiv p.1 π 0) (mkIETEquiv p.2 σ 0) = 1) :=
-  exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one_of_ae π σ (ae_hasRelation π σ)
+          evalWordEquiv w (mkIETEquiv p.1 π 0) (mkIETEquiv p.2 σ 0) = 1) := by
+  -- the a.e. statement in the free coordinates, from `main` through the chart
+  have hrel : ∀ᵐ q ∂((volume.restrict (simplexRegion d)).prod
+      (volume.restrict (simplexRegion e))), HasRelation π σ q := by
+    have hpull : ∀ᵐ q ∂((volume.restrict (simplexRegion d)).prod
+        (volume.restrict (simplexRegion e))),
+        ∃ w : FreeGroup Gen, w ≠ 1 ∧
+          evalWordEquiv w (mkIETEquiv (simplexMap d q.1) π 0)
+            (mkIETEquiv (simplexMap e q.2) σ 0) = 1 :=
+      ae_free_of_ae_prod (main π σ)
+    filter_upwards [hpull, ae_mem_simplexRegion_prod (d := d) (e := e)] with q hq hreg
+    obtain ⟨w, hw_ne, hw⟩ := hq
+    exact ⟨w, hw_ne, evalWord_fOf_eq_one hreg.1 hreg.2 hw⟩
+  exact exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one_of_ae π σ hrel
 
 end Pair
 
 -- The axiom check of the library: the `#print axioms` reports of the tree, for the main theorem and
--- for the two conclusions of the remark after it.
+-- for the conclusion of the remark after it.
 #print axioms main
-#print axioms IntervalExchange.Pair.exists_isOpen_subset_hasRelation
 #print axioms IntervalExchange.Pair.exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one
 
 end IntervalExchange

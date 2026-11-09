@@ -19418,6 +19418,87 @@ rather than relying on the definitional equality of a `rw`'s closing check.
   project namespaces.  Each move is a namespace change plus the call sites in its cone; the batch
   stopped before them.
 
+### Addendum 247: the remark's two intermediate theorems dropped, and the README verified
+
+The owner's instruction: *"In ChallengeSolved, drop `ae_hasRelation` and
+`exists_isOpen_subset_hasRelation` and go directly for the proof of
+`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`.  Also, I have shortened a little bit the
+README by hand.  Make sure that all information there is accurate, especially the links to the
+library."*
+
+**The two intermediate theorems are gone.**  `ChallengeSolved.lean`'s `Pair` section now holds one
+statement, `exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`, proved in one step from the
+library's `Pair.RobustRelation.exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one_of_ae`, whose
+almost-sure hypothesis is now derived in the proof: `ae_free_of_ae_prod (main π σ)` pulls `main` back
+to the free coordinates `PReal d e`, `ae_mem_simplexRegion_prod` puts almost every pair in the two
+regions, and `evalWord_fOf_eq_one` turns the relation of `mkIETEquiv` into `HasRelation`.  The
+free-coordinate conclusion `exists_isOpen_subset_hasRelation` is not restated anywhere: it is
+`…_of_ae` applied to that hypothesis, and the paper's remark is about `Δ_π × Δ_σ`.  The axiom block
+at the end of the file now reports `main` and the remark's conclusion (both
+`[propext, Classical.choice, Quot.sound]`); the third report went with the theorem it was about.
+The docstrings that named the two deleted theorems — this file's module docstring and section
+header, `Pair/RobustRelation/OpenSet.lean` (the `hrel` hypothesis) and
+`Pair/RobustRelation/FreeParams.lean` (why the a.e. statement lives above) — now name the proof
+instead.
+
+**The manifests follow.**  `formalization.yaml` loses the `alignment` entry and the `results` entry
+of the free-coordinate form, and the two remaining notes say that it is `…_of_ae` applied to the
+a.e. relation rather than a statement of its own; the project overview at the top of the file says
+the same.  The README's correspondence table loses that row, so it is again one row per `alignment`
+entry — 22 of each, in the same order (checked mechanically).
+
+**The README, after the owner's hand-shortening.**  Every `#L` link and every `file:line` pointer
+in the correspondence table was re-pointed by `.scratch/tmp/anchors.py`: **170 anchors, 0 stale**.
+The script needed one fix first — for a row whose second column names *several* declarations, it
+paired every label of the third column with the *first* declaration of the row, which had flattened
+`ReductionData.lean:189/355/392` (the three Section-3 notions) and
+`GoodRegion.lean:1075/1193`; it now pairs the `k`-th label of a row into a path with the `k`-th name
+link into that path.  The prose was then checked claim by claim against the tree, and these were
+wrong or stale and are corrected:
+
+* "five thematic directories" → **six** (`FreeGroup/`, `Measure/`, `Pair/`, `RauzyVeech/`,
+  `Rigidity/`, `UniqueErgodicity/`; with `CutSet/` and the four root modules that is the 120).
+* "47 234 lines" → **47 020**, "240 [import] lines" → **254** (at most 8 in a file, still), and the
+  `Pair/` row's 30 modules (13 + 9 + 2 + 6) and the two-inputs table's `UniqueErgodicity` figure
+  (11, not 12) — all re-counted.
+* "0 findings in 4 599 declarations" → the count is dropped: `runLinter` does not print one, and
+  `NOTES.md` already said so; the sentence now states the 15 linters and the two modules.
+* "twenty-nine others" (the declarations no proof term names) → the count is dropped in favour of
+  the property that matters (they are applied definitionally, and deleting one breaks the build) and
+  a pointer to `NOTES.md`; the walk was re-run and its figures are recorded there (Addendum 247).
+* "the three `sorry`s of the statement file" → **four** (the definition hole and the three targets).
+* "`It is part of Lean core`" (of Comparator) → **Lean FRO's Comparator, a built-in `lake` command
+  since Lean 4.35** (`lake --help` lists it), which is what it is here.
+* "`comparator.json` lists them in full" (of the fifteen challenge names) → it names the three
+  targets and the definition hole; the fifteen are the declarations `Challenge.lean` states.
+* "each with the directories that use it" (of the `sources` entries) → each with a note saying where
+  the library follows it, which is the field they have.
+* "a change of Mathlib revision ... those directories are root-owned" → the build artifacts under
+  `.lake/packages/` are writable copies owned by this user (the root-owned originals are under
+  `/opt`), so the sentence now says what actually bites: the oleans belong to the pinned revision, so
+  moving the pin means `lake exe cache get` or rebuilding Mathlib.
+* "the driver's executable cannot be built (its C objects would go into the read-only Mathlib tree)"
+  → dropped: it is run interpreted, which is the fact, and the reason given no longer holds now that
+  the packages' build directories are writable.
+* The scope bullet claimed that *the remark following Theorem 1.1 is not part of this development*.
+  It is: it is the comparator's third target.  The bullet now says only that Lemma 1.3 is left out.
+
+**Verified.**  `lake build`: **9 170 jobs, exit 0, 0 warnings**.  `runLinter --no-build IETFree` and
+`--no-build Challenge`: clean.  `#print axioms` on `main` and on
+`Pair.exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`: `[propext, Classical.choice,
+Quot.sound]`, unchanged.  README anchors 170, 0 stale.  `IET2.zip` rebuilt (151 entries,
+extraction-identical).  `lake comparator` was **not** run (the owner's rule); the two deleted
+theorems are not among its targets, and its three targets and definition hole are untouched — but
+the last recorded export list is from before this change, so the run that will confirm it is the
+one the owner calls for.
+
+**One thing to know about `Challenge.lean`.**  Its copy of `simplexRegion` still has the literal
+body, while the library's is now `RauzyVeech.region (d - 1)` (Addendum 246, R20).  The two have the
+same type and the same meaning, and neither `simplexRegion` nor `simplexVolume` appears in the
+comparator's export list of Addendum 242 (it holds the three targets, the hole and the primitives),
+so the pairing is unaffected; but the sentence in `Challenge.lean`'s header that the declarations
+mirror the library's "body for body" now has that one exception.
+
 ---
 
 # Part II — the Masur–Veech campaigns (verbatim records, blueprints and graphs)

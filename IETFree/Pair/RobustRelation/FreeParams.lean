@@ -17,10 +17,11 @@ off the simplex of length vectors, so that statements about them carry no side c
 `HasRelation
 π σ q` says that some nontrivial word is trivial for the two of them.
 
-The a.e. statement of the main theorem, `ae_hasRelation`, is *not* here: it consumes `main` and so
-lives in `ChallengeSolved.lean`, above all of this.  What is here is the machinery that carries an
-almost-sure statement between the two descriptions of the parameters, which is what makes that
-consumption possible, and which is also what the Section 3 development needs:
+The a.e. statement of the main theorem — every parameter pair of a full-measure set carries a
+relation — is *not* here: it consumes `main` and so is proved in `ChallengeSolved.lean`, above all
+of this.  What is here is the machinery that carries an almost-sure statement between the two
+descriptions of the parameters, which is what makes that proof possible, and which is also what the
+Section 3 development needs:
 
 * on the open region the total exchanges are `mkIET1'` of the length vectors
   (`fOf_eq_mkIET1'`, `gOf_eq_mkIET1'`), and a word is trivial for them exactly when it is trivial

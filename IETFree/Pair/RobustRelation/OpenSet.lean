@@ -141,7 +141,7 @@ measure.**
 
 Almost every pair is in the two open regions (`ae_mem_simplexRegion_prod`), is good at every
 threshold (`ae_goodParamsAt_all_thresholds`) and carries a relation — the hypothesis `hrel`, which
-`ChallengeSolved.lean` discharges with `ae_hasRelation`; at each such pair the relation is robust
+`ChallengeSolved.lean` proves from `main`; at each such pair the relation is robust
 (`evalWord_eventually_eq_one`), so the relation set is a neighbourhood of it.  The interior `U` of
 the relation set is therefore open, contained in the relation set, and conull — which is the
 statement that the pairs not generating a free group contain an open set of full measure.
