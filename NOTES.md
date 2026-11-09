@@ -8,7 +8,7 @@ against `.scratch/tauceti/TauCetiReview/rubrics/` and the `.skill/` files, and e
 reproduced before acceptance.  Read it before a large change; `../results/review-IET2-v2.md` is the
 previous audit and its §35 the closure index of that round, which v3 partly reopens (§4).
 
-The full development log is [`HISTORY.md`](HISTORY.md): the 247 addenda of the `IET2` campaign
+The full development log is [`HISTORY.md`](HISTORY.md): the 248 addenda of the `IET2` campaign
 (with the table that maps every declaration name that no longer exists), then everything the
 Masur–Veech campaigns left in prose — their records, and the rigidity campaign's blueprint, plan and
 two dependency-graph documents, plus the Birkhoff campaign's two blueprints.  Cite it for *why*
@@ -100,6 +100,14 @@ The remark after the main theorem is proved too (Addendum 233), with its machine
   a symlink, so a run with the key on ends with `nanoda exited with 1` although the kernel accepted;
   set it back to `true` where the sandbox can bind it.  The gate is not part of `lake build`; run it
   by hand, or `./SlowBuild.sh` runs it at the end.
+- **The bodies of the fifteen declarations `Challenge.lean` states are an interface.**  The
+  comparator compares a declaration it finds in both modules *whole* — a `def`'s body included — and
+  the walk reaches them through `main`, `mkIETEquiv` and the remark's conclusion.  So no reuse or
+  cleanup finding may change them: `simplexRegion`'s body is the literal
+  `{v | (∀ i, 0 < v i) ∧ ∑ i, v i < 1}` even though `RauzyVeech.region (d - 1)` is the same set
+  (`simplexRegion_eq_region` states the identity), because that is what `Challenge.lean` says
+  (Addendum 248).  Anything else the challenge states — `leftEnd`, `idxSet`, `mkIETFun`, `simplexMap`,
+  `simplexVolume`, `evalWordEquiv`, … — is frozen the same way.
 - **Declaration linters** (Batteries' `runLinter`, which `lake build` does not run): 0 findings for
   `IETFree` (including the six `Pair/RobustRelation/` modules) and 0 for `Challenge`, 15 linters
   (`runLinter` does not print its declaration count, so none is quoted here — re-run it with `-v` to

@@ -19499,6 +19499,47 @@ comparator's export list of Addendum 242 (it holds the three targets, the hole a
 so the pairing is unaffected; but the sentence in `Challenge.lean`'s header that the declarations
 mirror the library's "body for body" now has that one exception.
 
+### Addendum 248: the comparator's `simplexRegion` mismatch, and R20 reverted
+
+**The failure.**  The Palomar submission ran `lake comparator` and was rejected with
+
+```text
+error: Const does not match between challenge and target 'IntervalExchange.simplexRegion'
+```
+
+The comparator compares, declaration by declaration and by name, the declarations the challenge
+states — and for a `def` that means its *body*, not only its type.  `simplexRegion` is one of the
+fifteen names `Challenge.lean` declares, with the literal body
+`{v | (∀ i, 0 < v i) ∧ ∑ i, v i < 1}`; Addendum 246's R20 had rewritten the library's as
+`RauzyVeech.region (d - 1)`, and the two bodies are then different constants.  (Addendum 247
+flagged exactly this and was wrong to think the export list made it harmless: the walk reaches
+`simplexRegion` through `simplexVolume`, which `main` uses.)
+
+**The fix.**  The library's body is the challenge's again, word for word; the dedup is not
+available, because the challenge is frozen and its copy cannot be replaced by a reference.  What is
+kept of R20 is the *statement* of the identity, as a lemma beside the definition:
+
+```lean
+theorem simplexRegion_eq_region (d : ℕ) :
+    simplexRegion d = RauzyVeech.region (d - 1) := (rfl)
+```
+
+so the relation between the two indexings is machine-checked rather than a comment, and the
+docstrings of both definitions say why the bodies are written twice.  This is the one place where the
+audit's reuse finding (R20) cannot be applied: a body that the challenge states is an interface.
+
+**Verified, at the owner's request.**  `lake comparator`: exit 0, with
+
+```text
+Running Lean default kernel on solution
+Lean default kernel accepts the solution
+Your solution is okay!
+```
+
+`lake build`: 9 170 jobs, exit 0, 0 warnings.  `runLinter --no-build` clean on `IETFree` and
+`Challenge`.  README anchors re-pointed (170, 0 stale).  `Challenge.lean` and `comparator.json` are
+unchanged.
+
 ---
 
 # Part II — the Masur–Veech campaigns (verbatim records, blueprints and graphs)
