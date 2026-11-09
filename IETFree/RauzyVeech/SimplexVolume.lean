@@ -15,9 +15,10 @@ public import Mathlib.MeasureTheory.Constructions.BorelSpace.Order
 Everything here is stated for a simplex in dimension `n + 1`, whose
 free coordinates live on `Fin n`: this is the indexing in which `Fin.snoc` applies, and it avoids
 the `Fin (d - 1 + 1)` versus `Fin d` friction.  The bridge to the copied `simplexVolume d`, which
-is `simplexMap d` on `Fin (d - 1)` and `Fin d`, is the lemma `simplexVolume_eq_chartVolume`, and
-`simplexRegion d` in `IETFree/IET.lean` is `region (d - 1)`: the set is defined here, once, because
-this module needs only Mathlib and so sits below the length vectors.
+is `simplexMap d` on `Fin (d - 1)` and `Fin d`, is the lemma `simplexVolume_eq_chartVolume`.
+`IETFree/IET.lean`'s `simplexRegion d` is `region (d - 1)` — `simplexRegion_eq_region` — and its
+body is written out there too, because `Challenge.lean` states that definition and the comparator
+compares the two bodies.
 
 Proved here (the geometric layer):
 
@@ -43,7 +44,8 @@ noncomputable def chart (n : ℕ) (v : Fin n → ℝ) : Fin (n + 1) → ℝ :=
   Fin.snoc v (1 - ∑ i, v i)
 
 /-- The open simplex of free coordinates.  `IETFree/IET.lean`'s `simplexRegion d` is this set at
-`n = d - 1`. -/
+`n = d - 1` (`simplexRegion_eq_region`); the body is repeated there because the challenge file
+states that definition and the comparator compares bodies, so the two copies cannot be merged. -/
 def region (n : ℕ) : Set (Fin n → ℝ) := {v | (∀ i, 0 < v i) ∧ ∑ i, v i < 1}
 
 @[simp] theorem chart_castSucc {n : ℕ} (v : Fin n → ℝ) (i : Fin n) :

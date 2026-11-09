@@ -119,11 +119,18 @@ end IsIET
 /-- The free region: the `d - 1` free coordinates are positive and have total mass less than `1`,
 so that every coordinate of the image, including the last one `1 - ∑`, is positive.
 
-This is `RauzyVeech.region` at `d - 1`: the chart's own indexing (a simplex in `n + 1` dimensions
-has `n` free coordinates) is in `RauzyVeech/SimplexVolume.lean`, which needs only Mathlib, and the
-`d`-indexed form the length vectors use is this instance of it. -/
+The body is written out, not delegated: `Challenge.lean` declares this very definition, and the
+comparator compares the two declarations' bodies, so the library's must be the challenge's.  The
+chart's own indexing (a simplex in `n + 1` dimensions has `n` free coordinates) also defines the
+set, as `RauzyVeech.region n` in `RauzyVeech/SimplexVolume.lean`, a module that needs only
+Mathlib; `simplexRegion_eq_region` records that the two are the same set. -/
 def simplexRegion (d : ℕ) : Set (Fin (d - 1) → ℝ) :=
-  RauzyVeech.region (d - 1)
+  {v | (∀ i, 0 < v i) ∧ ∑ i, v i < 1}
+
+/-- **The two indexings of the open simplex agree**: `simplexRegion d` is the chart's `region` at
+`d - 1`.  The bodies are the same set, the `d`-indexed one being the challenge's. -/
+theorem simplexRegion_eq_region (d : ℕ) :
+    simplexRegion d = RauzyVeech.region (d - 1) := (rfl)
 
 /-- The `d - 1` free coordinates sit below `d - 1` in the `d`-th slot of the last coordinate.
 `omega` would be shorter, but it generates an auxiliary declaration, and auxiliaries are private to
