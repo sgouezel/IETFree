@@ -29,9 +29,10 @@ project:
     remark that follows the main theorem — the relation of a trivial word is robust, so the pairs
     that do not generate a free group contain an open set of full measure — is proved in
     `IETFree/Pair/RobustRelation/`: the symbolic data of an arbitrary word and the robustness at a
-    point of the conull set `Ω'` (`evalWord_eventually_eq_one`), and the open conull set in the free
-    coordinates (`exists_isOpen_subset_hasRelation`) and on `Δ_π × Δ_σ`
-    (`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`).
+    point of the conull set `Ω'` (`evalWord_eventually_eq_one`), and the assembly of the open conull
+    set (`exists_isOpen_subset_hasRelation_of_ae`), which `ChallengeSolved.lean` feeds with the a.e.
+    relation it proves from `main` — the conclusion on `Δ_π × Δ_σ` is
+    `exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`.
   authors:
     - "Sébastien Gouëzel"
   authors_note: >-
@@ -255,25 +256,17 @@ status:
       note: >-
         Proposition 2.5. Its proof is an elementary Borel–Cantelli argument; no external theorem
         is assumed.
-    - declaration: "Pair.exists_isOpen_subset_hasRelation"
-      file: "IETFree/ChallengeSolved.lean"
-      sorry_count: 0
-      axioms: ["propext", "Classical.choice", "Quot.sound"]
-      note: >-
-        The remark after Theorem 1.1, in free coordinates: an open set of full measure every point
-        of which carries a nontrivial word trivial for the two exchanges (the interior of the
-        relation set, which itself need not be open).  The machinery is in
-        `IETFree/Pair/RobustRelation/`, below the challenge file, and takes the almost-sure
-        statement as a hypothesis, which `ae_hasRelation` discharges from `main`.
     - declaration: "Pair.exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one"
       file: "IETFree/ChallengeSolved.lean"
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
       comparator_config: "comparator.json"
       note: >-
-        The same statement on the paper's `Δ_π × Δ_σ`, with the two normalisations as hypotheses:
-        this is the challenge's third target, and it reaches no declaration the challenge does not
-        already carry.
+        The remark after Theorem 1.1, on the paper's `Δ_π × Δ_σ`, with the two normalisations as
+        hypotheses: this is the challenge's third target, and it reaches no declaration the
+        challenge does not already carry.  The a.e. relation it needs is proved from `main` in the
+        same file, and the free-coordinate form is not a statement of its own: it is
+        `Pair.RobustRelation.exists_isOpen_subset_hasRelation_of_ae` applied to that relation.
 
 automation:
   methods:
@@ -431,19 +424,6 @@ alignment:
         on the resulting pieces are affine functions of the parameter (`Pair.WordData`), built letter
         by letter (`Pair.exists_wordData_singleton`, `Pair.wordData_append_singleton`); at a point of
         `Ω'` two distinct candidates never coincide, so the pieces are the genuine ones.
-    - source: "Remark after Theorem 1.1 (a full measure open set of pairs not generating a free group), free coordinates"
-      lean: "Pair.exists_isOpen_subset_hasRelation"
-      module: "IETFree/ChallengeSolved.lean"
-      status: "proved"
-      note: >-
-        There is an open set of parameter pairs, of full measure for the product of the two
-        restricted Lebesgue measures on the free regions, every point of which carries a nontrivial
-        word which is trivial (`Pair.HasRelation`).  It is the interior of the relation set — which
-        itself need not be open — and it is conull because almost every pair carries a relation
-        (`Pair.ae_hasRelation`, from `main`) and is good at every threshold
-        (`Pair.ae_goodParamsAt_all_thresholds`), and at such a pair the relation is robust
-        (`Pair.evalWord_eventually_eq_one`).  The hypothesis-taking form is
-        `Pair.exists_isOpen_subset_hasRelation_of_robust`.
     - source: "Remark after Theorem 1.1 (a full measure open set of pairs not generating a free group), the paper's coordinates"
       lean: "Pair.exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one"
       module: "IETFree/ChallengeSolved.lean"
@@ -456,7 +436,11 @@ alignment:
         conditions are hypotheses rather than an intersection with `simplex (Fin d) ×ˢ simplex
         (Fin e)`, because the product of the simplices has empty interior in the ambient space, so
         the open set can only be an open set of the ambient space; writing them as hypotheses keeps
-        the statement free of any project definition.
+        the statement free of any project definition.  The free-coordinate form of the remark — an
+        open set of full measure for the product of the two restricted Lebesgue measures on the
+        regions, every point of which carries a nontrivial trivial word (`Pair.HasRelation`) — is not
+        a statement of its own: it is `Pair.RobustRelation.exists_isOpen_subset_hasRelation_of_ae`
+        applied to the a.e. relation, which is proved from `main` in `ChallengeSolved.lean`.
     - source: "Lemma 1.3 (an irrational rotation and an interval exchange do not generate a free group)"
       lean: "—"
       module: "—"

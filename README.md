@@ -9,12 +9,11 @@ This repository contains a formalization in Lean 4 of the paper
 The paper's abstract: *"We show that the Lebesgue measure of the set of pairs of interval exchange
 transformations that generate a free group of rank 2 is zero."*
 
-**Status.** The main theorem is proved **outright**: [`IETFree/ChallengeSolved.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean) proves
-[`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L106), the
+**Status.** [`IETFree/ChallengeSolved.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean) proves
+[`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L105), the
 unconditional form of Theorem 1.1 stated by
-[`Challenge.lean`](https://github.com/sgouezel/IETFree/blob/main/Challenge.lean), and the library
-carries a single axiom check there — `#print axioms IntervalExchange.main` — which reports
-`[propext, Classical.choice, Quot.sound]`.  Nothing is assumed: the two results that the paper quotes
+[`Challenge.lean`](https://github.com/sgouezel/IETFree/blob/main/Challenge.lean).  
+Nothing is assumed: the two results that the paper quotes
 from the literature are proved in [`IETFree/RauzyVeech/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/RauzyVeech), [`IETFree/Rigidity/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/Rigidity) and
 [`IETFree/UniqueErgodicity/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/UniqueErgodicity). The formalization notably includes a full development of
 Rauzy–Veech induction in Marmi–Moussa–Yoccoz formalism, culminating in the proof that
@@ -23,54 +22,22 @@ uniquely ergodic (essentially following Kerckhoff's argument) and rigid
 (using Veech's argument rephrased in terms of Kerckhoff's framework to avoid the
 need of ergodicity of the projectivized Rauzy–Veech induction).
 
-**Sources.**  Three documents are followed, and the Lean docstrings cite them by these short forms,
-which are expanded in the module docstring of `IETFree/IET.lean` and of
-`IETFree/ChallengeSolved.lean` (the eight references of the project are `sources:` entries of
-[`formalization.yaml`](https://github.com/sgouezel/IETFree/blob/main/formalization.yaml), each
-with the directories that use it):
-
-* **the paper** — Sébastien Gouëzel, *Almost every pair of interval exchange transformations does
-  not generate a free group*, [arXiv:2610.29993](https://arxiv.org/abs/2610.29993): the statement
-  (Theorem 1.1), Definitions 2.1 and 2.2, Proposition 2.5, and the reduction of Section 3;
-* **Yoccoz** — J.-C. Yoccoz, *Continued fraction algorithms for interval exchange maps: an
-  introduction*, in *Frontiers in Number Theory, Physics, and Geometry I* (Springer, 2006, 401–435):
-  the Rauzy–Veech induction, the towers and the ray criterion, which `IETFree/RauzyVeech/` follows
-  (§5–§6 of the survey are not used);
-* **AGY** — Appendix A of A. Avila, S. Gouëzel and J.-C. Yoccoz, *Exponential mixing for the
-  Teichmüller flow*, *Publ. Math. IHÉS* 104 (2006), 143–211: the graded induction behind the rich
-  path, which `IETFree/RauzyVeech/RichPath/` follows (its `Γ₁`–`Γ₄` are the appendix's).
-
-Kerckhoff's criterion, in the form those documents state it, is what the ray argument uses; the
-two-permutation (`π₀`, `π₁`) presentation is the Marmi–Moussa–Yoccoz formalism.  Both are named
-where they are used, and both have their entry in `formalization.yaml`.
-
-A docstring that cites "§n" without naming a document cites the **Masur–Veech blueprint**: its text
-is reproduced in [`HISTORY.md`](HISTORY.md), Part II, where those section numbers resolve, and the
-file itself is `blueprint.md` at the top of the repository (one directory above this one, so not in
-this zip).
-
 The formalization was produced by supervised **autoformalization**: an AI agent working in **SAIR Open Math
 OS**, writing Lean against a pinned Mathlib and checking every step by compilation,
-under human guidance for API choices and proof construction. The full record is
-[`HISTORY.md`](HISTORY.md) — the 246 addenda of the development: what was tried, what failed, which
-statements had to be restated and why, the reconciliation table of every name that has disappeared,
-and the records, blueprints and dependency graphs of the two Masur–Veech campaigns whose theorems the
-last step uses.  [`NOTES.md`](NOTES.md) is the one-page summary of the current state: what is proved,
-what the build is, which decisions are in force, which traps still bite.  Neither file is a
-specification: the declarations in [`IETFree/`](https://github.com/sgouezel/IETFree/tree/main/IETFree) are.
+under human guidance for API choices and proof construction. 
 
 The four `sorry`s of the tree are all in [`Challenge.lean`](https://github.com/sgouezel/IETFree/blob/main/Challenge.lean), and all deliberate: the definition hole
 [`mkIETEquiv`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L572) and the three
 targets [`coe_mkIETEquiv`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L589),
-[`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L106) and the
+[`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L105) and the
 remark's conclusion
-[`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L199).  That
+[`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L164).  That
 file *is* the comparator challenge, and [`IETFree/ChallengeSolved.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean) is its solution; see
 [the comparator challenge](#the-comparator-challenge).
 
 ## What is proved
 
-The final statement is [`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L106), in the words of the challenge file — Theorem 1.1 of the
+The final statement is [`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L105), in the words of the challenge file — Theorem 1.1 of the
 paper, **with nothing assumed**:
 
 ```lean
@@ -96,10 +63,10 @@ It is assembled from three layers, each of which is a theorem of the library:
   ([`uniformBirkhoff_of_uniqueErgodic`](https://github.com/sgouezel/IETFree/blob/main/IETFree/UniqueErgodicity/Theorem2.lean#L502)).
 * **Veech's rigidity** ([`IETFree/Rigidity/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/Rigidity)): almost every irreducible exchange is rigid by
   translations ([`veechRigidity`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Irreducible.lean#L71)).
-* **Section 2 and 3** ([`IETFree/Pair/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/Pair)): for almost every pair of length vectors, and for every pair
+* **Sections 2 and 3** ([`IETFree/Pair/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/Pair)): for almost every pair of length vectors, and for every pair
   of data with those lengths, there is a nontrivial word trivial on `[0, 1)`.  This is
   Lemma 3.4 for a.e. lengths plus the assembly of the per-block words; it is the proof of
-  [`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L106),
+  [`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L105),
   whose two inputs are the two bullets above.
 
 The two a.e. inputs are stated for the exchange [`mkIET1 λ π : IET 0 1`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L1010) and iterated with
@@ -111,12 +78,34 @@ function, hence the shape of [`UniformBirkhoff`](https://github.com/sgouezel/IET
 which also carries Lemma 2.9
 [`exists_uniform_birkhoff`](https://github.com/sgouezel/IETFree/blob/main/IETFree/UniqueErgodicity/Theorem2.lean#L523).)
 
+
+## Sources
+
+Three documents are followed, and the Lean docstrings cite them by these short forms,
+which are expanded in the module docstring of `IETFree/IET.lean` and of
+`IETFree/ChallengeSolved.lean` (the eight references of the project are `sources:` entries of
+[`formalization.yaml`](https://github.com/sgouezel/IETFree/blob/main/formalization.yaml), each
+with a note saying where the library follows it):
+
+* **the paper** — Sébastien Gouëzel, *Almost every pair of interval exchange transformations does
+  not generate a free group*, [arXiv:2610.29993](https://arxiv.org/abs/2610.29993): the statement
+  (Theorem 1.1), Definitions 2.1 and 2.2, Proposition 2.5, and the reduction of Section 3;
+* **Yoccoz** — J.-C. Yoccoz, *Continued fraction algorithms for interval exchange maps: an
+  introduction*, in *Frontiers in Number Theory, Physics, and Geometry I* (Springer, 2006, 401–435):
+  the Rauzy–Veech induction, the towers and the ray criterion, which `IETFree/RauzyVeech/` follows
+  (§5–§6 of the survey are not used);
+* **AGY** — Appendix A of A. Avila, S. Gouëzel and J.-C. Yoccoz, *Exponential mixing for the
+  Teichmüller flow*, *Publ. Math. IHÉS* 104 (2006), 143–211: the graded induction behind the rich
+  path, which `IETFree/RauzyVeech/RichPath/` follows (its `Γ₁`–`Γ₄` are the appendix's).
+
+
 ## The comparator challenge
 
 [Comparator](https://github.com/leanprover/comparator) is Lean FRO's independent judge for a Lean
 proof: given a *challenge* file that states a theorem with `sorry` and a *solution* file that proves
 it, it checks that the solution proves the same statement, uses no axiom outside a permitted list,
-and that the kernel accepts the proof. It is part of Lean core, and **it is the gate of this
+and that the kernel accepts the proof. It is Lean FRO's Comparator, a built-in `lake` command since Lean
+4.35, and **it is the gate of this
 repository**:
 
 ```sh
@@ -150,7 +139,7 @@ Mathlib-only language — and the solution is **the library itself**:
 | file | contents |
 |---|---|
 | [`comparator.json`](https://github.com/sgouezel/IETFree/blob/main/comparator.json) | the configuration: challenge module, solution module, the theorem targets, the definition hole, `permitted_axioms`, `enable_nanoda` |
-| [`Challenge.lean`](https://github.com/sgouezel/IETFree/blob/main/Challenge.lean) | the challenge: one self-contained file, `import Mathlib` only, stating Theorem 1.1 ([`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L106)) and the remark's conclusion ([`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L199)) |
+| [`Challenge.lean`](https://github.com/sgouezel/IETFree/blob/main/Challenge.lean) | the challenge: one self-contained file, `import Mathlib` only, stating Theorem 1.1 ([`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L105)) and the remark's conclusion ([`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L164)) |
 | [`IETFree/ChallengeSolved.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean) | the solution: imports the library, proves the three targets and fills the definition hole |
 
 ```json
@@ -175,7 +164,7 @@ Mathlib-only language — and the solution is **the library itself**:
 ```
 
 Comparator compares the two modules declaration by declaration, by name, and then every
-declaration they reach; only the three targets ([`coe_mkIETEquiv`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L589), [`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L106), [`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L199)) and the definition hole
+declaration they reach; only the three targets ([`coe_mkIETEquiv`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L589), [`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L105), [`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L164)) and the definition hole
 ([`mkIETEquiv`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L572)) may differ.  The unconditional statement reaches only the single-exchange API, so the challenge declares
 verbatim the declarations it uses — [`leftEnd`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L206), [`imageLeft`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L214), [`translationVector`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L219),
 [`idxSet`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L313), [`idx`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L327), [`mkIETFun`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L521), [`simplexRegion`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L125), [`simplexMap`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L136), [`simplexVolume`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L144) and
@@ -192,23 +181,23 @@ not completely trivial, so the challenge leaves them to the solution instead of 
 The gate is a separate command — `lake build` does not run it — and
 [`./SlowBuild.sh`](https://github.com/sgouezel/IETFree/blob/main/SlowBuild.sh) runs it at the end of the thorough check.  Run it by hand after any change to
 [`Challenge.lean`](https://github.com/sgouezel/IETFree/blob/main/Challenge.lean), to a statement of the library, or to a declaration reachable from
-[`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L106).
+[`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L105).
 
 ## Layout and build
 
 The Lean sources are in [`IETFree/`](https://github.com/sgouezel/IETFree/tree/main/IETFree): the single-exchange layer at the root — `CutSet/` (two modules) and
 [`IET`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L905), which also holds the three notions the theorem is stated with, [`Invariant`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L1125),
-[`UniqueErgodic`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L1134) and [`IsRigidByTranslations`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L1143) — the two-bijection datum in `TopBotFormalism`, five thematic
+[`UniqueErgodic`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L1134) and [`IsRigidByTranslations`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L1143) — the two-bijection datum in `TopBotFormalism`, six thematic
 directories above them (each sibling group a directory of its own inside), and the challenge solution
 on top.  120 modules under `IETFree/` — 122 `.lean` files with the umbrella and `Challenge.lean` —
-47 234 lines in `IETFree/`.
+47 020 lines in `IETFree/`.
 Every file is a Lean **module** — a `module` header, `public import`s, and a `@[expose] public
 section` holding its declarations — so the library meets the module-system requirement of the
 Palomar registry; the exposure is blanket, which keeps every definition as transparent to its
 clients as it was before the conversion.
 
 Imports are explicit and **necessary**: no module of `IETFree/` imports `Mathlib` as a whole, and
-every import line is one whose deletion breaks the build (240 lines over the 120 modules, at most 8
+every import line is one whose deletion breaks the build (254 lines over the 120 modules, at most 8
 in a file; each was tested that way when it was added, and the whole-tree fixpoint was last
 recomputed in Addendum 224 of [`HISTORY.md`](HISTORY.md)).  A module therefore names one or a few
 modules that carry what it uses, rather than listing every module it happens to touch.  The
@@ -232,16 +221,20 @@ names that
 [`Challenge.lean`](https://github.com/sgouezel/IETFree/blob/main/Challenge.lean) states Theorem 1.1
 with — `IntervalExchange.simplexVolume`, `IntervalExchange.mkIETEquiv`,
 `IntervalExchange.evalWordEquiv`, `IntervalExchange.main`, … — are declared in the same namespace,
-and [`comparator.json`](https://github.com/sgouezel/IETFree/blob/main/comparator.json) lists them in
-full, because the comparator matches the two modules declaration by declaration *by name*; see
+and [`comparator.json`](https://github.com/sgouezel/IETFree/blob/main/comparator.json) names the three
+targets and the definition hole in full, because the comparator matches the two modules declaration
+by declaration *by name*; see
 [`NOTES.md`](NOTES.md), §"The namespaces".
 
-Every module is used in the proof of [`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L106) — the remark's own modules are the
+Every module is used in the proof of [`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L105) — the remark's own modules are the
 other way round, `ChallengeSolved` imports them and feeds `main` into their assembly — and so is
-every declaration of the library except the remark's, which are proved *from* `main` rather than
-used by it, and twenty-nine others, listed in [`NOTES.md`](NOTES.md) §"The prune
-has been done": five `@[ext]` lemmas, five structure projections, the `CoeFun` instance of `IET a b`,
-seventeen `rfl`/`@[simp]` lemmas and one API bridge (`colSumInt_cast`).  No declaration carries a
+every declaration of the library except two kinds: the remark's own, which are proved *from* `main`
+rather than used by it, and a short list of declarations that are applied *definitionally* —
+`@[ext]` lemmas, structure projections, `rfl`/`@[simp]` lemmas, the `CoeFun` instance of `IET a b`,
+and one API bridge (`colSumInt_cast`) kept because it is what makes the two column sums one notion
+for a reader.  They leave no trace in any proof term while a live proof still names them, so
+*deleting any of them breaks the build*; the list, and the walk that produces it, are in
+[`NOTES.md`](NOTES.md) §"The prune has been done".  No declaration carries a
 hypothesis its proof does not use: the last twenty were removed, together with nine more that the
 removal made dead ([`HISTORY.md`](HISTORY.md), Addendum 232).  They are applied definitionally, so they leave no trace in
 any proof term while a live proof still names them.  The library was pruned by
@@ -253,12 +246,12 @@ walking the dependency graph of the main theorem (see [`HISTORY.md`](HISTORY.md)
 | [`IETFree/ListPeriodicity.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ListPeriodicity.lean) | **lists**: periodic words, the `List` material behind root uniqueness in a free group — a flattened block of copies of a word is periodic, and two words with a common positive power commute — used by [`FreeGroup/Commensurable.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree/FreeGroup/Commensurable.lean) |
 | [`IETFree/Measure/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/Measure) (3 modules) | **measure theory and topological dynamics**: three general facts the uniqueness step uses — a finite measure on `ℝ` is determined by a refining sequence of partitions of mesh tending to `0` (`RefiningPartition`), Lévy's upward theorem for a cylinder filtration (`LevyRecurrence`), and uniform Birkhoff convergence on a compact space (`CompactTool`, Tool 1 of the Masur–Veech blueprint) — stated for an arbitrary measure space, with no interval exchange in sight |
 | [`IETFree/Pair/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/Pair) (30 modules: 13 here, 9 in `Block/`, 2 in `Singularity/`, 6 in [`RobustRelation/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/Pair/RobustRelation)) | **two exchanges**: the free-group development — the centralizer, the lattice bounds on displacements and singularities, Section 2's irreducible case ([`IsIrreduciblePerm`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L1191), [`masurVeech`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Irreducible.lean#L60), [`veechRigidity`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Irreducible.lean#L71), Theorem 2.6) and Proposition 2.5 ([`ae_diophantine`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Diophantine.lean#L971)) — and Section 3's reduction to blocks: the length map, the good regions, the block rescalings, Lemmas 3.2–3.4 and the assembly of the per-block words — together with [`ProductSimplex.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/ProductSimplex.lean), the chart of the product of the two simplices that both the challenge and the remark transport along |
-| [`IETFree/Pair/RobustRelation/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/Pair/RobustRelation) (6 modules) | **the remark after the main theorem**: the machinery, below the challenge file — the bad set at a threshold and its conull good set (`goodParamsAt`, the countably many hyperplanes), the symbolic data of an arbitrary word in the two exchanges and the robustness of a trivial word at a point of `Ω'` ([`evalWord_eventually_eq_one`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/RobustRelation/Robustness.lean#L39)), and the assembly of the open set of full measure from an almost-sure input ([`exists_isOpen_subset_hasRelation_of_ae`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/RobustRelation/OpenSet.lean#L158)) in free coordinates and on `Δ_π × Δ_σ`; the two conclusions, fed with [`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L106), are in [`ChallengeSolved.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean) |
+| [`IETFree/Pair/RobustRelation/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/Pair/RobustRelation) (6 modules) | **the remark after the main theorem**: the machinery, below the challenge file — the bad set at a threshold and its conull good set (`goodParamsAt`, the countably many hyperplanes), the symbolic data of an arbitrary word in the two exchanges and the robustness of a trivial word at a point of `Ω'` ([`evalWord_eventually_eq_one`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/RobustRelation/Robustness.lean#L39)), and the assembly of the open set of full measure from an almost-sure input ([`exists_isOpen_subset_hasRelation_of_ae`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/RobustRelation/OpenSet.lean#L158)) in free coordinates and on `Δ_π × Δ_σ`; the conclusion, fed with [`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L105), is in [`ChallengeSolved.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean) |
 | [`IETFree/RauzyVeech/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/RauzyVeech) (58 modules: 18 in [`RichPath/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/RauzyVeech/RichPath), 7 in `Tower/`, 3 in `Ray/`, 2 in `Cylinder/`) | the **Rauzy–Veech induction**: the step and the path matrices, the Rauzy diagram, the volume of path cylinders, the columns and their spread, the ray criterion, the towers and their floors, and the graded induction proving that the greedy path is rich — plus the invariant-measure side the induction steps use: [`InvariantMeasure`](https://github.com/sgouezel/IETFree/blob/main/IETFree/RauzyVeech/InvariantMeasure.lean) (Lebesgue's measure, the cells and the length vector of a measure, and the uniqueness step) and `MainComponents` (the notions the ray criterion is phrased with) |
 | [`IETFree/Rigidity/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/Rigidity) (10 modules) | **Veech's rigidity** for a.e. irreducible exchange, by the Rauzy–Veech induction: the good node, the rigid step, the hitting lemma and the assembly ([`veechRigidity`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Irreducible.lean#L71)) |
 | [`IETFree/UniqueErgodicity/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/UniqueErgodicity) (11 modules, 2 in `Germ/`, 2 in `Transfer/`) | **unique ergodicity** of an exchange: the a.e. theorem and its assembly (`MainTheorem`, [`masurVeech_ae_unique_invariant`](https://github.com/sgouezel/IETFree/blob/main/IETFree/UniqueErgodicity/MainTheorem.lean#L97)), and the **strong form** of Masur–Veech — a unique invariant probability measure gives uniformly convergent Birkhoff averages, through the compact-space tool `Measure/CompactTool` (Tool 1 of the Masur–Veech blueprint, reproduced in `HISTORY.md`, Part II), the split interval and its germ map ([`uniformBirkhoff_of_uniqueErgodic`](https://github.com/sgouezel/IETFree/blob/main/IETFree/UniqueErgodicity/Theorem2.lean#L502)) — together with Lemma 2.9 ([`exists_uniform_birkhoff`](https://github.com/sgouezel/IETFree/blob/main/IETFree/UniqueErgodicity/Theorem2.lean#L523)) |
 | [`IETFree/TopBotFormalism.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree/TopBotFormalism.lean) | interval exchanges in the Marmi–Moussa–Yoccoz framework for the Rauzy induction: a fixed alphabet with a top and a bottom permutation, the datum [`IETDatum₂`](https://github.com/sgouezel/IETFree/blob/main/IETFree/TopBotFormalism.lean#L97) and its simplex measure, and the translation to and from the single-permutation picture ([`perm`](https://github.com/sgouezel/IETFree/blob/main/IETFree/TopBotFormalism.lean#L131), [`ofPerm`](https://github.com/sgouezel/IETFree/blob/main/IETFree/TopBotFormalism.lean#L211), [`toIET`](https://github.com/sgouezel/IETFree/blob/main/IETFree/TopBotFormalism.lean#L158)) — below [`Pair/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/Pair), [`Rigidity/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/Rigidity) and [`UniqueErgodicity/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/UniqueErgodicity) |
-| [`IETFree/ChallengeSolved.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean) | the solution of the comparator challenge: [`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L106) in the challenge's words, and the two bridges [`masurVeech`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Irreducible.lean#L60) / [`veechRigidity`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Irreducible.lean#L71) |
+| [`IETFree/ChallengeSolved.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean) | the solution of the comparator challenge: [`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L105) in the challenge's words, and the two bridges [`masurVeech`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Irreducible.lean#L60) / [`veechRigidity`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Irreducible.lean#L71) |
 | [`Challenge.lean`](https://github.com/sgouezel/IETFree/blob/main/Challenge.lean) | the comparator challenge: one self-contained file at the top level, `import Mathlib` only |
 | [`IETFree.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree.lean) | the umbrella: it imports every module of the library (its import list is generated by `lake exe mk_all --lib IETFree`) |
 | [`HISTORY.md`](HISTORY.md), [`NOTES.md`](NOTES.md) | the full development record — the IET2 addenda, the reconciliation table, and the Masur–Veech campaigns' records, blueprints and dependency graphs — and the one-page summary of the current state |
@@ -274,30 +267,30 @@ lake build           # build IETFree and Challenge
 `lake build` is the build, here too: this VM's `.lake/packages/mathlib` already holds Mathlib's
 oleans, so Lake sees the pinned git package as built and needs no `cache get`.  It is incremental and
 parallel — a no-op costs seconds, an edit to a deep module a minute or two, a build from a removed
-`.lake/build` under three.  A package that Lake would have to *rewrite* is another matter: those
-directories are root-owned, so a change of Mathlib revision needs `lake exe cache get` (or a
-`path = "/opt/mathlib"` require) first.
+`.lake/build` under three.  A change of Mathlib revision is another matter: the oleans under
+`.lake/packages/` belong to the pinned revision, so moving the pin means either `lake exe cache get`
+(the oleans for the new revision, no compilation of Mathlib) or a rebuild of Mathlib itself.
 
 [`SlowBuild.sh`](https://github.com/sgouezel/IETFree/blob/main/SlowBuild.sh) is the *slow* thorough check, not the build: plain `lean`, one process per module,
 in dependency order, everything recompiled every time and Mathlib reloaded per module, so a full run
 costs several minutes.  It is worth it only when something a `lake build` cannot see is wanted: it
 compiles with `warn.sorry` **on** (the lakefile has `warn.sorry = false`) and so counts the
-declarations that still depend on `sorryAx`, `--strict` fails if `sorryAx` is reachable from [`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L106),
+declarations that still depend on `sorryAx`, `--strict` fails if `sorryAx` is reachable from [`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L105),
 and it runs the comparator gate, [`lake comparator`](https://github.com/sgouezel/IETFree/blob/main/comparator.json), on the challenge and the solution.  Its module list is not maintained by
 hand: it is the topological sort of the imports of the umbrella [`IETFree.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree.lean), so a new module needs
 only its import there.  That import list itself is generated by `lake exe mk_all --lib IETFree`.
 
 The build enables the Mathlib linter set (as [`lakefile.toml`](https://github.com/sgouezel/IETFree/blob/main/lakefile.toml) specifies) and is **warning-free**: a `lake build`
 from a removed `.lake/build` reports no linter warning at all; `warningAsError` is set in the lakefile,
-so a warning introduced later fails the build instead of scrolling past.  The only diagnostics are the three
+so a warning introduced later fails the build instead of scrolling past.  The only diagnostics are the four
 `sorry`s of the statement file, which the build does not print (`warn.sorry = false`) and which
 [`SlowBuild.sh`](https://github.com/sgouezel/IETFree/blob/main/SlowBuild.sh) counts.
 
 The *declaration* linters (Mathlib's `runLinter`, which `lake build` does not run) are clean as well:
-0 findings in 4 599 declarations (automatically generated ones included), 15 linters, for `IETFree`
-and for `Challenge`.  In this VM the driver's executable cannot be built (its C objects would go into
-the read-only Mathlib tree), so it is run interpreted — the command is in [`NOTES.md`](NOTES.md),
-§Commands, and the long story in [`HISTORY.md`](HISTORY.md), §"The declaration linters are clean".
+no findings with any of the 15 linters, for `IETFree` and for `Challenge` (the driver does not print
+its declaration count, so none is quoted here).  The driver is run interpreted — the command is in
+[`NOTES.md`](NOTES.md), §Commands, and the history in [`HISTORY.md`](HISTORY.md), §"The declaration
+linters are clean".
 
 ```sh
 lake build                             # the build: incremental, parallel, warning-free
@@ -316,7 +309,7 @@ Rauzy–Veech induction:
 
 | literature | in Lean | where |
 |---|---|---|
-| **Unique ergodicity** (H. Masur, *Interval exchange transformations and measured foliations*, Ann. of Math. 115 (1982) 169–200; W. A. Veech, *Gauss measures for transformations on the space of interval exchange maps*, Ann. of Math. 115 (1982) 201–242) | [`masurVeech_ae_unique_invariant`](https://github.com/sgouezel/IETFree/blob/main/IETFree/UniqueErgodicity/MainTheorem.lean#L97): for irreducible data on `n ≥ 2` letters, a.e. length vector gives an exchange with exactly one invariant probability measure carried by `[0, 1)`; and [`masurVeech`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Irreducible.lean#L60) for `mkIET1 λ π`; the uniform Birkhoff form is the theorem [`uniformBirkhoff_of_uniqueErgodic`](https://github.com/sgouezel/IETFree/blob/main/IETFree/UniqueErgodicity/Theorem2.lean#L502) | [`IETFree/RauzyVeech/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/RauzyVeech), [`IETFree/UniqueErgodicity/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/UniqueErgodicity) (58 + 12 modules) |
+| **Unique ergodicity** (H. Masur, *Interval exchange transformations and measured foliations*, Ann. of Math. 115 (1982) 169–200; W. A. Veech, *Gauss measures for transformations on the space of interval exchange maps*, Ann. of Math. 115 (1982) 201–242) | [`masurVeech_ae_unique_invariant`](https://github.com/sgouezel/IETFree/blob/main/IETFree/UniqueErgodicity/MainTheorem.lean#L97): for irreducible data on `n ≥ 2` letters, a.e. length vector gives an exchange with exactly one invariant probability measure carried by `[0, 1)`; and [`masurVeech`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Irreducible.lean#L60) for `mkIET1 λ π`; the uniform Birkhoff form is the theorem [`uniformBirkhoff_of_uniqueErgodic`](https://github.com/sgouezel/IETFree/blob/main/IETFree/UniqueErgodicity/Theorem2.lean#L502) | [`IETFree/RauzyVeech/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/RauzyVeech), [`IETFree/UniqueErgodicity/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/UniqueErgodicity) (58 + 11 modules) |
 | **Rigidity by translations** (Veech, *Metric theory of interval exchange transformations I*, Amer. J. Math. 106 (1984) 1331–1359, Theorem 1.4) | [`veechRigidity`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Irreducible.lean#L71): a.e. length vector gives an exchange rigid by translations, in the paper's Definition 2.2 form | [`IETFree/Rigidity/`](https://github.com/sgouezel/IETFree/tree/main/IETFree/Rigidity) (10 modules) |
 
 Both inputs are theorems of the library, stated once, in [`IETFree/Pair/Irreducible.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Irreducible.lean) besides the
@@ -336,8 +329,10 @@ Two remarks on the scope of the formalization:
   [`veechRigidity`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Irreducible.lean#L71) does not need it (the identity is rigid by translations), and the unconditional
   theorem above has no hypothesis on the number of cells at all.
 * Lemma 1.3 of the paper (an irrational rotation and an exchange do not generate a free group) is an
-  illustration in the introduction and is **not** part of this development; nor is the remark
-  following Theorem 1.1 (that the set of pairs is, in fact, open and of full measure).
+  illustration in the introduction and is **not** part of this development.  Everything else in the
+  paper is, including the remark that follows Theorem 1.1 — the open set of full measure of pairs
+  generating no free group is the third target of the comparator challenge, proved in
+  [`IETFree/ChallengeSolved.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean).
 
 ## Correspondence between the paper and the formalization
 
@@ -350,10 +345,9 @@ paper that is not in the tree.
 
 | paper | Lean | file:line | status |
 |---|---|---|---|
-| Theorem 1.1 (main theorem) | [`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L106), unconditional | [`ChallengeSolved.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L106) | `proved` |
+| Theorem 1.1 (main theorem) | [`main`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L105), unconditional | [`ChallengeSolved.lean`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L105) | `proved` |
 | Remark after Theorem 1.1 (robustness of the relation) | [`evalWord_eventually_eq_one`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/RobustRelation/Robustness.lean#L39) (hypothesis: the paper's `Ω'`, i.e. no nontrivial integer relation between the free lengths vanishes; the threshold form is `evalWord_eventually_eq_one_of_goodParams`) | [`Robustness.lean:39`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/RobustRelation/Robustness.lean#L39) | `proved` |
-| Remark after Theorem 1.1 (a full measure open set of pairs not generating a free group), free coordinates | [`exists_isOpen_subset_hasRelation`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L181) (the interior of the relation set) | [`ChallengeSolved.lean:181`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L181) | `proved` |
-| Remark after Theorem 1.1 (a full measure open set of pairs not generating a free group), the paper's coordinates | [`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L199) on `Δ_π × Δ_σ` (an open set of the ambient space such that every point `p` of it whose two vectors have total mass `1` carries a nontrivial word trivial for `mkIETEquiv p.1 π 0` and `mkIETEquiv p.2 σ 0`; the normalisation is a hypothesis, not an intersection with a simplex, so the statement names only what `Challenge.lean` declares and can be read as a target on its own) | [`ChallengeSolved.lean:199`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L199) | `proved` |
+| Remark after Theorem 1.1 (a full measure open set of pairs not generating a free group), the paper's coordinates | [`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L164) on `Δ_π × Δ_σ` (an open set of the ambient space such that every point `p` of it whose two vectors have total mass `1` carries a nontrivial word trivial for `mkIETEquiv p.1 π 0` and `mkIETEquiv p.2 σ 0`; the normalisation is a hypothesis, not an intersection with a simplex, so the statement names only what `Challenge.lean` declares and can be read as a target on its own) | [`ChallengeSolved.lean:164`](https://github.com/sgouezel/IETFree/blob/main/IETFree/ChallengeSolved.lean#L164) | `proved` |
 | Lemma 1.3 (an irrational rotation and an interval exchange do not generate a free group) | — | — | `not-formalized` |
 | Definition 2.1 (uniquely ergodic) | [`UniqueErgodic`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L1134) (a unique invariant probability measure carried by `[0, 1)`; the uniform Birkhoff form is the predicate [`UniformBirkhoff`](https://github.com/sgouezel/IETFree/blob/main/IETFree/UniqueErgodicity/Basic.lean#L65), derived from it in [`uniformBirkhoff_of_uniqueErgodic`](https://github.com/sgouezel/IETFree/blob/main/IETFree/UniqueErgodicity/Theorem2.lean#L502)) | [`IET.lean:1134`](https://github.com/sgouezel/IETFree/blob/main/IETFree/IET.lean#L1134) | `implemented` |
 | a.e. interval exchange is uniquely ergodic (Masur; Veech) | [`masurVeech`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Irreducible.lean#L60), from the measure form [`masurVeech_ae_unique_invariant`](https://github.com/sgouezel/IETFree/blob/main/IETFree/UniqueErgodicity/MainTheorem.lean#L97) | [`MainTheorem.lean:97`](https://github.com/sgouezel/IETFree/blob/main/IETFree/UniqueErgodicity/MainTheorem.lean#L97) | `proved` |
@@ -367,12 +361,12 @@ paper that is not in the tree.
 | Lemma 2.9, display (2.2) (uniform Birkhoff bound) | [`exists_uniform_birkhoff`](https://github.com/sgouezel/IETFree/blob/main/IETFree/UniqueErgodicity/Theorem2.lean#L523) | [`Theorem2.lean:523`](https://github.com/sgouezel/IETFree/blob/main/IETFree/UniqueErgodicity/Theorem2.lean#L523) | `proved` |
 | Lemma 2.10 (one commutator step: the support shrinks by a factor 18ε) | [`iterate_word`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Irreducible.lean#L364) (`Leb(supp w') ≤ 18 ε Leb(supp w)`) | [`Irreducible.lean:364`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Irreducible.lean#L364) | `proved` |
 | Lemma 3.1 (the length map of gf is an invertible affine map), the parts used | [`compLen_injective`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/LengthMap.lean#L263) (injectivity; the other two give the absolute continuity), [`compLen_absolutelyContinuousAt`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/AeBlockGood.lean#L195), [`absolutelyContinuous_map_blockFree`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/AETransfer.lean#L175) | [`LengthMap.lean:263`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/LengthMap.lean#L263), [`AeBlockGood.lean:195`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/AeBlockGood.lean#L195), [`AETransfer.lean:175`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/AETransfer.lean#L175) | `proved` |
-| splitting singularity / fixed interval / pair-splitting singularity (Section 3) | [`IETDatum.IsSplitting`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/ReductionData.lean#L189), [`IETDatum.InFixedCell`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/ReductionData.lean#L355), [`IsPairSplitting`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/ReductionData.lean#L392) | [`ReductionData.lean:189`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/ReductionData.lean#L189), [`ReductionData.lean:189`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/ReductionData.lean#L189), [`ReductionData.lean:189`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/ReductionData.lean#L189) | `implemented` |
+| splitting singularity / fixed interval / pair-splitting singularity (Section 3) | [`IETDatum.IsSplitting`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/ReductionData.lean#L189), [`IETDatum.InFixedCell`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/ReductionData.lean#L355), [`IsPairSplitting`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/ReductionData.lean#L392) | [`ReductionData.lean:189`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/ReductionData.lean#L189), [`ReductionData.lean:355`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/ReductionData.lean#L355), [`ReductionData.lean:392`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/ReductionData.lean#L392) | `implemented` |
 | Lemma 3.2 (between consecutive pair-splitting singularities the permutation is irreducible) | [`block_irreducible_on_good`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/Irreducibility.lean#L1070) (the intrinsic form), [`irreduciblePerm_blockPerm`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/BlockDatum.lean#L53) (for the explicit [`blockPerm`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/Rescaling.lean#L351)) | [`Irreducibility.lean:1070`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/Irreducibility.lean#L1070), [`BlockDatum.lean:53`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/BlockDatum.lean#L53) | `proved` |
 | Lemma 3.3 (a permutation fixing an initial segment of the image order) | [`perm_eq_of_preimage`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/ReductionData.lean#L481) | [`ReductionData.lean:481`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/ReductionData.lean#L481) | `proved` |
 | Lemma 3.4 (a.e. a nontrivial word is trivial on a given block) | [`exists_word_trivial_on_block`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/Lemma.lean#L209) | [`Lemma.lean:209`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/Lemma.lean#L209) | `proved` |
 | Theorem 1.1 in block form, and the assembly of the per-block words | [`main_theorem_of_blocks`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/Lemma.lean#L237) (the a.e. statement for the data of the composition), [`exists_word_trivial_on_all_of_blocks`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/Assembly.lean#L113) | [`Lemma.lean:237`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/Lemma.lean#L237), [`Assembly.lean:113`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/Assembly.lean#L113) | `proved` |
-| the open regions of Section 3, and their countable cover | [`GoodRegion`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/GoodRegion.lean#L1075) (the open region `O`, the list `s`, the permutation `ρ`, the cut and cell maps `a`, `B`), [`exists_goodRegion`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/GoodRegion.lean#L1193), [`exists_countable_goodRegion_cover`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/Endpoints.lean#L323) | [`GoodRegion.lean:1075`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/GoodRegion.lean#L1075), [`GoodRegion.lean:1075`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/GoodRegion.lean#L1075), [`Endpoints.lean:323`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/Endpoints.lean#L323) | `proved` |
+| the open regions of Section 3, and their countable cover | [`GoodRegion`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/GoodRegion.lean#L1075) (the open region `O`, the list `s`, the permutation `ρ`, the cut and cell maps `a`, `B`), [`exists_goodRegion`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/GoodRegion.lean#L1193), [`exists_countable_goodRegion_cover`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/Endpoints.lean#L323) | [`GoodRegion.lean:1075`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/GoodRegion.lean#L1075), [`GoodRegion.lean:1193`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/GoodRegion.lean#L1193), [`Endpoints.lean:323`](https://github.com/sgouezel/IETFree/blob/main/IETFree/Pair/Block/Endpoints.lean#L323) | `proved` |
 
 ## Discrepancies with the paper, and why the formalization departs from it
 

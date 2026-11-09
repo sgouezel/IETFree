@@ -8,7 +8,7 @@ against `.scratch/tauceti/TauCetiReview/rubrics/` and the `.skill/` files, and e
 reproduced before acceptance.  Read it before a large change; `../results/review-IET2-v2.md` is the
 previous audit and its §35 the closure index of that round, which v3 partly reopens (§4).
 
-The full development log is [`HISTORY.md`](HISTORY.md): the 246 addenda of the `IET2` campaign
+The full development log is [`HISTORY.md`](HISTORY.md): the 247 addenda of the `IET2` campaign
 (with the table that maps every declaration name that no longer exists), then everything the
 Masur–Veech campaigns left in prose — their records, and the rigidity campaign's blueprint, plan and
 two dependency-graph documents, plus the Birkhoff campaign's two blueprints.  Cite it for *why*
@@ -44,23 +44,19 @@ Both are stated in the library's vocabulary, for the exchange `mkIET1 λ π : IE
 group power — the `…Fun` predicates of the conditional challenge are gone (see below).
 
 The remark after the main theorem is proved too (Addendum 233), with its machinery in
-`Pair/RobustRelation/` **below** `ChallengeSolved.lean` and its two conclusions inside that file
+`Pair/RobustRelation/` **below** `ChallengeSolved.lean` and its conclusion inside that file
 (Addendum 234):
 
 * `evalWord_eventually_eq_one` — a word trivial at a point `q₀` of the open region at which no
   nontrivial integer relation between the free lengths vanishes (`∀ N, q₀ ∈ goodParamsAt N d e`, the
   paper's `Ω'`) is trivial on a neighbourhood of `q₀`; the threshold form `4 * |w| + 4` is
   `evalWord_eventually_eq_one_of_goodParams`;
-* `Pair.ae_hasRelation` — the a.e. statement of the main theorem, transported to the free parameters;
-* `Pair.exists_isOpen_subset_hasRelation` — the parameters carrying a nontrivial trivial word contain
-  an open set of full measure for
-  `(volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e))` (the interior of the
-  relation set, which need not be open itself);
-* `Pair.exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one` — the same on the paper's `Δ_π × Δ_σ`, as an open set of
-  the ambient space whose trace on the product of the simplices carries the relation.
-
-The last three are in `ChallengeSolved.lean`, next to `main`; the assembly that produces them from an
-almost-sure input is `Pair.RobustRelation.exists_isOpen_subset_hasRelation_of_ae`, below.
+* `Pair.exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one` — the remark on the paper's
+  `Δ_π × Δ_σ`: an open set of the ambient space, of null complement for
+  `simplexVolume d × simplexVolume e`, whose points of total mass `1` carry a nontrivial trivial
+  word (Addendum 247 states it directly from `main`; the a.e. step and the free-coordinate form are
+  *not* statements of their own — they are the proof of that theorem, on top of
+  `Pair.RobustRelation.exists_isOpen_subset_hasRelation_of_ae`, below).
 
 ## Status — measured, not remembered
 
@@ -108,9 +104,9 @@ almost-sure input is `Pair.RobustRelation.exists_isOpen_subset_hasRelation_of_ae
   `IETFree` (including the six `Pair/RobustRelation/` modules) and 0 for `Challenge`, 15 linters
   (`runLinter` does not print its declaration count, so none is quoted here — re-run it with `-v` to
   see the linter list).
-- **Size** (re-measured for Addendum 242): 120 modules, 47 234 lines
-  (counted over `IETFree/**/*.lean`, of which 240 are import lines; the umbrella `IETFree.lean`
-  adds 195).  The remark's machinery is 2 857 lines in the six modules of `Pair/RobustRelation/`,
+- **Size** (re-measured for Addendum 247): 120 modules, 47 020 lines
+  (counted over `IETFree/**/*.lean`, of which 254 are import lines; the umbrella `IETFree.lean`
+  adds 195).  The remark's machinery is 2 681 lines in the six modules of `Pair/RobustRelation/`,
   plus 130 lines in `Pair/ProductSimplex.lean` and the three `Equiv`-valued declarations that moved
   into `Pair/MeasureTools.lean`.  The
   declaration counts are the Addendum-232 measurement and are not re-derived here: 4 599 project
@@ -144,7 +140,7 @@ tiling and measure preservation), then the subdirectories below.  Every sibling 
 * `FreeGroup/` (2 modules) — the free-group theory the two-exchange development uses: root
   uniqueness and the centralizer of two elements, over an arbitrary alphabet, with no exchange in
   sight (`Commensurable`, `Centralizer`).
-* `Pair/` (29 modules: 13 here, 9 in `Block/`, 2 in `Singularity/`, 5 in `RobustRelation/`) — two
+* `Pair/` (30 modules: 13 here, 9 in `Block/`, 2 in `Singularity/`, 6 in `RobustRelation/`) — two
   exchanges: the free-group development.  Section 2 (centralizer, Lemmas 2.7–2.10, Theorem 2.6,
   Proposition 2.5 `ae_diophantine`) and Section 3 (the length map, the good regions, the block
   rescalings, Lemmas 3.2–3.4, the assembly of the per-block words).
@@ -184,8 +180,11 @@ exchange, with the three notions `Invariant`, `UniqueErgodic` and `IsRigidByTran
 by nothing).
 
 **The prune has been done, and this is what it left** (Addenda 222 and 232).  The walk over the
-environment — `getUsedConstants` from `IntervalExchange.main` — reports **29** declarations that no
-proof term names: five `@[ext]` lemmas (`BlockIdx.ext`, `Pair.IETDatum.ext`, `GoodRegion.Block.ext`,
+environment — `getUsedConstants` from `IntervalExchange.main` — reported **29** declarations that no
+proof term names (re-measured in Addendum 247 with the remark's conclusion as a second root: 2 695
+declarations in the project's modules, 240 of them not reached by any term, 124 once the
+`congr_simp`/`ext`/`casesOn` companions that the compiler generates are dropped — the growth is the
+remark's machinery, whose auxiliary lemmas are stated for reuse): five `@[ext]` lemmas (`BlockIdx.ext`, `Pair.IETDatum.ext`, `GoodRegion.Block.ext`,
 `SingularityShape.ext`, `Rkz.Blk.ext`), the `CoeFun (IET a b)` instance, five projections of
 `IsSmallRelation` — deleted with that structure, which had no other consumer (Addendum 232, C33), so
 the list is now five shorter — seventeen
