@@ -5,6 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.ForMathlib.List
 public import IETFree.RauzyVeech.RichPath.LargeLetter
 
 /-!
@@ -75,7 +76,7 @@ theorem dichotomy (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     List.append_assoc w γs _
   rw [hw] at hbound
   refine ⟨γs ++ (ν ++ [e]).take i, List.prefix_append γs _,
-    append_prefix_append γs (List.take_prefix i (ν ++ [e])), θ, hθ, ?_⟩
+    List.append_prefix_append γs (List.take_prefix i (ν ++ [e])), θ, hθ, ?_⟩
   -- the `C₂` bookkeeping: `C₂ ≥ 1` and `M(q_{w γ_s}) ≤ C₂·M(q_w)`
   have hxpos : 0 < mmin (insert θ A')
       (colSum P (w ++ (γs ++ (ν ++ [e]).take i))) :=

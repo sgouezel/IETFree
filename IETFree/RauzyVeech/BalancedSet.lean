@@ -11,7 +11,7 @@ public import IETFree.RauzyVeech.Nesting
 /-!
 # Column sums and volumes of path cylinders
 
-Column sums of a matrix multiplied by an elementary matrix (`colsum_mul_single`,
+Column sums of a matrix multiplied by an elementary matrix (`Matrix.sum_mul_single`,
 `colsum_append_singleton`, `colsum_append`), monotonicity of the column sums along an extension
 (`colsum_le_colsum_append`), and the volume identities for path cylinders: disjointness of two
 sibling cylinders and of incomparable prefixes (`disjoint_simplexCyl_cons_cons`,
@@ -36,7 +36,7 @@ non-decreasing, which is what makes the balance inequalities of Lemma 5 monotone
 
 /-- Column sums on the right by an elementary matrix `single i j c`: only the `j`-th column
 sum changes, and it is multiplied by `c`. -/
-theorem colsum_mul_single {ι : Type*} [Fintype ι] [DecidableEq ι] (M : Matrix ι ι ℤ)
+theorem Matrix.sum_mul_single {ι : Type*} [Fintype ι] [DecidableEq ι] (M : Matrix ι ι ℤ)
     (i j : ι) (c : ℤ) (b : ι) :
     (∑ a, (M * Matrix.single i j c) a b) = if b = j then (∑ a, M a i) * c else 0 := by
   by_cases hb : b = j <;> simp [hb, Finset.sum_mul]
@@ -54,7 +54,7 @@ theorem colsum_append_singleton (P : IETDatum₂ α n) (hP : P.Irreducible) (hn 
     Matrix.mul_add, Matrix.mul_one]
   simp only [Matrix.add_apply, Finset.sum_add_distrib]
   congr 1
-  simpa using colsum_mul_single (Path.Q P γ) ((vertex P γ).last e) ((vertex P γ).last (!e)) 1 b
+  simpa using Matrix.sum_mul_single (Path.Q P γ) ((vertex P γ).last e) ((vertex P γ).last (!e)) 1 b
 
 /-- **The column-sum recursion along a path**: the column sums of `γ ++ δ` are the column sums of
 `γ` applied to `Q(δ)` read at the vertex reached after `γ`. -/

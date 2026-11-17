@@ -16,7 +16,7 @@ exchange `mkIET1' lam π h` is the identity on the simplex, so rigidity holds wi
 `t = 0`, `B n = Set.Ico 0 1`.  This is the `d = 1` half of its proof.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter
 open scoped NNReal ENNReal BigOperators

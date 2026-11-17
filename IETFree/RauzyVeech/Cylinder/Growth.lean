@@ -107,7 +107,7 @@ def PairReach : Prop :=
 omit [DecidableEq α] in
 /-- If `A ≥ 0` with diagonal `≥ 1` and row `a` of `B` is positive, then row `a` of `A * B`
 is positive. -/
-theorem one_le_mul_of_one_le (A B : Matrix α α ℤ) (hA : ∀ i j, 0 ≤ A i j)
+theorem one_le_mul_of_diag (A B : Matrix α α ℤ) (hA : ∀ i j, 0 ≤ A i j)
     (hB : ∀ i j, 0 ≤ B i j) (hAdiag : ∀ i, 1 ≤ A i i) (a : α) (hrow : ∀ b, 1 ≤ B a b)
     (b : α) :
     1 ≤ (A * B) a b := by
@@ -122,7 +122,7 @@ theorem one_le_mul_of_one_le (A B : Matrix α α ℤ) (hA : ∀ i j, 0 ≤ A i j
 
 omit [DecidableEq α] in
 /-- If `A, B ≥ 0`, the diagonal of `B` is `≥ 1` and `1 ≤ A a b`, then `1 ≤ (A * B) a b`. -/
-theorem one_le_mul_of_one_le_right (A B : Matrix α α ℤ) (hA : ∀ i j, 0 ≤ A i j)
+theorem one_le_mul_of_diag_right (A B : Matrix α α ℤ) (hA : ∀ i j, 0 ≤ A i j)
     (hB : ∀ i j, 0 ≤ B i j) (hdiag : ∀ i, 1 ≤ B i i) (a b : α) (h : 1 ≤ A a b) :
     1 ≤ (A * B) a b := by
   rw [Matrix.mul_apply]
@@ -199,9 +199,9 @@ theorem exists_pos_word (P : IETDatum₂ α n) (h : PairReach (α := α) (n := n
       intro s hs b
       rw [Path.Q_append]
       rcases Finset.mem_insert.mp hs with rfl | hsT
-      · exact one_le_mul_of_one_le (Path.Q P w) (Path.Q (vertex P w) w') (Q_nonneg P w)
+      · exact one_le_mul_of_diag (Path.Q P w) (Path.Q (vertex P w) w') (Q_nonneg P w)
           (Q_nonneg (vertex P w) w') (one_le_Q_diag P w) s (fun j => hw' j) b
-      · exact one_le_mul_of_one_le_right (Path.Q P w) (Path.Q (vertex P w) w')
+      · exact one_le_mul_of_diag_right (Path.Q P w) (Path.Q (vertex P w) w')
           (Q_nonneg P w) (Q_nonneg (vertex P w) w') (one_le_Q_diag (vertex P w) w')
           s b (hw s hsT b)
   obtain ⟨w, hw⟩ := key Finset.univ

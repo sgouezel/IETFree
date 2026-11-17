@@ -26,7 +26,7 @@ length), and bounds the entries of the resulting cycle by a maximum over the fin
 bounded length. No length vector enters the constant.
 -/
 
-@[expose] public section
+public section
 
 open scoped BigOperators
 open IntervalExchange.RauzyVeech

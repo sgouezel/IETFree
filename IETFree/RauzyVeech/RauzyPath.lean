@@ -137,6 +137,7 @@ noncomputable def pathWord (P : IETDatum₂ α n) (x : α → ℝ≥0) : ℕ →
 noncomputable def pathStep (P : IETDatum₂ α n) (x : α → ℝ≥0) (k : ℕ) : Bool :=
   pathBranch P x (pathWord P x k)
 
+@[simp]
 theorem pathWord_succ (P : IETDatum₂ α n) (x : α → ℝ≥0) (k : ℕ) :
     pathWord P x (k + 1) = pathWord P x k ++ [pathStep P x k] := (rfl)
 

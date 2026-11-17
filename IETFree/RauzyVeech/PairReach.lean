@@ -15,8 +15,8 @@ public import IETFree.RauzyVeech.NameInfinite
 ordered pair of letters is reachable from every vertex by a Rauzy path (`pairReach_all`); this is
 what richness of the greedy path consumes.  The proof descends along the block below a last letter:
 the two block lemmas `true_block_piTop` and `false_block_piBottom`, the descent steps
-`descent_subclaim` and `descent_step`, and the counting bounds `card_filter_lt`, `card_filter_le`,
-`card_filter_gt`. -/
+`descent_subclaim` and `descent_step`, and the counting bounds `card_filter_val_lt`,
+`card_filter_val_le`, `card_filter_val_gt`. -/
 
 @[expose] public section
 
@@ -36,7 +36,7 @@ variable {α : Type*} [Fintype α] {n : ℕ}
 /-! ## 1. Counting letters by position -/
 
 /-- The letters whose position in the order `e` is `< k` are `k` in number. -/
-theorem card_filter_lt (e : α ≃ Fin n) {k : ℕ} (hk : k ≤ n) :
+theorem card_filter_val_lt (e : α ≃ Fin n) {k : ℕ} (hk : k ≤ n) :
     (Finset.univ.filter (fun a => (e a).val < k)).card = k := by
   have himg : ((Finset.univ.filter (fun a => (e a).val < k)).image (fun a => (e a).val))
       = Finset.range k := by
@@ -51,7 +51,7 @@ theorem card_filter_lt (e : α ≃ Fin n) {k : ℕ} (hk : k ≤ n) :
     (fun a b h => e.injective (Fin.ext h)), himg, Finset.card_range]
 
 /-- The letters whose position in the order `e` is `≤ k` are `k + 1` in number. -/
-theorem card_filter_le (e : α ≃ Fin n) {k : ℕ} (hk : k < n) :
+theorem card_filter_val_le (e : α ≃ Fin n) {k : ℕ} (hk : k < n) :
     (Finset.univ.filter (fun a => (e a).val ≤ k)).card = k + 1 := by
   have himg : ((Finset.univ.filter (fun a => (e a).val ≤ k)).image (fun a => (e a).val))
       = Finset.range (k + 1) := by
@@ -66,7 +66,7 @@ theorem card_filter_le (e : α ≃ Fin n) {k : ℕ} (hk : k < n) :
     (fun a b h => e.injective (Fin.ext h)), himg, Finset.card_range]
 
 /-- The letters whose position in the order `e` is `> k` are `n - k - 1` in number. -/
-theorem card_filter_gt (e : α ≃ Fin n) {k : ℕ} :
+theorem card_filter_val_gt (e : α ≃ Fin n) {k : ℕ} :
     (Finset.univ.filter (fun a => k < (e a).val)).card = n - k - 1 := by
   have himg : ((Finset.univ.filter (fun a => k < (e a).val)).image (fun a => (e a).val))
       = Finset.Ico (k + 1) n := by
@@ -141,7 +141,7 @@ theorem descent_subclaim (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤
     omega
   have hS_card : S.card = m := by
     rw [hS_def]
-    exact card_filter_lt P.piTop (by omega)
+    exact card_filter_val_lt P.piTop (by omega)
   have hd_not : P.last false ∉ S := by
     rw [hS_def, Finset.mem_filter]
     intro h
@@ -175,19 +175,19 @@ theorem descent_subclaim (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤
       intro a ha
       exact Finset.mem_filter.mpr ⟨Finset.mem_univ _, hS_sub a ha⟩
     have h1 := Finset.card_le_card hsub
-    rw [hS_card, card_filter_le P.piBottom hML_lt] at h1
+    rw [hS_card, card_filter_val_le P.piBottom hML_lt] at h1
     exact h1
   have hstep2 : ML ≤ m := by
     set R : Finset α := Finset.univ.filter (fun a => m < (P.piTop a).val) with hR_def
     have hRcard : R.card = n - m - 1 := by
       rw [hR_def]
-      exact card_filter_gt P.piTop
+      exact card_filter_val_gt P.piTop
     have hRsub : R ⊆ Finset.univ.filter (fun a => ML < (P.piBottom a).val) := by
       intro a ha
       rw [hR_def, Finset.mem_filter] at ha
       exact Finset.mem_filter.mpr ⟨Finset.mem_univ _, hstrict a ha.2⟩
     have h2 := Finset.card_le_card hRsub
-    rw [hRcard, card_filter_gt P.piBottom] at h2
+    rw [hRcard, card_filter_val_gt P.piBottom] at h2
     omega
   have hdich : ML = m - 1 ∨ ML = m := by omega
   rcases hdich with hcase | hcase
@@ -200,7 +200,7 @@ theorem descent_subclaim (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤
       refine Finset.eq_of_subset_of_card_le ?_ ?_
       · intro a ha
         exact Finset.mem_filter.mpr ⟨Finset.mem_univ _, hS_sub a ha⟩
-      · rw [hS_card, card_filter_le P.piBottom hML_lt]
+      · rw [hS_card, card_filter_val_le P.piBottom hML_lt]
         omega
     refine no_block P hP S hSne hSproper ?_ ?_
     · intro a ha b hb
@@ -217,13 +217,13 @@ theorem descent_subclaim (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤
     set R : Finset α := Finset.univ.filter (fun a => m < (P.piTop a).val) with hR_def
     have hRcard : R.card = n - m - 1 := by
       rw [hR_def]
-      exact card_filter_gt P.piTop
+      exact card_filter_val_gt P.piTop
     have hReq : R = Finset.univ.filter (fun a => ML < (P.piBottom a).val) := by
       refine Finset.eq_of_subset_of_card_le ?_ ?_
       · intro a ha
         rw [hR_def, Finset.mem_filter] at ha
         exact Finset.mem_filter.mpr ⟨Finset.mem_univ _, hstrict a ha.2⟩
-      · rw [hRcard, card_filter_gt P.piBottom]
+      · rw [hRcard, card_filter_val_gt P.piBottom]
         omega
     have hd_not_R : P.last false ∉ R := by
       rw [hR_def, Finset.mem_filter]
@@ -246,7 +246,7 @@ theorem descent_subclaim (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤
         · exact hd_le
         · have := hS_sub a haS
           omega
-      · rw [hS'_card, card_filter_le P.piBottom hmn]
+      · rw [hS'_card, card_filter_val_le P.piBottom hmn]
     have hcardα : Fintype.card α = n := by
       rw [Fintype.card_congr P.piTop, Fintype.card_fin]
     refine no_block P hP S' (by rw [hS'_def]; exact Finset.insert_nonempty _ _) ?_ ?_ ?_

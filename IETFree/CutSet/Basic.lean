@@ -185,6 +185,7 @@ noncomputable def IsCutSet.cellStarts (_hs : IsCutSet f a b s) : Fin s.card → 
 
 /-- **The enumeration, as a coercion**: `cellStarts i` is the `i`-th element of `{a} ∪ s`, read as a
 real number.  This is the form in which proofs meet it when they work with `orderIsoOfFin`. -/
+@[simp]
 theorem IsCutSet.cellStarts_eq_coe (hs : IsCutSet f a b s) (i : Fin s.card) :
     hs.cellStarts i = ((Finset.orderIsoOfFin s rfl i : {x // x ∈ s}) : ℝ) := (rfl)
 

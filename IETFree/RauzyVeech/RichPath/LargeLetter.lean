@@ -5,6 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.ForMathlib.List
 public import IETFree.RauzyVeech.ChildVolume
 public import IETFree.RauzyVeech.RichPath.NodeHeight
 
@@ -21,8 +22,8 @@ appears).  This file proves **`Γ₄`**, in the form the `k → k+1` step consum
   letter appears, under the dichotomy of the `A'`-heights;
 * `sum_cond_le_one`, `sum_cond_fibre_le`, **`exists_prefixFree_mass`**: the minimal prefixes of a
   covering family carry at least its mass (replacing AGY's non-injective, non-prefix-free
-  truncation in "`P(Γ₄ | π) ≥ P(Γ₃ | π)`"), together with `take_succ_eq_of_head`,
-  `exists_head_drop`.
+  truncation in "`P(Γ₄ | π) ≥ P(Γ₃ | π)`"), together with `List.take_succ_eq_of_head`,
+  `List.exists_head_drop`.
 -/
 
 open MeasureTheory Finset IntervalExchange.IETDatum₂
@@ -143,6 +144,7 @@ theorem newLetter_bound
     obtain ⟨hwinN, hloseN⟩ := hlast (by rw [hd]; exact hcase)
     have hNsub : N - 1 < N := by omega
     have hNm : N - 1 + 1 = N := Nat.sub_add_cancel hN1
+    -- the loser of the last step is above `mA`, since the winner is
     have hθ : mA ≤ h N (lose (N - 1)) := by
       have h1 := hmA (N - 1) (by omega) (win (N - 1)) hwinN
       have h2 := hstep (N - 1) hNsub (lose (N - 1))
@@ -156,12 +158,14 @@ theorem newLetter_bound
       le_mmin_insert.mpr ⟨hθ, hmA N le_rfl⟩
     have hminR : min mA R ≤ min (mmin (insert (lose (N - 1)) A') (h N)) R :=
       min_le_min hmin le_rfl
+    -- so the minimum over the extended set is `min mA R`, and `κ` turns it into `2dR`
     have hkey : 2 * d * R ≤ 4 * d * κ * min mA R := by
       rcases le_total R mA with hr | hr
       · rw [min_eq_right hr]
         nlinarith
       · rw [min_eq_left hr]
         nlinarith
+    -- and the last height is still below `2dR`: that is `Γ₄`
     refine ⟨N, le_rfl, lose (N - 1), hloseN, ?_⟩
     calc mkMass 1 (h N) ≤ 2 * d * R := hcase
       _ ≤ 4 * d * κ * min mA R := hkey
@@ -169,6 +173,7 @@ theorem newLetter_bound
           mul_le_mul_of_nonneg_left hminR hdκ
   · -- case 1: the maximum crossed `2dR`; the first crossing letter is a new large letter
     simp only [not_le] at hcase
+    -- take the first time the maximum crosses `2dR`
     have hex : ∃ j : ℕ, 2 * d * R < mkMass 1 (h j) := ⟨N, hcase⟩
     set j := Nat.find hex with hjdef
     have hjgt : 2 * d * R < mkMass 1 (h j) := Nat.find_spec hex
@@ -183,6 +188,7 @@ theorem newLetter_bound
       · exact h0
     have hprev : mkMass 1 (h (j - 1)) ≤ 2 * d * R := not_lt.mp (hjmin (j - 1) (by omega))
     have hjN : j - 1 < N := by omega
+    -- at that time every height is at most twice the previous maximum
     have hbound (b) : h j b ≤ 2 * (2 * d * R) := by
       have hstepj := hstep (j - 1) hjN b
       have hjm : j - 1 + 1 = j := Nat.sub_add_cancel hj1
@@ -195,6 +201,7 @@ theorem newLetter_bound
       · linarith
     obtain ⟨θ, hθeq⟩ := exists_eq_Mk_one (h j) hcard
     have hθgt : 2 * d * R < h j θ := by rw [hθeq]; exact hjgt
+    -- the crossing letter is not in `A'`: there the heights are bounded by `2dR`
     have hθnot : θ ∉ A' := by
       intro hθA
       have h1 := hAN j hjle θ hθA
@@ -211,6 +218,7 @@ theorem newLetter_bound
       linarith
     have hmin : mA ≤ mmin (insert θ A') (h j) := le_mmin_insert.mpr ⟨hmAj, hmA j hjle⟩
     have hminR : min mA R ≤ min (mmin (insert θ A') (h j)) R := min_le_min hmin le_rfl
+    -- hence the extended minimum is at least `min mA R`, and `κ` gives `Γ₄`
     have hkey : 4 * d * R ≤ 4 * d * κ * min mA R := by
       rcases le_total R mA with hr | hr
       · rw [min_eq_right hr]
@@ -224,31 +232,6 @@ theorem newLetter_bound
           mul_le_mul_of_nonneg_left hminR hdκ
 
 /-! ## 4. The word-level form of `Γ₄` -/
-
-/-- Splitting off the last letter of a prefix, in a form that avoids dependent indices. -/
-theorem take_succ_eq_of_head (l : List Bool) (i : ℕ) (e : Bool)
-    (h : (l.drop i).head? = some e) : l.take (i + 1) = l.take i ++ [e] := by
-  induction l generalizing i with
-  | nil => simp at h
-  | cons a t ih =>
-    cases i with
-    | zero =>
-      simp only [List.drop_zero, List.head?_cons, Option.some.injEq] at h
-      subst h
-      rfl
-    | succ j =>
-      have h' : (t.drop j).head? = some e := by simpa using h
-      simp only [List.take_succ_cons, List.cons_append]
-      rw [ih j h']
-
-/-- The letter dropped at a position below the length exists. -/
-theorem exists_head_drop (l : List Bool) (i : ℕ) (h : i < l.length) :
-    ∃ e : Bool, (l.drop i).head? = some e := by
-  cases hh : (l.drop i).head? with
-  | none =>
-    rw [List.head?_eq_none_iff, List.drop_eq_nil_iff] at hh
-    omega
-  | some e => exact ⟨e, rfl⟩
 
 /-- **`Γ₄` in the cylinder vocabulary.**  Let `w` be a node, `A'` a nonempty set of letters whose
 heights at `w` are all `≥ (1/Cb)·mkMass 1 (colSum P w)`, and let `δ = ν ++ [e]` be a continuation
@@ -280,7 +263,7 @@ theorem newLetter_words
   -- write the continuation as `δ = ν ++ [e]`, and `ee i` for the letter dropped at `i`
   set δ : List Bool := ν ++ [e] with hδdef
   have hex (i) (h : i < δ.length) : ∃ e' : Bool, (δ.drop i).head? = some
-      e' := exists_head_drop δ i h
+      e' := List.exists_head_drop δ i h
   set ee : ℕ → Bool := fun i => if h : i < δ.length then Classical.choose (hex i h) else true
     with hee_def
   have hee (i) (h : i < δ.length) : (δ.drop i).head? = some (ee i) := by
@@ -288,8 +271,8 @@ theorem newLetter_words
     simp only [dite_eq_left h]
     exact Classical.choose_spec (hex i h)
   -- the prefixes then grow one arrow at a time, each changing one column of the state
-  have htake (i) (h : i < δ.length) : δ.take (i + 1) = δ.take i ++ [ee i] := take_succ_eq_of_head δ
-      i (ee i) (hee i h)
+  have htake (i) (h : i < δ.length) : δ.take (i + 1) = δ.take i ++ [ee i] :=
+    List.take_succ_eq_of_head δ i (ee i) (hee i h)
   have hstep (i) (h : i < δ.length) : ∀ b, colSum P (w ++ δ.take (i + 1)) b
       = colSum P (w ++ δ.take i) b
         + (if b = (P.vertex (w ++ δ.take i)).last (!(ee i))
@@ -422,9 +405,9 @@ theorem sum_cond_fibre_le (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 �
   obtain ⟨y, hy, rfl⟩ := hb
   have hxy : x <+: y := by
     rw [hgoal x hx, hgoal y hy]
-    exact append_prefix_append t habs
+    exact List.append_prefix_append t habs
   have hyx : y <+: x := hS x hx y hy hxy
-  exact hab (congrArg uu (eq_of_prefix_of_prefix hxy hyx))
+  exact hab (congrArg uu (List.eq_of_prefix_of_prefix hxy hyx))
 
 /-- **The family of minimal prefixes of a finite family carries at least its mass.**  Given a
 prefix-free family `S` and a finite set `U` of words such that every member of `S` extends a member

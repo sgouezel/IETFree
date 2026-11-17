@@ -5,6 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.ForMathlib.Analysis
 public import IETFree.RauzyVeech.Step
 
 /-!
@@ -14,7 +15,8 @@ public import IETFree.RauzyVeech.Step
 `isBounded_simplexCyl`: the same for the path cylinders `simplexCyl P γ`.  These are the two
 boundedness inputs of the ray criterion (`eq_of_nonneg_preimage_of_diam`), and they are
 kept beside two elementary lemmas: `colR_eq_sum` (a column sum of an integer matrix, read in `ℝ`)
-and `dist_co_co` (the sup-distance on `α → ℝ≥0` is the distance of the coerced real vectors). -/
+and `NNReal.dist_pi_coe` (the sup-distance on `α → ℝ≥0` is the distance of the coerced real
+vectors). -/
 
 @[expose] public section
 
@@ -39,15 +41,6 @@ theorem colR_eq_sum (M : Matrix α α ℤ) (b : α) : colR M b = ∑ a, (M a b :
   rw [colR]
   push_cast
   rfl
-
-omit [DecidableEq α] in
-/-- Distances are computed by the sup-norm on the coordinates: the `ℝ≥0` and the `ℝ`
-versions coincide. -/
-theorem dist_co_co (x y : α → ℝ≥0) :
-    dist (fun a => (x a : ℝ)) (fun a => (y a : ℝ)) = dist x y := by
-  rw [dist_pi_def, dist_pi_def]
-  exact congrArg (fun r : ℝ≥0 => (r : ℝ))
-    (Finset.sup_congr rfl fun a _ => rfl)
 
 /-! ## 2. Boundedness of the simplex, and the vertices as limits of cylinder points -/
 

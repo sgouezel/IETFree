@@ -102,6 +102,7 @@ noncomputable def lebesgue : ProbabilityMeasure ℝ := ⟨unitMeas, inferInstanc
 
 /-- **Lebesgue measure, as a measure**: the coercion of `lebesgue` is `unitMeas`, the restriction of
 `volume` to `[0, 1)`.  The computation form proofs unfolding it need. -/
+@[simp]
 theorem coe_lebesgue : (lebesgue : Measure ℝ) = unitMeas := (rfl)
 
 /-- **The length vector of Lebesgue measure is the length vector.**  Each cell `[leftEnd, upperEnd)`

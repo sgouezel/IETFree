@@ -5,6 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.ForMathlib.Analysis
 public import Mathlib.MeasureTheory.Measure.RegularityCompacts
 
 /-!
@@ -51,7 +52,7 @@ variable {μ ν : Measure ℝ}
 
 /-- A finite union of pairwise disjoint measurable sets has the same `μ`- and `ν`-measure as soon
 as each of the pieces does. -/
-theorem measure_biUnion_eq {s : Finset (Set ℝ)}
+theorem MeasureTheory.measure_biUnion_eq {s : Finset (Set ℝ)}
     (hdisj : ∀ A ∈ s, ∀ B ∈ s, A ≠ B → Disjoint A B)
     (hmeas : ∀ A ∈ s, MeasurableSet A) (hagr : ∀ A ∈ s, μ A = ν A) :
     μ (⋃ A ∈ s, A) = ν (⋃ A ∈ s, A) := by
@@ -114,7 +115,7 @@ theorem measure_eq_of_isClosed [IsFiniteMeasure μ] [IsFiniteMeasure ν]
       obtain ⟨A, hA, hxA⟩ := hcov n x (hFI hx)
       exact Set.mem_biUnion ((hES n A).2 ⟨hA, ⟨x, hxA, hx⟩⟩) hxA
   -- `μ` and `ν` agree on each `E n`
-  have hagree (n) : μ (E n) = ν (E n) := measure_biUnion_eq
+  have hagree (n) : μ (E n) = ν (E n) := MeasureTheory.measure_biUnion_eq
       (fun A hA B hB hne => hdisj n A ((hES n A).1 hA).1 B ((hES n B).1 hB).1 hne)
       (fun A hA => hmeas n A ((hES n A).1 hA).1)
       (fun A hA => hagr n A ((hES n A).1 hA).1)
@@ -134,22 +135,6 @@ theorem measure_eq_of_isClosed [IsFiniteMeasure μ] [IsFiniteMeasure ν]
   exact tendsto_nhds_unique hμt hνt
 
 /-! ### The main statement -/
-
-/-- The set `I` is measurable: it is the union of the level-`0` atoms. -/
-theorem measurableSet_of_partitions (I : Set ℝ) (P : ℕ → Finset (Set ℝ))
-    (hmeas : ∀ n A, A ∈ P n → MeasurableSet A)
-    (hsub : ∀ n A, A ∈ P n → A ⊆ I)
-    (hcov : ∀ n x, x ∈ I → ∃ A ∈ P n, x ∈ A) : MeasurableSet I := by
-  have h0 : I = ⋃ A ∈ P 0, A := by
-    refine Set.Subset.antisymm ?_ ?_
-    · intro x hx
-      obtain ⟨A, hA, hxA⟩ := hcov 0 x hx
-      exact Set.mem_biUnion hA hxA
-    · intro x hx
-      obtain ⟨A, hA, hxA⟩ := Set.mem_iUnion₂.1 hx
-      exact hsub 0 A hA hxA
-  rw [h0]
-  exact Finset.measurableSet_biUnion _ fun A hA => hmeas 0 A hA
 
 /-- **A finite measure on `ℝ` is determined by refining partitions of mesh → 0** (Borel form).  Let
 `P n` be a sequence of finite families of pairwise disjoint measurable subsets of `I` covering `I`,
@@ -191,7 +176,7 @@ theorem measure_restrict_eq_of_refining_partitions [IsFiniteMeasure μ] [IsFinit
     (hmesh : ∀ ε > 0, ∀ᶠ n in atTop, ∀ A ∈ P n, ∀ x ∈ A, ∀ y ∈ A, dist x y < ε)
     (hagr : ∀ n A, A ∈ P n → μ A = ν A) :
     μ.restrict I = ν.restrict I := by
-  have hImeas := measurableSet_of_partitions I P hmeas hsub hcov
+  have hImeas := MeasureTheory.measurableSet_of_partitions I P hmeas hsub hcov
   refine Measure.ext fun B hB => ?_
   rw [Measure.restrict_apply hB, Measure.restrict_apply hB]
   exact measure_eq_of_measurableSet_subset I P hmeas hcov hdisj href hmesh hagr

@@ -5,9 +5,10 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-import Mathlib.Tactic.Linarith.NNRealPreprocessor
+public import IETFree.ForMathlib.Analysis
 public import IETFree.RauzyVeech.InvariantMeasure
 public import IETFree.RauzyVeech.RenormData
+import Mathlib.Tactic.Linarith.NNRealPreprocessor
 
 /-!
 # The Rauzy–Veech step of type `true`
@@ -93,6 +94,7 @@ theorem lamH_topCell : lamH π lam (topCell π)
     = lam (topCell π) - lam (lastPos n) := by
   rw [lamH]; exact ite_eq_left rfl
 
+@[simp]
 theorem lamT_apply (j : Fin n) : lamT π lam j = lamH π lam ((eT π).symm j) := (rfl)
 
 theorem eT_symm_of_le {j : Fin n} (hj : j.val ≤ (topCell π).val) :
@@ -697,7 +699,8 @@ theorem firstReturnT_eq (hlt : lam (lastPos n) < lam (topCell π)) {y : ℝ}
         intro hc
         have hge := (mkIETFun_mem_Ico_cutT_totalLength_of_top_high hlt hy h hhi).1
         linarith [hc.2]
-      rw [retT_of_not_mem hnot, iterate_two_eq, mkIETFun_lamT_of_top_high hlt hy h hhi]
+      rw [retT_of_not_mem hnot, Function.iterate_succ_apply, Function.iterate_one,
+        mkIETFun_lamT_of_top_high hlt hy h hhi]
   · by_cases hi : (idx lam y hy.1).val < (topCell π).val
     · rw [retT_of_mem (mkIETFun_mem_cutT_of_ne_top hlt hy h), Function.iterate_one,
         mkIETFun_lamT_of_lt hlt hy hi]
@@ -908,7 +911,7 @@ theorem restrict_cut_invariant_true (hlt : lam (lastPos n) < lam (topCell π))
         = ⋃ β, mkIETFun (lamT π lam) (piHatT π) 0 '' (A ∩ cellHatT π lam β) := by
       conv_lhs => rw [hcover]
       rw [Set.image_iUnion]
-    have hdisj' := pairwiseDisjoint_image
+    have hdisj' := Set.PairwiseDisjoint.image_of_injective
       (injective_mkIETFun (piHatT π) (lamT π lam)) hdisj
     have hmeas' (β) (hβ : β ∈ (Finset.univ : Finset (Fin n))) :
         MeasurableSet (mkIETFun (lamT π lam) (piHatT π) 0 '' (A ∩ cellHatT π lam β)) :=
@@ -1027,6 +1030,7 @@ theorem mkIETFun_image_cellHatT_succ (hlt : lam (lastPos n) < lam (topCell π)) 
       refine ⟨z - translationVector π lam (topCell π), ?_, ?_⟩
       · rw [cellHatT_succ hlt, hsp, htv, upperEnd_eq]
         constructor <;> linarith [hz.1, hz.2]
+      -- the inverse equation of the translation: `z - tv` plus `tv` is `z`
       · show z - translationVector π lam (topCell π)
             + translationVector π lam (topCell π) = z
         ring
@@ -1333,7 +1337,7 @@ theorem mkIETFun_rvStep_true_hatLam (P : IETDatum₂ α n) (lam : α → ℝ≥0
   rw [perm_rvStep_true, lengthsInBottom_hatLam_true]
 
 /-- Regrouping of a double sum with weights. -/
-theorem sum_mul_sum {ι : Type*} [Fintype ι] (A : ι → ℝ≥0∞)
+theorem sum_sum_mul {ι : Type*} [Fintype ι] (A : ι → ℝ≥0∞)
     (B : ι → ι → ℝ≥0∞) (w : ι → ℝ≥0∞) :
     (∑ c, A c * ∑ b, B c b * w b) = ∑ b, (∑ c, A c * B c b) * w b := by
   simp only [Finset.mul_sum, Finset.sum_mul]
@@ -1434,7 +1438,7 @@ theorem tower_formula_level_pathQ_mkIETFun (P : IETDatum₂ α n) (lam : α → 
               * (IETDatum₂.Path.Q (P.rvStep e) es c b).toNat)
             * ν.restrict (Set.Ico 0 (totalLength (hatLam P e lam)))
               (cellAt (P.rvStep e) es (hatLam P e lam) b) :=
-          sum_mul_sum (fun c => ((P.rvMat e a c).toNat : ℝ≥0∞))
+          sum_sum_mul (fun c => ((P.rvMat e a c).toNat : ℝ≥0∞))
             (fun c b => ((IETDatum₂.Path.Q (P.rvStep e) es c b).toNat : ℝ≥0∞)) _
       _ = ∑ b, (∑ c, ((P.rvMat e a c).toNat : ℝ≥0∞)
               * (IETDatum₂.Path.Q (P.rvStep e) es c b).toNat)

@@ -47,7 +47,7 @@ many precisions `ε = 1/(k+1)` (`ae_all_iff`) and transported to every `ε > 0` 
 `ε`.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal

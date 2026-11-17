@@ -29,9 +29,6 @@ variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
 /-! ## 1. Basic rewrites for a path given by its step types -/
 
-theorem int_toNat_coe_real {k : ℤ} (h : 0 ≤ k) : ((k.toNat : ℕ) : ℝ) = (k : ℝ) := by
-  exact_mod_cast Int.toNat_of_nonneg h
-
 /-- The coefficient formula for the renormalised lengths, in `ℝ`. -/
 theorem renorm_apply (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     {lam : α → ℝ≥0} {γ : List Bool}
@@ -39,8 +36,8 @@ theorem renorm_apply (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     (∑ b, ((IETDatum₂.Path.Q P γ a b).toNat : ℝ) * (lamAfter P γ lam b : ℝ))
       = (lam a : ℝ) := by
   have h1 := qApply_lamAfter P hP hn γ lam hOK
-  have h2 (b) : ((IETDatum₂.Path.Q P γ a b).toNat : ℝ) = (IETDatum₂.Path.Q P γ a b : ℝ) :=
-      int_toNat_coe_real (IETDatum₂.Path.Q_nonneg P γ a b)
+  have h2 (b) : ((IETDatum₂.Path.Q P γ a b).toNat : ℝ) = (IETDatum₂.Path.Q P γ a b : ℝ) := by
+    rw [← Int.cast_natCast, Int.toNat_of_nonneg (IETDatum₂.Path.Q_nonneg P γ a b)]
   have h3 := congrFun h1 a
   simp only [qApply_apply] at h3
   rw [← h3]
@@ -134,7 +131,7 @@ theorem lamAt_zero (hzero : γ 0 = []) : TowerStep.lamAt P γ lam 0 = lam := by
 
 theorem heightAt_zero (hzero : γ 0 = []) (b : α) : TowerStep.heightAt P γ 0 b = 1 := by
   simp only [TowerStep.heightAt, IETDatum₂.Path.height, hzero, IETDatum₂.Path.Q]
-  refine (Finset.sum_congr rfl (fun x _ => ?_)).trans (sum_ite_single (c := b) 1)
+  refine (Finset.sum_congr rfl (fun x _ => ?_)).trans (Finset.sum_ite_single (c := b) 1)
   rw [Matrix.one_apply]
   split_ifs <;> simp
 
@@ -573,7 +570,7 @@ theorem levelCell_eq_Ico (k : ℕ) (b : α) :
 
 /-! ## 11. Each floor is an interval of the level-`k` length -/
 
-theorem image_Ico_of_translation {A : Set ℝ} {u v τ : ℝ} (hA : A = Set.Ico u v)
+theorem Set.image_Ico_of_translation {A : Set ℝ} {u v τ : ℝ} (hA : A = Set.Ico u v)
     {f : ℝ → ℝ} (hf : ∀ y ∈ A, f y = y + τ) :
     f '' A = Set.Ico (u + τ) (v + τ) := by
   ext z
@@ -597,7 +594,7 @@ theorem floor_Ico (hzero : γ 0 = []) (hstep : ∀ k, γ (k + 1) = γ k ++ [p k]
         ((TowerStep.datumAt P γ k).piBottom b) + τ,
       upperEnd ((TowerStep.datumAt P γ k).lengthsInBottom (TowerStep.lamAt P γ lam k))
         ((TowerStep.datumAt P γ k).piBottom b) + τ,
-      image_Ico_of_translation (levelCell_eq_Ico (P := P) (γ := γ) (lam := lam) k b)
+      Set.image_Ico_of_translation (levelCell_eq_Ico (P := P) (γ := γ) (lam := lam) k b)
         (fun y hy => hτ y hy), ?_⟩
   rw [upperEnd_eq, IETDatum₂.lengthsInBottom, Equiv.symm_apply_apply]
   ring

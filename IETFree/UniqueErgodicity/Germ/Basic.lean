@@ -403,6 +403,7 @@ noncomputable def germMapOf (hT : IsCutSet (⇑T) 0 1 s) (z : SplitI (splitSet T
       unfold germCoordOf
       exact decide_eq_true_iff.mpr (Or.inl hgt)⟩
 
+@[simp]
 theorem proj_germMapOf (hT : IsCutSet (⇑T) 0 1 s) (z : SplitI (splitSet T s)) :
     SplitI.proj (germMapOf hT z) = germProjOf hT z := (rfl)
 

@@ -425,6 +425,7 @@ noncomputable def truncatedLengths (mu : Fin e → ℝ≥0) (u v : ℝ) (huv : u
     div_nonneg (le_max_left _ _) (by linarith : (0 : ℝ) ≤ v - u)⟩
 
 omit [NeZero e] in
+@[simp]
 theorem truncatedLengths_coe (mu : Fin e → ℝ≥0) {u v : ℝ} (huv : u < v) (j : Fin e) :
     (truncatedLengths mu u v huv j : ℝ)
       = max 0 (min v (upperEnd mu j) - max u (leftEnd mu j)) / (v - u) := (rfl)

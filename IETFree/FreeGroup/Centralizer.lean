@@ -53,10 +53,11 @@ that is conjugate to `q` has exponent `±1`), gives commensurability of powers
 
 ## What Mathlib provides
 
-* `FreeGroup.reduce`, `FreeGroup.reduceCyclically`, `FreeGroup.conjugator`,
+* `FreeGroup.reduce`, `FreeGroup.reduceCyclically`, `FreeGroup.reduceCyclically.conjugator`,
   `FreeGroup.IsReduced`, `FreeGroup.IsCyclicallyReduced`, with the lemmas linking them to `mk` and
   `toWord` (`reduce.exact`, `reduce.sound`, `toWord_inj`);
-* `pow_left_injective` (unique `k`-th roots in a free group) and `FreeGroup.IsMulTorsionFree`;
+* `pow_left_injective` (unique `k`-th roots in a free group) and the instance
+  `IsMulTorsionFree (FreeGroup α)` that follows from it;
 * the Periodicity Lemma (`List.HasPeriod`, `HasPeriod.gcd`) in
   `Mathlib/Data/List/PeriodicityLemma.lean`;
 * nothing about centralizers or commuting elements in free groups: that is what this file builds.
@@ -74,7 +75,7 @@ that is conjugate to `q` has exponent `±1`), gives commensurability of powers
   theorem, and reaching it through Nielsen–Schreier is more work than the route above.
 -/
 
-@[expose] public section
+public section
 
 /-! # Powers of cyclically reduced words, and the root bound -/
 

@@ -5,6 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.ForMathlib.Analysis
 public import IETFree.RauzyVeech.Path
 public import IETFree.RauzyVeech.Tower.Level
 
@@ -63,13 +64,6 @@ theorem pairwiseDisjoint_cellHat (π : Equiv.Perm (Fin n)) (lam : Fin n → ℝ�
     Set.PairwiseDisjoint (↑(Finset.univ : Finset (Fin n))) (cellHat π lam) := by
   intro β _ β' _ hne
   exact disjoint_cell (lamHat π lam) hne
-
-/-- Disjointness is preserved by an injective image. -/
-theorem pairwiseDisjoint_image {ι : Type*} {f : ℝ → ℝ} (hf : Function.Injective f)
-    {s : Finset ι} {g : ι → Set ℝ} (h : Set.PairwiseDisjoint (↑s) g) :
-    Set.PairwiseDisjoint (↑s) fun i => f '' g i := by
-  intro i hi j hj hij
-  exact (h hi hj hij).image hf.injOn (Set.subset_univ _) (Set.subset_univ _)
 
 /-! ## 2. Induced invariance: the restriction to the cut interval is invariant under the
 first-return exchange -/
@@ -160,7 +154,8 @@ theorem restrict_cut_invariant (hlt : lam (topCell π) < lam (lastPos n)) (μ : 
         = ⋃ β, mkIETFun (lamHat π lam) (piHat π) 0 '' (A ∩ cellHat π lam β) := by
       conv_lhs => rw [hcover]
       rw [Set.image_iUnion]
-    have hdisj' := pairwiseDisjoint_image (injective_mkIETFun (piHat π) (lamHat π lam)) hdisj
+    have hdisj' := Set.PairwiseDisjoint.image_of_injective
+      (injective_mkIETFun (piHat π) (lamHat π lam)) hdisj
     have hmeas' (β) (hβ : β ∈ (Finset.univ : Finset (Fin n))) :
         MeasurableSet (mkIETFun (lamHat π lam) (piHat π) 0 '' (A ∩ cellHat π lam β)) :=
             measurableSet_image_mkIETFun _ _ (hmeasInt β (Finset.mem_univ β))
@@ -218,6 +213,7 @@ noncomputable def Qnat (P : IETDatum₂ α n) : List Bool → Matrix α α ℕ
 
 @[simp] theorem Qnat_nil (P : IETDatum₂ α n) : P.Qnat [] = 1 := (rfl)
 
+@[simp]
 theorem Qnat_cons (P : IETDatum₂ α n) (e : Bool) (es : List Bool) :
     P.Qnat (e :: es) = P.rvMatNat e * (P.rvStep e).Qnat es := (rfl)
 
@@ -313,6 +309,7 @@ theorem lamAfter_cons (P : IETDatum₂ α n) (e : Bool) (es : List Bool) (lam : 
     lamAfter P (e :: es) lam = lamAfter (P.rvStep e) es (hatLam P e lam) := (rfl)
 
 /-- **One letter.**  `lamAfter_cons` with `es = []` followed by `lamAfter_nil`; it is therefore not
+@[simp]
 a `simp` lemma, `simp` reaching the same normal form through those two. -/
 theorem lamAfter_singleton (P : IETDatum₂ α n) (e : Bool) (lam : α → ℝ≥0) :
     lamAfter P [e] lam = hatLam P e lam := (rfl)

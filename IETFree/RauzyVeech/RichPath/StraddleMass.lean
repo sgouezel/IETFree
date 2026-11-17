@@ -18,7 +18,7 @@ The `Γ₃` mass estimate of the induction is the statement of
 This file keeps the other half of the step — the balance constant `balanceConstant` delivered by
 `Γ₂`, and
 the fact that `A'`-balance is preserved by the growth bound (`bal_of_growth`) — which
-`MassFunction.balanceStep_of_extMassGen` consumes. -/
+`balanceStep_of_extMassGen`, in `InductionAssembly.lean`, consumes. -/
 
 open Finset IntervalExchange.IETDatum₂
 open scoped BigOperators

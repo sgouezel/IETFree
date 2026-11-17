@@ -12,7 +12,7 @@ public import IETFree.RauzyVeech.RichPath.Potential
 /-!
 # The induction step, from `Γ₂` and `Γ₃`: the assembly
 
-Contents (namespace `Assemble`):
+Contents (namespace `IntervalExchange.RauzyVeech.RichPath`):
 
 * the `Γ₂`-mass `g2Mass`, with `g2Mass_pos`;
 * the `Γ₂`-free assembly of the induction step: `balanceStep_of_straddleMass` and

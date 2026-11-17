@@ -23,10 +23,11 @@ The statements are
   (Lemma 4.5(i));
 * `map_map_eq_self` — vanishing of the defect, i.e. transfer of invariance (Theorem 4.6).
 
-The lift lemma that the germ-map construction uses is the corrected `MeasPrep.lift_unique_on_Ico`.
+The lift lemma that the germ-map construction uses is the corrected `lift_unique_on_Ico`, in
+`MeasPrep.lean`.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter
 open scoped ENNReal Topology BoundedContinuousFunction

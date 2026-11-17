@@ -56,7 +56,7 @@ theorem colSum_append_singleton (P : IETDatum₂ α n) (hP : P.Irreducible) (hn 
   simpa [colSum] using h2
 
 /-- One factor of a product changed. -/
-theorem prod_ite_eq_mul {M : Type*} [CommMonoid M] (f : α → M) (β : α) (y : M) :
+theorem Finset.prod_ite_eq_mul {M : Type*} [CommMonoid M] (f : α → M) (β : α) (y : M) :
     (∏ b, (if b = β then y else f b)) = (∏ b ∈ Finset.univ.erase β, f b) * y := by
   rw [← Finset.prod_erase_mul (s := Finset.univ) (f := fun b => if b = β then y else f b)
     (Finset.mem_univ β)]
@@ -79,7 +79,7 @@ theorem prod_cs_append_singleton (P : IETDatum₂ α n) (hP : P.Irreducible) (hn
     by_cases hb : b = (P.vertex w).last (!e)
     · rw [ite_eq_left hb, ite_eq_left hb, hb]
     · rw [ite_eq_right hb, ite_eq_right hb, add_zero]
-  rw [h1, prod_ite_eq_mul]
+  rw [h1, Finset.prod_ite_eq_mul]
 
 /-- **The conditional mass of one letter**: the loser's height over the sum of the two heights
 (`P_q(γ | π) = q_β/(q_α + q_β)` in AGY, `α` the winner and `β` the loser). -/

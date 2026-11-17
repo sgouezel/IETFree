@@ -367,6 +367,7 @@ noncomputable def cellLen (G : GoodRegion d e π σ q₀) {q : PReal d e} (hq : 
 
 /-- **The unfolding of `cellLen`**: the cell lengths are `compLen` of the singularity list at the
 point, and do not depend on which proof of monotonicity is supplied. -/
+@[simp]
 theorem cellLen_eq (G : GoodRegion d e π σ q₀) {q : PReal d e} (hq : q ∈ G.O)
     (hmono : StrictMono fun k => G.s k q) : G.cellLen hq = compLen hmono := (rfl)
 

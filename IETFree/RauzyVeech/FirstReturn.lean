@@ -50,7 +50,7 @@ multiplicity of the floor over `β` inside the cell `α` is `rvMat false`.
 **What follows this file**: the inverse Rauzy type (`TrueStep.lean`), the tower-of-towers refinement
 (the level-`(k+1)` floors refine the level-`k` ones) and the level-`n` formula `μ (cell α) = ∑ β,
 (Path.Q P γ α β : ℝ) * μ (level-n cell β)` for an arbitrary word `γ`, by induction on `γ` from `Q (γ
-++ [ε]) = Q γ * rvMat ε` (`LevelN.lean`, `TrueStep.TowerTrue.tower_formula_level_pathQ_any`). -/
+++ [ε]) = Q γ * rvMat ε` (`LevelN.lean`, `tower_formula_level_pathQ_any` in `TrueStep.lean`). -/
 
 namespace IntervalExchange.RauzyVeech
 
@@ -168,6 +168,7 @@ def lamHat (π : Equiv.Perm (Fin n)) (lam : Fin n → ℝ≥0) : Fin n → ℝ�
 def piHat (π : Equiv.Perm (Fin n)) : Equiv.Perm (Fin n) :=
   π.trans (insertEquiv (π (lastPos n)))
 
+@[simp]
 theorem piHat_apply (π : Equiv.Perm (Fin n)) (j : Fin n) :
     piHat π j = insertEquiv (π (lastPos n)) (π j) := (rfl)
 
@@ -548,8 +549,6 @@ theorem mkIETFun_mkIETFun_eq (hlt : lam (topCell π) < lam (lastPos n)) {y : ℝ
     ⟨le_trans (le_of_lt (cut_pos hlt)) hT.1, hT.2⟩
   rw [mkIETFun_zero_of_mem hT', hidx]
 
-theorem iterate_two_eq (f : ℝ → ℝ) (y : ℝ) : f^[2] y = f (f y) := (rfl)
-
 /-! ## 8. Endpoints of the new cells -/
 
 theorem upperEnd_lamHat_of_ne {π : Equiv.Perm (Fin n)} {lam : Fin n → ℝ≥0} {i : Fin n}
@@ -632,7 +631,8 @@ theorem firstReturn_eq (hlt : lam (topCell π) < lam (lastPos n)) {y : ℝ}
       intro hc
       have hge := (mkIETFun_mem_Ico_cut_totalLength hy h).1
       linarith [hc.2]
-    rw [ret_of_not_mem hnot, iterate_two_eq (mkIETFun lam π 0) y, exchHat_eq_mkIETFun_sq hlt hy h]
+    rw [ret_of_not_mem hnot, Function.iterate_succ_apply, Function.iterate_one,
+      exchHat_eq_mkIETFun_sq hlt hy h]
   · rw [ret_of_mem (mkIETFun_mem_cut_of_ne hy h), Function.iterate_one,
       exchHat_eq_mkIETFun hlt hy h]
 

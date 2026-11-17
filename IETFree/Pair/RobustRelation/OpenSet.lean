@@ -5,9 +5,6 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-public import IETFree.Pair.ProductSimplex
-public import IETFree.Pair.RobustRelation.FreeParams
-public import IETFree.Pair.RobustRelation.GoodParams
 public import IETFree.Pair.RobustRelation.Robustness
 
 /-!
@@ -24,9 +21,10 @@ Almost every pair is good at *every* threshold: the good sets decrease with the 
 everywhere — is being good at every fixed threshold (`ae_goodParamsAt_all_thresholds`).  The other
 almost-sure input, that almost every pair carries a nontrivial relation, is the content of the main
 theorem and is not available here: this file sits below `ChallengeSolved.lean`, so the assembly
-takes it as a hypothesis — `exists_isOpen_subset_hasRelation_of_robust` takes both inputs, and
-`exists_isOpen_subset_hasRelation_of_ae` takes only the relation, discharging robustness from
-`Robustness.lean`.  The unconditional statement is in `ChallengeSolved.lean`, fed with `main`.
+takes both inputs as hypotheses — `exists_isOpen_subset_hasRelation_of_robust` takes the relation
+and its robustness, and `exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one_of_robust` the same
+in the paper's coordinates, with robustness discharged from `Robustness.lean` (`…_of_ae`).  The
+unconditional statement is in `ChallengeSolved.lean`, fed with `main`.
 
 The third ingredient is the robustness of a relation at a good parameter: a word which is trivial
 at a parameter good at every threshold is trivial on a whole neighbourhood of that pair
@@ -46,7 +44,7 @@ is a statement that a complement has measure zero, so `∀ᵐ q ∂μ, q ∈ int
 `μ ((interior Z)ᶜ) = 0`.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -136,34 +134,7 @@ theorem exists_isOpen_subset_hasRelation_of_robust {d e : ℕ} [NeZero d] [NeZer
   rw [MeasureTheory.ae_iff] at hae
   exact ⟨interior {q : PReal d e | HasRelation π σ q}, isOpen_interior, hae, interior_subset⟩
 
-/-- **The set of parameter pairs carrying a nontrivial relation has an open subset of full
-measure.**
 
-Almost every pair is in the two open regions (`ae_mem_simplexRegion_prod`), is good at every
-threshold (`ae_goodParamsAt_all_thresholds`) and carries a relation — the hypothesis `hrel`, which
-`ChallengeSolved.lean` proves from `main`; at each such pair the relation is robust
-(`evalWord_eventually_eq_one`), so the relation set is a neighbourhood of it.  The interior `U` of
-the relation set is therefore open, contained in the relation set, and conull — which is the
-statement that the pairs not generating a free group contain an open set of full measure.
-
-`U` is the interior rather than the relation set itself: the relation set need not be open, and
-`∀ᵐ q ∂μ, q ∈ U` is by definition `μ Uᶜ = 0`, with no measurability of the relation set required.
-Points outside the two regions cost nothing, the measure being the product of the two restrictions
-to the regions.
-
-The relation set is in fact larger than the region: off it the total exchanges `fOf` and `gOf` are
-often the identity already (`mkIET1` is the identity when the lengths do not sum to `1`), so `U`
-contains points far from the region as well.  The content of the statement is on the region, where
-`U` has null complement. -/
-theorem exists_isOpen_subset_hasRelation_of_ae {d e : ℕ} [NeZero d] [NeZero e]
-    (π : Equiv.Perm (Fin d)) (σ : Equiv.Perm (Fin e))
-    (hrel : ∀ᵐ q ∂((volume.restrict (simplexRegion d)).prod
-      (volume.restrict (simplexRegion e))), HasRelation π σ q) :
-    ∃ U : Set (PReal d e), IsOpen U ∧
-      ((volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e))) Uᶜ = 0 ∧
-      U ⊆ {q | HasRelation π σ q} :=
-  exists_isOpen_subset_hasRelation_of_robust π σ hrel fun w _ h1 h2 hgood hw =>
-    evalWord_eventually_eq_one π σ w ⟨h1, h2⟩ hgood hw
 
 /-! ## The free coordinates of a point of the simplex -/
 

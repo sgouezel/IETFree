@@ -5,6 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.ForMathlib.List
 public import IETFree.ListPeriodicity
 public import IETFree.RauzyVeech.RichPath.CylinderMass
 
@@ -167,14 +168,6 @@ def GradedStepMin (P : IETDatum₂ α n) (k : ℕ) (Cb Cm : ℝ) : Prop :=
       Cb * min (mmin A' (colSum P (w ++ δ))) (mkMass 1 (colSum P w))) ∧
     1 / Cm < ∑ δ ∈ S, cond P w δ
 
-omit [DecidableEq α] in
-theorem powersetCard_univ_card_pos {k : ℕ} (hk : k ≤ Fintype.card α) :
-    0 < (((Finset.univ : Finset α).powersetCard k).card : ℝ) := by
-  have hne : ((Finset.univ : Finset α).powersetCard k).Nonempty :=
-    Finset.powersetCard_nonempty.mpr (by rw [Finset.card_univ]; exact hk)
-  have h : 0 < ((Finset.univ : Finset α).powersetCard k).card := Finset.card_pos.mpr hne
-  exact_mod_cast h
-
 /-- **The source's step `Γ₁`**: split the family of the `k`-statement according to which
 `k`-subset `A'` attains `m_k = m_{A'}`; one piece keeps a fraction `1/#{k-subsets}` of the total
 mass, and on that piece `m_k` *is* `m_{A'}`. -/
@@ -203,8 +196,8 @@ theorem gradedStep_min {P : IETDatum₂ α n} {k : ℕ} {Cb Cm : ℝ} (hst : Gra
       Finset.mem_powersetCard_univ.mpr (hg_card δ hδ)
   set Nk : ℝ := (((Finset.univ : Finset α).powersetCard k).card : ℝ) with hNk
   have hNk_pos : 0 < Nk := by
-    rw [hNk]
-    exact powersetCard_univ_card_pos hk
+    rw [hNk, Finset.card_powersetCard, Finset.card_univ]
+    exact_mod_cast Nat.choose_pos hk
   -- `m A'`: the mass of the members whose chosen subset is `A'`
   set m : Finset α → ℝ := fun A' => ∑ δ ∈ S with g δ = A', cond P w δ
     with hm_def
@@ -256,30 +249,15 @@ theorem prefixFree_empty : PrefixFree (∅ : Finset (List Bool)) := by
   intro δ hδ
   exact absurd hδ (Finset.notMem_empty δ)
 
-theorem eq_of_prefix_of_prefix {u v : List Bool} (h1 : u <+: v) (h2 : v <+: u) : u = v :=
-  List.IsPrefix.eq_of_length h1 (le_antisymm (List.IsPrefix.length_le h1)
-    (List.IsPrefix.length_le h2))
-
 /-- The one-sided form of prefix-freeness used below. -/
 theorem prefixFree_iff_one_sided (S : Finset (List Bool)) :
     PrefixFree S ↔ ∀ δ ∈ S, ∀ δ' ∈ S, δ ≠ δ' → ¬ δ <+: δ' := by
   constructor
   · intro h δ hδ δ' hδ' hne hp
-    exact hne (eq_of_prefix_of_prefix hp (h δ hδ δ' hδ' hp))
+    exact hne (List.eq_of_prefix_of_prefix hp (h δ hδ δ' hδ' hp))
   · intro h δ hδ δ' hδ' hp
     by_contra hcon
     exact h δ hδ δ' hδ' (fun hh => hcon (hh ▸ List.prefix_rfl)) hp
-
-/-- **Cancelling a common prefix on the left**: `a ++ b <+: a ++ c` implies `b <+: c`. -/
-theorem prefix_append_left_cancel {a b c : List Bool} (h : a ++ b <+: a ++ c) : b <+: c := by
-  obtain ⟨t, ht⟩ := h
-  rw [List.append_assoc] at ht
-  exact ⟨t, List.append_cancel_left ht⟩
-
-theorem append_prefix_append (a : List Bool) {b c : List Bool} (h : b <+: c) :
-    a ++ b <+: a ++ c := by
-  obtain ⟨t, ht⟩ := h
-  exact ⟨t, by rw [List.append_assoc, ht]⟩
 
 /-- The word `δ ++ η` (with `δ ∈ S`, `η ∈ T δ`) determines `δ`. -/
 theorem eq_of_append_eq_append {S : Finset (List Bool)} (hS : PrefixFree S) {δ δ' : List Bool}
@@ -287,8 +265,8 @@ theorem eq_of_append_eq_append {S : Finset (List Bool)} (hS : PrefixFree S) {δ 
     δ = δ' := by
   have hpre0 : δ ++ η <+: δ' ++ η' := h ▸ List.prefix_rfl
   rcases List.prefix_or_prefix_of_append hpre0 with h2 | h2
-  · exact eq_of_prefix_of_prefix h2 (hS δ hδ δ' hδ' h2)
-  · exact (eq_of_prefix_of_prefix h2 (hS δ' hδ' δ hδ h2)).symm
+  · exact List.eq_of_prefix_of_prefix h2 (hS δ hδ δ' hδ' h2)
+  · exact (List.eq_of_prefix_of_prefix h2 (hS δ' hδ' δ hδ h2)).symm
 
 /-- **Gluing of prefix-free families** is prefix-free. -/
 theorem prefixFree_comp {S : Finset (List Bool)} {T : List Bool → Finset (List Bool)}
@@ -302,14 +280,14 @@ theorem prefixFree_comp {S : Finset (List Bool)} {T : List Bool → Finset (List
   obtain ⟨η, hη, rfl⟩ := hxδ
   obtain ⟨η', hη', rfl⟩ := hyδ
   rcases List.prefix_or_prefix_of_append hxy with h2 | h2
-  · have hEq : δ = δ' := eq_of_prefix_of_prefix h2 (hS δ hδ δ' hδ' h2)
+  · have hEq : δ = δ' := List.eq_of_prefix_of_prefix h2 (hS δ hδ δ' hδ' h2)
     subst hEq
-    have hηη' : η <+: η' := prefix_append_left_cancel hxy
-    exact append_prefix_append δ (hT δ η hη η' hη' hηη')
-  · have hEq : δ' = δ := eq_of_prefix_of_prefix h2 (hS δ' hδ' δ hδ h2)
+    have hηη' : η <+: η' := List.prefix_self_append_iff.mp hxy
+    exact List.append_prefix_append δ (hT δ η hη η' hη' hηη')
+  · have hEq : δ' = δ := List.eq_of_prefix_of_prefix h2 (hS δ' hδ' δ hδ h2)
     subst hEq
-    have hηη' : η <+: η' := prefix_append_left_cancel hxy
-    exact append_prefix_append δ' (hT δ' η hη η' hη' hηη')
+    have hηη' : η <+: η' := List.prefix_self_append_iff.mp hxy
+    exact List.append_prefix_append δ' (hT δ' η hη η' hη' hηη')
 
 /-- The mass of a glued family: the product of the masses (`cond_append` + disjointness). -/
 theorem sum_comp {S : Finset (List Bool)} {T : List Bool → Finset (List Bool)}
@@ -604,7 +582,7 @@ theorem gradedStep_const_mono {P : IETDatum₂ α n} {k : ℕ} {Cb Cb' Cm Cm' : 
 theorem PrefixFree.antichain {S : Finset (List Bool)} (hS : PrefixFree S) (u : List Bool)
     (hu : u ∈ S) (v : List Bool) (hv : v ∈ S) (huv : u ≠ v) : ¬ u <+: v := by
   intro hpre
-  exact huv (eq_of_prefix_of_prefix hpre (hS u hu v hv hpre))
+  exact huv (List.eq_of_prefix_of_prefix hpre (hS u hu v hv hpre))
 
 /-- **Mass to volume**: if a prefix-free family of continuations of `w` has total relative mass `>
 1/C`, then the union of the corresponding child cylinders carries at least a fraction `1/C` of the

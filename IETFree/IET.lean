@@ -129,6 +129,7 @@ def simplexRegion (d : ℕ) : Set (Fin (d - 1) → ℝ) :=
 
 /-- **The two indexings of the open simplex agree**: `simplexRegion d` is the chart's `region` at
 `d - 1`.  The bodies are the same set, the `d`-indexed one being the challenge's. -/
+@[simp]
 theorem simplexRegion_eq_region (d : ℕ) :
     simplexRegion d = RauzyVeech.region (d - 1) := (rfl)
 
@@ -152,6 +153,7 @@ noncomputable def simplexVolume (d : ℕ) : Measure (Fin d → ℝ≥0) :=
   Measure.map (simplexMap d) (volume.restrict (simplexRegion d))
 
 /-- The definition of `simplexVolume`, as an equation: use it rather than `unfold` (`simp` does not
+@[simp]
 know the equation, since `simplexVolume` is not a `simp` lemma). -/
 theorem simplexVolume_def (d : ℕ) :
     simplexVolume d = Measure.map (simplexMap d) (volume.restrict (simplexRegion d)) := (rfl)
@@ -591,6 +593,7 @@ noncomputable def mkIETEquiv {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π 
     ring
 
 /-- **The coercion of `mkIETEquiv`**: as a map, the exchange with lengths `lam` and permutation `π`
+@[simp]
 shifted by `a` is `mkIETFun lam π a`.  This is an equality of *functions* (a coercion lemma, and a
 definitional one), not the value at a point; hence `coe_mkIETEquiv` and not `mkIETEquiv_apply`. -/
 theorem coe_mkIETEquiv {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
@@ -1023,10 +1026,7 @@ theorem mkIET1_of_mem {n : ℕ} [NeZero n] {lam : Fin n → ℝ≥0} {π : Equiv
     (h : (∑ i, lam i) = 1) : mkIET1 lam π = mkIET1' lam π h := by
   rw [mkIET1, dite_eq_left h]
 
-/-- Off the simplex, the total `mkIET1` is the identity. -/
-theorem mkIET1_of_notMem {n : ℕ} [NeZero n] {lam : Fin n → ℝ≥0} {π : Equiv.Perm (Fin n)}
-    (h : ¬ (∑ i, lam i) = 1) : mkIET1 lam π = 1 := by
-  rw [mkIET1, dite_eq_right h]
+
 
 /-- **The function of the total `mkIET1` on the simplex** is `mkIETFun lam π 0`. -/
 theorem coe_mkIET1 {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))

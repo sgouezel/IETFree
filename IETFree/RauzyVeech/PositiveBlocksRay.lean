@@ -28,12 +28,13 @@ The proof has three pieces, each in its own file:
   `diam_le_of_cols_close`, the tower formula and `ray_of_shrink_and_tower`).
 
 The uniform bound `M` is what makes the product of the contraction factors tend to `0`; richness and
-uniform positivity supply it a.e. with a single `M` (`MainTheorem.hasPositiveBlocks_ae`), which is
+uniform positivity supply it a.e. with a single `M` (`hasPositiveBlocks_ae`, in
+`UniqueErgodicity/MainTheorem.lean`), which is
 why the assembly in `MainTheorem.lean` needs nothing else from this file.  Positivity of
 the coordinates of `lam` is not assumed: a positive block at time `0` gives it
 (`mem_simplexCyl_nil_of_mem`). -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter
 open scoped NNReal ENNReal BigOperators Topology
@@ -51,7 +52,7 @@ normalised columns coalesce (`peel_of_contract`) and the pointwise criterion
 The condition `lam ∉ cylStop P (pathWord P lam k)` for every `k` is a null-set condition
 (`IETDatum₂.ae_notMem_cylStop_all`): `cylStop` is where the renormalised length vector has a tie,
 which the tower formula cannot handle; discharged a.e. in
-`MainTheorem.rayCondition_of_components`.
+`rayCondition_of_components`, in the same module.
 Positivity of the coordinates of `lam` (`lam ∈ simplexCyl P []`) is *not* assumed: it follows from a
 positive block (`mem_simplexCyl_nil_of_mem`). -/
 theorem positiveBlocksRay (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)

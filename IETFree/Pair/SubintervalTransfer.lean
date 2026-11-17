@@ -482,8 +482,10 @@ theorem rescaleSub_mem_simplexRegion {n k m : ℕ} {x : Fin (n - 1) → ℝ}
     Finset.sum_pos (fun j _ => blockLen_pos hx j) Finset.univ_nonempty
   have hcast (i : Fin m) : (⟨i.val, by omega⟩ : Fin (m + 1)) = i.castSucc := Fin.ext rfl
   refine ⟨fun i => ?_, ?_⟩
+  -- membership in `Z` is the positivity of one rescaled block length
   · change 0 < blockLen k (m + 1) x ⟨i.val, by omega⟩ / ∑ j, blockLen k (m + 1) x j
     exact div_pos (blockLen_pos hx _) hS
+  -- and the sum condition is the sum of the rescaled block lengths
   · change (∑ i : Fin m, blockLen k (m + 1) x ⟨i.val, by omega⟩
       / ∑ j, blockLen k (m + 1) x j) < 1
     rw [← Finset.sum_div, div_lt_one hS]
@@ -586,6 +588,7 @@ theorem absolutelyContinuous_map_rescaleSub {n : ℕ} (hn : 0 < n) {k r : ℕ} (
         refine ⟨fun i => ?_, ?_⟩
         · rw [h1]
           exact blockLen_pos hxO i
+        -- after `h1`, the rescaled vector is that of `Φ x`
         · show (fun i : Fin m => (Φ x).1 i.castSucc / ∑ j, (Φ x).1 j) ∈ Z'
           rw [h1]
           have hres : (fun i : Fin m => blockLen k (m + 1) x i.castSucc

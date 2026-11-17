@@ -29,7 +29,7 @@ namespace IntervalExchange.RauzyVeech
 
 /-- **(A)** A sequence of sets through a common point, with diameters tending to `0`, has
 intersection of closures the single point. -/
-theorem iInter_closure_eq_singleton {E : Type*} [MetricSpace E] {S : ℕ → Set E} {x : E}
+theorem Set.iInter_closure_eq_singleton {E : Type*} [MetricSpace E] {S : ℕ → Set E} {x : E}
     (hx : ∀ n, x ∈ S n) (hanti : Antitone S) (hbdd : Bornology.IsBounded (S 0))
     (hdiam : Tendsto (fun n => Metric.diam (S n)) atTop (𝓝 0)) :
     (⋂ n, closure (S n)) = {x} := by

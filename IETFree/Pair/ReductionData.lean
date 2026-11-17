@@ -91,6 +91,7 @@ noncomputable def toFun (D : IETDatum n) : ℝ → ℝ := mkIETFun D.lam D.perm 
 
 /-- **The exchange of a datum, as a function**: `toFun` is `mkIETFun` at the datum's lengths and
 permutation.  The computation form proofs unfolding `toFun` need. -/
+@[simp]
 theorem toFun_apply (D : IETDatum n) (x : ℝ) : D.toFun x = mkIETFun D.lam D.perm 0 x := (rfl)
 
 /-- The exchange as an element of `IET 0 1`.  (This is derived data, not an input: everything below
@@ -98,6 +99,7 @@ takes the datum `D`, never an `IET 0 1`.) -/
 noncomputable def toIET (D : IETDatum n) : IET 0 1 := mkIET1' D.lam D.perm D.mem_simplex
 
 /-- The unfolding of `toFun`: the exchange of the datum is `mkIETFun` of its length vector and
+@[simp]
 permutation. -/
 theorem toFun_def (D : IETDatum n) : D.toFun = mkIETFun D.lam D.perm 0 := (rfl)
 
@@ -772,8 +774,8 @@ theorem isBadParamAt_mem_badSet {d e N' N : ℕ} [NeZero d] [NeZero e]
   set a : Fin (d - 1) → ℤ := fun i => t (Sum.inl (Sum.inl i)) with ha_def
   set b : Fin (e - 1) → ℤ := fun j => t (Sum.inl (Sum.inr j)) with hb_def
   set k : ℤ := constCoeff t with hk_def
-  have ha : ∀ i, |a i| ≤ (N' : ℤ) := fun i => ht _
-  have hb : ∀ j, |b j| ≤ (N' : ℤ) := fun j => ht _
+  have ha (i) : |a i| ≤ (N' : ℤ) := ht _
+  have hb (j) : |b j| ≤ (N' : ℤ) := ht _
   have hk : |k| ≤ (N' : ℤ) := ht _
   have hntK : k ≠ 0 ∨ (∃ i, a i ≠ 0) ∨ ∃ j, b j ≠ 0 := by
     simpa [NontrivialCoeff, constCoeff, ha_def, hb_def, hk_def] using hnt

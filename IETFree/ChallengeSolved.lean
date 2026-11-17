@@ -6,8 +6,6 @@ Authors: Sébastien Gouëzel
 module
 
 public import IETFree.Pair.Block.Lemma
-public import IETFree.Pair.ProductSimplex
-public import IETFree.Pair.RobustRelation.FreeParams
 public import IETFree.Pair.RobustRelation.OpenSet
 
 /-!
@@ -51,17 +49,17 @@ The remark that follows the main theorem is proved here as well, in the `Pair` n
 open set of full measure of pairs not generating a free group, on the paper's `Δ_π × Δ_σ`
 (`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`).  The machinery behind it is in
 `IETFree/Pair/RobustRelation/`, which sits *below* this file: its assembly
-(`exists_isOpen_subset_hasRelation_of_ae`) takes the almost-sure relation as a hypothesis precisely
-so that it can, and the file proves that hypothesis from `main` — through the chart of
-`Pair/ProductSimplex.lean` — and feeds it in.  The challenge's vocabulary (`evalWordEquiv`) lives in
-`Pair/MeasureTools.lean` and that chart in `Pair/ProductSimplex.lean`, both below, where the
-Section 3 machinery uses them too.
+(`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one_of_ae`) takes the almost-sure relation as
+a hypothesis precisely so that it can, and the proof below derives that hypothesis from `main` —
+through the chart of `Pair/ProductSimplex.lean` — and feeds it in.  The challenge's vocabulary
+(`evalWordEquiv`) lives in `Pair/MeasureTools.lean` and that chart in `Pair/ProductSimplex.lean`,
+both below, where the Section 3 machinery uses them too.
 
-The file ends with the `#print axioms` reports of the tree: the main theorem and the two
-conclusions of the remark.
+The file ends with the `#print axioms` reports of the tree: the main theorem and the remark's
+conclusion.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal

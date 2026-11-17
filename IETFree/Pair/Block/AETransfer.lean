@@ -29,7 +29,7 @@ the earlier version of this file stated that transfer for the *global* monotonic
 `∀ q, StrictMono fun k => s k q`, which `GoodRegion` cannot supply, so those statements are gone.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal

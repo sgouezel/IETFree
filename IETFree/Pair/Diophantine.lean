@@ -68,7 +68,7 @@ lemma insertNthEquiv_apply_pair {n : ℕ} {α : Fin (n + 1) → Type*} (i : Fin 
   funext j
   exact Fin.insertNthEquiv_apply _ i (x, s) j
 
-lemma sum_insertNth {n : ℕ} (f : Fin (n + 1) → ℤ) (i : Fin (n + 1)) (t : ℝ) (s : Fin n → ℝ) :
+lemma Finset.sum_insertNth {n : ℕ} (f : Fin (n + 1) → ℤ) (i : Fin (n + 1)) (t : ℝ) (s : Fin n → ℝ) :
     (∑ j, (f j : ℝ) * (Fin.insertNth i t s : Fin (n + 1) → ℝ) j)
       = (f i : ℝ) * t + ∑ j : Fin n, (f (i.succAbove j) : ℝ) * s j := by
   rw [Fin.sum_univ_succAbove _ i, Fin.insertNth_apply_same]
@@ -158,7 +158,7 @@ lemma volume_ubox_affine {n : ℕ} (f : Fin (n + 1) → ℤ) (k : ℝ) (i : Fin 
       obtain ⟨-, hlt⟩ := ht
       simp only [Set.mem_ofPred_eq] at hlt
       simp only [Set.mem_ofPred_eq]
-      rw [sum_insertNth f i t s] at hlt
+      rw [Finset.sum_insertNth f i t s] at hlt
       convert hlt using 2
       ring
     calc volume {t : ℝ | (t, s) ∈ ee '' S}
@@ -193,7 +193,8 @@ lemma volume_ubox_affine {n : ℕ} (f : Fin (n + 1) → ℤ) (k : ℝ) (i : Fin 
     _ ≤ ENNReal.ofReal (2 * ε) := hbound
 
 /-- Integrals of a function vanishing off `B` and bounded by `C` are at most `C * μ B`. -/
-lemma lintegral_le_of_indicator {β : Type*} [MeasurableSpace β] {μ : Measure β} (B : Set β)
+lemma MeasureTheory.lintegral_le_of_indicator {β : Type*} [MeasurableSpace β] {μ : Measure β}
+    (B : Set β)
     (hB : MeasurableSet B) (F : β → ℝ≥0∞) (C : ℝ≥0∞) (hle : ∀ x, F x ≤ C)
     (hzero : ∀ x ∉ B, F x = 0) :
     ∫⁻ x, F x ∂μ ≤ C * μ B := by
@@ -264,7 +265,7 @@ lemma volume_prod_ubox_affine {p q : ℕ} (f : Fin p → ℤ) (g : Fin q → ℤ
   -- so Fubini gives at most `2ε · volume (ubox q) = 2ε`
     calc ∫⁻ w : Fin q → ℝ, volume {v : Fin (n + 1) → ℝ | (v, w) ∈ T}
         ≤ ENNReal.ofReal (2 * ε) * volume (ubox q) :=
-          lintegral_le_of_indicator (ubox q) (measurableSet_ubox q) _ _ hslice hzero
+          MeasureTheory.lintegral_le_of_indicator (ubox q) (measurableSet_ubox q) _ _ hslice hzero
       _ = ENNReal.ofReal (2 * ε) := by rw [volume_ubox, mul_one]
   -- second case: `g` is not zero, the same with the two factors exchanged
   · obtain ⟨m, hq⟩ : ∃ m, q = m + 1 := by
@@ -300,7 +301,7 @@ lemma volume_prod_ubox_affine {p q : ℕ} (f : Fin p → ℤ) (g : Fin q → ℤ
       rw [hempty, measure_empty]
     calc ∫⁻ v : Fin p → ℝ, volume {w : Fin (m + 1) → ℝ | (v, w) ∈ T}
         ≤ ENNReal.ofReal (2 * ε) * volume (ubox p) :=
-          lintegral_le_of_indicator (ubox p) (measurableSet_ubox p) _ _ hslice hzero
+          MeasureTheory.lintegral_le_of_indicator (ubox p) (measurableSet_ubox p) _ _ hslice hzero
       _ = ENNReal.ofReal (2 * ε) := by rw [volume_ubox, mul_one]
 
 /-- The surjection `Fin (2N+1) → [-N, N]`, `z ↦ z - N`. -/
@@ -981,7 +982,7 @@ section IntCombination
 variable {d e r n : ℕ} {lam : Fin d → ℝ≥0} {mu : Fin e → ℝ≥0}
 
 /-- A bound on the absolute value of a sum of products. -/
-theorem natAbs_sum_mul_le {ι : Type*} [Fintype ι] (f g : ι → ℤ) (N K : ℕ)
+theorem Int.natAbs_sum_mul_le {ι : Type*} [Fintype ι] (f g : ι → ℤ) (N K : ℕ)
     (hf : ∀ i, (f i).natAbs ≤ N) (hg : ∀ i, (g i).natAbs ≤ K) :
     (∑ i, f i * g i).natAbs ≤ Fintype.card ι * (N * K) := by
   refine (Int.natAbs_sum_le _ _).trans ?_
@@ -1023,9 +1024,9 @@ theorem IsDiophantine.of_int_combination (hdio : IsDiophantine lam mu) {K : ℕ}
     have hb (j) : (b j).natAbs ≤ N := le_trans (Finset.le_sup (f := fun j => (b j).natAbs)
         (Finset.mem_univ j)) (le_max_right _ _)
     have h1 : (∑ i, a i * A i k).natAbs ≤ Fintype.card (Fin r) * (N * K) :=
-      natAbs_sum_mul_le a (fun i => A i k) N K ha (fun i => hA i k)
+      Int.natAbs_sum_mul_le a (fun i => A i k) N K ha (fun i => hA i k)
     have h2 : (∑ j, b j * A' j k).natAbs ≤ Fintype.card (Fin n) * (N * K) :=
-      natAbs_sum_mul_le b (fun j => A' j k) N K hb (fun j => hA' j k)
+      Int.natAbs_sum_mul_le b (fun j => A' j k) N K hb (fun j => hA' j k)
     have h3 := Int.natAbs_add_le (∑ i, a i * A i k) (∑ j, b j * A' j k)
     simp only [Fintype.card_fin] at h1 h2
     have he : r * (N * K) + n * (N * K) = Ktot * N := by rw [hKtotdef]; ring
@@ -1040,9 +1041,9 @@ theorem IsDiophantine.of_int_combination (hdio : IsDiophantine lam mu) {K : ℕ}
     have hb (j) : (b j).natAbs ≤ N := le_trans (Finset.le_sup (f := fun j => (b j).natAbs)
         (Finset.mem_univ j)) (le_max_right _ _)
     have h1 : (∑ i, a i * B i l).natAbs ≤ Fintype.card (Fin r) * (N * K) :=
-      natAbs_sum_mul_le a (fun i => B i l) N K ha (fun i => hB i l)
+      Int.natAbs_sum_mul_le a (fun i => B i l) N K ha (fun i => hB i l)
     have h2 : (∑ j, b j * B' j l).natAbs ≤ Fintype.card (Fin n) * (N * K) :=
-      natAbs_sum_mul_le b (fun j => B' j l) N K hb (fun j => hB' j l)
+      Int.natAbs_sum_mul_le b (fun j => B' j l) N K hb (fun j => hB' j l)
     have h3 := Int.natAbs_add_le (∑ i, a i * B i l) (∑ j, b j * B' j l)
     simp only [Fintype.card_fin] at h1 h2
     have he : r * (N * K) + n * (N * K) = Ktot * N := by rw [hKtotdef]; ring

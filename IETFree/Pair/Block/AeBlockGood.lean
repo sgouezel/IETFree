@@ -5,6 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.ForMathlib.Analysis
 public import IETFree.Pair.Block.AETransfer
 public import IETFree.Pair.Block.Endpoints
 public import IETFree.Pair.Irreducible
@@ -164,7 +165,7 @@ theorem compLenAffine_absolutelyContinuousAt (G : GoodRegion d e π σ q₀) :
     have he : 0 < e := NeZero.pos e
     omega
   have hinjlin : Function.Injective (compLenAffine G.s).linear :=
-    injective_linear_of_injOn G.isOpen_O ⟨q₀, G.mem_O⟩ hAinj
+    AffineMap.injective_linear_of_injOn G.isOpen_O ⟨q₀, G.mem_O⟩ hAinj
   have hac : (volume.restrict G.O).map (compLenAffine G.s) ≪ volume :=
     absolutelyContinuous_map_affine hinjlin hdim
   -- the image is contained in the simplex region, so the measure lives there
@@ -214,7 +215,7 @@ theorem ae_block_of_ae_simplexVolume (G : GoodRegion d e π σ q₀) {k l : ℕ}
     ∀ᵐ q ∂(volume.restrict G.O),
       Q (simplexMap (l - k) (blockFree k l (simplexMap G.n (compLenAffine G.s q)))) := by
   have : NeZero G.n := neZeroN G
-  refine ae_of_ae_of_absolutelyContinuous
+  refine MeasureTheory.ae_of_ae_of_absolutelyContinuous
     (φ := fun q : PReal d e => simplexMap G.n (compLenAffine G.s q))
     (P := fun ν => Q (simplexMap (l - k) (blockFree k l ν))) ?_
     (compLen_absolutelyContinuousAt G) ?_

@@ -19,7 +19,7 @@ steps.  Taking `ε k = 1/(k+1)` and `N₀ = k` turns it into the sequence form o
 
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal

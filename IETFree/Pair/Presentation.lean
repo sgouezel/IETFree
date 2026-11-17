@@ -130,6 +130,7 @@ noncomputable def compLen {n : ℕ} {s : Fin (n + 1) → ℝ} (hmono : StrictMon
   ⟨s i.succ - s i.castSucc, sub_nonneg.mpr (le_of_lt (hmono (Fin.castSucc_lt_succ (i := i))))⟩
 
 /-- **`compLen` in `ℝ`**: the `i`-th cell length is the increment of the monotone list. -/
+@[simp]
 theorem compLen_coe {n : ℕ} {s : Fin (n + 1) → ℝ} (hmono : StrictMono s) (i : Fin n) :
     (compLen hmono i : ℝ) = s i.succ - s i.castSucc := (rfl)
 

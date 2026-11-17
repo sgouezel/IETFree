@@ -31,7 +31,7 @@ remaining `n - 1` positions by one, whence the letters in the last bottom positi
 all the letters other than `b`, one per step.
 -/
 
-@[expose] public section
+public section
 
 open scoped BigOperators
 open IntervalExchange.RauzyVeech

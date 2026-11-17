@@ -5,6 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.ForMathlib.Analysis
 public import IETFree.RauzyVeech.BoundedSimplex
 public import IETFree.RauzyVeech.Nesting
 public import IETFree.RauzyVeech.Ray.Criterion
@@ -200,7 +201,7 @@ theorem mem_closure_simplexCyl_of_nonneg (P : IETDatum₂ α n) {w : List Bool} 
     exact hbound a
   have hdist : dist (fun a => (⟨qApply Q y a, hSig0 a⟩ : ℝ≥0))
       (fun a => (⟨xt a, hxtnn a⟩ : ℝ≥0)) ≤ 2 * t * totSum Q :=
-    (dist_co_co (x := fun a => (⟨qApply Q y a, hSig0 a⟩ : ℝ≥0))
+    (NNReal.dist_pi_coe (x := fun a => (⟨qApply Q y a, hSig0 a⟩ : ℝ≥0))
       (y := fun a => (⟨xt a, hxtnn a⟩ : ℝ≥0))).symm.trans_le hdist'
   have hkey : 2 * t * totSum Q = ε * (totSum Q / (totSum Q + 1)) := by
     rw [ht]
@@ -221,7 +222,7 @@ theorem mem_closure_simplexCyl_of_nonneg (P : IETDatum₂ α n) {w : List Bool} 
 *strictly* positive renormalised vector.  The
 tower formula only produces nonnegative ones, which is what `mem_closure_simplexCyl_of_nonneg` is
 for: `Sig` then lies in every `closure Δ(w k)`, and these closures meet in `lam` by
-`iInter_closure_eq_singleton`. -/
+`Set.iInter_closure_eq_singleton`. -/
 theorem eq_of_nonneg_preimage_of_diam {w : ℕ → List Bool} {lam : α → ℝ≥0} {Sig : α → ℝ}
     {y : ℕ → α → ℝ} (P : IETDatum₂ α n)
     (hanti : Antitone fun k => IETDatum₂.simplexCyl P (w k))
@@ -243,7 +244,7 @@ theorem eq_of_nonneg_preimage_of_diam {w : ℕ → List Bool} {lam : α → ℝ�
   have hsub : (fun a => (⟨Sig a, hSig0 a⟩ : ℝ≥0)) ∈
       ⋂ k, closure (IETDatum₂.simplexCyl P (w k)) := Set.mem_iInter.mpr hclos
   have hsingle : (fun a => (⟨Sig a, hSig0 a⟩ : ℝ≥0)) ∈ ({lam} : Set (α → ℝ≥0)) := by
-    rw [← iInter_closure_eq_singleton hlam_mem hanti hbdd hdiam]
+    rw [← Set.iInter_closure_eq_singleton hlam_mem hanti hbdd hdiam]
     exact hsub
   have hEq : (fun a => (⟨Sig a, hSig0 a⟩ : ℝ≥0)) = lam :=
     Set.mem_singleton_iff.mp hsingle

@@ -39,7 +39,7 @@ The statement is given for the two-bijection datum `IETDatum₂` used by the ind
 single-permutation form, stated with the copied `mkIET1'`, is `masurVeech_ae_unique_invariant_perm`
 below. -/
 
-@[expose] public section
+public section
 
 open MeasureTheory
 open IntervalExchange.RauzyVeech IntervalExchange.RauzyVeech.RichPath

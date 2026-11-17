@@ -335,23 +335,6 @@ theorem wt_nil (P : IETDatum₂ α n) (A' : Finset α) (w : List Bool) :
     wt P A' w [] = pot P w A' := by
   simp [wt]
 
-/-- The value of `getD` at the appended last letter. -/
-theorem getD_append_singleton_len (γ : List Bool) (e : Bool) :
-    (γ ++ [e]).getD γ.length false = e := by
-  induction γ with
-  | nil => simp
-  | cons a t ih => simp
-
-/-- The value of `getD` before the appended last letter. -/
-theorem getD_append_singleton_of_lt (γ : List Bool) (e : Bool) {g : ℕ} (hg : g < γ.length) :
-    (γ ++ [e]).getD g false = γ.getD g false := by
-  induction γ generalizing g with
-  | nil => simp at hg
-  | cons a t ih =>
-    cases g with
-    | zero => simp
-    | succ g' => simpa [List.getD_cons_succ] using ih (by simpa using hg)
-
 omit [DecidableEq α] in
 /-- `NoExit` of `γ ++ [e]` splits as `NoExit γ` plus the last letter not being an exit arrow. -/
 theorem noExit_append_singleton (P : IETDatum₂ α n) (A' : Finset α) (w γ : List Bool) (e : Bool) :
@@ -361,21 +344,24 @@ theorem noExit_append_singleton (P : IETDatum₂ α n) (A' : Finset α) (w γ : 
   · intro h
     refine ⟨fun g hg => ?_, ?_⟩
     · have h1 := h g (by simp only [List.length_append, List.length_singleton]; omega)
-      rw [List.take_append_of_le_length (le_of_lt hg), getD_append_singleton_of_lt γ e hg] at h1
+      rw [List.take_append_of_le_length (le_of_lt hg), List.getD_append γ [e] false g hg] at h1
       exact h1
     · have h1 := h γ.length (by simp)
-      rw [List.take_left, getD_append_singleton_len] at h1
+      rw [List.take_left, List.getD_append_right γ [e] false γ.length (le_refl _),
+        Nat.sub_self, List.getD_cons_zero] at h1
       exact h1
   · rintro ⟨h1, h2⟩ g hg
     have hgl : g ≤ γ.length := by
       simp only [List.length_append, List.length_singleton] at hg; omega
     rw [List.take_append_of_le_length hgl]
     rcases Nat.lt_or_eq_of_le hgl with hlt | heq
-    · rw [getD_append_singleton_of_lt γ e hlt]
+    · rw [List.getD_append γ [e] false g hlt]
       exact h1 g hlt
     · subst heq
       have ht : List.take γ.length γ = γ := by simp
-      have hd : (γ ++ [e]).getD γ.length false = e := getD_append_singleton_len γ e
+      have hd : (γ ++ [e]).getD γ.length false = e := by
+        rw [List.getD_append_right γ [e] false γ.length (le_refl _), Nat.sub_self,
+          List.getD_cons_zero]
       rw [ht, hd]
       exact h2
 
@@ -543,8 +529,11 @@ theorem frontier_bound (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n
       + (∑ m ∈ Finset.range (N + 1),
           ∑ δ ∈ (levelWords m).filter (FirstCr P A' w), wt P A' w δ)
       ≤ pot P w A' := by
+  -- induction on the level: the frontier mass of level `N + 1` is that of level `N` plus the mass
+  -- of the words that stop at `N + 1`, and the `Γ₂` estimate bounds the increment by `C / (N + 1)²`
   induction N with
   | zero =>
+    -- at level `0` the only word is `[]`, alive by `hbl0`, and it is not a first crossing
     have halive : Alive P A' w [] := by
       refine ⟨fun g hg => by simp at hg, fun i hi => ?_⟩
       have hi0 : i = 0 := by simpa using hi
@@ -562,6 +551,7 @@ theorem frontier_bound (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n
         Finset.sum_empty]
     rw [h1, h2, add_zero]
   | succ N ih =>
+    -- split the sum at level `N + 1`, then use the induction hypothesis on the levels below
     have hsplit : (∑ m ∈ Finset.range (N + 1 + 1),
         ∑ δ ∈ (levelWords m).filter (FirstCr P A' w), wt P A' w δ)
         = (∑ m ∈ Finset.range (N + 1),

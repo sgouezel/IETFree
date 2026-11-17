@@ -142,8 +142,9 @@ constant.  So `InductionStep` is *implied by* the `Γ₂`--`Γ₄` interface of 
 theorem inductionStep_of_balance (P : IETDatum₂ α n) {K : ℝ → ℝ}
     (hbal : BalanceStep P K) (hK : ∀ Cb : ℝ, 1 ≤ Cb → 1 ≤ K Cb) : InductionStep P := by
   intro k hk1 hkcard C hC hgr
-  have hkN : 0 < (((Finset.univ : Finset α).powersetCard k).card : ℝ) :=
-    powersetCard_univ_card_pos (by omega)
+  have hkN : 0 < (((Finset.univ : Finset α).powersetCard k).card : ℝ) := by
+    rw [Finset.card_powersetCard, Finset.card_univ]
+    exact_mod_cast Nat.choose_pos (by omega)
   have hCpos : (0 : ℝ) < C := by linarith
   have hCm : 0 < C * (((Finset.univ : Finset α).powersetCard k).card : ℝ) := mul_pos hCpos hkN
   have hCb1 : (1 : ℝ) ≤ C := le_of_lt hC

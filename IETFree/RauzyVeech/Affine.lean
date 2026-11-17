@@ -6,7 +6,6 @@ Authors: Sébastien Gouëzel
 module
 
 public import IETFree.RauzyVeech.SimplexAe
-public import IETFree.RauzyVeech.SimplexVolume
 public import Mathlib.LinearAlgebra.Matrix.Permutation
 public import Mathlib.LinearAlgebra.Matrix.SchurComplement
 public import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
@@ -17,8 +16,8 @@ public import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
 This is the analytic layer of the volume computation, on top of the geometric layer of
 `IETFree/RauzyVeech/SimplexVolume.lean`:
 
-* `det_sub_last_col` — the pure matrix identity `det (Q - b·1ᵀ) = det M` for a matrix with column
-  sums `1` (by row and column operations);
+* `Matrix.det_sub_last_col` — the pure matrix identity `det (Q - b·1ᵀ) = det M` for a matrix with
+  column sums `1` (by row and column operations);
 * `det_linInducedMap` — the determinant of the linear part of `inducedMap M` is `det M`;
 * `*` — the affine decomposition `inducedMap M = linInducedMap M + b`, the change of
   variables `volume (inducedMap M '' S) = |det M| · volume S`, injectivity and region membership
@@ -183,7 +182,7 @@ theorem lastRowOp_mul_lastColOp {n : ℕ} (M : Matrix (Fin (n + 1)) (Fin (n + 1)
 
 /-- **The determinant identity.**  Subtracting the last column from each of the first `n` columns
 of a matrix whose column sums are all `1` does not change the determinant. -/
-theorem det_sub_last_col {n : ℕ} (M : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ)
+theorem Matrix.det_sub_last_col {n : ℕ} (M : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ)
     (hM : ∀ j, ∑ i, M i j = 1) :
     (Matrix.of fun i j : Fin n => M i.castSucc j.castSucc - M i.castSucc (Fin.last n)).det
       = M.det := by
@@ -279,9 +278,9 @@ theorem det_linInducedMap_of_toMatrix_det {n : ℕ}
     LinearMap.det (linInducedMapLinear M) = M.det := by
   rw [← LinearMap.det_toMatrix', hdet]
 
-/-- Interface with `det_sub_last_col`, the pure matrix identity of this file: it is exactly the
-hypothesis `hdet` here, because `toMatrix'_linInducedMapLinear` identifies the matrix of the linear
-part with `i j ↦ M i.castSucc j.castSucc - M i.castSucc (Fin.last n)`. -/
+/-- Interface with `Matrix.det_sub_last_col`, the pure matrix identity of this file: it is exactly
+the hypothesis `hdet` here, because `toMatrix'_linInducedMapLinear` identifies the matrix of the
+linear part with `i j ↦ M i.castSucc j.castSucc - M i.castSucc (Fin.last n)`. -/
 theorem det_linInducedMap_of_matrix {n : ℕ} {M : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ}
     (hdet : (Matrix.of fun i j : Fin n =>
       M i.castSucc j.castSucc - M i.castSucc (Fin.last n)).det = M.det) :
@@ -352,10 +351,10 @@ theorem volume_image_inducedMap_of_det {n : ℕ} {M : Matrix (Fin (n + 1)) (Fin 
 
 /-! ## The determinant of the linear part -/
 
-/-- The determinant of the linear part of `inducedMap M`, deduced from `det_sub_last_col`. -/
+/-- The determinant of the linear part of `inducedMap M`, deduced from `Matrix.det_sub_last_col`. -/
 theorem det_linInducedMap {n : ℕ} {M : Matrix (Fin (n + 1)) (Fin (n + 1)) ℝ}
     (hM : ∀ j, ∑ i, M i j = 1) : LinearMap.det (linInducedMapLinear M) = M.det :=
-  det_linInducedMap_of_matrix (det_sub_last_col M hM)
+  det_linInducedMap_of_matrix (Matrix.det_sub_last_col M hM)
 
 /-! ## The permutation matrix -/
 
@@ -685,7 +684,7 @@ section Transvection
 variable {α : Type*} [Fintype α] [DecidableEq α]
 
 /-- `det (1 + single i j c) = 1` for `i ≠ j` (a transvection). -/
-theorem det_one_add_single_of_ne (i j : α) (h : i ≠ j) (c : ℤ) :
+theorem Matrix.det_one_add_single_of_ne (i j : α) (h : i ≠ j) (c : ℤ) :
     (1 + Matrix.single i j c : Matrix α α ℤ).det = 1 := by
   have hvec : (Matrix.single i j c : Matrix α α ℤ)
       = Matrix.vecMulVec (fun a => if i = a then c else 0)
@@ -703,7 +702,7 @@ theorem det_one_add_single_of_ne (i j : α) (h : i ≠ j) (c : ℤ) :
   rw [hdot, add_zero]
 
 /-- The column sum of the identity matrix. -/
-theorem colsum_one (b : α) : (∑ a : α, (1 : Matrix α α ℤ) a b) = 1 := by
+theorem Matrix.sum_one_apply (b : α) : (∑ a : α, (1 : Matrix α α ℤ) a b) = 1 := by
   rw [Finset.sum_eq_single b]
   · rw [Matrix.one_apply, ite_eq_left rfl]
   · intro a _ ha; rw [Matrix.one_apply, ite_eq_right ha]

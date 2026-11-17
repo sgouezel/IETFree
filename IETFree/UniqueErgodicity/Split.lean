@@ -144,6 +144,7 @@ noncomputable def leftGerm (x : ℝ) (hx : x ∈ Set.Icc (0 : ℝ) 1) : SplitI D
       ⟨fun h => decide_eq_false_iff_not.mpr (not_lt.mpr (le_of_lt (h : x < (d : ℝ)))),
         fun h => decide_eq_true_iff.mpr (h : (d : ℝ) < x)⟩⟩⟩
 
+@[simp]
 theorem coord_leftGerm (x : ℝ) (hx : x ∈ Set.Icc (0 : ℝ) 1) (d : D) :
     (leftGerm (D := D) x hx).1.2 d = decide ((d : ℝ) < x) := (rfl)
 
@@ -151,11 +152,11 @@ theorem coord_leftGerm (x : ℝ) (hx : x ∈ Set.Icc (0 : ℝ) 1) (d : D) :
 theorem coord_rightGerm (x : ℝ) (hx : x ∈ Set.Icc (0 : ℝ) 1) (d : D) :
     (rightGerm (D := D) x hx).1.2 d = decide ((d : ℝ) ≤ x) := (rfl)
 
-@[simp]
+@[simp, simp]
 theorem proj_rightGerm (x : ℝ) (hx : x ∈ Set.Icc (0 : ℝ) 1) :
     proj (D := D) (rightGerm x hx) = x := (rfl)
 
-@[simp]
+@[simp, simp]
 theorem proj_leftGerm (x : ℝ) (hx : x ∈ Set.Icc (0 : ℝ) 1) :
     proj (D := D) (leftGerm x hx) = x := (rfl)
 

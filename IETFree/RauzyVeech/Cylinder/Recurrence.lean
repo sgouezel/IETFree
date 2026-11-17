@@ -54,6 +54,7 @@ noncomputable def lvl {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZe
     (P : IETDatum₂ α n) (k : ℕ) (x : α → ℝ≥0) : Word k :=
   ⟨IETDatum₂.pathWord P x k, IETDatum₂.pathWord_length P x k⟩
 
+@[simp]
 theorem lvl_coe {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
     (P : IETDatum₂ α n) (k : ℕ) (x : α → ℝ≥0) :
     (lvl P k x).1 = IETDatum₂.pathWord P x k := (rfl)

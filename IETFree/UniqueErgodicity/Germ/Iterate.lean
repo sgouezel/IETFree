@@ -20,7 +20,7 @@ Everything is proved first for an arbitrary exchange `T` with cut set `s` on `[0
 `Germ/Basic.lean`, and then specialised to `T = mkIETEquiv lam π 0` and `s = mkIETCuts lam 0 1`.
 -/
 
-@[expose] public section
+public section
 
 open Set Function Filter Topology
 open scoped BigOperators NNReal

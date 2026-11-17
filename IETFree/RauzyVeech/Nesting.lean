@@ -458,7 +458,7 @@ end IETDatum₂
 variable {k : ℕ}
 
 /-- **A level set of a nonzero linear functional on `Fin k → ℝ` is Lebesgue-null.** -/
-theorem volume_linear_eq_zero (f : (Fin k → ℝ) →ₗ[ℝ] ℝ) (hf : f ≠ 0) (c : ℝ) :
+theorem MeasureTheory.volume_linear_eq_zero (f : (Fin k → ℝ) →ₗ[ℝ] ℝ) (hf : f ≠ 0) (c : ℝ) :
     volume {v : Fin k → ℝ | f v = c} = 0 := by
   have hzero : volume {v : Fin k → ℝ | f v = 0} = 0 := by
     have h : {v : Fin k → ℝ | f v = 0} = (LinearMap.ker f : Set _) := by
@@ -527,6 +527,7 @@ noncomputable def hallLin (A : Fin (m + 1) → ℝ) : (Fin (m + 1) → ℝ) →�
     simp only [Pi.smul_apply, smul_eq_mul, Finset.mul_sum]
     exact Finset.sum_congr rfl fun i _ => by simp only [RingHom.id_apply]; ring
 
+@[simp]
 theorem hallLin_apply (A : Fin (m + 1) → ℝ) (w : Fin (m + 1) → ℝ) :
     hallLin A w = ∑ i, A i * w i := (rfl)
 
@@ -633,7 +634,7 @@ theorem volume_hallLin_chart_eq_zero {A : Fin (m + 1) → ℝ} (hA : A ≠ 0) :
       simp only [Set.mem_ofPred_eq, hallLin_chart]
       constructor <;> intro h <;> linarith
     rw [hset]
-    exact volume_linear_eq_zero (glin A) hG _
+    exact MeasureTheory.volume_linear_eq_zero (glin A) hG _
 
 end Null
 
