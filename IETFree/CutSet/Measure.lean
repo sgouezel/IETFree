@@ -6,6 +6,7 @@ Authors: Sébastien Gouëzel
 module
 
 public import IETFree.CutSet.Basic
+public import IETFree.ForMathlib.Analysis
 
 /-!
 # The cells tile the interval, and an exchange preserves Lebesgue measure
@@ -111,30 +112,6 @@ theorem IsCutSet.image_cells_union {a b : ℝ} {e : Equiv ℝ ℝ} {s : Finset �
     rw [Set.mem_iUnion]
     exact ⟨i, e.symm y, hi, by simp⟩
 
-/-- Translating a set does not change its measure. -/
-theorem volume_image_add (d : ℝ) (S : Set ℝ) :
-    volume ((fun x : ℝ => x + d) '' S) = volume S := by
-  have h : (fun x : ℝ => x + d) '' S = (fun x : ℝ => x + (-d)) ⁻¹' S := by
-    ext x
-    simp only [Set.mem_image, Set.mem_preimage]
-    constructor
-    · rintro ⟨y, hy, rfl⟩
-      simpa [sub_eq_add_neg] using hy
-    · intro hx
-      exact ⟨x - d, by simpa [sub_eq_add_neg] using hx, by ring⟩
-  rw [h, measure_preimage_add_right]
-
-/-- **A measure is the sum of its masses on the pieces of a finite tiling.** -/
-theorem volume_inter_eq_sum {n : ℕ} {C : Fin n → Set ℝ} {T : Set ℝ}
-    (hcover : (⋃ i, C i) = T) (hdisj : ∀ i j, i ≠ j → Disjoint (C i) (C j))
-    {S : Set ℝ} (hmeas : ∀ i, MeasurableSet (S ∩ C i)) :
-    volume (S ∩ T) = ∑ i, volume (S ∩ C i) := by
-  have h : S ∩ T = ⋃ i, S ∩ C i := by
-    rw [← hcover, Set.inter_iUnion]
-  rw [h, measure_iUnion (f := fun i => S ∩ C i)
-    (fun i j hij => (hdisj i j hij).mono Set.inter_subset_right Set.inter_subset_right)
-    hmeas, tsum_fintype]
-
 /-- On a cell, `e` acts as a fixed translation. -/
 theorem IsCutSet.preimage_inter_cell {e : Equiv ℝ ℝ} {a b : ℝ} {s : Finset ℝ}
     (hs : IsCutSet (⇑e) a b s) (i : Fin s.card) (A : Set ℝ) :
@@ -181,8 +158,8 @@ theorem IsCutSet.volume_preimage_cell {a b : ℝ} {e : Equiv ℝ ℝ} {s : Finse
       exact ⟨x, hx, by rw [hd]; exact hs.map_of_mem_cell hx⟩
   calc volume (⇑e ⁻¹' A ∩ C)
       = volume ((fun z : ℝ => z + d) ⁻¹' A ∩ C) := by rw [hpre, hC]
-    _ = volume ((fun z : ℝ => z + d) '' ((fun z : ℝ => z + d) ⁻¹' A ∩ C)) :=
-        (volume_image_add d _).symm
+    _ = volume ((fun z : ℝ => z + d) '' ((fun z : ℝ => z + d) ⁻¹' A ∩ C)) := by
+        rw [Set.image_add_right, measure_preimage_add_right]
     _ = volume (⇑e '' (⇑e ⁻¹' A ∩ C)) := by rw [hC, ← hpre, htrans]
     _ = volume (A ∩ ⇑e '' C) := by rw [Set.image_preimage_inter]
 
@@ -192,17 +169,19 @@ theorem IsCutSet.measure_preimage {a b : ℝ} {e : Equiv ℝ ℝ} {s : Finset �
     volume (⇑e ⁻¹' A ∩ Set.Ico a b) = volume (A ∩ Set.Ico a b) := by
   calc volume (⇑e ⁻¹' A ∩ Set.Ico a b)
       = ∑ i, volume (⇑e ⁻¹' A ∩ Set.Ico (hs.cellStarts i) (hs.cellPos (i.val + 1))) := by
-        refine volume_inter_eq_sum (hs.cells_union) (fun i j hij => hs.cells_disjoint hij)
+        refine MeasureTheory.measure_inter_eq_sum volume (hs.cells_union)
+          (fun i j hij => hs.cells_disjoint hij)
           (fun i => ?_)
         rw [hs.preimage_inter_cell i A]
         exact (hA.preimage (by fun_prop : Measurable fun z : ℝ => z + _)).inter measurableSet_Ico
     _ = ∑ i, volume (A ∩ ⇑e '' Set.Ico (hs.cellStarts i) (hs.cellPos (i.val + 1))) :=
         Finset.sum_congr rfl (fun i _ => hs.volume_preimage_cell i A)
     _ = volume (A ∩ Set.Ico a b) := by
-        refine (volume_inter_eq_sum (IsCutSet.image_cells_union hs)
+        refine (MeasureTheory.measure_inter_eq_sum volume (IsCutSet.image_cells_union hs)
           (fun i j hij => hs.image_cell_disjoint e.injective hij) (fun i => ?_)).symm
         rw [hs.image_cell]
         exact hA.inter measurableSet_Ico
+
 /-! ## Measurability
 
 An exchange is the identity outside `[a, b)` and a translation on each of its finitely many cells,

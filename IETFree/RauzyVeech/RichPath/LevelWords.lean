@@ -42,6 +42,7 @@ def levelWords : ℕ → Finset (List Bool)
   | N + 1 => (levelWords N).image (fun δ => δ ++ [true]) ∪
       (levelWords N).image (fun δ => δ ++ [false])
 
+@[simp]
 theorem levelWords_zero : levelWords 0 = {[]} := (rfl)
 
 theorem levelWords_succ (N : ℕ) :

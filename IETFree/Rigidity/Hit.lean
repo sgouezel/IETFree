@@ -28,7 +28,7 @@ private): it needs, besides these three, the richness of the greedy path, and it
 at the node `w` rather than at `w ++ γ₀`, which is the node the rigid step is run at.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal Topology

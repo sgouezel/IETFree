@@ -7,7 +7,6 @@ module
 
 public import IETFree.Pair.Block.Irreducibility
 public import IETFree.Pair.Irreducible
-public import IETFree.Pair.MeasureTools
 
 /-!
 # From per-block words to a single word trivial on `[0, 1)`
@@ -20,7 +19,7 @@ combined with commutators and conjugates (`commutator_apply_eq_self_left`,
 as the identity on a set invariant under the two generators.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal commutatorElement
@@ -102,7 +101,7 @@ theorem evalWord_mapsTo_of_invariant {d e : ℕ} [NeZero d] [NeZero e] (D : IETD
     exact hu _ (hv x hx)
 
 /-- The part of the union of the blocks of `J` inside `[0, 1)`. -/
-private def BlocksIn {n : ℕ} (u v : Fin n → ℝ) (J : Finset (Fin n)) : Set ℝ :=
+def BlocksIn {n : ℕ} (u v : Fin n → ℝ) (J : Finset (Fin n)) : Set ℝ :=
   {x | x ∈ Set.Ico (0 : ℝ) 1 ∧ ∃ i ∈ J, u i ≤ x ∧ x < v i}
 
 /-- **The assembly of Theorem 1.1.**  If `[0, 1)` is covered by finitely many intervals, each of

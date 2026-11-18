@@ -29,7 +29,7 @@ rewritten with `IETDatum₂.pfx_pathStep`.  The stopping-set hypothesis is only 
 greedy path* (`lam ∉ cylStop P (pathWord P lam k)`), not for every word: this is
 `isRauzyPath_pathWord_of_notMem_cylStop`, in `IETFree/RauzyVeech/IterOKPath.lean`. -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter
 open scoped NNReal ENNReal BigOperators Topology

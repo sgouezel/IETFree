@@ -79,7 +79,7 @@ theorem evalWord_apply_coe (w : FreeGroup Gen) (f g : IET 0 1) :
         (FreeGroup.lift (fun i : Gen => if i = 0 then f else g))
       = FreeGroup.lift (fun i : Gen => if i = 0 then f.toEquiv else g.toEquiv) := by
     refine FreeGroup.ext_hom _ _ (fun i => ?_)
-    by_cases h : i = 0 <;> simp [h]
+    by_cases h : i = 0 <;> simp [h, IET.coeHom_apply]
   exact congrArg (fun (φ : FreeGroup Gen →* Equiv.Perm ℝ) => ⇑(φ w)) h2
 
 /-! ## Instantiation for the exchanges `mkIET1' lam π` and `mkIET1' mu σ` -/

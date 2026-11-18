@@ -156,7 +156,7 @@ theorem imageInG {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (Fin d))
     have himg : mkIET1' (simplexMap d v) π hl '' Set.Ico (s k.castSucc) (s k.succ)
         = Set.Ico (mkIET1' (simplexMap d v) π hl (s k.castSucc))
             (mkIET1' (simplexMap d v) π hl (s k.castSucc) + (s k.succ - s k.castSucc)) := by
-      have h := image_Ico_add (f := mkIET1' (simplexMap d v) π hl) (δ := δ) hδ
+      have h := Set.image_Ico_add (f := mkIET1' (simplexMap d v) π hl) (δ := δ) hδ
       have h1' : s k.castSucc + δ = mkIET1' (simplexMap d v) π hl (s k.castSucc) :=
         (hδ _ le_rfl hcell).symm
       rw [h, h1']
@@ -226,7 +226,7 @@ theorem markedCell_g_transl {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm
   have himg : mkIET1' (simplexMap d v) π hl '' Set.Ico (s k.castSucc) (s k.succ)
       = Set.Ico (mkIET1' (simplexMap d v) π hl (s k.castSucc))
           (mkIET1' (simplexMap d v) π hl (s k.castSucc) + (s k.succ - s k.castSucc)) := by
-    have h := image_Ico_add (f := mkIET1' (simplexMap d v) π hl) (δ := δ) hδ
+    have h := Set.image_Ico_add (f := mkIET1' (simplexMap d v) π hl) (δ := δ) hδ
     have h1' : s k.castSucc + δ = mkIET1' (simplexMap d v) π hl (s k.castSucc) :=
       (hδ _ le_rfl hcell).symm
     rw [h, h1']
@@ -716,7 +716,7 @@ theorem partialSum_image {d e n : ℕ} [NeZero d] [NeZero e] (π : Equiv.Perm (F
         = Set.Ico (F j q) (F j q + (s j.succ q - s j.castSucc q)) := by
     have hδ := htransl q hq hl hm j
     obtain ⟨δ, hδ⟩ := hδ
-    rw [image_Ico_add (f := h) (δ := δ) hδ]
+    rw [Set.image_Ico_add (f := h) (δ := δ) hδ]
     have h1 : s j.castSucc q + δ = F j q := by
       rw [← hF q hq hl hm j]
       exact (hδ _ le_rfl (hmono q hq (Fin.castSucc_lt_succ (i := j)))).symm

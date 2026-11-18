@@ -35,7 +35,7 @@ The tower statements at the node `γ` are those of `Rigidity/RigidSet.lean`, whi
 `IsRauzyPath P lam γ` only.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter
 open scoped BigOperators ENNReal NNReal

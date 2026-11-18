@@ -5,6 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.ForMathlib.Analysis
 public import IETFree.Pair.GoodRegion
 public import Mathlib.MeasureTheory.Measure.Haar.NormedSpace
 public import Mathlib.MeasureTheory.Measure.Haar.Unique
@@ -21,8 +22,8 @@ lengths as functions of the parameters — is affine as a whole.  The file split
   is a sum of lengths of marked cells (`IsCompPresentation.lam_eq_sum`, `.mu_eq_sum`);
 * the pointwise description of that affine map: `monoAt` (the list is strictly increasing at a point
   of the region) and `compLenAffine_mem_regionAt` (its image lies in the open simplex there);
-* `injective_linear_of_injOn`, the general tool by which an affine map injective on an open set
-  gives an absolutely continuous pushforward.
+* `AffineMap.injective_linear_of_injOn`, the general tool by which an affine map injective on an
+  open set gives an absolutely continuous pushforward.
 
 The length vector is only ever used at a single point (`compLenVec s q (monoAt G hq)`, abbreviated
 `G.cellLen hq`), because a global monotonicity hypothesis on the list is not derivable from the data
@@ -52,7 +53,7 @@ in three separable parts:
 * injectivity — `ν` determines `(λ, μ)` on the region (each `λᵢ` and each `μⱼ` is a sum of lengths
   of cells of `g ∘ f`): `compLen_injective`;
 * absolute continuity of the pushforward — injectivity together with
-  `injective_linear_of_injOn`; the pointwise forms
+  `AffineMap.injective_linear_of_injOn`; the pointwise forms
   `compLenAffine_absolutelyContinuousAt`/`compLen_absolutelyContinuousAt` are what the reduction
   consumes, and they live in `IETFree.Pair.Block.AeBlockGood`. -/
 
@@ -315,50 +316,15 @@ to the first `n - 1` lengths of the composition (the last one is `1` minus their
 `simplexMap n` of it.
 
 This file has the map and the general tool: *an injective affine map between spaces of the same
-dimension has injective linear part* (`injective_linear_of_injOn`; a linear equivalence carries Haar
-measure to Haar measure, and any two Haar measures on a finite-dimensional real vector space are
+dimension has injective linear part* (`AffineMap.injective_linear_of_injOn`; a linear equivalence
+carries Haar measure to Haar measure, and any two Haar measures on a finite-dimensional real
+vector space are
 mutually absolutely continuous).  The absolute continuity of the pushforward is stated pointwise,
 where `compLenAffine G.s` is injective on `G.O` because the combinatorial type is fixed there
 (`compLen_injective`) and its image lies in `simplexRegion n`; see
 `compLenAffine_absolutelyContinuousAt` in `IETFree.Pair.Block.AeBlockGood`. -/
 
 section AffineAbsoluteContinuous
-
-/-- The linear part of an affine map injective on a nonempty open set is injective. -/
-theorem injective_linear_of_injOn {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
-    [AddCommGroup F] [Module ℝ F]
-    {O : Set E} (hOo : IsOpen O) (hne : O.Nonempty) {A : E →ᵃ[ℝ] F}
-    (hinj : Set.InjOn A O) : Function.Injective A.linear := by
-  intro v w hvw
-  by_contra hne'
-  have hz : A.linear (v - w) = 0 := by rw [map_sub, hvw, sub_self]
-  have hune : v - w ≠ 0 := sub_ne_zero.mpr hne'
-  obtain ⟨p, hp⟩ := hne
-  obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.mp hOo p hp
-  set u := v - w with hu
-  set t := ε / (2 * (‖u‖ + 1)) with ht
-  have htpos : 0 < t := by
-    rw [ht]; positivity
-  have hnorm : 0 < ‖u‖ + 1 := by positivity
-  have htlt : t * ‖u‖ < ε := by
-    rw [ht, div_mul_eq_mul_div, div_lt_iff₀ (by positivity)]
-    nlinarith [norm_nonneg u]
-  have hmem : p + t • u ∈ O := by
-    refine hball ?_
-    rw [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left, norm_smul, Real.norm_eq_abs,
-      abs_of_pos htpos]
-    exact htlt
-  have hAp : A (p + t • u) = A p := by
-    have h := AffineMap.map_vadd A p (t • u)
-    rw [vadd_eq_add, map_smul, hz, smul_zero, add_comm (t • u) p] at h
-    simpa using h
-  have hfin := hinj hmem hp hAp
-  have hzu : t • u = 0 := by
-    have := congrArg (fun x => x - p) hfin
-    simpa using this
-  rcases smul_eq_zero.mp hzu with h | h
-  · exact absurd h (ne_of_gt htpos)
-  · exact hune h
 
 /-- **An injective affine map pushes Lebesgue measure to an absolutely continuous measure.**
 The linear part of an injective affine map is a linear equivalence once the dimensions agree, and a
@@ -497,8 +463,9 @@ end AffineAbsoluteContinuous
 /-- The measure-theoretic content of Lemma 3.1, in the abstract form in which it is used: an
 almost-sure statement about an absolutely continuous image of the parameters holds for almost every
 parameter. -/
-theorem ae_of_ae_of_absolutelyContinuous {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
-    {μ : Measure α} {ν' : Measure β} {φ : α → β} (hφ : AEMeasurable φ μ) (hac : μ.map φ ≪ ν')
+theorem MeasureTheory.ae_of_ae_of_absolutelyContinuous {α β : Type*} [MeasurableSpace α]
+    [MeasurableSpace β] {μ : Measure α} {ν' : Measure β} {φ : α → β} (hφ : AEMeasurable φ μ)
+    (hac : μ.map φ ≪ ν')
     {P : β → Prop} (hP : ∀ᵐ y ∂ν', P y) : ∀ᵐ x ∂μ, P (φ x) :=
   ae_of_ae_map hφ (hac.ae_le hP)
 

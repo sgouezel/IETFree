@@ -101,6 +101,7 @@ omit [DecidableEq α] in
     (rvStep P false).piBottom = P.piBottom := (rfl)
 
 omit [DecidableEq α] in
+@[simp]
 theorem rvStep_piBottom_true (P : IETDatum₂ α n) :
     (rvStep P true).piBottom =
       P.piBottom.trans (insertEquiv (P.piBottom (P.last true))) := (rfl)

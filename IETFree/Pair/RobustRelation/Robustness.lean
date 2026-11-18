@@ -26,7 +26,7 @@ property is an explicit hypothesis, which is what makes the other two one-liners
 -/
 
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -48,7 +48,10 @@ theorem evalWord_eventually_eq_one {d e : ℕ} [NeZero d] [NeZero e]
 /-- **The robustness of a trivial word, at a numerical threshold**: the same statement with
 `q₀ ∈ goodParamsAt (4 * |w| + 4)` in place of `Ω'`.  The two hypotheses are not interchangeable:
 `∀ N, q₀ ∈ goodParamsAt N` implies `q₀ ∈ goodParamsAt (4|w|+4)` by `goodParamsAt_antitone`, so the
-`Ω'` statement is the stronger one. -/
+`Ω'` statement is the stronger one.
+
+API, not a step: the proofs go through `evalWord_eventually_eq_one`, and this is the numerical form
+of the same fact, quoted by the README as the threshold statement. -/
 theorem evalWord_eventually_eq_one_of_goodParams {d e : ℕ} [NeZero d] [NeZero e]
     (π : Equiv.Perm (Fin d)) (σ : Equiv.Perm (Fin e)) (w : FreeGroup Gen) {q₀ : PReal d e}
     (hq₀ : q₀.1 ∈ simplexRegion d ∧ q₀.2 ∈ simplexRegion e)

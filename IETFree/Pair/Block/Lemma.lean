@@ -26,7 +26,7 @@ is Theorem 1.1 for the per-block words, and `exists_word_trivial_on_all_of_block
 `IETFree.Pair.Block.Assembly`) is what turns the per-block words of that statement into one word.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal

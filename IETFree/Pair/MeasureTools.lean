@@ -218,6 +218,7 @@ theorem isFiniteUnionIntervals_ne_id {h : IET 0 1} {C : Finset ℝ}
             rw [hc₁def]
             exact Finset.le_max' _ c (Finset.mem_filter.mpr ⟨hcC, hxc⟩)
           linarith
+      -- the displacement of the point is a difference, which is what `sub_ne_zero` reads
       · change h c₁ - c₁ ≠ 0
         rw [← hdisp]
         exact sub_ne_zero.mpr hx
@@ -246,7 +247,8 @@ the paper's display (2.3).
 -/
 
 /-- The set where a measurable function differs from the identity is measurable. -/
-theorem measurableSet_ne_id {f : ℝ → ℝ} (hf : Measurable f) : MeasurableSet {x | f x ≠ x} := by
+theorem MeasureTheory.measurableSet_ne_id {f : ℝ → ℝ} (hf : Measurable f) :
+    MeasurableSet {x | f x ≠ x} := by
   have hclosed : IsClosed {p : ℝ × ℝ | p.1 = p.2} := isClosed_eq continuous_fst continuous_snd
   have h : {x | f x ≠ x} = (fun x => (f x, x)) ⁻¹' {p : ℝ × ℝ | p.1 = p.2}ᶜ := by
     ext x
@@ -257,7 +259,7 @@ theorem measurableSet_ne_id {f : ℝ → ℝ} (hf : Measurable f) : MeasurableSe
 /-- The support of a word is measurable. -/
 theorem measurableSet_wordSupp (u : FreeGroup Gen) (f g : IET 0 1) :
     MeasurableSet (wordSupp u f g) :=
-  measurableSet_ne_id (measurable (evalWord u f g))
+  MeasureTheory.measurableSet_ne_id (measurable (evalWord u f g))
 
 end IntervalExchange.Pair
 
@@ -416,7 +418,8 @@ theorem unitMeas_real_supp_commutator_inv_le (φ ψ : IET 0 1) :
       ≤ 3 * unitMeas.real ({x | φ x ≠ x} ∩ {x | ψ x ≠ x}) := by
   set A : Set ℝ := {x | φ x ≠ x} ∩ {x | ψ x ≠ x} with hAdef
   have hA : MeasurableSet A :=
-    (measurableSet_ne_id (measurable φ)).inter (measurableSet_ne_id (measurable ψ))
+    (MeasureTheory.measurableSet_ne_id (measurable φ)).inter
+      (MeasureTheory.measurableSet_ne_id (measurable ψ))
   have h1 : unitMeas.real {x : ℝ | (⁅φ⁻¹, ψ⁻¹⁆) x ≠ x}
       ≤ unitMeas.real (A ∪ ⇑φ ⁻¹' A ∪ ⇑ψ ⁻¹' A) :=
     measureReal_mono (commutator_inv_supp_subset φ ψ)

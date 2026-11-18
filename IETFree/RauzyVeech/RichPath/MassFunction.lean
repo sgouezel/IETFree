@@ -21,8 +21,8 @@ constant form, which is false; the exit family's mass decays like `Cb⁻²`).
 and large (`one_lt_balanceConstant`, `two_mul_lt_balanceConstant`, `le_balanceConstant`), and
 `balanceStep_of_extMassGen` is the constant
 chase of the balance step with `1/C₂` replaced by `1/(M Cb)` throughout: since
-`BalanceStep` takes an arbitrary `K : ℝ → ℝ`, nothing else moves. `one_div_mul_two_eq` is
-the elementary arithmetic used in the chase. -/
+`BalanceStep` takes an arbitrary `K : ℝ → ℝ`, nothing else moves.  The one arithmetic step of
+the chase, `1/(M Cb * 2) = (1/2)·(1/(M Cb))`, is `field_simp`. -/
 
 open Finset IntervalExchange.IETDatum₂
 open scoped BigOperators
@@ -78,10 +78,6 @@ theorem le_balanceConstant {M : ℝ → ℝ} {C2 Cb : ℝ} (hMpos : 0 < M Cb) :
   have h1 : (0 : ℝ) ≤ 2 * M Cb + 1 := by linarith
   simp only [balanceConstant]
   nlinarith
-
-/-- A numerical identity used in the mass bookkeeping. -/
-theorem one_div_mul_two_eq {x : ℝ} (hx : x ≠ 0) : 1 / (x * 2) = 1 / 2 * (1 / x) := by
-  field_simp
 
 variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 
@@ -252,7 +248,7 @@ theorem balanceStep_of_extMassGen (P : IETDatum₂ α n) (hP : P.Irreducible) (h
   have hhalf : (1 / 2) * (1 / (M Cb)) < (1 / 2) * ∑ η ∈ T2, cond P w η :=
     mul_lt_mul_of_pos_left hT2mass (by norm_num)
   have hSgt : 1 / (M Cb * 2) < ∑ x ∈ S, cond P w x := by
-    rw [hSmass, one_div_mul_two_eq (ne_of_gt hMpos)]
+    rw [hSmass, show 1 / (M Cb * 2) = 1 / 2 * (1 / M Cb) by field_simp]
     linarith [hsum_lt, hfac, hhalf]
   refine ⟨T, hTpf, ?_, ?_⟩
   · -- the mass: `1/(K Cb) < 1/(2 C₂) ≤ mass(T)`

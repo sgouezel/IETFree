@@ -5,6 +5,7 @@ Authors: Sébastien Gouëzel
 -/
 module
 
+public import IETFree.ForMathlib.List
 public import IETFree.RauzyVeech.RichPath.LargeLetter
 public import IETFree.RauzyVeech.RichPath.LevelWords
 
@@ -336,16 +337,6 @@ theorem prefixFree_stopFam (P : IETDatum₂ α n) (A' : Finset α) (w : List Boo
       exact List.eq_nil_of_length_eq_zero (by omega)
     rw [ht, List.append_nil]
 
-/-- A word of length `n + 1` is its prefix of length `n` followed by its `n`-th letter. -/
-theorem take_succ_getD (l : List Bool) {n : ℕ} (h : n < l.length) :
-    l.take (n + 1) = l.take n ++ [l.getD n false] := by
-  rw [List.take_add_one]
-  have hsome : l[n]? = some (l.getD n false) := by
-    rw [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem h]
-    rfl
-  rw [hsome]
-  rfl
-
 /-- **The `A'`-heights do not move across an exit arrow.** -/
 theorem colSum_eq_of_exitArrow (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     {A' : Finset α} {w μ : List Bool} {e : Bool}
@@ -367,7 +358,7 @@ theorem exitArrow_of_stopW_take {P : IETDatum₂ α n} {A' : Finset α} {w : Lis
   have hgl : g - 1 < δ.length := by omega
   have h1 : δ.take g = δ.take (g - 1) ++ [δ.getD (g - 1) false] := by
     rw [show g = g - 1 + 1 by omega]
-    exact take_succ_getD δ hgl
+    exact List.take_succ_getD δ hgl false
   have h2 : (δ.take g).dropLast = δ.take (g - 1) := by
     rw [h1, List.dropLast_concat]
   have h5 : (δ.take g).dropLast ++ [e] = δ.take (g - 1) ++ [δ.getD (g - 1) false] := by
@@ -457,7 +448,7 @@ theorem exists_stopfam_of_good (P : IETDatum₂ α n) (hP : P.Irreducible)
     rcases hcase with ⟨hH', -⟩ | ⟨hsucc, hEA, -⟩
     · exact absurd hH' hH
     have hjlt : j < δ.length := by omega
-    have hsplitj : δ.take (j + 1) = δ.take j ++ [δ.getD j false] := take_succ_getD δ hjlt
+    have hsplitj : δ.take (j + 1) = δ.take j ++ [δ.getD j false] := List.take_succ_getD δ hjlt false
     have hlenS : (δ.take (j + 1)).length = j + 1 := by
       rw [List.length_take, Nat.min_eq_left (by omega)]
     have hdropS : (δ.take (j + 1)).dropLast = δ.take j := by

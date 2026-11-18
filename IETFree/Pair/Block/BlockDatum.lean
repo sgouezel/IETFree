@@ -451,14 +451,14 @@ theorem rho_lt_iff {D : IETDatum d} {E : IETDatum e}
       exact Finset.filter_congr (fun j _ => himg j)
     rw [h1]
     simp only [Fin.lt_def]
-    exact card_filter_lt ρ (le_of_lt (ρ i).isLt)
+    exact card_filter_val_lt ρ (le_of_lt (ρ i).isLt)
   have hBcard : B.card = k.val := by
     rw [hB]
     have h1 : (Finset.univ.filter (fun j : Fin n => listImageLeft ρ S j < S k))
         = Finset.univ.filter (fun j : Fin n => j.val < k.val) := by
       exact Finset.filter_congr (fun j _ => hcell j)
     rw [h1]
-    exact card_filter_lt (Equiv.refl (Fin n)) (show k.val ≤ n by have := k.isLt; omega)
+    exact card_filter_val_lt (Equiv.refl (Fin n)) (show k.val ≤ n by have := k.isLt; omega)
   constructor
   · intro hik
     -- `i < k` makes the first segment a proper part of the second, so `(ρ i).val < k.val`

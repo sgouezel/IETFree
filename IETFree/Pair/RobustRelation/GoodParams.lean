@@ -33,11 +33,12 @@ The definitions and the structural lemmas at an arbitrary threshold — `smallCo
 `coeffs_zero_of_good_with_const_at`, `isBadParamAt_mem_badSet` — are in
 `Pair/ReductionData.lean`, beside the paper's `N = 4` case they generalise, which is stated
 *through* them: `smallCoeffs := smallCoeffsAt 4`, `IsBadParam := IsBadParamAt 4`,
-`goodParams := goodParamsAt 4`, and `isBadParam`/`isClosed_badParam`/`isOpen_goodParams`/
+`goodParams := goodParamsAt 4`, and `isBadParam_iff_coeffs`/`isClosed_badParam`/
+`isOpen_goodParams`/
 `isBadParam_mem_badSet` are the `N = 4` instances.  What is left here is what needs the threshold to
 vary:
 
-* **§1** `ae_goodParamsAt_all`, `ae_goodParamsAt_all_large`: the "countably many affine hyperplanes"
+* **§1** `ae_goodParamsAt_all_large`: the "countably many affine hyperplanes"
   of Remark 1.2 — almost every point is good at *some*, indeed at every *large*, threshold.  The
   proof goes through the Diophantine tube estimates of `Pair/Diophantine.lean` (`badSet`,
   `ae_eventually_notMem_badSet`), not through a separate hyperplane computation.
@@ -51,12 +52,17 @@ vary:
   lengths with coefficients bounded by `N` that vanishes at a point good at `2 * N` is constant with
   the two constants cancelling, hence vanishes identically on the simplex.
 
+Nothing in §2–§4 is on the main proof path: Theorem A is stated at `Ω'`, so these are the
+machine-checked content of the source's Remark 1.2 — the hyperplanes that §2–§3 count are the ones
+it mentions — and of the `2 n` threshold that the displacements of a word raise, kept as a statement
+rather than consumed by a proof.
+
 The parameter space is `PReal d e`, the **free** lengths of the two exchanges, and the threshold is
 a natural number `N` against which the coefficients of the relations — the constant term included —
 are compared.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -71,19 +77,18 @@ at a point of the two free regions, being inside the tube `badSet N` is incompat
 Diophantine-tube estimate applied to the relation itself, and almost every point is outside
 `badSet N` for all large `N`. -/
 
-/-- **Almost every point of the product of the two free regions is good at some threshold**: the
-complement of `⋃ N, goodParamsAt N` is a countable union of affine hyperplanes, hence null. -/
-theorem ae_goodParamsAt_all {d e : ℕ} [NeZero d] [NeZero e] :
+/-- **Almost every point is good at every large threshold**: §3 gives only that almost every point
+is good at *some* threshold, while a word of length `n` imposes its own threshold `4 * n + 4`, so
+what the robustness argument needs is goodness at every large `N`. -/
+theorem ae_goodParamsAt_all_large {d e : ℕ} [NeZero d] [NeZero e] :
     ∀ᵐ z ∂((volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e))),
-      ∃ N, z ∈ goodParamsAt N d e := by
+      ∀ᶠ N in atTop, z ∈ goodParamsAt N d e := by
   filter_upwards [ae_eventually_notMem_badSet (simplexRegion d) (simplexRegion e),
     ae_mem_simplexRegion_prod (d := d) (e := e)] with z hz hmemz
-  obtain ⟨N₀, hzN⟩ := Filter.eventually_atTop.mp hz
-  refine ⟨N₀, ?_⟩
-  intro hbad
-  refine hzN N₀ le_rfl (isBadParamAt_mem_badSet ⟨simplexRegion_subset_ubox d hmemz.1,
-    simplexRegion_subset_ubox e hmemz.2⟩ le_rfl ?_)
-  rwa [toReal_simplexMap hmemz.1.1 hmemz.2.1]
+  refine hz.mono ?_
+  intro N hN hbad
+  exact hN (isBadParamAt_mem_badSet ⟨simplexRegion_subset_ubox d hmemz.1,
+    simplexRegion_subset_ubox e hmemz.2⟩ le_rfl (by rwa [toReal_simplexMap hmemz.1.1 hmemz.2.1]))
 
 /-! ## 2. The hyperplanes are null
 
@@ -129,7 +134,7 @@ theorem volume_eq_zero_intLinear_eq {m : ℕ} {f : Fin m → ℤ} (i : Fin m) (h
       simp only [Set.mem_ofPred_eq, Set.mem_singleton_iff]
       rw [key t s, MeasurableEquiv.piFinSuccAbove_symm_apply, insertNthEquiv_apply_pair]
       rw [hS]
-      simp only [Set.mem_ofPred_eq, sum_insertNth]
+      simp only [Set.mem_ofPred_eq, Finset.sum_insertNth]
       constructor
       · intro h
         rw [eq_div_iff hfi]
@@ -250,7 +255,10 @@ theorem volume_compl_iUnion_goodParamsAt {d e : ℕ} :
   measure_mono_null compl_iUnion_goodParamsAt_subset volume_iUnion_relReal_eq_zero
 
 /-- **The complement is null for the measure of the two free regions**: the complement of the union
-of the good sets is null for the measure `(volume|_{Δ}) × (volume|_{Δ})` of the two simplices. -/
+of the good sets is null for the measure `(volume|_{Δ}) × (volume|_{Δ})` of the two simplices.
+
+API, not a step: the theorems below use the `volume` form (`volume_compl_iUnion_goodParamsAt`), and
+this is its restatement for the measure the theorems are stated with. -/
 theorem measure_compl_iUnion_goodParamsAt {d e : ℕ} :
     ((volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e)))
       ((⋃ N, goodParamsAt N d e)ᶜ : Set (PReal d e)) = 0 := by
@@ -341,7 +349,11 @@ theorem relation_of_good_at {d e : ℕ} [NeZero d] [NeZero e] {p : (Fin d → �
     · rfl
 
 /-- **The `2 n` threshold, in the free coordinates**: `relation_of_good_at` for the length vectors
-`simplexMap d q.1`, `simplexMap e q.2` of a point of the two free regions. -/
+`simplexMap d q.1`, `simplexMap e q.2` of a point of the two free regions.
+
+API, not a step: the paper's Remark 1.2 is proved here at `Ω'` (every threshold), so the `2 n`
+form is kept as the machine-checked statement of the threshold corollary rather than used by a
+proof. -/
 theorem relation_of_good_simplexMap_at {d e : ℕ} [NeZero d] [NeZero e] {q : PReal d e} {N : ℕ}
     (hreg : q.1 ∈ simplexRegion d ∧ q.2 ∈ simplexRegion e)
     (hgood : ¬ IsBadParamAt (2 * N) q) {a : Fin d → ℤ} {b : Fin e → ℤ}
@@ -358,9 +370,8 @@ theorem relation_of_good_simplexMap_at {d e : ℕ} [NeZero d] [NeZero e] {q : PR
   rwa [toReal_simplexMap hreg.1.1 hreg.2.1]
 
 /-- **A vanishing combination at a good point vanishes identically**: the form of
-`relation_of_good_simplexMap_at` used for the displacements of a word, which are lattice
-combinations of the lengths with no constant term and coefficients bounded by the length of the
-word. -/
+`relation_of_good_simplexMap_at` taken by the displacement of a word, a lattice combination of the
+lengths with no constant term and coefficients bounded by the length of the word. -/
 theorem comb_simplexMap_eq_zero_of_good_at {d e : ℕ} [NeZero d] [NeZero e] {q₀ : PReal d e}
     {N : ℕ} (hreg : q₀.1 ∈ simplexRegion d ∧ q₀.2 ∈ simplexRegion e)
     (hgood : ¬ IsBadParamAt (2 * N) q₀) {a : Fin d → ℤ} {b : Fin e → ℤ}
@@ -396,18 +407,5 @@ theorem comb_simplexMap_eq_zero_of_good_at {d e : ℕ} [NeZero d] [NeZero e] {q�
       _ = (b (lastPos (l + 1)) : ℝ) := by rw [hmu, mul_one]
   rw [e1, e2]
   exact_mod_cast hsum
-
-/-- **Almost every point is good at every large threshold**: the form needed when the threshold is
-imposed by the word rather than by the point, since the witness of the relation at a point is fixed
-(`w`) while the threshold provided by `ae_goodParamsAt_all` is not. -/
-theorem ae_goodParamsAt_all_large {d e : ℕ} [NeZero d] [NeZero e] :
-    ∀ᵐ z ∂((volume.restrict (simplexRegion d)).prod (volume.restrict (simplexRegion e))),
-      ∀ᶠ N in atTop, z ∈ goodParamsAt N d e := by
-  filter_upwards [ae_eventually_notMem_badSet (simplexRegion d) (simplexRegion e),
-    ae_mem_simplexRegion_prod (d := d) (e := e)] with z hz hmemz
-  refine hz.mono ?_
-  intro N hN hbad
-  exact hN (isBadParamAt_mem_badSet ⟨simplexRegion_subset_ubox d hmemz.1,
-    simplexRegion_subset_ubox e hmemz.2⟩ le_rfl (by rwa [toReal_simplexMap hmemz.1.1 hmemz.2.1]))
 
 end IntervalExchange.Pair

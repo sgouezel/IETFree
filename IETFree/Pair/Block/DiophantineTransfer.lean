@@ -34,7 +34,7 @@ the Diophantine transfer, both indexed by `hmono : ∀ q, StrictMono fun k => G.
 point `q`, which is what the assembly uses.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal

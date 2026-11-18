@@ -38,7 +38,7 @@ computed by subtracting the displacement of `e'`) and `inv_translate` (the cuts 
 `Sf.image f`).
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory
 open scoped BigOperators ENNReal NNReal
@@ -82,18 +82,6 @@ lemma isLat_mono {k l : ℤ} (hkl : k ≤ l) {x : ℝ} (hx : IsLat lam mu k x) :
   obtain ⟨a, b, ha, hb, rfl⟩ := hx
   exact ⟨a, b, fun i => le_trans (ha i) hkl, fun j => le_trans (hb j) hkl, rfl⟩
 
-lemma sum_sub_mul {n : ℕ} {lam : Fin n → ℝ} (a1 a2 : Fin n → ℤ) :
-    (∑ i, ((a1 i : ℝ) - (a2 i : ℝ)) * lam i)
-      = (∑ i, (a1 i : ℝ) * lam i) - ∑ i, (a2 i : ℝ) * lam i := by
-  rw [← Finset.sum_sub_distrib]
-  exact Finset.sum_congr rfl fun i _ => by ring
-
-lemma sum_add_mul {n : ℕ} {lam : Fin n → ℝ} (a1 a2 : Fin n → ℤ) :
-    (∑ i, ((a1 i : ℝ) + (a2 i : ℝ)) * lam i)
-      = (∑ i, (a1 i : ℝ) * lam i) + ∑ i, (a2 i : ℝ) * lam i := by
-  rw [← Finset.sum_add_distrib]
-  exact Finset.sum_congr rfl fun i _ => by ring
-
 lemma isLat_sub {k l : ℤ} {x y : ℝ} (hx : IsLat lam mu k x) (hy : IsLat lam mu l y) :
     IsLat lam mu (k + l) (x - y) := by
   obtain ⟨a1, b1, ha1, hb1, rfl⟩ := hx
@@ -113,7 +101,7 @@ lemma isLat_sub {k l : ℤ} {x y : ℝ} (hx : IsLat lam mu k x) (hy : IsLat lam 
     omega
   · simp only [comb]
     push_cast
-    rw [sum_sub_mul a1 a2, sum_sub_mul b1 b2]
+    simp only [sub_mul, Finset.sum_sub_distrib]
     ring
 
 lemma isLat_add {k l : ℤ} {x y : ℝ} (hx : IsLat lam mu k x) (hy : IsLat lam mu l y) :
@@ -135,7 +123,7 @@ lemma isLat_add {k l : ℤ} {x y : ℝ} (hx : IsLat lam mu k x) (hy : IsLat lam 
     omega
   · simp only [comb]
     push_cast
-    rw [sum_add_mul a1 a2, sum_add_mul b1 b2]
+    simp only [add_mul, Finset.sum_add_distrib]
     ring
 
 lemma isLat_neg {k : ℤ} {x : ℝ} (hx : IsLat lam mu k x) : IsLat lam mu k (-x) := by

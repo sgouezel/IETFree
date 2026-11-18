@@ -21,7 +21,7 @@ The truncation lemma that the assembly uses is `GoodRegion.exists_isIntAffine_tr
 `IETFree.Pair.Block.DiophantineTransfer`, where the integer-affine families are built directly.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal

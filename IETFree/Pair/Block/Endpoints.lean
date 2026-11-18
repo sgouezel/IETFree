@@ -389,7 +389,7 @@ noncomputable def blockLam (G : GoodRegion d e π σ q₀) {q : PReal d e} (hq :
 /-- The defining equation of `G.blockLam`, as a rewrite rule (the proof of positivity is
 irrelevant, so this can be used to compare a `G.blockLam` with the `blockLam` of a length
 vector). -/
-@[simp] theorem blockLam_def (G : GoodRegion d e π σ q₀) {q : PReal d e} (hq : q ∈ G.O)
+theorem blockLam_def (G : GoodRegion d e π σ q₀) {q : PReal d e} (hq : q ∈ G.O)
     (k : ℕ) {l : ℕ} (hkl : k < l) (hln : l ≤ G.n) :
     G.blockLam hq k hkl hln
       = IntervalExchange.Pair.blockLam (G.cellLen hq) k hkl hln (G.cellLen_pos hq) := (rfl)

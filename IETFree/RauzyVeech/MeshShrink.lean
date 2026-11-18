@@ -8,7 +8,6 @@ module
 public import IETFree.RauzyVeech.ChildVolume
 public import IETFree.RauzyVeech.ColDiam
 public import IETFree.RauzyVeech.NameInfinite
-public import IETFree.RauzyVeech.PrefixWord
 
 /-!
 # Corollary 2: the base interval of the Rauzy induction shrinks to a point
@@ -40,7 +39,7 @@ gives that every
    letter would be a main name only finitely often.
 3. **Column sums grow.**  For `colSumInt k b = ∑_a (Q_k)_{ab}` the one-step formula
    `colSumInt (k+1) b = colSumInt k b + [b = secondLetter k] · colSumInt k (mainLetter k)`
-   (from `colsum_mul_one_add_single`) and
+   (from `Matrix.sum_mul_one_add_single`) and
    `colSumInt k b ≥ 1` give `colSumInt k b ≥ M` eventually, for every letter `b` and every `M`.
 4. **Conclusion.**  `Λ := ∑_a lam a` satisfies
    `Λ = ∑_a ∑_c (Q_k)_{ac} w k c ≥ (colSumInt k b) · w k b`,
@@ -312,7 +311,7 @@ theorem colSumInt_succ (hP : P.Irreducible) (hn : 2 ≤ n) (k : ℕ) (b : α) :
   rw [colSumInt, colSumInt, colSumInt, Qm_succ,
     IETDatum₂.rvMat_eq_one_add_single (pathVertex P p k) (p k) hne,
     mainLetter_eq_last, secondLetter_eq_last]
-  exact colsum_mul_one_add_single (Qm P p k) _ _ b
+  exact Matrix.sum_mul_one_add_single (Qm P p k) _ _ b
 
 /-- The column sums are nondecreasing. -/
 theorem colSumInt_succ_le (hP : P.Irreducible) (hn : 2 ≤ n) (k : ℕ) (b : α) :

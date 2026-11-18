@@ -435,6 +435,7 @@ theorem leftEnd_eq_filter {n : ℕ} (lam : Fin n → ℝ≥0) (i : Fin n) :
 
 /-! ### The block permutation -/
 
+@[simp]
 theorem blockPerm_apply_val {n : ℕ} {π : Equiv.Perm (Fin n)} {k l : ℕ} (hkl : k < l) (hln : l ≤ n)
     (hstab : ∀ i : Fin n, (i.val < k ↔ (π i).val < k) ∧ (i.val < l ↔ (π i).val < l))
     (t : Fin (l - k)) :
@@ -905,7 +906,7 @@ theorem comp_image_cell {d e : ℕ} [NeZero d] [NeZero e] {lam : Fin d → ℝ�
     (mkIET1' mu σ hm * mkIET1' lam π hl) '' Set.Ico (S i.castSucc) (S i.succ)
       = Set.Ico (listImageLeft ρ S i) (listImageLeft ρ S i + (S i.succ - S i.castSucc)) := by
   have hab : S i.castSucc < S i.succ := P.mono (Fin.castSucc_lt_succ (i := i))
-  rw [image_Ico_add (fun x hx1 hx2 => P.cell i x hx1 hx2), listLeftEnd_eq P.mono P.zero i]
+  rw [Set.image_Ico_add (fun x hx1 hx2 => P.cell i x hx1 hx2), listLeftEnd_eq P.mono P.zero i]
   congr 1
   · ring
   · ring

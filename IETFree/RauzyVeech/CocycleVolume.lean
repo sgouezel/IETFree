@@ -79,7 +79,7 @@ theorem det_rvMat (P : IETDatum₂ α n) (ε : Bool) : (P.rvMat ε).det = 1 := b
   by_cases h : P.last ε = P.last (!ε)
   · rw [rvMat_eq_one_of_last_eq P ε h, Matrix.det_one]
   · rw [rvMat_eq_one_add_single P ε h]
-    exact det_one_add_single_of_ne _ _ h 1
+    exact Matrix.det_one_add_single_of_ne _ _ h 1
 
 /-- **The renormalisation matrix is unimodular**: `det Q(γ) = 1`. -/
 theorem Path.Q_det (P : IETDatum₂ α n) (γ : List Bool) : (Path.Q P γ).det = 1 := by
@@ -99,11 +99,11 @@ variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 theorem rvMat_colsum_ge (P : IETDatum₂ α n) (ε : Bool) (b : α) :
     1 ≤ ∑ a, P.rvMat ε a b := by
   by_cases h : P.last ε = P.last (!ε)
-  · rw [rvMat_eq_one_of_last_eq P ε h, colsum_one]
+  · rw [rvMat_eq_one_of_last_eq P ε h, Matrix.sum_one_apply]
   · rw [rvMat_eq_one_add_single P ε h]
     have h1 : (∑ a, (1 + Matrix.single (P.last ε) (P.last (!ε)) (1 : ℤ) : Matrix α α ℤ) a b)
         = 1 + ∑ a, Matrix.single (P.last ε) (P.last (!ε)) (1 : ℤ) a b := by
-      simp only [Matrix.add_apply, Finset.sum_add_distrib, colsum_one]
+      simp only [Matrix.add_apply, Finset.sum_add_distrib, Matrix.sum_one_apply]
     rw [h1]
     have h2 : 0 ≤ ∑ a, Matrix.single (P.last ε) (P.last (!ε)) (1 : ℤ) a b :=
       Finset.sum_nonneg fun a _ => by
@@ -113,7 +113,7 @@ theorem rvMat_colsum_ge (P : IETDatum₂ α n) (ε : Bool) (b : α) :
 theorem Path.Q_colsum_pos (P : IETDatum₂ α n) (γ : List Bool) (b : α) :
     0 < ∑ a, Path.Q P γ a b := by
   induction γ generalizing P with
-  | nil => rw [Path.Q_nil, colsum_one]; norm_num
+  | nil => rw [Path.Q_nil, Matrix.sum_one_apply]; norm_num
   | cons e es ih =>
     rw [Path.Q_cons]
     have hstep : (∑ a, (P.rvMat e * Path.Q (P.rvStep e) es) a b)
@@ -300,7 +300,7 @@ theorem image_openRealSimplex_eq (N : Matrix (Fin (m + 1)) (Fin (m + 1)) ℤ)
   · rintro ⟨w, ⟨v, hvreg, rfl⟩, rfl⟩
     exact ⟨chart m v, ⟨v, hvreg, rfl⟩, hchartv v⟩
 
-theorem colsum_one_real (b : Fin (m + 1)) :
+theorem Matrix.sum_one_apply_real (b : Fin (m + 1)) :
     (∑ a : Fin (m+1), (1 : Matrix (Fin (m+1)) (Fin (m+1)) ℝ) a b) = 1 := by
   rw [Finset.sum_eq_single b]
   · rw [Matrix.one_apply, ite_eq_left rfl]
@@ -318,7 +318,7 @@ theorem inv_colsum {M : Matrix (Fin (m + 1)) (Fin (m + 1)) ℝ} (hcol : ∀ j, �
     refine Finset.sum_congr rfl fun i _ => ?_
     rw [← Finset.sum_mul, hcol i, one_mul]
   rw [← key, hmul]
-  exact colsum_one_real j
+  exact Matrix.sum_one_apply_real j
 
 /-- `inducedMap (M⁻¹)` is a left and right inverse of `inducedMap M`. -/
 theorem inducedMap_inv_left {M : Matrix (Fin (m + 1)) (Fin (m + 1)) ℝ} (hcol : ∀ j, ∑ i, M i j = 1)

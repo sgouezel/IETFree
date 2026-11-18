@@ -23,7 +23,7 @@ instances of the certificate `WordData`.
 -/
 
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -210,6 +210,7 @@ theorem withTop_revCut_mono {d e : ℕ} [NeZero d] (σ₀ : Equiv.Perm (Fin d)) 
     rw [Equiv.sum_comp σ₀ (fun i => (simplexMap d q.1 i : ℝ))]
     exact sum_coe_eq_one (simplexMap_mem_simplex_fin hq.1 hq.2)
   intro a b hab
+  -- `withTop` is a definition, so its order is the order on the underlying values at `q`
   change (withTop (revCut (e := e) σ₀) a) q < (withTop (revCut (e := e) σ₀) b) q
   rw [Fin.lt_def] at hab
   have hmem : ∀ i : Fin d, withTop (revCut (e := e) σ₀) i.castSucc q
@@ -249,8 +250,7 @@ theorem withTop_revCut_succ {d e : ℕ} [NeZero d] (σ₀ : Equiv.Perm (Fin d)) 
     · have hj' : ¬ (σ₀.symm j).val < k.val + 1 := by omega
       rw [ite_eq_right hj, ite_eq_right hj']
   · rw [dite_eq_right h]
-    have hmax : ∀ j : Fin d, j ≤ k := by
-      intro j
+    have hmax (j : Fin d) : j ≤ k := by
       rw [Fin.le_def]
       have := k.isLt
       omega
@@ -539,6 +539,7 @@ theorem withTop_revCutR_mono {d e : ℕ} [NeZero e] (σ₀ : Equiv.Perm (Fin e))
     rw [Equiv.sum_comp σ₀ (fun i => (simplexMap e q.2 i : ℝ))]
     exact sum_coe_eq_one (simplexMap_mem_simplex_fin hq.1 hq.2)
   intro a b hab
+  -- as for `revCut`: the order of `withTop` is the order of the values at `q`
   change (withTop (revCutR (d := d) (e := e) σ₀) a) q < (withTop (revCutR (d := d) (e := e) σ₀) b) q
   rw [Fin.lt_def] at hab
   have hmem : ∀ i : Fin e, withTop (revCutR (d := d) (e := e) σ₀) i.castSucc q
@@ -578,8 +579,7 @@ theorem withTop_revCutR_succ {d e : ℕ} [NeZero e] (σ₀ : Equiv.Perm (Fin e))
     · have hj' : ¬ (σ₀.symm j).val < k.val + 1 := by omega
       rw [ite_eq_right hj, ite_eq_right hj']
   · rw [dite_eq_right h]
-    have hmax : ∀ j : Fin e, j ≤ k := by
-      intro j
+    have hmax (j : Fin e) : j ≤ k := by
       rw [Fin.le_def]
       have := k.isLt
       omega

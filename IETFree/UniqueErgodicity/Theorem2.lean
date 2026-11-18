@@ -49,7 +49,7 @@ The iterate bridge for the left germs is in `UniqueErgodicity/Germ/Iterate.lean`
 uses them directly.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter Set Topology
 open scoped ENNReal NNReal BigOperators
@@ -59,7 +59,7 @@ open IntervalExchange.IET
 namespace IntervalExchange.UniqueErgodicity
 
 /-- Lebesgue measure on `[0, 1)` has no atoms: this is the `hlam` hypothesis of
-`MeasPrep.lift_unique_on_Ico`. -/
+`lift_unique_on_Ico` of `MeasPrep.lean`. -/
 theorem unitMeas_singleton (x : ℝ) : unitMeas {x} = 0 := by
   rw [unitMeas, Measure.restrict_apply (measurableSet_singleton x)]
   exact measure_mono_null Set.inter_subset_left Real.volume_singleton
@@ -191,7 +191,8 @@ to Lebesgue measure on `[0, 1)`, as soon as Lebesgue measure is the only invaria
 the exchange carried by `[0, 1)`.
 
 The proof pushes `ν` forward to the whole split interval and applies the abstract transfer theorem
-`Transfer.map_map_eq_self`: the defect is carried by the left germs of the finite set `J` of
+`map_map_eq_self` (in `Transfer/Basic.lean`): the defect is carried by the left germs of the
+finite set `J` of
 points at
 which the left limit differs from the exchange, and each of these germs carries no mass — for `0`
 because `leftGerm 0 ∉ [0⁺, 1⁻]`, for the others because (H2) makes their orbit infinite. -/

@@ -152,6 +152,7 @@ noncomputable def simplexVolume (d : ℕ) : Measure (Fin d → ℝ≥0) :=
   Measure.map (simplexMap d) (volume.restrict (simplexRegion d))
 
 /-- The definition of `simplexVolume`, as an equation: use it rather than `unfold` (`simp` does not
+@[simp]
 know the equation, since `simplexVolume` is not a `simp` lemma). -/
 theorem simplexVolume_def (d : ℕ) :
     simplexVolume d = Measure.map (simplexMap d) (volume.restrict (simplexRegion d)) := (rfl)
@@ -591,6 +592,7 @@ noncomputable def mkIETEquiv {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π 
     ring
 
 /-- **The coercion of `mkIETEquiv`**: as a map, the exchange with lengths `lam` and permutation `π`
+@[simp]
 shifted by `a` is `mkIETFun lam π a`.  This is an equality of *functions* (a coercion lemma, and a
 definitional one), not the value at a point; hence `coe_mkIETEquiv` and not `mkIETEquiv_apply`. -/
 theorem coe_mkIETEquiv {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
@@ -965,7 +967,7 @@ def coeHom {a b : ℝ} : IET a b →* Equiv.Perm ℝ where
   map_one' := rfl
   map_mul' _ _ := rfl
 
-@[simp] theorem coeHom_apply {a b : ℝ} (e : IET a b) :
+theorem coeHom_apply {a b : ℝ} (e : IET a b) :
     coeHom e = e.toEquiv := (rfl)
 
 /-- **Iterating an exchange**: the `n`-th power in the group `IET a b` is the `n`-th iterate of the
@@ -1023,10 +1025,7 @@ theorem mkIET1_of_mem {n : ℕ} [NeZero n] {lam : Fin n → ℝ≥0} {π : Equiv
     (h : (∑ i, lam i) = 1) : mkIET1 lam π = mkIET1' lam π h := by
   rw [mkIET1, dite_eq_left h]
 
-/-- Off the simplex, the total `mkIET1` is the identity. -/
-theorem mkIET1_of_notMem {n : ℕ} [NeZero n] {lam : Fin n → ℝ≥0} {π : Equiv.Perm (Fin n)}
-    (h : ¬ (∑ i, lam i) = 1) : mkIET1 lam π = 1 := by
-  rw [mkIET1, dite_eq_right h]
+
 
 /-- **The function of the total `mkIET1` on the simplex** is `mkIETFun lam π 0`. -/
 theorem coe_mkIET1 {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))

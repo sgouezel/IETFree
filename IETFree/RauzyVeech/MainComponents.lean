@@ -17,8 +17,10 @@ vector proportional to `λ`) and the positive-block vocabulary `HasPositiveBlock
 `HasPositiveBlocks` that the ray criterion is fed with.
 
 Both are definitions of *notions*, not assumptions: the theorems that produce them are
-`RauzyVeech.PosBlocks.positiveBlocksRay` (positive blocks with one entry bound at unbounded times
-give the ray condition, an everywhere statement) and `RauzyVeech.RayPointwise.rayCondition_of_cols`.
+`positiveBlocksRay`, in `PositiveBlocksRay.lean` (positive blocks with one entry bound at unbounded
+times
+give the ray condition, an everywhere statement) and `rayCondition_of_cols`, in
+`Ray/Pointwise.lean`.
 The a.e. assembly — richness plus the uniform bound on the entries gives those blocks a.e., which
 gives the ray condition a.e. — is in `IETFree/UniqueErgodicity/MainTheorem.lean`, above the modules
 that prove its two inputs.

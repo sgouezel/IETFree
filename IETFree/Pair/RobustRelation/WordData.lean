@@ -150,14 +150,17 @@ theorem IsFreeLat.add {d e : ℕ} {K L : ℤ} {f g : ParamAffine d e} (hf : IsFr
     have := abs_add_le (a1 i) (a2 i)
     have h1' := ha1 i
     have h2' := ha2 i
+    -- at the point, the goal is the triangle inequality for the two bounds `h1'`, `h2'`
     change |a1 i + a2 i| ≤ K + L
     omega
   · intro j
     have := abs_add_le (b1 j) (b2 j)
     have h1' := hb1 j
     have h2' := hb2 j
+    -- likewise for the `b` block
     change |b1 j + b2 j| ≤ K + L
     omega
+  -- `(f + g) q` is the pointwise sum; the right side is the `(c₁ + c₂) + ∑` form
   · change f q + g q = _
     rw [h1 q, h2 q]
     have e1 : (∑ i, (((a1 + a2) i : ℤ) : ℝ) * q.1 i)
@@ -178,6 +181,7 @@ theorem IsFreeLat.neg {d e : ℕ} {K : ℤ} {f : ParamAffine d e} (hf : IsFreeLa
   · simpa using hc
   · intro i; simpa using ha i
   · intro j; simpa using hb j
+  -- `(-f) q` is `-(f q)`, so the representation of `f` reads off
   · change -(f q) = _
     rw [hrep q]
     have e1 : (∑ i, ((-a) i : ℝ) * q.1 i) = -(∑ i, (a i : ℝ) * q.1 i) := by
@@ -193,6 +197,7 @@ theorem IsFreeLat.sub {d e : ℕ} {K L : ℤ} {f g : ParamAffine d e} (hf : IsFr
     (hg : IsFreeLat L g) : IsFreeLat (K + L) (f - g) := by
   have h : f - g = f + (-g) := by
     ext q
+    -- subtraction of affine maps is pointwise, and `a - b = a + -b`
     change f q - g q = f q + -(g q)
     ring
   rw [h]
@@ -210,6 +215,7 @@ theorem IsFreeLat.eq_of_eq_at_omega {d e : ℕ} {q₀ : PReal d e}
   obtain ⟨c, a, b, -, -, -, hrep⟩ := hf.sub hg
   have hrel : relReal (ofCoeffs c a b) q₀ = 0 := by
     rw [relReal_ofCoeffs, ← hrep q₀]
+    -- the value of `f - g` at `q₀`
     change f q₀ - g q₀ = 0
     rw [h, sub_self]
   have hS1 : (0 : ℤ) ≤ ∑ i : Fin (d - 1), |a i| := Finset.sum_nonneg (fun i _ => abs_nonneg _)
@@ -283,12 +289,14 @@ theorem IsFullLat.isFreeLat {d e : ℕ} [NeZero d] [NeZero e] {K : ℤ} {f : Par
   · intro i
     have h1 := abs_le.mp (hA i.castSucc)
     have h2 := abs_le.mp (hA (Fin.last m))
+    -- the difference of two coefficients bounded by `K`, each half of `2 * K`
     change |A i.castSucc - A (Fin.last m)| ≤ 2 * K
     rw [abs_le]
     constructor <;> omega
   · intro j
     have h1 := abs_le.mp (hB j.castSucc)
     have h2 := abs_le.mp (hB (Fin.last n))
+    -- the same for the `B` family
     change |B j.castSucc - B (Fin.last n)| ≤ 2 * K
     rw [abs_le]
     constructor <;> omega
@@ -450,7 +458,12 @@ theorem pieceIndex_range {d e m : ℕ} {s : Fin (m + 1) → ParamAffine d e} {q 
 
 /-- **`Ω'` is the set of points at which no nontrivial integer relation vanishes**: the
 intersection of the good sets over all thresholds.  This is the paper's hypothesis, and the form in
-which the robustness theorem below is stated. -/
+which the robustness theorem below is stated.
+
+API, not a step: the proofs of this file work with the threshold form (`goodParamsAt N`)
+directly, so nothing in the tree applies this equivalence; it is kept because it is the
+machine-checked form of the sentence of the paper that defines `Ω'`, and because the README and
+`formalization.yaml` quote it. -/
 theorem forall_goodParams_iff {d e : ℕ} {q : PReal d e} :
     (∀ N, q ∈ goodParamsAt N (d := d) (e := e)) ↔
       ∀ t : CoeffData d e, NontrivialCoeff t → relReal t q ≠ 0 := by
@@ -623,8 +636,7 @@ theorem exists_sorted_cuts {ι : Type*} [Fintype ι] [Nonempty ι] {d e : ℕ}
       (∀ i, ∃ k, s k = C i) ∧ (∀ k, ∃ i, s k = C i) ∧ StrictMono fun k => s k q₀ := by
   classical
   set V : Finset ℝ := Finset.univ.image (fun i => C i q₀) with hV
-  have hVmem : ∀ y, y ∈ V ↔ ∃ i, C i q₀ = y := by
-    intro y
+  have hVmem (y) : y ∈ V ↔ ∃ i, C i q₀ = y := by
     rw [hV, Finset.mem_image]
     exact ⟨fun ⟨i, _, h⟩ => ⟨i, h⟩, fun ⟨i, h⟩ => ⟨i, Finset.mem_univ _, h⟩⟩
   have hVne : V.Nonempty :=
@@ -644,8 +656,7 @@ theorem exists_sorted_cuts {ι : Type*} [Fintype ι] [Nonempty ι] {d e : ℕ}
     omega
   set g := V.orderEmbOfFin rfl with hg
   have hgmono : StrictMono g := g.strictMono
-  have hgmem : ∀ k, g k ∈ V := by
-    intro k
+  have hgmem (k) : g k ∈ V := by
     rw [hg]
     exact Finset.orderEmbOfFin_mem _ _ k
   have hrange : ∀ y ∈ V, ∃ k, g k = y := by
@@ -661,8 +672,7 @@ theorem exists_sorted_cuts {ι : Type*} [Fintype ι] [Nonempty ι] {d e : ℕ}
     obtain ⟨k, -, hk⟩ := Finset.mem_image.mp hy'
     exact ⟨k, hk⟩
   have hsurj : ∀ k : Fin V.card, ∃ i, C i q₀ = g k := fun k => (hVmem _).mp (hgmem k)
-  have hgrange : ∀ i, ∃ k : Fin V.card, C i q₀ = g k := by
-    intro i
+  have hgrange (i) : ∃ k : Fin V.card, C i q₀ = g k := by
     obtain ⟨k, hk⟩ := hrange _ ((hVmem _).mpr ⟨i, rfl⟩)
     exact ⟨k, hk.symm⟩
   have hcardι : V.card ≤ Fintype.card ι := by
@@ -775,16 +785,19 @@ theorem wordData_append_singleton {d e : ℕ} [NeZero d] [NeZero e]
     | Sum.inr li => W.s li.1 - V.D li.2 with hCdef
   have hlat : ∀ i, IsFreeLat (2 * ((L ++ [b]).length : ℤ) + 2) (C i) := by
     rintro (j | ⟨l, i'⟩)
+    -- the `inl` branch of `C` is `V.s j`
     · change IsFreeLat (2 * ((L ++ [b]).length : ℤ) + 2) (V.s j)
       refine (V.hsLat j).mono ?_
       rw [hlen, hlen1]
       linarith
+    -- the `inr` branch of `C` is `W.s l - V.D i'`
     · change IsFreeLat (2 * ((L ++ [b]).length : ℤ) + 2) (W.s l - V.D i')
       refine ((W.hsLat l).sub (V.hD i')).mono ?_
       rw [hlen, hlen1]
       linarith
   have hlt : ∃ i j : (Fin (V.m + 1) ⊕ (Fin (W.m + 1) × Fin V.m)), C i q₀ < C j q₀ := by
     refine ⟨Sum.inl V.lz, Sum.inl V.lo, ?_⟩
+    -- both witnesses are `inl`, so their values are `V.s _` at `q₀`
     change V.s V.lz q₀ < V.s V.lo q₀
     rw [V.hlz, V.hlo]
     norm_num
@@ -798,13 +811,14 @@ theorem wordData_append_singleton {d e : ℕ} [NeZero d] [NeZero e]
       linarith
     have hz : C i - C j = 0 := by
       refine hgood _ _ hb hsub ?_
+      -- the value at `q₀` of the difference `C i - C j`
       change C i q₀ - C j q₀ = 0
       rw [hij, sub_self]
     exact sub_eq_zero.mp hz
   obtain ⟨m', hm', -, s', hcov, hcov', hstrict'⟩ := exists_sorted_cuts C hval hlt
   -- the positions of the letter's cuts and of the preimages in the sorted list
   set lU : Fin (V.m + 1) → Fin (m' + 1) := fun j => Classical.choose (hcov (Sum.inl j)) with hlUdef
-  have hlU : ∀ j, s' (lU j) = V.s j := fun j => Classical.choose_spec (hcov (Sum.inl j))
+  have hlU (j) : s' (lU j) = V.s j := Classical.choose_spec (hcov (Sum.inl j))
   set lP : Fin (W.m + 1) → Fin V.m → Fin (m' + 1) :=
     fun l i => Classical.choose (hcov (Sum.inr (l, i))) with hlPdef
   have hlP : ∀ l i, s' (lP l i) = W.s l - V.D i :=
@@ -914,6 +928,7 @@ theorem wordData_append_singleton {d e : ℕ} [NeZero d] [NeZero e]
     have hex_l : ∃ l : Fin W.m, lP l.castSucc iO ≤ k.castSucc ∧ k.castSucc < lP l.succ iO := by
       refine ⟨lu, ?_, ?_⟩
       · rw [← hcmp (lP lu.castSucc iO), hlP]
+        -- `lP` is `W.s _ - V.D _` by definition
         change W.s lu.castSucc q - V.D iO q ≤ x
         linarith [hletter]
       · by_contra hcon
@@ -935,6 +950,7 @@ theorem wordData_append_singleton {d e : ℕ} [NeZero d] [NeZero e]
       have h1 : (W.s lO.succ - V.D iO) q ≤ x := by
         have h := hcon
         rw [hletter] at h
+        -- likewise at `lO.succ`
         change W.s lO.succ q - V.D iO q ≤ x
         linarith
       have h2 : lP lO.succ iO ≤ k.castSucc :=
@@ -948,6 +964,7 @@ theorem wordData_append_singleton {d e : ℕ} [NeZero d] [NeZero e]
       _ = ltrQ π σ b q x + W.D lO q := hold
       _ = x + (W.D lO + V.D iO) q := by
           rw [hletter]
+          -- commutativity of the two defect values; `ring` closes it
           change x + V.D iO q + W.D lO q = x + (W.D lO q + V.D iO q)
           ring
   · -- the cut bounds

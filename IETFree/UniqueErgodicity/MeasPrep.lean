@@ -30,7 +30,7 @@ split interval, and none of which is in `Split.lean`, `Limits.lean` or `Transfer
   `[0, 1)`.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter Set Topology
 open scoped ENNReal NNReal BigOperators

@@ -24,8 +24,8 @@ descriptions of the parameters, which is what makes that proof possible, and whi
 Section 3 development needs:
 
 * on the open region the total exchanges are `mkIET1'` of the length vectors
-  (`fOf_eq_mkIET1'`, `gOf_eq_mkIET1'`), and a word is trivial for them exactly when it is trivial
-  for `mkIET1'` (`hasRelation_iff_mkIET1'`);
+  (`fOf_eq_mkIET1'`, `gOf_eq_mkIET1'`), which is how `HasRelation` is read as a statement about the
+  exchanges of the main theorem;
 * `evalWord_mkIET1'_eq_one_iff` passes between the two formalisations of the evaluation
   (`evalWord` on `IET` and `evalWordEquiv` on the underlying permutations of `ℝ`);
 * `ae_free_of_ae_prod` pulls an almost-sure statement about length vectors back to the free
@@ -124,16 +124,7 @@ def HasRelation (π : Equiv.Perm (Fin d)) (σ : Equiv.Perm (Fin e))
     (q : PReal d e) : Prop :=
   ∃ w : FreeGroup Gen, w ≠ 1 ∧ evalWord w (fOf π q) (gOf σ q) = 1
 
-/-- **`HasRelation` in terms of `mkIET1'`**, at a parameter pair of the open region: the two
-descriptions differ only by the total-length proofs, which the region supplies.  This is the
-form in which the relation is applied to the exchanges of `main`. -/
-theorem hasRelation_iff_mkIET1' {π : Equiv.Perm (Fin d)} {σ : Equiv.Perm (Fin e)} {q : PReal d e}
-    (h1 : q.1 ∈ simplexRegion d) (h2 : q.2 ∈ simplexRegion e) :
-    HasRelation π σ q ↔
-      ∃ w : FreeGroup Gen, w ≠ 1 ∧
-        evalWord w (mkIET1' (simplexMap d q.1) π (simplexMap_mem_simplex_fin h1.1 h1.2))
-          (mkIET1' (simplexMap e q.2) σ (simplexMap_mem_simplex_fin h2.1 h2.2)) = 1 := by
-  rw [HasRelation, fOf_eq_mkIET1' π h1, gOf_eq_mkIET1' σ h2]
+
 
 /-- **The bridge in free coordinates**, at a parameter pair of the open region: a word trivial for
 the two permutations of `main` is trivial for `fOf` and `gOf`. -/

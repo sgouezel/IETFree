@@ -8,6 +8,8 @@ module
 public import IETFree.ChallengeSolved
 public import IETFree.CutSet.Basic
 public import IETFree.CutSet.Measure
+public import IETFree.ForMathlib.Analysis
+public import IETFree.ForMathlib.List
 public import IETFree.FreeGroup.Centralizer
 public import IETFree.FreeGroup.Commensurable
 public import IETFree.IET

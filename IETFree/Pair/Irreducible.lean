@@ -26,7 +26,7 @@ Lemma 2.10) are in `MeasureTools.lean`; Proposition 2.5 and the Diophantine defi
 `Diophantine.lean`.  Both are imported below.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal commutatorElement

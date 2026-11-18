@@ -30,7 +30,7 @@ for the paper's single-permutation form, both for the exchange as a bundled `IET
 of the two halves of the proof of `veechRigidity`.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter
 open IntervalExchange.RauzyVeech

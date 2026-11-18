@@ -64,7 +64,7 @@ theorem sum_coe_eq_one {α : Type*} [Fintype α] {lam : α → ℝ≥0} (hlam : 
   push_cast at h
   exact h
 
-@[simp] theorem mem_simplex {α : Type*} [Fintype α] {lam : α → ℝ≥0} :
+theorem mem_simplex {α : Type*} [Fintype α] {lam : α → ℝ≥0} :
     lam ∈ simplex α ↔ ∑ a, lam a = 1 := Iff.rfl
 
 /-- The simplex `{lam | ∑ lam = 1}` is measurable: a level set of a continuous function on the
@@ -168,11 +168,6 @@ theorem toIET_eq_mkIET1 (P : IETDatum₂ α n) [NeZero n] {lam : α → ℝ≥0}
     P.toIET lam = mkIET1' (P.lengthsInBottom lam) P.perm (P.sum_lengthsInBottom h) := by
   rw [toIET, dite_eq_left h]
 
-/-- Off the simplex, `toIET` is the identity. -/
-theorem toIET_of_notMem (P : IETDatum₂ α n) [NeZero n] {lam : α → ℝ≥0}
-    (h : lam ∉ simplex α) : P.toIET lam = 1 := by
-  rw [toIET, dite_eq_right h]
-
 /-- The involution `π_top ↔ π_bottom`; by source 2.4 it sends the exchange to its inverse. -/
 def inv (P : IETDatum₂ α n) : IETDatum₂ α n := ⟨P.piBottom, P.piTop⟩
 
@@ -189,6 +184,7 @@ theorem perm_inv (P : IETDatum₂ α n) : P.inv.perm = P.perm.symm := by
 /-- **The coercion of `mkIET1'`, read on `toEquiv`**:
 `(mkIET1' lam π h).toEquiv = mkIETFun lam π 0`.  The same identity as
 `IntervalExchange.coe_mkIET1'`, stated so that it rewrites when the coercion has already been
+@[simp]
 unfolded. -/
 theorem toEquiv_mkIET1 {n : ℕ} [NeZero n] (lam : Fin n → ℝ≥0) (π : Equiv.Perm (Fin n))
     (h : (∑ i, lam i) = 1) : (mkIET1' lam π h).toEquiv = mkIETFun lam π 0 := (rfl)

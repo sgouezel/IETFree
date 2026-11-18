@@ -198,7 +198,7 @@ theorem IETDatum.toFun_eq_of_mem_cell {n : ℕ} [NeZero n] (D : IETDatum n) (i :
 
 /-- An indicator sum as a filtered sum:
 `∑ i, (if p i then 1 else 0) * f i = ∑ i ∈ filter p, f i`. -/
-theorem sum_ite_one_mul {n : ℕ} (p : Fin n → Prop) [DecidablePred p] (f : Fin n → ℝ) :
+theorem Finset.sum_ite_one_mul {n : ℕ} (p : Fin n → Prop) [DecidablePred p] (f : Fin n → ℝ) :
     (∑ i, ((if p i then (1 : ℤ) else 0 : ℤ) : ℝ) * f i) = ∑ i ∈ Finset.univ.filter p, f i := by
   rw [Finset.sum_filter]
   refine Finset.sum_congr rfl fun i _ => ?_
@@ -209,16 +209,7 @@ theorem abs_ite_sub_ite_le (p q : Prop) [Decidable p] [Decidable q] :
     |(if p then (1 : ℤ) else 0) - (if q then (1 : ℤ) else 0)| ≤ 1 := by
   by_cases hp : p <;> by_cases hq : q <;> simp [hp, hq]
 
-/-- A sum of two indicator functions minus a third takes values in `{-2, …, 2}`. -/
-theorem abs_ite_add_ite_sub_ite_le (p q r : Prop) [Decidable p] [Decidable q] [Decidable r] :
-    |(if p then (1 : ℤ) else 0) + (if q then (1 : ℤ) else 0) - (if r then (1 : ℤ) else 0)| ≤ 2 := by
-  by_cases hp : p <;> by_cases hq : q <;> by_cases hr : r <;> simp [hp, hq, hr]
 
-/-- A difference of three indicator functions takes values in `{-2, …, 2}`. -/
-theorem abs_ite_sub_ite_sub_ite_le (p q r : Prop) [Decidable p] [Decidable q] [Decidable r] :
-    |(if p then (1 : ℤ) else 0) - (if q then (1 : ℤ) else 0)
-      - (if r then (1 : ℤ) else 0)| ≤ 2 := by
-  by_cases hp : p <;> by_cases hq : q <;> by_cases hr : r <;> simp [hp, hq, hr]
 /-- The difference of two indicators vanishes exactly when the two predicates agree. -/
 theorem ite_one_sub_ite_one_eq_zero {p q : Prop} [Decidable p] [Decidable q] :
     ((if p then (1 : ℤ) else 0) - (if q then 1 else 0)) = 0 ↔ (p ↔ q) := by
@@ -248,11 +239,11 @@ theorem splitting_of_imageLeft_relation {d e : ℕ} [NeZero d] [NeZero e]
   set b : Fin e → ℤ := fun j =>
     (if (σ j).val < (σ l).val then 1 else 0) - (if j.val < l.val then 1 else 0) with hb_def
   have hlam : (∑ i, (a i : ℝ) * (lam i : ℝ)) = imageLeft π lam k - leftEnd lam n := by
-    simp only [ha_def, Int.cast_sub, sub_mul, Finset.sum_sub_distrib, sum_ite_one_mul, imageLeft,
-      leftEnd, Fin.lt_def]
+    simp only [ha_def, Int.cast_sub, sub_mul, Finset.sum_sub_distrib, Finset.sum_ite_one_mul,
+      imageLeft, leftEnd, Fin.lt_def]
   have hmu : (∑ j, (b j : ℝ) * (mu j : ℝ)) = imageLeft σ mu l - leftEnd mu l := by
-    simp only [hb_def, Int.cast_sub, sub_mul, Finset.sum_sub_distrib, sum_ite_one_mul, imageLeft,
-      leftEnd, Fin.lt_def]
+    simp only [hb_def, Int.cast_sub, sub_mul, Finset.sum_sub_distrib, Finset.sum_ite_one_mul,
+      imageLeft, leftEnd, Fin.lt_def]
   have hrel : (∑ i, (a i : ℝ) * (lam i : ℝ)) + (∑ j, (b j : ℝ) * (mu j : ℝ)) = 0 := by
     rw [hlam, hmu]
     linarith
@@ -347,20 +338,22 @@ theorem splitting_of_imageLeft_relation_add {d e : ℕ} [NeZero d] [NeZero e]
   have hlam : (∑ i, (a i : ℝ) * (lam i : ℝ))
       = imageLeft π lam k + imageLeft π lam m - leftEnd lam m := by
     simp only [ha_def, Int.cast_add, Int.cast_sub, add_mul, sub_mul, Finset.sum_add_distrib,
-      Finset.sum_sub_distrib, sum_ite_one_mul, imageLeft, leftEnd, Fin.lt_def]
+      Finset.sum_sub_distrib, Finset.sum_ite_one_mul, imageLeft, leftEnd, Fin.lt_def]
   have hmu : (∑ j, (b j : ℝ) * (mu j : ℝ))
       = imageLeft σ mu l - leftEnd mu l - leftEnd mu n := by
-    simp only [hb_def, Int.cast_sub, sub_mul, Finset.sum_sub_distrib, sum_ite_one_mul, imageLeft,
-      leftEnd, Fin.lt_def]
+    simp only [hb_def, Int.cast_sub, sub_mul, Finset.sum_sub_distrib, Finset.sum_ite_one_mul,
+      imageLeft, leftEnd, Fin.lt_def]
   have hrel : (∑ i, (a i : ℝ) * (lam i : ℝ)) + (∑ j, (b j : ℝ) * (mu j : ℝ)) = 0 := by
     rw [hlam, hmu]
     linarith
   have hA (i) : |a i| ≤ 2 := by
     rw [ha_def]
-    exact abs_ite_add_ite_sub_ite_le _ _ _
+    by_cases h1 : (π i).val < (π k).val <;> by_cases h2 : (π i).val < (π m).val
+      <;> by_cases h3 : i.val < m.val <;> simp [h1, h2, h3]
   have hB (j) : |b j| ≤ 2 := by
     rw [hb_def]
-    exact abs_ite_sub_ite_sub_ite_le _ _ _
+    by_cases h1 : (σ j).val < (σ l).val <;> by_cases h2 : j.val < l.val
+      <;> by_cases h3 : j.val < n.val <;> simp [h1, h2, h3]
   obtain ⟨haconst, hbconst, hsum0⟩ := relation_of_good (p := (lam, mu)) hgood hA hB hl hm hrel
   -- the coefficient of the last index of `a` is `0` or `1`, and `1` is impossible
   have ham : a m = (if (π m).val < (π k).val then 1 else 0) := by
@@ -835,10 +828,10 @@ theorem leftEnd_eq_zero_of_imageLeft_eq {d e : ℕ} [NeZero d] [NeZero e]
       refine Finset.sum_congr rfl fun i _ => ?_
       simp only [ha_def, Int.cast_neg]
       ring
-    rw [hsplit, sum_ite_one_mul]
+    rw [hsplit, Finset.sum_ite_one_mul]
     rfl
   have hmu : (∑ j, (b j : ℝ) * (mu j : ℝ)) = imageLeft σ mu l := by
-    rw [hb_def, sum_ite_one_mul]
+    rw [hb_def, Finset.sum_ite_one_mul]
     rfl
   have hrel : (∑ i, (a i : ℝ) * (lam i : ℝ)) + (∑ j, (b j : ℝ) * (mu j : ℝ)) = 0 := by
     rw [hlam, hmu, h]

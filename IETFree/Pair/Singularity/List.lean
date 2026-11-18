@@ -211,6 +211,7 @@ noncomputable def singAffine {d e : ℕ} [NeZero d] (π : Equiv.Perm (Fin d))
   | Sum.inl i => cutAffine (e := e) ⟨i.val + 1, by have := i.isLt; omega⟩
   | Sum.inr j => preimageCutAffine π ⟨j.val + 1, by have := j.isLt; omega⟩ (k j)
 
+@[simp]
 theorem singAffine_inl {d e : ℕ} [NeZero d] (π : Equiv.Perm (Fin d))
     (k : Fin (e - 1) → Fin d) (i : Fin (d - 1)) :
     singAffine π k (Sum.inl i)
@@ -684,7 +685,7 @@ theorem markedCell_transl {d e n : ℕ} [NeZero d] (π : Equiv.Perm (Fin d))
       · rw [hi]; linarith
 
 /-- The image of a half-open interval under a translation. -/
-theorem image_Ico_add {a b : ℝ} {f : ℝ → ℝ} {δ : ℝ}
+theorem Set.image_Ico_add {a b : ℝ} {f : ℝ → ℝ} {δ : ℝ}
     (hf : ∀ x, a ≤ x → x < b → f x = x + δ) :
     f '' Set.Ico a b = Set.Ico (a + δ) (b + δ) := by
   ext y
@@ -723,7 +724,7 @@ theorem no_gcut_inside_image {d e n : ℕ} [NeZero d] (π : Equiv.Perm (Fin d))
   have himg : mkIET1' (simplexMap d v) π hl '' Set.Ico (s k.castSucc) (s k.succ)
       = Set.Ico (mkIET1' (simplexMap d v) π hl (s k.castSucc))
           (mkIET1' (simplexMap d v) π hl (s k.castSucc) + (s k.succ - s k.castSucc)) := by
-    have h := image_Ico_add (f := mkIET1' (simplexMap d v) π hl) (δ := δ) hδ
+    have h := Set.image_Ico_add (f := mkIET1' (simplexMap d v) π hl) (δ := δ) hδ
     have h1' : s k.castSucc + δ = mkIET1' (simplexMap d v) π hl (s k.castSucc) :=
       (hδ _ le_rfl hlt).symm
     rw [h, h1']

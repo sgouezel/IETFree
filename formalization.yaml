@@ -30,9 +30,9 @@ project:
     that do not generate a free group contain an open set of full measure — is proved in
     `IETFree/Pair/RobustRelation/`: the symbolic data of an arbitrary word and the robustness at a
     point of the conull set `Ω'` (`evalWord_eventually_eq_one`), and the assembly of the open conull
-    set (`exists_isOpen_subset_hasRelation_of_ae`), which `ChallengeSolved.lean` feeds with the a.e.
-    relation it proves from `main` — the conclusion on `Δ_π × Δ_σ` is
-    `exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`.
+    set (`exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one_of_robust`), which
+    `ChallengeSolved.lean` feeds with the a.e. relation it proves from `main` — the conclusion on
+    `Δ_π × Δ_σ` is `exists_isOpen_ae_exists_nontrivial_evalWordEquiv_eq_one`.
   authors:
     - "Sébastien Gouëzel"
   authors_note: >-
@@ -266,7 +266,8 @@ status:
         hypotheses: this is the challenge's third target, and it reaches no declaration the
         challenge does not already carry.  The a.e. relation it needs is proved from `main` in the
         same file, and the free-coordinate form is not a statement of its own: it is
-        `Pair.RobustRelation.exists_isOpen_subset_hasRelation_of_ae` applied to that relation.
+        `Pair.RobustRelation.exists_isOpen_subset_hasRelation_of_robust` applied to that relation,
+        with robustness discharged by `Pair.evalWord_eventually_eq_one`.
 
 automation:
   methods:
@@ -439,7 +440,7 @@ alignment:
         the statement free of any project definition.  The free-coordinate form of the remark — an
         open set of full measure for the product of the two restricted Lebesgue measures on the
         regions, every point of which carries a nontrivial trivial word (`Pair.HasRelation`) — is not
-        a statement of its own: it is `Pair.RobustRelation.exists_isOpen_subset_hasRelation_of_ae`
+        a statement of its own: it is `Pair.RobustRelation.exists_isOpen_subset_hasRelation_of_robust`
         applied to the a.e. relation, which is proved from `main` in `ChallengeSolved.lean`.
     - source: "Lemma 1.3 (an irrational rotation and an interval exchange do not generate a free group)"
       lean: "—"

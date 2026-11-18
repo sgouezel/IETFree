@@ -11,7 +11,7 @@ public import IETFree.RauzyVeech.RauzyPath
 /-!
 # The greedy path is an `IsRauzyPath` word
 
-The a.e. greedy path (`RauzyPath.pathWord`, built by choosing at each step the child cylinder that
+The a.e. greedy path (`pathWord`, built by choosing at each step the child cylinder that
 contains the point) satisfies `IsRauzyPath` — the Rauzy type rule — and its renormalised length
 vector (`lamAfter`) stays strictly positive.  The two statements are proved simultaneously:
 positivity is what lets `IsRenorm.unique` identify the comparison from `mem_simplexCyl_append_iff`

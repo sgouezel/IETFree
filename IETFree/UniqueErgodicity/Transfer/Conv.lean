@@ -21,7 +21,8 @@ convergence of the averages of `ψ ∘ π` for `G`, from every point of an invar
 split interval, gives uniform convergence of the averages of `ψ` for `T`, from every point of
 `[0,1)`.  No measure theory enters; the only measure-theoretic input is the identification of the
 two limits, which the caller supplies as `hint` (it follows from the transfer of Lebesgue measure,
-in the form `MeasPrep.lift_unique_on_Ico` — a total section `ℝ → X` cannot exist for the split
+in the form `lift_unique_on_Ico` of `MeasPrep.lean` — a total section `ℝ → X` cannot exist for the
+split
 interval).  The convergence hypothesis is asked on `S`, not on the whole space, and that is not a
 convenience: the split interval has two isolated fixed points (`leftGerm 0`, `rightGerm 1`) at
 which the averages cannot converge to `∫ ψ dμ`, so the unrestricted form is false.
@@ -29,7 +30,7 @@ which the averages cannot converge to `∫ ψ dμ`, so the unrestricted form is 
 See Blueprint 2, Remark 2.7.  The statement is purely about iterates of a section, so it is stated
 for arbitrary types. -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter
 open scoped BigOperators
@@ -144,7 +145,8 @@ theorem uniformBirkhoff_of_split {X : Type*} [TopologicalSpace X] [MeasurableSpa
 /-- **The two limits agree**: if the lift `μ` of Lebesgue measure on the split interval projects
 to Lebesgue measure, then the integral of a lift `φ ∘ π` against `μ` is the integral of `φ`
 against Lebesgue measure.  This is what discharges the hypothesis `hint` of
-`uniformBirkhoff_of_split` from the measure-theoretic transfer (`MeasPrep.lift_unique_on_Ico`). -/
+`uniformBirkhoff_of_split` from the measure-theoretic transfer (`lift_unique_on_Ico`, in
+`MeasPrep.lean`). -/
 theorem integral_comp_of_map_eq {X : Type*} [TopologicalSpace X] [MeasurableSpace X] [BorelSpace X]
     {μ : Measure X} {π : X → ℝ} (hπ : Continuous π) {φ : ℝ → ℝ} (hφ : Continuous φ)
     (hpush : μ.map π = unitMeas) :

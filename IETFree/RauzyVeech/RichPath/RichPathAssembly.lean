@@ -277,8 +277,9 @@ variable {α : Type*} [Fintype α] [DecidableEq α] {n : ℕ} [NeZero n]
 /-- **The Lévy recurrence instantiated at the level-`k` cylinder partition**, for an *arbitrary*
 level-measurable target `Z`: if every level-`k` cylinder (`k ≥ N`) carries a subset of relative mass
 `≥ δ` which misses `Z`, then `Z` is null.  This is the cylinder recurrence with the target `Z` not
-tied to the letters-only condition `Ztgt`; richness needs `Z` to be the *vertex-pinned*
-target `ZpinTgt` ("follows `γ₀` from `π₀` at no late time"), which is not of the form `Ztgt`. -/
+tied to a letters-only condition on the last letter of the path; richness needs `Z` to be the
+*vertex-pinned* target `ZpinTgt` ("follows `γ₀` from `π₀` at no late time"), which is not of that
+form. -/
 theorem levy_cylinder (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
     (Z : Set (α → ℝ≥0))
     (hZ : MeasurableSet[⨆ j, MeasurableSpace.comap (lvl P j) ⊤] Z)

@@ -21,7 +21,7 @@ the exact shift identity for their pushforwards, and the two headline convergenc
 and relative form).
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter Topology
 open scoped ENNReal NNReal BoundedContinuousFunction Topology
@@ -116,7 +116,7 @@ theorem integral_map_eq_of_tendsto_empiricalMeasure (f : X → X) (hf : Continuo
 
 /-- A regular finite measure which is invariant against every bounded continuous test function
 is invariant.  Regularity is what makes closed sets accessible to Urysohn functions. -/
-theorem map_eq_self_of_integral_eq (f : X → X) (hf : Continuous f) (ν₀ : Measure X)
+theorem MeasureTheory.map_eq_self_of_integral_eq (f : X → X) (hf : Continuous f) (ν₀ : Measure X)
     [Measure.Regular ν₀] [IsFiniteMeasure ν₀]
     (hint : ∀ g : X →ᵇ ℝ, ∫ x, g x ∂(ν₀.map f) = ∫ x, g x ∂ν₀) :
     ν₀.map f = ν₀ := by
@@ -220,7 +220,7 @@ theorem exists_regular_map_eq_self (f : X → X) (hf : Continuous f) (ν : Proba
         g.continuous.aestronglyMeasurable).symm
     rw [h1, h2, h3, hν g, hint g]
   exact ⟨⟨ν₀, ⟨hprob⟩⟩, hreg, hint,
-    @map_eq_self_of_integral_eq X _ _ _ _ _ f hf ν₀ hreg hfin hinv₀⟩
+    @MeasureTheory.map_eq_self_of_integral_eq X _ _ _ _ _ f hf ν₀ hreg hfin hinv₀⟩
 
 /-! ### The core uniform convergence argument -/
 

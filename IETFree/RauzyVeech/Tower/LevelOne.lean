@@ -5,9 +5,8 @@ Authors: Sébastien Gouëzel
 -/
 module
 
-import Mathlib.Tactic.Linarith.NNRealPreprocessor
-public import IETFree.RauzyVeech.FirstReturn
 public import IETFree.RauzyVeech.IterOKPath
+import Mathlib.Tactic.Linarith.NNRealPreprocessor
 
 /-!
 # The level-one Rauzy-Veech tower in `IETDatum₂` letters (both step types)
@@ -54,7 +53,7 @@ theorem rvMatNat_eq (P : IETDatum₂ α n) (e : Bool) (a b : α) :
   rw [IETDatum₂.rvMatNat, IETDatum₂.rvMat]
   split_ifs <;> simp
 
-theorem sum_ite_single {c : α} (t : ℕ) :
+theorem Finset.sum_ite_single {c : α} (t : ℕ) :
     (∑ a, (if a = c then t else 0)) = t := by
   refine (Finset.sum_eq_single c ?_ ?_).trans (ite_eq_left rfl)
   · intro a _ ha; exact ite_eq_right ha
@@ -93,7 +92,7 @@ theorem height_singleton_eq (P : IETDatum₂ α n) (hne : ∀ e : Bool, P.last e
           + ∑ a, (if a = P.last e then (if b = P.last (!e) then 1 else 0) else 0) :=
         Finset.sum_add_distrib
     _ = 1 + (if b = P.last (!e) then 1 else 0) := by
-        rw [sum_ite_single (c := b) 1, sum_ite_single (c := P.last e)]
+        rw [Finset.sum_ite_single (c := b) 1, Finset.sum_ite_single (c := P.last e)]
 
 /-- The one-letter height is at most two. -/
 theorem height_singleton_le_two (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n)
@@ -407,12 +406,6 @@ theorem names_true_image (P : IETDatum₂ α n) (L : α → ℝ≥0)
 
 /-! ## 7. The algebraic recursion of the heights -/
 
-theorem sum_ite_single_int {c : α} (t : α → ℤ) :
-    (∑ x, (if x = c then t x else 0)) = t c := by
-  refine (Finset.sum_eq_single c ?_ ?_).trans (ite_eq_left rfl)
-  · intro x _ hx; exact ite_eq_right hx
-  · intro h; exact absurd (Finset.mem_univ c) h
-
 /-- Multiplying a column of `Q` by `rvMat e` adds the main-name column to the secondary one. -/
 theorem mulVec_rvMat (Q : Matrix α α ℤ) (V : IETDatum₂ α n) (e : Bool)
     (hne : V.last e ≠ V.last (!e)) (a b : α) :
@@ -445,8 +438,7 @@ theorem mulVec_rvMat (Q : Matrix α α ℤ) (V : IETDatum₂ α n) (e : Bool)
           + ∑ c, (if c = V.last e then (if b = V.last (!e) then Q a c else 0) else 0) :=
         Finset.sum_add_distrib
     _ = Q a b + if b = V.last (!e) then Q a (V.last e) else 0 := by
-        rw [sum_ite_single_int (c := b) (fun x => Q a x),
-          sum_ite_single_int (c := V.last e) (fun x => if b = V.last (!e) then Q a x else 0)]
+        simp only [Finset.sum_ite_eq', Finset.mem_univ, ite_true]
 
 end IntervalExchange.RauzyVeech
 

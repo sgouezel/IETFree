@@ -21,7 +21,7 @@ preserves nontriviality (`substGen_ne_one`), and it is compatible with evaluatio
 the original block, `exists_word_trivial_on_block_of_rescaled`.
 -/
 
-@[expose] public section
+public section
 
 open MeasureTheory Filter Topology
 open scoped BigOperators ENNReal NNReal
@@ -53,6 +53,7 @@ theorem invSubstGen_substGen_apply (i : Gen) :
     rw [FreeGroup.lift_apply_of]
     simp only [genX, genY]
     norm_num
+  -- the composite is an application of `lift`; restate the goal at that form
   · change (FreeGroup.lift (fun i : Gen => if i = 0 then genY⁻¹ * genX else genY))
       ((FreeGroup.lift (fun i : Gen => if i = 0 then genY * genX else genY)) (FreeGroup.of 1))
       = FreeGroup.of 1
@@ -82,12 +83,14 @@ theorem evalWord_substGen (w : FreeGroup Gen) (f g : IET 0 1) :
     FreeGroup.lift (fun i : Gen => if i = 0 then f else g)
       (substGen (FreeGroup.of i)) = (if i = 0 then g * f else g) := by
     fin_cases i
+    -- the two cases are applications of `lift`; restate each goal at that form
     · change (FreeGroup.lift (fun i : Gen => if i = 0 then f else g))
         ((FreeGroup.lift (fun i : Gen => if i = 0 then genY * genX else genY)) (FreeGroup.of 0))
         = if (0 : Gen) = 0 then g * f else g
       rw [FreeGroup.lift_apply_of]
       simp only [genX, genY]
       norm_num
+    -- the two cases are applications of `lift`; restate each goal at that form
     · change (FreeGroup.lift (fun i : Gen => if i = 0 then f else g))
         ((FreeGroup.lift (fun i : Gen => if i = 0 then genY * genX else genY)) (FreeGroup.of 1))
         = if (1 : Gen) = 0 then g * f else g

@@ -124,7 +124,7 @@ private theorem rigid_set_abstract (T : ℝ → ℝ) {u v Le τ δ : ℝ} {h : �
     obtain ⟨ρ, hρ⟩ := hSH j (le_of_lt hj)
     refine ⟨max u (u - τ) + ρ, min v (v - τ) + ρ, ?_, ?_⟩
     · rw [hE]
-      exact image_Ico_of_translation rfl
+      exact Set.image_Ico_of_translation rfl
         (fun y hy => hρ y (hEin y (by rw [hE]; exact hy)))
     · have := hEle
       linarith
@@ -267,6 +267,7 @@ private theorem SH_list {P : IETDatum₂ α n} {lam : α → ℝ≥0} (hP : P.Ir
       | true => exact cc_sub_true (P := P) (γ := γ) (lam := lam) hS b (by simpa using hb) hy
 
 /-- The level-`γ` cell, unfolded to its interval endpoints. -/
+@[simp]
 private theorem cellAt_Ico (P : IETDatum₂ α n) (γ : List Bool) (lam : α → ℝ≥0) (b : α) :
     cellAt P γ lam b
       = Set.Ico (leftEnd ((IETDatum₂.vertex P γ).lengthsInBottom (lamAfter P γ lam))
@@ -342,7 +343,7 @@ private theorem floor_Ico_node {P : IETDatum₂ α n} {lam : α → ℝ≥0} (hP
         ((IETDatum₂.vertex P γ).piBottom b) + τ,
       upperEnd ((IETDatum₂.vertex P γ).lengthsInBottom (lamAfter P γ lam))
         ((IETDatum₂.vertex P γ).piBottom b) + τ, ?_, ?_⟩
-  · exact image_Ico_of_translation (cellAt_Ico P γ lam b)
+  · exact Set.image_Ico_of_translation (cellAt_Ico P γ lam b)
       (fun y hy => hτ y hy)
   · rw [upperEnd_eq, IETDatum₂.lengthsInBottom, Equiv.symm_apply_apply]
     ring

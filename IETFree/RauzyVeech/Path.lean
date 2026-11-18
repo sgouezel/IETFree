@@ -116,7 +116,7 @@ theorem vertex_last_ne (P : IETDatum₂ α n) (hP : P.Irreducible) (hn : 2 ≤ n
 namespace Path
 
 /-- `Q` of the empty word is the identity (definitional). -/
-@[simp]
+@[simp, simp]
 theorem Q_nil (P : IETDatum₂ α n) : Path.Q P [] = 1 := (rfl)
 
 /-- The recursion of `Q` (definitional). -/

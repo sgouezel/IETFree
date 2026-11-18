@@ -23,8 +23,9 @@ From that positivity: `volume_simplex_pos` (the simplex has positive mass) and
 `volume_simplexCyl` of `IETFree/RauzyVeech/CocycleVolume.lean`).  These are what the strict
 inequality of the contraction needs.
 
-The matrix identity `colsum_mul_one_add_single` is the elementary column-sum computation behind the
-step `Q(γ ++ [e]) = Q(γ) · (1 + E_{α_e α_{1-e}})`: only the column of the *secondary* name changes,
+The matrix identity `Matrix.sum_mul_one_add_single` is the elementary column-sum computation
+behind step `Q(γ ++ [e]) = Q(γ) · (1 + E_{α_e α_{1-e}})`: only the column of the *secondary* name
+changes,
 and it grows by the column of the name.
 
 The volume of the child cylinder (Lemma 3 of Yoccoz) is the ratio `vol Δ(γ ++ [δ]) / vol Δ(γ) =
@@ -47,7 +48,7 @@ section MatrixColsum
 variable {α : Type*} [Fintype α] [DecidableEq α]
 
 /-- **Only the column `c'` changes, and it grows by the column `c`.** -/
-theorem colsum_mul_one_add_single (M : Matrix α α ℤ) (c c' β : α) :
+theorem Matrix.sum_mul_one_add_single (M : Matrix α α ℤ) (c c' β : α) :
     (∑ a, (M * (1 + Matrix.single c c' (1 : ℤ))) a β)
       = (∑ a, M a β) + (if β = c' then ∑ a, M a c else 0) := by
   have hM : M * (1 + Matrix.single c c' (1 : ℤ)) = M + M * Matrix.single c c' (1 : ℤ) := by

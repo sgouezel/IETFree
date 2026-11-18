@@ -91,7 +91,7 @@ theorem cellAt_node (P : IETDatum₂ α n) (γ : List Bool) (lam : α → ℝ≥
 /-- The height at the empty node is one. -/
 theorem height_nil (P : IETDatum₂ α n) (b : α) : IETDatum₂.Path.height P [] b = 1 := by
   simp only [IETDatum₂.Path.height, IETDatum₂.Path.Q]
-  refine (Finset.sum_congr rfl (fun x _ => ?_)).trans (sum_ite_single (c := b) 1)
+  refine (Finset.sum_congr rfl (fun x _ => ?_)).trans (Finset.sum_ite_single (c := b) 1)
   rw [Matrix.one_apply]
   split_ifs <;> simp
 
